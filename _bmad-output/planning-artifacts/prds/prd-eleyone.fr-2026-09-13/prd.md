@@ -15,7 +15,8 @@ Il s'appuie sur les entrées suivantes, qu'il ne recopie pas :
 
 - le brief produit, validé le 13/09/2026 : `_bmad-output/planning-artifacts/briefs/brief-eleyone.fr-2026-09-13/brief.md` ;
 - son addendum, validé à la même date (inventaire des cas, contenu connu des encarts, matériel vivant, détail technique) : `_bmad-output/planning-artifacts/briefs/brief-eleyone.fr-2026-09-13/addendum.md` ;
-- le contrat de format des cas, `docs/format-cas.md`, en version 0.2 (statut draft), et le vocabulaire contrôlé de la stack, `data/stack.yaml`. Le PRD s'y réfère sans les redéfinir ;
+- le contrat de format des cas, `docs/format-cas.md`, en version 0.3 (statut draft), et le vocabulaire contrôlé de la stack, `data/stack.yaml`. Le PRD s'y réfère sans les redéfinir ;
+- l'architecture, `_bmad-output/planning-artifacts/architecture/architecture-eleyone.fr-2026-09-13/ARCHITECTURE-SPINE.md`, dont Arnaud a validé les recommandations le 13/09/2026. Le PRD en cite quelques décisions (AD-n) comme références, sans les détailler ;
 - le cas pilote 02, rédigé en FR et en EN (§9) ;
 - les décisions d'Arnaud du 13/09/2026, postérieures au brief : le titre du site, le pitch et l'ancienneté (plus de dix-huit ans), puis cinq questions ouvertes de ce PRD, tranchées (§11.1) ;
 - les consignes du dépôt (`AGENTS.md`), pour le contexte du dépôt et la manière de livrer les stories.
@@ -74,7 +75,7 @@ Le site lui-même sert de preuve. Il est statique, bilingue et sobre, parce que 
 - **Cadre** : forme de la mission. Une valeur parmi quatre : salarié, freelance, ESN, Ton Pote le Geek. `docs/format-cas.md` en fixe les identifiants stockés, en anglais ; le site affiche un libellé dans la langue de la page.
 - **Stack** : liste des technologies citées dans le cas, tirée du vocabulaire contrôlé, identique en FR et en EN.
 - **Vocabulaire contrôlé** : liste des technologies autorisées, une seule écriture chacune, tenue dans `data/stack.yaml`, qui fait foi.
-- **Encart « En bref »** : bloc placé après l'encart « Contexte mission ». Il donne l'enjeu puis le résultat, en trois lignes au plus, lisibles par un dirigeant.
+- **Encart « En bref »** : bloc placé après l'encart « Contexte mission ». Il donne l'enjeu puis le résultat, en trois phrases et 400 caractères au plus par langue, lisibles par un dirigeant.
 - **Cas complet** : corps du cas, au niveau CTO, découpé en rubriques.
 - **Cas mis en avant** : cas présenté sur l'accueil. En v1, ce sont les cas 01, 02 et 05.
 - **Matériel vivant** : élément qui illustre un cas. Il en existe quatre types : schéma, vidéo, extrait, encart thématique. Chaque élément a un statut, « prévu » ou « prêt ».
@@ -155,7 +156,7 @@ La présentation mentionne l'activité parallèle, avec un lien vers Ton Pote le
 
 ### 4.2 Pages cas
 
-**Description.** Chaque cas se présente dans un ordre fixe : l'encart « Contexte mission », l'encart « En bref », puis le cas complet. Il y a un seul texte par cas et par langue, sans bascule entre une version CTO et une version dirigeant. Les cas 02, 03 et 04 sont réunis sur la page Chiliz. Le contenu suit `docs/format-cas.md`. Réalise UJ-1 et UJ-2.
+**Description.** Chaque cas se présente dans un ordre fixe : l'encart « Contexte mission », l'encart « En bref », puis le cas complet. Il y a un seul texte par cas et par langue, sans bascule entre une version CTO et une version dirigeant. Les cas 02, 03 et 04 sont réunis sur la page Chiliz. Les pages cas sont servies sous `/cas/` en français et sous `/en/cases/` en anglais. Le contenu suit `docs/format-cas.md`. Réalise UJ-1 et UJ-2.
 
 #### FR-5 : Ordre d'un cas
 
@@ -170,7 +171,7 @@ Chaque cas, sur sa page cas ou dans sa section de la page Chiliz, présente dans
 L'encart « Contexte mission » affiche la société, le cadre, le rôle, la période et la stack du cas.
 
 **Conséquences (testables) :**
-- Les cinq champs apparaissent, en FR et en EN, sous des libellés dans la langue de la page (libellés EN : question 10).
+- Les cinq champs apparaissent, en FR et en EN, sous des libellés dans la langue de la page. En anglais, l'encart « Contexte mission » s'intitule *Engagement context* et l'encart « En bref » *At a glance* ; les cadres s'affichent *Employee*, *Freelance*, *IT consultancy* et *Ton Pote le Geek* (question 10, tranchée le 13/09/2026).
 - Le cadre affiché est l'une des quatre valeurs du glossaire, avec son libellé dans la langue de la page.
 - La stack ne contient que des technologies de `data/stack.yaml`, et elle est identique en FR et en EN. Seules les technologies citées dans le cas y figurent *(relecture)*.
 - Une valeur manquante n'est jamais affichée comme un fait : elle reste un marqueur TODO et le cas reste un brouillon (FR-26). Le contenu connu à ce jour est dans l'addendum du brief (tableau « Encart Contexte mission ») et, pour le cas 02, dans le cas pilote.
@@ -181,7 +182,7 @@ L'encart « Contexte mission » affiche la société, le cadre, le rôle, la pé
 L'encart « En bref » donne l'enjeu puis le résultat du cas, dans des termes lisibles par un dirigeant.
 
 **Conséquences (testables) :**
-- L'encart tient en trois lignes au plus, en FR comme en EN, comme le fixe `docs/format-cas.md`. La façon de compter les lignes dépend de la question 11.
+- Dans chaque langue, l'encart compte 3 phrases au plus et 400 caractères au plus. La règle se vérifie par script (question 11, tranchée le 13/09/2026).
 - L'enjeu précède le résultat.
 - L'encart est sans jargon *(relecture)*.
 
@@ -206,6 +207,8 @@ La page Chiliz réunit les cas 02, 03 et 04, dans cet ordre, chacun dans sa sect
 - Les sections mises en ligne apparaissent dans l'ordre 02, 03, 04. Chacune a son titre du cas, son encart « Contexte mission », son encart « En bref » et son cas complet.
 - Chaque section peut être atteinte directement par un lien (voir FR-2 pour le cas 02).
 - Le titre de la page et son éventuelle introduction dépendent de la question 9.
+
+**Notes :** la page Chiliz ne peut pas être mise en ligne tant que le cas 02 est un brouillon : un contrôle de mise en ligne l'empêche (C15 dans l'architecture).
 
 #### FR-10 : Limites présentées telles quelles
 
@@ -270,7 +273,7 @@ Chaque cas mis en ligne est accessible depuis l'accueil en suivant les liens du 
 
 ### 4.3 À propos
 
-**Description.** La page « À propos » condense le positionnement d'Arnaud. Réalise UJ-1.
+**Description.** La page « À propos » condense le positionnement d'Arnaud. Elle est servie à `/a-propos/` en français et à `/en/about/` en anglais. Réalise UJ-1.
 
 #### FR-16 : Contenu de la page « À propos »
 
@@ -286,7 +289,7 @@ La page « À propos » dit ce qu'Arnaud fait bien, ce qu'il ne veut pas être e
 
 #### FR-17 : Page Contact
 
-La page Contact donne une adresse mail et un lien LinkedIn, sans formulaire. Réalise UJ-1.
+La page Contact donne une adresse mail et un lien LinkedIn, sans formulaire. Elle est servie à `/contact/` en français et à `/en/contact/` en anglais. Réalise UJ-1.
 
 **Conséquences (testables) :**
 - En FR et en EN, la page affiche l'adresse mail et le lien vers le profil LinkedIn.
@@ -297,21 +300,28 @@ La page Contact donne une adresse mail et un lien LinkedIn, sans formulaire. Ré
 
 #### FR-18 : Mentions légales
 
-Le site met en ligne des mentions légales statiques, en FR et en EN.
+Le site met en ligne des mentions légales statiques, à `/mentions-legales/` en français et à `/en/legal-notice/` en anglais.
 
 **Conséquences (testables) :**
 - Une page de mentions légales existe dans chaque langue.
 - Elle est accessible depuis chaque page du site. [ASSUMPTION : les pages légales sont liées depuis toutes les pages, par exemple en pied de page.]
-- Son contenu reste compatible avec NFR-9, puisque la page est versionnée dans le dépôt public (question 12).
+- Sur le site mis en ligne, elle affiche, dans chaque langue, les mentions exigées par la loi. *Tranché le 13/09/2026.*
+  - Éditeur : identité, adresse de l'activité déclarée, contact, numéro d'immatriculation.
+  - Directeur de la publication : l'éditeur lui-même.
+  - Hébergeur : raison sociale, adresse et contact, repris de sa page légale officielle.
+- Elle n'affiche pas de numéro de TVA intracommunautaire.
+- Ces valeurs sont fournies au build par l'environnement et ne sont jamais commitées : aucune n'apparaît dans le dépôt ni dans son historique (NFR-9, AD-9).
+- Le build de production échoue si une valeur manque.
 
 #### FR-19 : Politique de confidentialité minimale
 
-Le site met en ligne une politique de confidentialité statique et minimale, en FR et en EN.
+Le site met en ligne une politique de confidentialité statique et minimale, à `/confidentialite/` en français et à `/en/privacy/` en anglais.
 
 **Conséquences (testables) :**
 - Une politique de confidentialité existe dans chaque langue et est accessible depuis chaque page du site (même hypothèse que FR-18).
 - Elle indique que le site ne dépose aucun cookie et que les vidéos sont des liens vers YouTube, un site tiers.
-- La mention éventuelle des journaux du serveur dépend de la question 13.
+- Elle indique que l'éditeur ne collecte aucune donnée personnelle, et renvoie à la politique de l'hébergeur pour ses propres traitements.
+- Cette affirmation est vraie sur toute la chaîne de service, reverse proxy compris : aucune adresse IP n'est journalisée ; le journal d'accès est minimal, sans IP, user-agent ni referer ; le journal d'erreurs est au niveau `crit` (AD-15). *Tranché le 13/09/2026.*
 
 ### 4.6 Bilinguisme et parité linguistique
 
@@ -368,7 +378,7 @@ Un agent de parité signale en commentaire de PR, sur la forge principale, les �
 - Sur une PR venant d'un fork, la clé d'API de l'agent n'est pas exposée (NFR-11).
 - Qualité de détection, consultative : sur deux PR de démonstration, l'une qui modifie un chiffre d'un seul côté, l'autre qui supprime une phrase d'un seul côté, le commentaire signale l'écart. Une détection manquée est remontée, mais ne bloque rien.
 
-**Hors périmètre :** le choix de l'outil qui fait tourner l'agent relève de l'architecture. Les commentaires restent sur la forge principale, privée, et ne sont pas visibles publiquement. L'exécution éventuelle de l'agent sur le dépôt public, qui n'a pas de PR et demanderait d'y placer une clé d'API, relève de la tâche d'architecture du §7.
+**Hors périmètre :** la mise en œuvre de l'agent est fixée par l'architecture (AD-16 : modèle Sonnet, sur la forge principale seulement, pas d'agent sur le dépôt public). Les commentaires restent sur la forge principale, privée, et ne sont pas visibles publiquement.
 
 ### 4.7 Contenu, mise en ligne et garde-fou
 
@@ -437,7 +447,7 @@ Le README du dépôt public est rédigé comme un cas, pour un CTO ou un tech le
 - Le README suit la structure des cas : contexte, problème, la solution facile et pourquoi elle a été écartée, ce qui a été décidé, ce qui a résisté, résultat.
 - Sa partie « ce qui a résisté » raconte que l'historique initial contenait des sources privées, repérées avant la publication sur GitHub, puis que l'historique a été réécrit et le garde-fou public/privé ajouté.
 - Le README ne nomme aucun fichier privé et ne contient aucune information de la liste de NFR-9.
-- La langue du README dépend de la question 14.
+- Le README est rédigé en anglais. *Tranché le 13/09/2026.*
 
 #### FR-31 : Artefacts de cadrage publics
 
@@ -459,6 +469,7 @@ La première mise en ligne est le socle ; les cas 03, 04 et 06 sont ensuite mis 
 - La première mise en ligne contient, en FR et en EN : l'accueil, « À propos », Contact, les mentions légales, la politique de confidentialité, la page cas du cas 01, la page Chiliz avec la section du cas 02, et la page cas du cas 05.
 - Aucun des cas 01, 02 et 05 n'est un brouillon au moment de la mise en ligne du socle.
 - Les cas 03, 04 et 06 sont mis en ligne chacun indépendamment, quand il n'est plus un brouillon, sans modifier le contenu des autres pages.
+- Chaque mise en ligne est déclenchée explicitement, par un tag (AD-14), et non à chaque modification du dépôt.
 - À chaque étape, le site mis en ligne respecte FR-9 (page Chiliz partielle), FR-15 (aucune page orpheline) et FR-26 (aucun brouillon).
 
 ## 5. Exigences non fonctionnelles transverses
@@ -467,13 +478,13 @@ La première mise en ligne est le socle ; les cas 03, 04 et 06 sont ensuite mis 
 - **NFR-2. Hébergement existant.** Les fichiers sont servis par un conteneur nginx, sur l'infrastructure Docker existante, derrière le reverse proxy en place : c'est le serveur de production. Le build de l'image et le déploiement partent de la forge principale, sur un autre serveur. Une indisponibilité de la forge principale bloque les déploiements, jamais le site mis en ligne. *Test :* le site mis en ligne répond via ce reverse proxy, sans nouveau service d'hébergement, y compris quand la forge principale est arrêtée.
 - **NFR-3. Aucun cookie, aucun consentement.** Aucune page ne dépose de cookie ni ne charge de ressource qui en dépose, et le site n'a donc pas de bandeau de consentement. *Test :* le chargement de chaque page, dans un navigateur vierge, ne crée aucun cookie.
 - **NFR-4. Accessibilité WCAG 2.2 niveau AA.** Chaque page mise en ligne, en FR et en EN, satisfait les critères de succès WCAG 2.2 de niveaux A et AA. *Tranché le 13/09/2026.* *Test :* audit de chaque gabarit de page contre ces critères ; l'outillage relève de l'architecture.
-- **NFR-5. Performance.** Chaque page mise en ligne atteint, sur mobile, les seuils « bons » des Core Web Vitals : LCP ≤ 2,5 s, CLS ≤ 0,1, INP ≤ 200 ms. Chaque page respecte un budget de poids par page, dont la valeur est à fixer (§7). Le site n'utilise pas de framework front lourd. *Tranché le 13/09/2026.* *Test :* mesure de chaque gabarit de page contre ces seuils et ce budget ; l'outillage relève de l'architecture.
-- **NFR-6. Design sobre.** Le design est professionnel et lisible, sans effets ni gabarit « agence » : c'est le contenu qui porte la page *(relecture)*.
+- **NFR-5. Performance.** Chaque page mise en ligne atteint, sur mobile, les seuils « bons » des Core Web Vitals : LCP ≤ 2,5 s, CLS ≤ 0,1, INP ≤ 200 ms. Chaque page respecte le budget de poids par page chiffré dans l'architecture (AD-8). Le site n'utilise pas de framework front lourd. *Tranché le 13/09/2026.* *Test :* mesure de chaque gabarit de page contre ces seuils et ce budget ; l'outillage relève de l'architecture.
+- **NFR-6. Design sobre.** Le design est professionnel et lisible, sans effets ni gabarit « agence » : c'est le contenu qui porte la page *(relecture)*. Le site utilise la police système, sans police web (AD-8).
 - **NFR-7. Maintenance minimale et bon outil pour le besoin.** Le build se reproduit avec des scripts simples, sans base de données, sans backend et sans dépendance lourde à suivre. Symfony et React sont exclus. Tout outil ajouté au build ou à la CI répond à un besoin que des scripts simples ne couvrent pas *(relecture de chaque ajout)*.
 - **NFR-8. Reproductibilité des schémas.** Pour une version de D2 donnée, le rendu d'un schéma est identique à l'octet près d'un build à l'autre, sur x86_64, où ce déterminisme a été testé : c'est l'architecture des runners de la forge principale, et celle des runners hébergés de GitHub, à confirmer par l'architecture. C'est ce qui rend FR-27 possible.
-- **NFR-9. Frontière public/privé.** Aucun fichier public, qu'il s'agisse d'une page du site ou d'un fichier du dépôt, ne contient : des prétentions de rémunération ou de taux journalier, un lieu de vie, des conditions de télétravail ou de mobilité, une auto-évaluation d'entretien, des proches, ou le chemin d'un fichier privé. *Test :* le garde-fou public/privé refuse ces contenus (FR-28), complété par une relecture de ces catégories.
+- **NFR-9. Frontière public/privé.** Le dépôt et son historique ne contiennent aucune information personnelle : ni prétentions de rémunération ou de taux journalier, ni lieu de vie, ni conditions de télétravail ou de mobilité, ni auto-évaluation d'entretien, ni proches, ni chemin d'un fichier privé, ni coordonnées de l'éditeur. Les pages du site ne contiennent aucune de ces informations, à une exception : les mentions légales exigées par la loi (identité, adresse, contact et immatriculation de l'éditeur ; hébergeur) apparaissent sur le site public. Ces valeurs sont injectées au build par l'environnement, jamais commitées, et le build de production échoue s'il en manque une (FR-18, AD-9). *Tranché le 13/09/2026.* *Test :* le garde-fou public/privé refuse ces contenus (FR-28), aucune valeur des mentions légales n'est présente dans le dépôt, et une relecture couvre ces catégories.
 - **NFR-10. Intégrité et voix du contenu.** Rien n'est inventé : ni cas, ni chiffre, ni client, ni technologie, ni date absents des sources ou non confirmés par Arnaud. Le contenu reformule les sources le moins possible, à la première personne, sur un ton factuel envers les anciens employeurs et clients. Les faits et les chiffres sont les mêmes en FR et en EN. Aucun code propriétaire d'un client n'est publié : seulement du pseudo-code et des extraits illustratifs *(relecture)*.
-- **NFR-11. Sécurité de la CI.** La clé d'API de l'agent de parité est un secret de la CI de la forge principale. Elle n'est jamais exposée aux PR venant de forks, ni affichée dans les journaux de CI. Sa présence éventuelle sur le dépôt public dépend de la tâche d'architecture sur l'agent (§7).
+- **NFR-11. Sécurité de la CI.** La clé d'API de l'agent de parité est un secret de la CI de la forge principale. Elle n'est jamais exposée aux PR venant de forks, ni affichée dans les journaux de CI. Elle n'est pas placée sur le dépôt public, où l'agent ne tourne pas (AD-16).
 - **NFR-12. Zéro JavaScript en v1.** Les pages mises en ligne ne chargent aucun JavaScript, dans la mesure du possible. Toute exception est justifiée par écrit, avec le besoin qu'elle couvre et l'absence d'alternative sans JavaScript. *Tranché le 13/09/2026.* *Test :* les fichiers de la mise en ligne ne contiennent ni fichier JavaScript ni script en ligne, hors exceptions justifiées.
 
 ## 6. Non-objectifs de la v1
@@ -489,7 +500,7 @@ La première mise en ligne est le socle ; les cas 03, 04 et 06 sont ensuite mis 
 
 ## 7. Contraintes transmises à l'architecture
 
-Le PRD rappelle les décisions déjà prises et nomme, sans les trancher, les points restant à décider.
+Le PRD rappelle les décisions déjà prises et nomme les points confiés à l'architecture. Ces points sont désormais traités dans `ARCHITECTURE-SPINE.md` (recommandations validées par Arnaud le 13/09/2026), notamment le budget de poids et la police système (AD-8), les mentions légales (AD-9), la mise en ligne par tag (AD-14), la journalisation (AD-15) et l'agent de parité (AD-16). La liste ci-dessous reste la trace de ce qui a été confié.
 
 - **Décisions déjà prises (brief, addendum et décisions du 13/09/2026).**
   - Le site est généré par Hugo. La chaîne de build va de D2 aux SVG par langue (commités), puis au build Hugo, aux fichiers statiques et à l'image nginx.
@@ -537,7 +548,7 @@ Le PRD rappelle les décisions déjà prises et nomme, sans les trancher, les po
 
 ### 8.2 v1.1
 
-Les entrées ne donnent aucun contenu à la v1.1. Le brief annonce « v1 puis v1.1 » sans rien y placer, et la seule mention de la v1.1 est une exclusion : la page d'offre TPE/PME. La mise en ligne progressive des cas 03, 04 et 06 fait partie de la v1 (FR-32). Ce PRD n'invente pas le contenu de la v1.1 (question 16).
+Les entrées ne donnent aucun contenu à la v1.1. Le brief annonce « v1 puis v1.1 » sans rien y placer, et la seule mention de la v1.1 est une exclusion : la page d'offre TPE/PME. La mise en ligne progressive des cas 03, 04 et 06 fait partie de la v1 (FR-32). Ce PRD n'invente pas le contenu de la v1.1 (question 13).
 
 ### 8.3 Hors v1 et hors v1.1
 
@@ -556,7 +567,7 @@ Les entrées ne donnent aucun contenu à la v1.1. Le brief annonce « v1 puis v1
 
 ## 9. Séquencement et cas pilote
 
-- **Cas pilote : état au 13/09/2026.** Le cas 02 (« Chiliz, source de vérité ») est rédigé en FR et en EN, conforme à `docs/format-cas.md`, sans marqueur TODO, et corrigé à la relecture. Sa rubrique « La solution facile, et pourquoi je ne l'ai pas prise » a été retirée, faute de source, et le format a gagné la règle correspondante : une rubrique absente de la source est omise. Ses identifiants sont passés en anglais, et sa stack s'appuie sur `data/stack.yaml`. À la date du PRD, son fichier reste marqué `draft: true` ; il passe à `draft: false` selon la règle du format. Il a été choisi parce qu'il fait jouer le plus de mécanismes : page Chiliz, cas mis en avant, matériel vivant, ligne de contexte EN, parité linguistique.
+- **Cas pilote : état au 13/09/2026.** Le cas 02 (« Chiliz, source de vérité ») est rédigé en FR et en EN, conforme à `docs/format-cas.md`, sans marqueur TODO, et corrigé à la relecture. Ses deux fichiers sont placés dans `content/cases/chiliz/`. Sa rubrique « La solution facile, et pourquoi je ne l'ai pas prise » a été retirée, faute de source, et le format a gagné la règle correspondante : une rubrique absente de la source est omise. Ses identifiants sont passés en anglais, et sa stack s'appuie sur `data/stack.yaml`. À la date du PRD, son fichier reste marqué `draft: true` ; il passe à `draft: false` selon la règle du format. Il a été choisi parce qu'il fait jouer le plus de mécanismes : page Chiliz, cas mis en avant, matériel vivant, ligne de contexte EN, parité linguistique.
 - **Validation de l'architecture sur le cas pilote.** L'architecture est validée sur le cas pilote avant la rédaction des dix autres fichiers de cas (les cinq autres cas, en deux langues). Les premières stories doivent pouvoir être démontrées avec ce seul cas, sur le rendu de travail : FR-2 (lien vers une section), FR-5 à FR-9 (dont la page Chiliz avec la seule section du cas 02), FR-12, FR-20 à FR-23 et FR-26. Le format peut encore être ajusté à l'issue de cette validation.
 - **Stories.** Elles sont courtes et livrées une par une. Avant chaque story, l'agent reformule ce qu'il a compris et pose ses questions (`AGENTS.md`).
 - **Mise en ligne (FR-32).** Le socle d'abord, puis les cas 03, 04 et 06 un par un. Le socle attend que les cas 01 et 05 ne soient plus des brouillons, donc la réponse à la question 2 pour ces deux cas.
@@ -568,7 +579,7 @@ Les entrées ne donnent aucun contenu à la v1.1. Le brief annonce « v1 puis v1
 ## 10. Indicateurs de succès
 
 **Indicateurs de la thèse** (le site prouve-t-il le jugement ?)
-- **SM-1. Test des trente secondes.** Après trente secondes sur l'accueil, un CTO ou un recruteur peut dire ce qu'Arnaud fait bien. Mesure qualitative, dont la méthode dépend de la question 17. Valide FR-1 et FR-2.
+- **SM-1. Test des trente secondes.** Après trente secondes sur l'accueil, un CTO ou un recruteur peut dire ce qu'Arnaud fait bien. Mesure qualitative, dont la méthode dépend de la question 14. Valide FR-1 et FR-2.
 - **SM-2. Effet recherché.** Des prises de contact et des entretiens où le site ou un cas est cité. [ASSUMPTION : mesure qualitative, sans analytics avancés en v1, reprise du brief ; les mentions sont relevées à la main, sans objectif chiffré.]
 
 **Contrôles de conformité**
@@ -593,14 +604,26 @@ Les entrées ne donnent aucun contenu à la v1.1. Le brief annonce « v1 puis v1
 | 13/09/2026 | Titre du site et pitch (question du brief) | Titre FR et EN retenus ; pitch de trois phrases sous le titre ; ancienneté : plus de dix-huit ans | FR-1, §1 |
 | 13/09/2026 | Racine du domaine (ex-question 11) | Français à la racine, anglais sous `/en/` ; pas de redirection selon la langue du navigateur ; sélecteur de langue visible ; `hreflang` dans les deux langues | FR-21, §7 |
 | 13/09/2026 | CI, PR et point de contrôle non contournable (ex-question 18) | Forge principale Gitea sur un homelab distinct du serveur de production (runners x86_64) : dépôt principal, PR, contrôles, build de l'image et déploiement. GitHub en miroir public en lecture seule, avec uniquement des contrôles, visibles publiquement, sans build ni déploiement. Garde-fou côté serveur (pre-receive Gitea) en plus du hook local. Corrigé le même jour (la première version plaçait toute la CI sur Gitea, sans contrôle sur GitHub) | FR-24, FR-28, NFR-2, NFR-8, NFR-11, §7 |
+| 13/09/2026 | Mentions légales et frontière public/privé (reformulation de NFR-9) | Aucune information personnelle dans le dépôt ni son historique ; les mentions légales exigées par la loi apparaissent sur le site public, injectées au build par l'environnement, jamais commitées ; le build de production échoue s'il en manque une | NFR-9, FR-18 |
+| 13/09/2026 | Contenu des mentions légales (ex-question 12) | Éditeur : identité, adresse de l'activité déclarée, contact, numéro d'immatriculation ; directeur de la publication : l'éditeur lui-même ; hébergeur : raison sociale, adresse et contact, repris de sa page légale officielle ; pas de numéro de TVA intracommunautaire. Valeurs injectées au build, jamais commitées (AD-9) | FR-18 |
+| 13/09/2026 | Journaux du serveur dans la politique de confidentialité (ex-question 13) | Aucune IP journalisée sur toute la chaîne, reverse proxy compris : journal d'accès minimal sans IP, user-agent ni referer, journal d'erreurs au niveau `crit` ; la politique dit que l'éditeur ne collecte aucune donnée personnelle et renvoie à celle de l'hébergeur (AD-15) | FR-19 |
+| 13/09/2026 | Langue du README-cas (ex-question 14) | Anglais | FR-30 |
+| 13/09/2026 | Libellés anglais des encarts et des cadres (question 10, numéro conservé) | Libellés proposés par l'architecture et validés par Arnaud : *Engagement context* (« Contexte mission »), *At a glance* (« En bref ») ; cadres *Employee*, *Freelance*, *IT consultancy*, *Ton Pote le Geek* | FR-6, FR-7 |
+| 13/09/2026 | Mesure des « trois lignes » de l'encart « En bref » (question 11, numéro conservé) | 3 phrases maximum et 400 caractères maximum par langue, vérifiables par script | FR-7, §3 |
+| 13/09/2026 | Adresses des pages simples et des cas | FR : `/a-propos/`, `/contact/`, `/mentions-legales/`, `/confidentialite/`, cas sous `/cas/` ; EN : `/en/about/`, `/en/contact/`, `/en/legal-notice/`, `/en/privacy/`, cas sous `/en/cases/` | §4.2, FR-16 à FR-19 |
+| 13/09/2026 | Décisions d'architecture citées en référence | Budget de poids chiffré et police système (AD-8), mise en ligne par tag (AD-14), agent de parité sur un modèle Sonnet, sur la forge principale seulement (AD-16), contrôle empêchant la mise en ligne de la page Chiliz sans le cas 02 (C15) | NFR-5, NFR-6, NFR-11, FR-9, FR-24, FR-32 |
 | 13/09/2026 | Exposition publique de la forge principale | Écartée : le dépôt Gitea reste privé et n'est jamais exposé publiquement, faute de disponibilité garantie du homelab et pour limiter la surface exposée. Le dépôt public reste le miroir GitHub | §3, §6, §7 |
 | 13/09/2026 | Accessibilité et performance (ex-question 17) | Zéro JavaScript en v1 dans la mesure du possible, exceptions justifiées ; WCAG 2.2 AA ; Core Web Vitals « bons » sur mobile (LCP ≤ 2,5 s, CLS ≤ 0,1, INP ≤ 200 ms) et budget de poids par page ; outillage laissé à l'architecture | NFR-4, NFR-5, NFR-12, SM-8, §7 |
 | 13/09/2026 | Affichage d'un élément « prévu » (ex-question 5) | Invisible en production tant qu'il est « prévu », visible dans le rendu de travail ; le texte d'un cas se lit sans son matériel vivant | FR-12, FR-26 |
 | 13/09/2026 | Critère de mise en ligne (ex-question 21) | Socle d'abord (accueil, à propos, contact, pages légales, cas 01, 02 et 05), puis cas 03, 04 et 06 un par un ; page Chiliz correcte avec la seule section du cas 02 | FR-9, FR-32, §9 |
 
+Les mentions « ex-question N » renvoient à la numérotation des versions antérieures de la liste, avant son gel ; « numéro conservé » renvoie à la numérotation figée du §11.2.
+
 ### 11.2 Questions ouvertes
 
 Chaque question indique les exigences qu'elle touche et ce qu'elle bloque. Aucune n'est tranchée par ce PRD.
+
+La numérotation de 1 à 14 est figée, car l'architecture y renvoie. Une question tranchée garde son numéro : elle reste à sa place, barrée, avec la mention « tranchée le JJ/MM/AAAA, voir §11.1 ». Les autres questions ne sont jamais décalées.
 
 **Reprises du brief**
 
@@ -616,14 +639,11 @@ Chaque question indique les exigences qu'elle touche et ce qu'elle bloque. Aucun
 7. **Informations affichées pour un cas mis en avant.** Au-delà du titre du cas, l'accueil affiche-t-il l'encart « En bref », la stack, ou autre chose ? *Impact :* FR-2. *Bloque :* la story de l'accueil.
 8. **Emplacement de la mention de l'activité parallèle.** Le brief dit « accueil et/ou à propos ». *Impact :* FR-4. *Bloque :* les stories de l'accueil et de la page « À propos ».
 9. **Titre et introduction de la page Chiliz.** Les sources ne donnent ni l'un ni l'autre. La page a-t-elle un titre seul, ou aussi une introduction ? *Impact :* FR-9 et NFR-10. *Bloque :* la story de la page Chiliz.
-10. **Libellés anglais des encarts et des cadres.** Les entrées ne donnent pas de libellé EN pour « Contexte mission », « En bref » et les quatre cadres. *Impact :* FR-6 et FR-7. *Bloque :* la story des encarts, en EN.
-11. **Mesure des « trois lignes » de l'encart « En bref ».** Lignes affichées, phrases, ou nombre de caractères ? *Impact :* FR-7. *Bloque :* la vérification de l'encart dans les stories de cas.
-12. **Contenu des mentions légales.** Quelles informations sur l'éditeur et l'hébergeur y figurent, compatibles avec NFR-9 alors que la page est versionnée dans le dépôt public ? *Impact :* FR-18. *Bloque :* la story des pages légales, donc le socle.
-13. **Journaux du serveur dans la politique de confidentialité.** La politique mentionne-t-elle les journaux d'accès de nginx et leur durée de conservation ? *Impact :* FR-19. *Bloque :* la story des pages légales, donc le socle.
-14. **Langue du README-cas.** Français, anglais, ou les deux ? *Impact :* FR-30 et UJ-3. *Bloque :* la story du README.
-15. **Étape UX.** La chaîne prévue (brief, PRD, architecture, stories) ne comporte pas d'étape UX. Qui tranche la mise en page sobre (NFR-6), la navigation (question 6) et le contenu des cas mis en avant (question 7) : une étape UX légère, l'architecture, ou Arnaud avant chaque story ? *Bloque :* l'organisation de la suite de la chaîne.
-16. **Contenu de la v1.1.** Les entrées n'en donnent aucun. Les éléments renvoyés à « plus tard » (façade vidéo, taxonomie par technologie, matériel vivant non livré en v1) ne sont affectés à aucune version. *Impact :* §8.2. *Bloque :* rien en v1.
-17. **Méthode du test des trente secondes.** Qui passe le test, et comment ? *Impact :* SM-1. *Bloque :* rien avant la mise en ligne.
+10. ~~**Libellés anglais des encarts et des cadres.**~~ Tranchée le 13/09/2026, voir §11.1.
+11. ~~**Mesure des « trois lignes » de l'encart « En bref ».**~~ Tranchée le 13/09/2026, voir §11.1.
+12. **Étape UX.** La chaîne prévue (brief, PRD, architecture, stories) ne comporte pas d'étape UX. Qui tranche la mise en page sobre (NFR-6), la navigation (question 6) et le contenu des cas mis en avant (question 7) : une étape UX légère, l'architecture, ou Arnaud avant chaque story ? *Bloque :* l'organisation de la suite de la chaîne.
+13. **Contenu de la v1.1.** Les entrées n'en donnent aucun. Les éléments renvoyés à « plus tard » (façade vidéo, taxonomie par technologie, matériel vivant non livré en v1) ne sont affectés à aucune version. *Impact :* §8.2. *Bloque :* rien en v1.
+14. **Méthode du test des trente secondes.** Qui passe le test, et comment ? *Impact :* SM-1. *Bloque :* rien avant la mise en ligne.
 
 **Contenus à fournir par Arnaud** (des entrées manquantes, pas des décisions)
 

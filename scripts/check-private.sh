@@ -10,7 +10,7 @@
 # Sans ce fichier, seuls les chemins interdits sont vérifiés.
 set -euo pipefail
 
-forbidden_paths='^docs/(private|context)/'
+forbidden_paths='^docs/(private|context)/|(^|/)\.env$'
 patterns_file="${PRIVATE_PATTERNS_FILE:-$(git rev-parse --show-toplevel 2>/dev/null || true)/docs/private/forbidden-patterns.txt}"
 status=0
 

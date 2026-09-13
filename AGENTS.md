@@ -48,7 +48,7 @@ These supersede the original brief. The validated project brief is in `_bmad-out
 - **Repository:** public on GitHub, including BMAD planning artifacts, because showing the framing process is part of the point. No private files, no raw cases.
 - **Tooling:** the right tool for the job. Plain scripts rather than heavy tooling in CI or build images; no Symfony or React for a static site.
 
-Pilot case: `content/cases/case-02-chiliz.{fr,en}.md` follows `docs/format-cas.md` and is the architecture's test fixture. The stack vocabulary lives in `data/stack.yaml`.
+Pilot case: `content/cases/chiliz/case-02-chiliz.{fr,en}.md` follows `docs/format-cas.md` (v0.3: grouped cases live in their group's folder) and is the architecture's test fixture. The stack vocabulary lives in `data/stack.yaml`. The architecture draft is in `_bmad-output/planning-artifacts/architecture/`.
 
 Unchanged constraints: static site, Markdown content editable without touching code, no database, no backend to maintain, sober and readable design, simplicity over everything. Out of scope for v1: blog, client area, contact form, advanced analytics.
 

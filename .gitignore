@@ -1,6 +1,9 @@
 # Sources privées (cas bruts, noyau narratif, mémoire des réunions) : jamais versionnées
 docs/private/
 
+# Valeurs d'environnement (mentions légales, secrets) : seul .env.example est versionné
+.env
+
 # Worktrees temporaires des agents
 .claude/worktrees/
 

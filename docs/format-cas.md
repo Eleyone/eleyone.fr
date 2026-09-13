@@ -1,40 +1,44 @@
 ---
 title: "Format de sortie des cas clients"
-version: 0.2
+version: 0.3
 status: draft
 updated: 2026-09-13
 ---
 
 # Format de sortie des cas clients
 
-Contrat entre la rédaction des cas et le site Hugo. Un agent ou une personne qui rédige un cas produit exactement ce format. L'emplacement dans le dépôt sera confirmé par l'architecture ; les métadonnées et la structure du texte sont stables.
+Contrat entre la rédaction des cas et le site Hugo. Un agent ou une personne qui rédige un cas produit exactement ce format. L'emplacement des fichiers est fixé par l'architecture (AD-4) ; les métadonnées et la structure du texte sont stables.
 
 ## Principe : un fichier par cas et par langue
 
-On écrit **un cas**, pas une page. Le site assemble les pages : les cas 02, 03 et 04 portent `group: chiliz` et le gabarit de la page Chiliz les réunit dans l'ordre de `order`. La rédaction ne dépend donc pas de la mise en page.
+On écrit **un cas**, pas une page. Le site assemble les pages : un cas qui appartient à un groupe vit dans le dossier de ce groupe, et la page du groupe (la page Chiliz) réunit ses cas dans l'ordre de `order`. La rédaction ne dépend donc pas de la mise en page.
 
 ```
-content/cases/case-01-<nom-court>.fr.md
+content/cases/case-01-<nom-court>.fr.md          ← cas sans groupe
 content/cases/case-01-<nom-court>.en.md
-content/cases/case-02-chiliz.fr.md
-content/cases/case-02-chiliz.en.md
+content/cases/chiliz/case-02-chiliz.fr.md        ← cas groupé : dans le dossier du groupe
+content/cases/chiliz/case-02-chiliz.en.md
+content/cases/chiliz/_index.fr.md                ← page du groupe : créée avec le site, pas par la rédaction des cas
+content/cases/chiliz/_index.en.md
 …
 ```
 
 - **Noms de fichiers en anglais**, en minuscules et en kebab-case : `case-<NN>-<nom-court>.<langue>.md`. Le nom de fichier est un identifiant ; l'URL publique vient du `slug` de chaque langue.
+- **Cas groupé** : le fichier est dans `content/cases/<group>/`, et la clé `group` est obligatoire et **égale au nom du dossier**. Un contrôle bloquant le vérifie.
 - Le suffixe `.fr.md` / `.en.md` est la convention multilingue native de Hugo. Les deux fichiers d'un même cas partagent le même `translationKey`.
+- **URL** : un cas seul est publié à `/cas/<slug>/` et `/en/cases/<slug>/`. Un cas groupé est une section de la page du groupe, avec pour ancre son `translationKey` (par exemple `/cas/chiliz/#case-02`).
 
 ## Métadonnées (front matter YAML)
 
-Les **clés** et les **identifiants** (`translationKey`, `setup`, `live_material[].id`, `type`, `status`) sont en anglais et identiques dans les deux langues. Les **valeurs** textuelles sont dans la langue du fichier, sauf `stack`, qui ne se traduit pas.
+Les **clés** et les **identifiants** (`translationKey`, `group`, `setup`, `live_material[].id`, `type`, `status`) sont en anglais et identiques dans les deux langues. Les **valeurs** textuelles sont dans la langue du fichier, sauf `stack`, qui ne se traduit pas.
 
 ```yaml
 ---
 title: "Titre du cas"                 # ≤ 70 caractères, dans la langue du fichier
-translationKey: "case-02"             # identique FR/EN
+translationKey: "case-02"             # identique FR/EN ; sert aussi d'ancre dans une page de groupe
 number: "02"
 slug: "chiliz-source-de-verite"       # dans la langue du fichier : c'est l'URL
-group: "chiliz"                       # facultatif : page qui regroupe plusieurs cas
+group: "chiliz"                       # cas groupé seulement : égal au nom du dossier
 order: 1                              # position dans le groupe, ou sur la liste des cas
 featured: true                        # mis en avant sur l'accueil (cas 01, 02, 05)
 draft: true                           # passe à false quand plus aucun [TODO] ne reste et que le cas est relu
@@ -47,7 +51,7 @@ context:                              # encart « Contexte mission »
   stack: ["PHP", "Symfony", "Twig"]   # vocabulaire contrôlé, identique FR/EN
 
 summary: >-                           # encart « En bref » : l'enjeu → le résultat
-  Trois lignes au plus, lisibles par un dirigeant. Pas de jargon.
+  3 phrases et 400 caractères au plus, par langue. Lisible par un dirigeant, sans jargon.
 
 live_material:                        # matériel vivant prévu (vide si aucun)
   - id: "diagram-reconciliation"      # anglais, kebab-case, identique FR/EN
@@ -113,6 +117,7 @@ title: "[TODO: titre]"
 translationKey: "case-NN"
 number: "NN"
 slug: "[TODO: slug]"
+group: ""                             # à retirer pour un cas sans groupe
 order: 0
 featured: false
 draft: true
@@ -123,7 +128,7 @@ context:
   period: "[TODO: période]"
   stack: []
 summary: >-
-  [TODO: l'enjeu → le résultat, 3 lignes]
+  [TODO: l'enjeu → le résultat, 3 phrases et 400 caractères au plus]
 live_material: []
 ---
 
