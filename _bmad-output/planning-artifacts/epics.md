@@ -13,7 +13,9 @@ inputDocuments:
   - content/cases/chiliz/case-02-chiliz.en.md
   - scripts/check-private.sh
   - .githooks/pre-commit
-status: draft
+  - _bmad-output/planning-artifacts/implementation-readiness.md
+  - _bmad-output/planning-artifacts/sprint-change-proposal-2026-09-13.md
+status: validated
 created: 2026-09-13
 updated: 2026-09-13
 ---
@@ -22,15 +24,17 @@ updated: 2026-09-13
 
 ## Présentation
 
-Ce document découpe en epics et en stories le PRD, l'architecture et l'UX d'eleyone.fr. Il ne fixe rien de nouveau. Pour le **comment**, l'ordre de précédence est : l'architecture (`ARCHITECTURE-SPINE.md`, AD-1 à AD-23, contrôles C1 à C24), puis le PRD (FR-1 à FR-39, NFR-1 à NFR-13), puis `DESIGN.md` et `EXPERIENCE.md` (validés par Arnaud le 13/09/2026), puis `docs/format-cas.md` v0.4 et le brief. Aucune fonctionnalité n'est ajoutée. La v1.1 ne contient que ce que le PRD y place (génération des CV PDF, §8.2) et n'a aucune story ici.
+Ce document découpe en epics et en stories le PRD, l'architecture et l'UX d'eleyone.fr. Il ne fixe rien de nouveau. Pour le **comment**, l'ordre de précédence est : l'architecture (`ARCHITECTURE-SPINE.md`, AD-1 à AD-24, contrôles C1 à C24), puis le PRD (FR-1 à FR-39, NFR-1 à NFR-13), puis `DESIGN.md` et `EXPERIENCE.md` (validés par Arnaud le 13/09/2026), puis `docs/format-cas.md` v0.4 et le brief. Aucune fonctionnalité n'est ajoutée. La v1.1 ne contient que ce que le PRD y place (génération des CV PDF, §8.2) et n'a aucune story ici.
 
 Réalignement complet du 13/09/2026, sans interlocuteur (run headless). Là où l'atelier aurait posé une question, la réponse vient des documents. Ce qu'ils ne tranchent pas n'est pas décidé ici :
 
-- une story n'est **bloquée** que par une question du PRD **encore ouverte** : Q1 (matériel vivant en v1), Q2 (période et cadre des cas), Q3 (contenu des vidéos), Q4 (signature unique), Q5 (stack du cas 03), Q9 (titre et introduction de la page Chiliz). Q13 (v1.1) ne bloque rien en v1 ;
+- une story n'est **bloquée** que par une question du PRD **encore ouverte** : Q1 (matériel vivant en v1), Q2 (période et cadre des cas), Q3 (contenu des vidéos), Q4 (signature unique), Q5 (stack du cas 03). Q13 (v1.1) ne bloque rien en v1 ;
 - un contenu qu'Arnaud doit fournir (PRD §11.2, « Contenus à fournir ») est noté en **prérequis de contenu**, pas en blocage ;
 - un point que les documents laissent ouvert ou contradictoire figure dans les questions de la story et dans « Tensions restantes ».
 
-Les questions Q6, Q7, Q8, Q10, Q11, Q12, Q14, Q15, Q16 et Q17 sont tranchées (PRD §11.1).
+Les questions Q6 à Q12 et Q14 à Q17 sont tranchées (PRD §11.1), Q9 comprise (titre « Chiliz », sans introduction : décision D-4).
+
+Mise à jour du 13/09/2026 (`bmad-correct-course`) : les décisions D-1 à D-17 et les corrections M-1 à M-18 du contrôle de préparation à l'implémentation (`implementation-readiness.md`) sont appliquées ; le détail est dans `sprint-change-proposal-2026-09-13.md`.
 
 ### Règles de conduite des stories
 
@@ -44,8 +48,9 @@ Ces règles s'appliquent à **chaque** story.
 6. **Gabarits.** Toute story qui crée ou modifie un gabarit s'appuie sur `DESIGN.md` et `EXPERIENCE.md`, et passe la check-list manuelle d'AD-17 sur les gabarits touchés, **en mode clair et en mode sombre** : clavier et focus visible, reflow à 320 px et zoom à 200 %, contraste, cibles de 24 px, ordre de lecture, alternatives des images. Les tranches du walking skeleton (Epic 2) livrent une structure HTML sans mise en page (architecture, « Reporté ») ; la mise en page arrive à partir de l'Epic 5.
 7. **Contrôles.** Dès que `scripts/check.sh` existe (story 3.2), chaque story se termine avec `scripts/check.sh` au vert.
 8. **Libellés.** Les libellés d'interface viennent d'`EXPERIENCE.md` (« Voice and Tone »). Un libellé encore « à valider par Arnaud » est confirmé par lui avant commit.
-9. **Flux de travail.** Chaque story se développe sur une branche `feat/*` ou `fix/*` issue de `dev`, passe par `create-pull-request`, `llm-review` et `verify-and-merge-pr` (Epic 0), et se fusionne en squash vers `dev`. Aucun merge commit ; répétition sur un tag `vX.Y.Z-rc.N` posé sur `dev`, puis publication vers `main` en fast-forward par le skill `release`. Les jetons et identifiants se définissent dans `.env`, jamais commité (story 0.1).
+9. **Flux de travail.** Chaque story se développe sur une branche `feat/*` ou `fix/*` issue de `dev`, passe par `create-pull-request`, `llm-review` et `verify-and-merge-pr` (Epic 0), ou par la règle d'amorçage (règle 11) tant que ces skills n'existent pas, et se fusionne en squash vers `dev`. Aucun merge commit ; répétition sur un tag `vX.Y.Z-rc.N` posé sur `dev`, puis publication vers `main` en fast-forward par le skill `release`. Un correctif de production part de `main` sur une branche `hotfix/*` (skill `hotfix`). Les jetons et identifiants se définissent dans `.env`, jamais commité (story 0.1).
 10. **Opérations manuelles.** Les stories marquées « Opération manuelle (Arnaud) » touchent le serveur Gitea et son image Docker, le serveur de production, Nginx Proxy Manager, le DNS, les secrets, la photo originale ou les CV PDF. La procédure vient de l'architecture ; Arnaud l'exécute, le développeur prépare les fichiers versionnés et la liste de vérification.
+11. **Amorçage des verrous** (AD-24, décision D-1). Pour les premières PR, avant la CI et les skills de l'Epic 0 : le verrou CI vaut `absent`, admis seulement tant que `.gitea/workflows/checks.yaml` n'existe pas sur la branche de base, et il est remplacé par `scripts/check-private.sh history`, puis aussi `scripts/check.sh` dès la story 3.2, lancés en local sur le SHA de tête et notés dans la PR. La planification de sprint est faite avant la story 0.1, et la PR qui ajoute `sprint-status.yaml` est la seule fusionnée sans verrou de suivi. Avant `llm-review`, la revue se fait par `agy --mode plan`, lancé à la main dans un worktree temporaire hors du dépôt, avec le rapport collé en commentaire de PR au format d'AD-24 ; Arnaud fusionne à la main.
 
 ### Lecture des stories
 
@@ -131,29 +136,30 @@ Résumé ; le texte et les conséquences testables du PRD font foi.
 
 Pas de gabarit de démarrage ; le dépôt part de la structure initiale de l'architecture.
 
-- **AD-1** : versions et sha256 de Hugo v0.166.0 et D2 v0.9.0, `CHECK_IMAGE` (`alpine:3.24` par digest) dans `tools.env` seul ; `install-tools.sh` installe `bash`, `git`, `grep` GNU, `jq`, `libxml2-utils`, `poppler-utils`.
+- **AD-1** : versions et sha256 de Hugo v0.166.0 et D2 v0.9.0, `CHECK_IMAGE` (`alpine:3.24` par digest) dans `tools.env` seul ; `install-tools.sh` installe `bash`, `git`, `grep` GNU, `jq`, `libxml2-utils`, `poppler-utils` ; avec `--local`, Hugo et D2 sur le poste, dans `.tools/`.
 - **AD-2** : langues, permaliens, slugs ; `<title>` construit par `baseof.html` seul (titre de page puis identité) ; sélecteur « English » / « Français », sans ancre.
 - **AD-3** : aucun texte de contenu dans les gabarits ; mail et LinkedIn dans le front matter de `content/contact` ; `params.source_url` vide ⇒ aucun lien ; libellés dans `i18n/`.
-- **AD-4** : cas groupés, cascade ciblée ; hook de titres (préfixe d'identifiant, descente de niveau, numéro de rubrique `NN.r` par cas, classe `rubric-heading`) ; sommaire `<details>` ; `case-url.html` ; `content/cases/_index` jamais rendu.
+- **AD-4** : cas groupés, cascade ciblée, `_index` de groupe en brouillon tant qu'aucun cas du groupe n'est publié ; hook de titres (préfixe d'identifiant, descente de niveau, numéro de rubrique `NN.r` par cas, classe `rubric-heading`) ; sommaire `<details>` ; `case-url.html` ; `content/cases/_index` jamais rendu.
 - **AD-5** : `build.sh work|production` ; `noindex` et marqueur « Brouillon » en rendu de travail seulement.
 - **AD-6** : shortcode `live-material` ; résolution par type ; schéma large sans `style` en ligne.
 - **AD-7** : pipeline D2, thème clair et sombre venant de `DESIGN.md`, **spike D2 à double thème avant toute story du pipeline**, avec repli.
 - **AD-8** : zéro script exécutable (exception AD-20), une CSS, mode sombre en CSS pur, budget chiffré.
-- **AD-9** : sept `HUGO_LEGAL_*` ; lecture refusée hors pages `legal-notice` ; chargeur `env.sh` (`ENV_MODE=release` + `LEGAL_ENV_FILE`) ; secret BuildKit ; C22 sur la sortie.
+- **AD-9** : sept `HUGO_LEGAL_*` ; lecture refusée hors pages `legal-notice` ; chargeur `env.sh` (`ENV_MODE=release` + `LEGAL_ENV_FILE`), qui ne transmet à Hugo que les `HUGO_LEGAL_*` ; secret BuildKit ; C22 sur la sortie.
 - **AD-10** : `check.sh` unique ; manifeste (rôles `home`, `case`, `group`, `position`, `education`, `page`) ; règles de forme tolérantes aux `[TODO` des brouillons.
 - **AD-11** : workflows minces ; runners Gitea en **mode hôte** pour les jobs Docker ; tags `vX.Y.Z` et `vX.Y.Z-rc.N`.
-- **AD-12** : garde-fou en trois couches ; `pre-receive` fermé sans liste des motifs ; chemins interdits `docs/private/`, `docs/context/`, `.env`, `assets/cv/*.pdf` (ce dernier tant que le hook ne lit pas les PDF) ; miroir après hook et audit.
+- **AD-12** : garde-fou en trois couches ; `pre-receive` fermé sans liste des motifs ; chemins interdits `docs/private/`, `docs/context/`, `.env`, `assets/cv/*.pdf` (ce dernier tant que le hook ne lit pas les PDF) ; miroir après hook et audit ; ruleset GitHub qui ne laisse écrire que l'identité du miroir.
 - **AD-13** : image multi-étapes, nginx (CSP sur HTML seulement, cache long pour `css`, `svg`, `webp`, `no-cache` pour HTML et PDF, 404 par langue).
 - **AD-14** : livraison `docker save | ssh` vers `deploy-site` (`deploy`, `rollback`, `status`, `rehearse …`).
 - **AD-15** : journaux sans IP dans le conteneur et dans Nginx Proxy Manager.
 - **AD-16** : agent de parité en script HTTP, Gitea seulement.
 - **AD-17** : contrôles automatiques, check-list manuelle par gabarit en clair et en sombre, critère 390 × 844, mesures consignées dans `docs/measures/`.
-- **AD-18** : `content/career/position-<id>` et `content/education/education-<id>` ; clé `position` dans le cas ; ancres `#position-<id>` et « Retour au parcours » ; `position-ton-pote-le-geek` en `track: parallel`.
+- **AD-18** : `content/career/position-<id>` et `content/education/education-<id>` ; clé `position` dans le cas ; ancres `#position-<id>` et « Retour au parcours » ; `position-ton-pote-le-geek` en `track: parallel` ; identifiants de poste figés (`position-<société>`, suivi de `-<année de début>` si la société revient).
 - **AD-19** : identité dans `content/_index` ; `scripts/photo/prepare.sh` (Hugo, recadrage 4:5, 640 × 800, ancrage manuel) ; variantes accueil et « À propos » ≤ 40 Ko.
-- **AD-20** : JSON-LD `Person`, un bloc par accueil, champs de FR-35 seulement.
+- **AD-20** : JSON-LD `Person`, un bloc par accueil, champs de FR-35 seulement, sources fixées (`job_title` de `content/_index`, `linkedin` et `github` de `content/contact`, lien vide omis).
 - **AD-21** : `assets/cv/cv-{fr,en}.pdf`, liens conditionnels « ensemble ou rien », C21 en pre-commit, pre-receive (après `poppler-utils` sur Gitea) et `release`.
-- **AD-22** : canal de répétition `site-rehearsal` sur `127.0.0.1:18080`, accès par tunnel SSH, tags `-rc.N`, jalon « répétition générale » avant `v1.0.0`.
+- **AD-22** : canal de répétition `site-rehearsal` sur `127.0.0.1:18080`, accès par tunnel SSH, tags `-rc.N`, première répétition tôt sur `v0.1.0-rc.N`, jalon « répétition générale » avant `v1.0.0` ; tag `-rc` de même arbre exigé pour `v1.0.0` seulement.
 - **AD-23** : typographie française appliquée au build par `_partials/typo-fr.html`, pages FR seulement.
+- **AD-24** : flux de développement : `feat/*` et `fix/*` depuis `dev` en squash, `dev` → `main` en fast-forward, `hotfix/*` depuis `main` ; protections Gitea ; outillage en trois niveaux (neuf skills) ; revue par un LLM d'un autre fournisseur dans un worktree hors du dépôt, rapport `llm-review sha=… base=… model=… verdict=…` ; verrous de fusion, règle d'amorçage, exception documentaire sur tout `_bmad-output/` ; prérequis du poste (`jq`, `agy`, Docker dans WSL, Hugo et D2 locaux).
 - **Contrôles C1 à C24** : chacun est rattaché à une story.
 - **Procédures** : hook pre-receive (7 étapes, dont les PDF et l'image Gitea dérivée) ; premier déploiement (9 étapes, dont la répétition générale et la mesure).
 - **Walking skeleton** : WS-0 à WS-5, puis, hors squelette : parcours et formation, photo et JSON-LD, CV PDF, typographie, spike D2 puis pipeline, pages simples et légales, `release`, répétition générale, premier déploiement, agent de parité.
@@ -224,15 +230,15 @@ Tirées de `DESIGN.md` et `EXPERIENCE.md` (validés le 13/09/2026). Aucune valeu
 - FR-36 : 5.3, 10.3
 - FR-37 : 5.2, 10.1, 11.11
 - FR-38 : 7.1 à 7.4, 9.4
-- FR-39 : 11.4, 11.5, 11.8, 11.9
+- FR-39 : 11.4, 11.5, 11.8, 11.9, 11.10
 
 ## Liste des epics
 
-L'ordre suit le walking skeleton, précédé de l'outillage de développement (Epic 0, décidé par Arnaud le 13/09/2026) : WS-0, puis WS-1 à WS-5, puis l'ordre « hors du squelette » de l'architecture. Deux ajustements, pour qu'aucune story ne dépende d'une story suivante : le JSON-LD vient après la page Contact, qui porte le lien LinkedIn ; les stories d'intégration du contenu du socle forment un epic placé avant la mise en ligne.
+L'ordre suit le walking skeleton, précédé de l'outillage de développement (Epic 0, décidé par Arnaud le 13/09/2026) : WS-0, puis WS-1 à WS-5, puis l'ordre « hors du squelette » de l'architecture. Deux ajustements, pour qu'aucune story ne dépende d'une story suivante : le JSON-LD vient après la page Contact, qui porte le lien LinkedIn ; les stories d'intégration du contenu du socle forment un epic placé avant la mise en ligne. Troisième ajustement (décision D-5) : les stories 11.1 à 11.9 (chaîne de mise en ligne, skills `release` et `rehearse-release`, première répétition) sont placées avant l'Epic 10, dont elles ne dépendent pas, pour répéter tôt ; les stories 11.10 à 11.13 (test des trente secondes, socle en ligne, `hotfix`, retour arrière) restent après lui. Les numéros des stories sont conservés.
 
 ### Epic 0 : Outillage de développement
 Arnaud et ses agents travaillent sur un flux de branches linéaire sans merge commit, avec revue LLM d'un autre fournisseur, verrous de fusion et garde-fou avant tout envoi. Jeton Gitea dans `.env` et `.env.example`, protections des branches, skills `check-private`, `create-pull-request`, `llm-review`, `sprint-consistency`, `verify-and-merge-pr` ; les skills `publish-case`, `release`, `rehearse-release` et `hotfix` et le verrou « CI verte » sont placés après les stories dont ils dépendent.
-**FR :** FR-28, FR-30. **NFR :** NFR-7, NFR-9, NFR-11. **AD :** AD-12.
+**FR :** FR-28, FR-30. **NFR :** NFR-7, NFR-9, NFR-11. **AD :** AD-12, AD-24.
 
 ### Epic 1 : Garde-fou public/privé avant tout miroir (WS-0)
 Arnaud peut publier le dépôt sur GitHub sans qu'aucun chemin ni motif privé y arrive.
@@ -240,11 +246,11 @@ Arnaud peut publier le dépôt sur GitHub sans qu'aucun chemin ni motif privé y
 
 ### Epic 2 : Site bilingue et cas pilote sous son poste (WS-1, WS-2)
 Un lecteur passe du français à l'anglais, voit en rendu de travail le poste Chiliz avec le cas 02, et ouvre la section du cas sur la page Chiliz.
-**FR :** FR-1, FR-2, FR-5 à FR-9, FR-12, FR-15, FR-18, FR-20, FR-21, FR-25, FR-26, FR-33. **NFR :** NFR-1, NFR-7, NFR-8. **AD :** AD-1 à AD-6, AD-9, AD-18, AD-19.
+**FR :** FR-1, FR-2, FR-5 à FR-9, FR-12, FR-15, FR-18, FR-20, FR-21, FR-25, FR-26, FR-33. **NFR :** NFR-1, NFR-7, NFR-8. **AD :** AD-1 à AD-6, AD-9, AD-18, AD-19, AD-24.
 
 ### Epic 3 : Contrôles bloquants, CI des deux forges et README-cas (WS-3, WS-4)
 Arnaud reçoit un refus explicite pour tout écart ; les mêmes contrôles tournent en local, sur Gitea et publiquement sur GitHub ; le README accueille Sam.
-**FR :** FR-5 à FR-9, FR-12, FR-14, FR-15, FR-20, FR-23, FR-26, FR-28, FR-30, FR-35. **NFR :** NFR-3, NFR-4, NFR-5, NFR-7, NFR-12. **AD :** AD-10, AD-11, AD-12, AD-17, AD-20. **C :** C1, C3 à C8, C10 à C14, C16, C18, C19. Comprend aussi le verrou « CI verte » et le skill `publish-case`.
+**FR :** FR-5 à FR-9, FR-12, FR-14, FR-15, FR-20, FR-23, FR-26, FR-28, FR-30, FR-35. **NFR :** NFR-3, NFR-4, NFR-5, NFR-7, NFR-12. **AD :** AD-10, AD-11, AD-12, AD-17, AD-20, AD-24. **C :** C1, C3 à C8, C10 à C14, C16, C18, C19. Comprend aussi le verrou « CI verte » et le skill `publish-case`.
 
 ### Epic 4 : Image du site servie par nginx (WS-5)
 Le build de production est servi par un conteneur nginx avec ses en-têtes, son cache, ses 404 par langue et des journaux sans IP.
@@ -275,8 +281,8 @@ Le pitch, le parcours, la formation, la page Chiliz et les cas 01, 02 et 05 pass
 **FR :** FR-1, FR-2, FR-4, FR-9 à FR-11, FR-22, FR-25, FR-36. **NFR :** NFR-10.
 
 ### Epic 11 : Mise en ligne, répétition générale et socle
-La chaîne de mise en ligne et les skills `release`, `rehearse-release` et `hotfix` sont construits ; la chaîne est répétée sur le serveur de production, le test des trente secondes est passé, puis le socle est mis en ligne derrière un proxy sans journal d'IP.
-**FR :** FR-18, FR-19, FR-26, FR-32, FR-37, FR-39. **NFR :** NFR-2, NFR-3, NFR-5, NFR-9. **AD :** AD-9, AD-11, AD-14, AD-15, AD-17, AD-22. **C :** C15, C22.
+La chaîne de mise en ligne et les skills `release`, `rehearse-release` et `hotfix` sont construits ; la chaîne est répétée sur le serveur de production, le test des trente secondes est passé, puis le socle est mis en ligne derrière un proxy sans journal d'IP. Les stories 11.1 à 11.9 se placent avant l'Epic 10, les stories 11.10 à 11.13 après lui (D-5).
+**FR :** FR-18, FR-19, FR-26, FR-32, FR-37, FR-39. **NFR :** NFR-2, NFR-3, NFR-5, NFR-9. **AD :** AD-9, AD-11, AD-14, AD-15, AD-17, AD-22, AD-24. **C :** C15, C22.
 
 ### Epic 12 : Agent de parité consultatif
 Sur une PR de contenu, Arnaud reçoit un commentaire qui signale un écart FR/EN, sans blocage.
@@ -294,20 +300,24 @@ Arnaud et ses agents travaillent sur un flux de branches linéaire, sans merge c
 
 **Identifiants.** Tous les jetons et identifiants se définissent dans le fichier `.env` à la racine, jamais commité (déjà ignoré par git et refusé par le garde-fou). Un skill qui appelle l'API de Gitea charge `.env` sans jamais afficher de valeur ; sans variable, il échoue avec un message qui renvoie à la procédure de la story 0.1, et ne demande jamais le jeton.
 
-**Modèle de branches.** Branches de travail `feat/*` ou `fix/*` issues de `dev`, PR vers `dev` en **squash**. Publication de `dev` vers `main` en **fast-forward seulement** : `main` reste toujours un ancêtre de `dev`, et la publication échoue si `main` a divergé. Tags de répétition `vX.Y.Z-rc.N` sur `dev`, tags de mise en ligne `vX.Y.Z` sur `main`. Correctif en production par le skill `hotfix`. Aucun merge commit, aucun cherry-pick. `dev` et `main` sont protégées. Sur le miroir GitHub, la branche par défaut est `main`, `dev` est la branche de travail.
+**Modèle de branches.** Branches de travail `feat/*` ou `fix/*` issues de `dev`, PR vers `dev` en **squash**. Publication de `dev` vers `main` en **fast-forward seulement** : `main` reste toujours un ancêtre de `dev`, et la publication échoue si `main` a divergé. Tags de répétition `vX.Y.Z-rc.N` sur `dev`, tags de mise en ligne `vX.Y.Z` sur `main`. Correctif en production par le skill `hotfix`, sur une branche `hotfix/*` issue de `main` (préfixe réservé à ces branches, D-14). Aucun merge commit, aucun cherry-pick. `dev` et `main` sont protégées. Sur le miroir GitHub, la branche par défaut est `main`, `dev` est la branche de travail.
 
-**Règle de revue.** Revue LLM obligatoire avant tout merge. **Exception documentaire** : une PR qui ne touche que des documents de planification `.md` sous `_bmad-output/` n'exige qu'une CI verte. L'exception ne couvre jamais `content/**`, `AGENTS.md`, `CLAUDE.md`, `docs/procedures/**`, `.claude/**` ni `docs/format-cas.md` ; un seul fichier hors exception rétablit la revue pour toute la PR.
+**Règle de revue.** Revue LLM obligatoire avant tout merge. **Exception documentaire** : une PR dont tous les fichiers sont sous `_bmad-output/` (artefacts de cadrage et suivi de sprint, `sprint-status.yaml` compris) n'exige qu'une CI verte, ou son substitut d'amorçage (D-2). L'exception ne couvre jamais `content/**`, `AGENTS.md`, `CLAUDE.md`, `docs/procedures/**`, `.claude/**` ni `docs/format-cas.md` ; un seul fichier hors exception rétablit la revue pour toute la PR.
+
+**Règle d'amorçage** (AD-24, D-1). Les stories 0.1 à 0.7 se fusionnent avant que leurs propres skills et la CI existent : elles suivent la règle 11 des stories.
+
+**Format du rapport de revue.** Un seul, celui d'AD-24 : première ligne `llm-review sha=<SHA> base=<base> model=<modèle> verdict=<pass|block>`, suivie du texte de la revue. `llm-review` l'écrit (story 0.5), `verify-and-merge-pr` le lit (story 0.7).
 
 **Placement.** Les skills qui s'appuient sur des stories ultérieures sont placés après elles, pour qu'aucune story ne dépende d'une story suivante : le verrou « CI verte » (story 3.16) et `publish-case` (3.17) après les contrôles ; `release` (11.7), `rehearse-release` (11.8) et `hotfix` (11.12) après l'image et le déploiement.
 
-### Story 0.1 : Jeton Gitea dans `.env` et `.env.example` commité
+### Story 0.1 : Gitea token in env and env example
 
 En tant qu'Arnaud, mainteneur,
 je veux un jeton Gitea aux portées minimales, rangé dans `.env`, et un `.env.example` qui liste les variables sans valeur,
 afin que les skills appellent l'API de la forge sans qu'aucun identifiant n'entre dans le dépôt.
 
-**Couvre :** NFR-9, NFR-11, FR-18 · AD-9, AD-12
-**Dépendances :** aucune
+**Couvre :** NFR-9, NFR-11, FR-18 · AD-9, AD-12, AD-24
+**Dépendances :** planification de sprint faite (`sprint-status.yaml`, règle d'amorçage)
 **Bloquée par :** —
 **Prérequis de contenu :** —
 **Opération manuelle (Arnaud) :** **oui**, première opération de l'epic : créer dans l'interface Gitea un jeton d'accès aux portées minimales (PR, fusion, commentaires) et avec une expiration ; renseigner `GITEA_URL`, `GITEA_USER` et `GITEA_TOKEN` dans `.env` à la racine, depuis son propre terminal.
@@ -330,25 +340,28 @@ afin que les skills appellent l'API de la forge sans qu'aucun identifiant n'entr
 
 **Questions à poser avant de commencer :**
 - Nom de la procédure (`docs/procedures/gitea-token.md` est une proposition, aucun document ne le fixe) ?
-- `scripts/env.sh` (story 2.4) charge `.env` pour les builds : doit-il n'en exporter que les `HUGO_LEGAL_*`, pour que `GITEA_TOKEN` n'entre pas dans l'environnement de Hugo ?
 
-### Story 0.2 : Branche `main`, protections et styles de fusion dans Gitea
+### Story 0.2 : Main branch protections and merge styles
 
 En tant qu'Arnaud, mainteneur,
 je veux créer `main`, protéger `dev` et `main` et imposer les styles de fusion du flux linéaire,
 afin qu'aucun merge commit ni push direct n'entre sur les branches publiées.
 
-**Couvre :** FR-28, FR-30 (flux documenté par le README-cas), NFR-7
+**Couvre :** FR-28, FR-30 (flux documenté par le README-cas), NFR-7 · AD-24
 **Dépendances :** aucune
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, administration Gitea : création de `main` depuis `dev` ; protection de `dev` et `main` ; PR vers `dev` en squash ; PR vers `main` en fast-forward seulement ; force-push sur `dev` réservé au compte d'Arnaud (exception tracée, utilisée par `hotfix` après son approbation explicite) ; aucun style « merge commit ».
+**Opération manuelle (Arnaud) :** **oui**, administration Gitea : création de `main` depuis `dev` ; protection de `dev` et `main` ; `main` sans aucun push ni force-push, pour aucun compte ; `dev` avec le compte d'Arnaud dans la liste de push (Gitea exige le droit de push pour autoriser un force-push) et seul dans la liste de force-push (exception tracée, utilisée par `hotfix` après son approbation explicite) ; PR vers `dev` en squash ; PR vers `main` en fast-forward seulement ; aucun style « merge commit » (D-10).
 
 **Critères d'acceptation :**
 
 **Étant donné** la configuration appliquée
-**Quand** Arnaud tente un push direct sur `main`, puis sur `dev`
+**Quand** Arnaud tente un push direct, puis un force-push, sur `main`
 **Alors** les deux sont refusés.
+
+**Étant donné** un compte autre que celui d'Arnaud, s'il en existe un
+**Quand** il tente un push direct sur `dev`
+**Alors** il est refusé ; pour le compte d'Arnaud, le push direct sur `dev` reste techniquement possible et n'est interdit que par la procédure (D-10).
 
 **Étant donné** une PR de test `feat/*` vers `dev`
 **Quand** elle est fusionnée
@@ -362,18 +375,18 @@ afin qu'aucun merge commit ni push direct n'entre sur les branches publiées.
 **Quand** il tente un force-push sur `dev`
 **Alors** il est refusé.
 
-- [ ] Les réglages sont notés dans la procédure `release` (story 11.7), sans nom d'hôte.
+- [ ] Les réglages sont notés dans `docs/procedures/gitea-branches.md`, sans nom d'hôte, avec la limite du push direct d'Arnaud sur `dev`.
 
 **Questions à poser avant de commencer :**
 - La version de Gitea en service propose-t-elle le style de fusion « fast-forward only » pour les PR ? À constater avant la configuration.
 
-### Story 0.3 : Skill `check-private`
+### Story 0.3 : Check-private skill
 
 En tant qu'Arnaud ou agent de développement,
 je veux une procédure unique pour lancer le garde-fou et l'audit complet de l'historique,
 afin de ne jamais pousser, activer le miroir ou envoyer un diff à un reviewer sans audit.
 
-**Couvre :** FR-28, NFR-9, SM-5 · AD-12 · C1
+**Couvre :** FR-28, NFR-9, SM-5 · AD-12, AD-24 · C1
 **Dépendances :** aucune
 **Bloquée par :** —
 **Prérequis de contenu :** —
@@ -391,17 +404,17 @@ afin de ne jamais pousser, activer le miroir ou envoyer un diff à un reviewer s
 
 - [ ] Le skill n'ajoute pas de second script.
 
-### Story 0.4 : Skill `create-pull-request`
+### Story 0.4 : Create-pull-request skill
 
 En tant qu'agent de développement,
 je veux ouvrir une PR sur la forge par l'API REST de Gitea, sans exposer de secret ni abîmer le corps de la PR,
 afin que chaque story arrive en revue de la même façon.
 
-**Couvre :** NFR-7, NFR-11
+**Couvre :** NFR-7, NFR-11 · AD-24
 **Dépendances :** 0.1, 0.2
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, installer `jq` sur le poste de développement (`sudo apt install jq`), absent aujourd'hui ; l'architecture ne l'installe que dans l'image de contrôle et ne retient pas python3 pour ces scripts.
+**Opération manuelle (Arnaud) :** **oui**, constater que `jq` est installé sur le poste de développement (`command -v jq` ; présent, constat du 13/09/2026) ; l'architecture ne retient pas python3 pour ces scripts (AD-24).
 
 **Critères d'acceptation :**
 
@@ -421,38 +434,39 @@ afin que chaque story arrive en revue de la même façon.
 **Quand** le script s'exécute
 **Alors** il échoue avant tout appel d'écriture.
 
-- [ ] Une PR vers `main` n'est pas créée par ce skill : il renvoie vers `release` ou `hotfix`.
+- [ ] Une PR vers `main` n'est pas créée par ce skill, et une branche `hotfix/*` est refusée : il renvoie vers `release` ou `hotfix`.
 - [ ] Sans `jq` dans le `PATH`, le script échoue avant tout appel, avec un message qui indique l'installation (`sudo apt install jq`).
 
 **Questions à poser avant de commencer :**
 - Où est déclaré le nom canonique du dépôt (constante du script, variable de `.env`) ?
 
-### Story 0.5 : Skill `llm-review` : revue du diff par un autre fournisseur
+### Story 0.5 : LLM-review skill with cross-vendor review
 
 En tant qu'Arnaud, mainteneur,
 je veux qu'un LLM d'un autre fournisseur que l'auteur relise chaque diff et publie un verdict explicite sur la PR,
 afin qu'aucun merge ne repose sur la seule relecture du modèle qui a écrit le code.
 
-**Couvre :** NFR-7, NFR-9, NFR-11 · AD-12
+**Couvre :** NFR-7, NFR-9, NFR-11 · AD-12, AD-24
 **Dépendances :** 0.3, 0.4
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** non
+**Opération manuelle (Arnaud) :** **oui**, `agy` authentifié sur le poste : `agy models` répond (prérequis du poste d'AD-24).
 
 **Critères d'acceptation :**
 
 **Étant donné** `scripts/llm-review.sh <PR>`
 **Quand** l'auteur est Claude (défaut), puis `AUTHOR_LLM=gemini`
-**Alors** la revue est envoyée par `agy --mode plan` au reviewer `gemini-3.1-pro-high`, puis à un modèle Claude.
+**Alors** la revue est envoyée par `agy --mode plan` au reviewer `gemini-3.1-pro-high`, puis à un modèle Claude (sens inverse, gardé et écrit dans AD-24, D-11).
 
 **Étant donné** le périmètre relu
 **Quand** la revue se prépare
 **Alors** elle tourne dans un worktree git temporaire **hors du dépôt**, qui ne contient que les fichiers suivis : ni `.env` ni `docs/private/`, présents sur disque mais ignorés par git, n'y sont jamais
-**Et** `scripts/check-private.sh` passe sur ce périmètre **avant** l'envoi ; en cas d'échec, rien n'est envoyé.
+**Et** `scripts/check-private.sh` passe sur ce périmètre **avant** l'envoi ; en cas d'échec, rien n'est envoyé
+**Et** le diff relu est `git diff <base>...<SHA>` : la branche entière, au SHA de tête (AD-24).
 
 **Étant donné** la réponse du reviewer
 **Quand** le script la publie
-**Alors** elle est postée **en commentaire de la PR Gitea**, avec le SHA de tête relu, et se termine par `VERDICT: BLOQUANT` ou `VERDICT: NON BLOQUANT` ; sans verdict, le script échoue et ne publie rien
+**Alors** elle est postée **en commentaire de la PR Gitea**, dont la première ligne est `llm-review sha=<SHA de tête> base=<base de la PR> model=<modèle> verdict=<pass|block>` (format d'AD-24), suivie du texte de la revue ; sans verdict lisible, le script échoue et ne publie rien
 **Et** aucun fichier de rapport n'est commité.
 
 **Étant donné** le premier usage du skill
@@ -464,19 +478,16 @@ afin qu'aucun merge ne repose sur la seule relecture du modèle qui a écrit le 
 - [ ] Les refus de lecture de `.env` déjà configurés pour les agents (`.claude/settings.json` versionné, réglage d'Antigravity sur le poste, `.antigravityignore`), faits hors backlog, ne sont qu'une défense en profondeur : ils ne remplacent pas le critère du worktree.
 - [ ] Si le script utilise `jq` (par exemple pour le corps du commentaire), il échoue sans `jq` avec un message qui indique l'installation.
 
-**Questions à poser avant de commencer :**
-- La revue porte-t-elle sur le diff par rapport à la base de la PR, sur toute la branche, ou sur les deux (le verrou de la story 0.7 exige les deux) ?
-
-### Story 0.6 : Skill `sprint-consistency`
+### Story 0.6 : Sprint-consistency skill
 
 En tant qu'Arnaud, mainteneur,
 je veux vérifier que l'état des stories et le suivi de sprint disent la même chose,
 afin qu'une PR ne soit pas fusionnée sur une story mal suivie.
 
-**Couvre :** NFR-7
+**Couvre :** NFR-7 · AD-24
 **Dépendances :** 0.2
 **Bloquée par :** —
-**Prérequis de contenu :** planification de sprint faite (`sprint-status.yaml` et fichiers de story portant un en-tête `Status:`), par le skill de planification de sprint à partir de ce document.
+**Prérequis de contenu :** planification de sprint faite (`sprint-status.yaml` et fichiers de story portant un en-tête `Status:`), par le skill de planification de sprint à partir de ce document, avant la story 0.1 (règle d'amorçage).
 **Opération manuelle (Arnaud) :** non
 
 **Critères d'acceptation :**
@@ -489,20 +500,22 @@ afin qu'une PR ne soit pas fusionnée sur une story mal suivie.
 **Quand** le script s'exécute
 **Alors** il le dit explicitement et sort en échec, sans conclure à la cohérence.
 
+- [ ] En v1, le script ne vérifie que les statuts, pas les branches (D-17) ; la vérification des branches pourra s'ajouter si un écart se produit.
+
 **Questions à poser avant de commencer :**
 - Emplacement de `sprint-status.yaml` et des fichiers de story (`_bmad-output/implementation-artifacts/` d'après la configuration BMAD) ?
 
-### Story 0.7 : Skill `verify-and-merge-pr`
+### Story 0.7 : Verify-and-merge-pr skill
 
 En tant qu'Arnaud, mainteneur,
 je veux auditer une PR par défaut et ne la fusionner qu'avec `--merge`, seulement si tous les verrous passent,
 afin qu'aucun merge ne contourne la revue, le garde-fou ou le flux linéaire.
 
-**Couvre :** FR-28, NFR-9, NFR-11 · AD-12
+**Couvre :** FR-28, NFR-9, NFR-11 · AD-12, AD-24
 **Dépendances :** 0.5, 0.6
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** non (prérequis : `jq` installé à la story 0.4)
+**Opération manuelle (Arnaud) :** non (prérequis : `jq`, constaté à la story 0.4)
 
 **Critères d'acceptation :**
 
@@ -512,33 +525,33 @@ afin qu'aucun merge ne contourne la revue, le garde-fou ou le flux linéaire.
 
 **Étant donné** `--merge`
 **Quand** un verrou ne passe pas
-**Alors** rien n'est fusionné. Verrous : PR exploitable ; commentaire de revue présent ; verdict `NON BLOQUANT` lu dans ce commentaire ; commentaire portant sur le **SHA de tête** et sur la branche entière ; `scripts/check-private.sh` sur l'arbre de tête ; CI verte ; cohérence du suivi de sprint (story 0.6).
+**Alors** rien n'est fusionné. Verrous : PR exploitable ; commentaire `llm-review` dont la première ligne (format d'AD-24) porte `sha=` égal au **SHA de tête**, `base=` égal à la base de la PR (branche entière) et `verdict=pass` ; `scripts/check-private.sh` sur l'arbre de tête ; CI verte ; cohérence du suivi de sprint (story 0.6).
 
-**Étant donné** une PR qui ne touche que des `.md` sous `_bmad-output/`
+**Étant donné** une PR dont tous les fichiers sont sous `_bmad-output/`, `sprint-status.yaml` compris (D-2)
 **Quand** le script évalue la revue
-**Alors** seule la CI verte est exigée ; un seul fichier hors exception (dont `content/**`, `AGENTS.md`, `CLAUDE.md`, `docs/procedures/**`, `.claude/**`, `docs/format-cas.md`) rétablit la revue.
+**Alors** seule la CI verte, ou son substitut d'amorçage, est exigée ; un seul fichier hors de `_bmad-output/` (dont `content/**`, `AGENTS.md`, `CLAUDE.md`, `docs/procedures/**`, `.claude/**`, `docs/format-cas.md`) rétablit la revue.
 
 **Étant donné** la base de la PR
 **Quand** elle est `dev`, puis `main`
 **Alors** la fusion se fait en squash, puis elle est refusée avec un renvoi vers `release` ou `hotfix`.
 
-**Étant donné** l'absence de CI à ce stade
+**Étant donné** `.gitea/workflows/checks.yaml` absent de la branche de base
 **Quand** le verrou « CI verte » est évalué
-**Alors** il est affiché comme **absent**, jamais comme passé ; son activation est la story 3.16.
+**Alors** il est affiché comme **absent**, jamais comme passé, et admis selon la règle d'amorçage (D-1), avec le résultat du substitut local (`check-private.sh history`, puis `check.sh` dès la story 3.2) noté dans la PR ; dès que ce fichier existe sur la base, `absent` bloque (story 3.16).
+
+**Étant donné** la PR qui ajoute `sprint-status.yaml`
+**Quand** le verrou de suivi de sprint est évalué
+**Alors** c'est la seule PR admise sans ce verrou (règle d'amorçage).
 
 - [ ] Aucune option `--force`.
 - [ ] Sans `jq` dans le `PATH`, le script échoue avant tout appel, avec un message qui indique l'installation (`sudo apt install jq`).
 - [ ] Le script charge `.env` sans afficher de valeur ; sans variable Gitea, il échoue en renvoyant à la story 0.1.
 
-**Questions à poser avant de commencer :**
-- Tant que le verrou « CI verte » est absent, une PR peut-elle être fusionnée ? Pour une PR documentaire, la CI est le seul verrou exigé : est-elle alors impossible à fusionner avant la story 3.13 ?
-- Même question pour le verrou de suivi de sprint avant la planification de sprint.
-
 ## Epic 1 : Garde-fou public/privé avant tout miroir (WS-0)
 
 Arnaud peut publier le dépôt sur GitHub sans qu'aucun chemin ni motif privé y arrive. La forge principale refuse ces contenus côté serveur, l'historique complet est audité avec la liste des motifs, et le miroir n'est activé qu'ensuite (ordre imposé par AD-12).
 
-### Story 1.1 : Le mode `pre-receive` du garde-fou échoue sans liste des motifs
+### Story 1.1 : Pre-receive guard fails without pattern list
 
 En tant qu'Arnaud, mainteneur,
 je veux que `scripts/check-private.sh pre-receive` refuse tout push quand la liste des motifs est absente,
@@ -574,7 +587,7 @@ afin qu'un hook serveur mal installé ne laisse jamais passer un motif privé.
 - Une liste présente mais vide (ou faite de commentaires) doit-elle aussi faire échouer le mode `pre-receive` ?
 - Test automatisé versionné sous `tests/`, ou démonstration dans des dépôts jetables ?
 
-### Story 1.2 : Hook pre-receive installé et testé sur la forge principale
+### Story 1.2 : Pre-receive hook installed on main forge
 
 En tant qu'Arnaud, mainteneur,
 je veux que la forge principale refuse côté serveur tout push qui contient un chemin ou un motif privé,
@@ -614,7 +627,7 @@ afin que le garde-fou soit non contournable (UJ-4).
 - Le contenu du fichier `check-private` est-il versionné dans le dépôt, et où ? La structure initiale ne lui donne pas d'emplacement.
 - Où consigner le résultat des tests sans information sur le serveur ?
 
-### Story 1.3 : Audit complet de l'historique avec la liste des motifs
+### Story 1.3 : Full history audit with pattern list
 
 En tant qu'Arnaud, mainteneur,
 je veux un audit propre de tout l'historique de la forge, toutes branches et tous tags compris,
@@ -642,7 +655,7 @@ afin d'activer le miroir sans qu'un commit privé reste accessible sur GitHub pa
 **Questions à poser avant de commencer :**
 - Les références internes de PR de Gitea sont-elles poussées par le miroir, et faut-il les auditer ?
 
-### Story 1.4 : Miroir push de la forge principale vers le dépôt public GitHub
+### Story 1.4 : Push mirror to public GitHub repository
 
 En tant que Sam, tech lead (UJ-3),
 je veux trouver sur GitHub le dépôt et ses artefacts de cadrage, tenus à jour depuis la forge,
@@ -652,7 +665,7 @@ afin de lire le cadrage et le code.
 **Dépendances :** 0.2, 1.2, 1.3
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, dépôt public GitHub, jeton du miroir, configuration du miroir push dans Gitea.
+**Opération manuelle (Arnaud) :** **oui**, dépôt public GitHub, identité du miroir (clé de déploiement si le miroir push de Gitea sait pousser en SSH, sinon compte machine avec un jeton à grain fin limité au dépôt), rulesets d'AD-12, configuration du miroir push dans Gitea.
 
 **Critères d'acceptation :**
 
@@ -665,29 +678,36 @@ afin de lire le cadrage et le code.
 **Quand** Arnaud lance `scripts/check-private.sh history` avec la liste des motifs
 **Alors** il sort avec le code 0.
 
-- [ ] Le jeton du miroir n'est stocké que dans Gitea ; les remotes du poste pointent vers la forge seulement.
+**Étant donné** les rulesets d'AD-12 sur le dépôt public (toutes les branches et tous les tags : création, mise à jour et suppression restreintes, identité du miroir seule autorisée à contourner ; `main` en « Block force pushes »)
+**Quand** Arnaud pousse directement depuis son compte personnel
+**Alors** GitHub refuse le push, et le miroir continue de synchroniser (D-9).
+
+**Étant donné** une branche jetable réécrite sur la forge (force-push), puis synchronisée
+**Quand** le miroir la pousse
+**Alors** GitHub accepte la mise à jour non fast-forward, la synchronisation n'échoue pas, et la liste des références effectivement poussées est notée, références internes de PR de Gitea comprises.
+
+- [ ] L'identifiant du miroir (clé ou jeton) n'est stocké que dans Gitea ; les remotes du poste pointent vers la forge seulement.
 - [ ] Aucun artefact public ne cite de cas brut *(relecture)*.
 - [ ] L'URL du dépôt public est transmise pour `params.source_url` (story 9.5).
 
 **Questions à poser avant de commencer :**
-- AD-12 pose qu'aucun push ne va directement sur GitHub, sans fixer de mécanisme : lequel Arnaud retient-il ?
 - Toutes les branches sont-elles mirrorées ? Le README-cas citera `design/dossier-architecture`, `design/suisse` et `experiment/d2-bilingue`.
 
 ## Epic 2 : Site bilingue et cas pilote sous son poste (WS-1, WS-2)
 
 Un lecteur passe du français à l'anglais par le sélecteur, et voit en rendu de travail le poste Chiliz avec le cas 02, puis la section du cas sur la page Chiliz. Structure HTML sans mise en page : la mise en forme vient des epics 5 et 6.
 
-### Story 2.1 : Outils épinglés, installés et vérifiés à l'identique
+### Story 2.1 : Pinned tools installed and verified
 
 En tant qu'Arnaud, mainteneur,
 je veux que Hugo, D2 et les outils de contrôle aient la même version sur le poste, dans les deux CI et dans l'image,
 afin qu'un rendu ou un contrôle ne diffère jamais d'un environnement à l'autre.
 
-**Couvre :** NFR-7, NFR-8 · AD-1
+**Couvre :** NFR-7, NFR-8 · AD-1, AD-24
 **Dépendances :** Epic 1 (ordre du squelette)
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** non
+**Opération manuelle (Arnaud) :** **oui**, rendre Docker disponible dans le shell WSL du poste (prérequis du poste d'AD-24, D-15).
 
 **Critères d'acceptation :**
 
@@ -704,11 +724,14 @@ afin qu'un rendu ou un contrôle ne diffère jamais d'un environnement à l'autr
 **Quand** le script, puis la vérification commune de version, s'exécutent
 **Alors** chacun échoue en nommant l'outil et les versions.
 
+**Étant donné** le poste de développement, sans Hugo ni D2 dans le `PATH`
+**Quand** on lance `scripts/ci/install-tools.sh --local`
+**Alors** Hugo et D2 sont téléchargés, vérifiés par sha256 d'après `tools.env`, et installés dans `.tools/`, que `.gitignore` exclut (D-15).
+
 **Questions à poser avant de commencer :**
 - Où vit la fonction commune de vérification de version, que l'architecture impose sans emplacement ?
-- Sur le poste de travail, Hugo et D2 s'installent-ils par ce même script ?
 
-### Story 2.2 : Build Hugo bilingue en deux environnements, accueil minimal et `<title>`
+### Story 2.2 : Bilingual Hugo build with minimal home
 
 En tant qu'Arnaud, mainteneur,
 je veux une commande unique qui produit le rendu de travail ou le build de production, avec un accueil minimal par langue,
@@ -740,14 +763,16 @@ afin que brouillons et éléments prévus n'arrivent jamais en production.
 **Alors** seul le rendu de travail contient `<meta name="robots" content="noindex">`, et aucun build n'émet d'avertissement.
 
 - [ ] `scripts/dev.sh` lance `hugo server --environment work --buildDrafts`.
-- [ ] `.gitignore` exclut `public/`, `build/`, `resources/_gen/`, `.hugo_build.lock`.
+- [ ] `.gitignore` exclut `public/`, `build/`, `resources/_gen/`, `.hugo_build.lock` et `.tools/`.
+- [ ] `scripts/build.sh` et `scripts/dev.sh` placent `.tools/` en tête du `PATH` quand il existe (D-15).
+- [ ] `ci/release-pages.txt` est créé avec `home`, première entrée de la liste cumulative des pages publiées attendues (D-5).
 - [ ] Aucun texte de contenu dans les gabarits ; ceux-ci ne testent que `hugo.IsProduction`.
 
 **Questions à poser avant de commencer :**
 - Le pitch n'est pas encore fourni (story 10.1). L'accueil minimal l'omet-il, plutôt que de porter un `[TODO: …]` qui ferait passer l'accueil en brouillon (C5) et le retirerait de la production ?
 - Arnaud confirme-t-il le libellé du titre du site de FR-1 à commiter ?
 
-### Story 2.3 : Sélecteur « English » / « Français », `hreflang` et 404 par langue
+### Story 2.3 : Language switcher, hreflang and 404 pages
 
 En tant que Daniel, recruteur qui lit en anglais (UJ-2),
 je veux passer d'une page française à la même page en anglais par un lien visible,
@@ -778,7 +803,7 @@ afin de lire le site dans ma langue.
 **Questions à poser avant de commencer :**
 - Texte de la 404 : libellé i18n `not_found_title` (« à valider » dans `EXPERIENCE.md`) et phrase dans `i18n/` ou dans un fichier de contenu ?
 
-### Story 2.4 : Chargeur d'environnement unique et valeurs légales factices
+### Story 2.4 : Single env loader and dummy legal values
 
 En tant qu'Arnaud, mainteneur,
 je veux un chargeur unique des variables `HUGO_LEGAL_*` pour tous les builds,
@@ -794,7 +819,7 @@ afin qu'aucune coordonnée réelle ne soit commitée et qu'une mise en ligne n'u
 
 **Étant donné** `.env.example` (story 0.1) et `ci/legal-placeholder.env`
 **Quand** on les lit
-**Alors** le premier liste les sept variables d'AD-9 sans valeur, et le second exactement ces sept noms avec des valeurs `VALEUR-FACTICE-…`.
+**Alors** le premier liste exactement, sans valeur, les sept variables d'AD-9 et les trois `GITEA_*` d'AD-24 (C18), et le second exactement les sept noms légaux avec des valeurs `VALEUR-FACTICE-…`.
 
 **Étant donné** `scripts/env.sh` hors mise en ligne
 **Quand** une variable est déjà définie, puis seulement dans `.env`, puis dans aucun des deux
@@ -804,13 +829,14 @@ afin qu'aucune coordonnée réelle ne soit commitée et qu'une mise en ligne n'u
 **Quand** `LEGAL_ENV_FILE` manque, désigne `.env` ou le fichier factice, ou qu'une variable manque
 **Alors** le chargeur échoue en nommant la cause, sans afficher aucune valeur.
 
+**Étant donné** un `.env` qui contient une variable `GITEA_TOKEN` factice
+**Quand** `scripts/build.sh` lance `hugo`
+**Alors** le processus `hugo` ne voit pas `GITEA_TOKEN` dans son environnement : le chargeur ne lit que les lignes `^HUGO_LEGAL_` de `.env`, sans `source` complet ni `set -a` (AD-9).
+
 - [ ] `scripts/build.sh` et `scripts/dev.sh` passent par `scripts/env.sh`.
 - [ ] Aucun `set -x`.
 
-**Questions à poser avant de commencer :**
-- `.env` porte aussi `GITEA_TOKEN` (story 0.1) : le chargeur n'exporte-t-il vers les builds que les `HUGO_LEGAL_*` ?
-
-### Story 2.5 : Page Chiliz, partial de cas et matériel « prévu »
+### Story 2.5 : Chiliz page, case partial and planned material
 
 En tant que Claire, CTO (UJ-1),
 je veux voir le cas 02 dans sa section de la page Chiliz, avec « Contexte mission », « En bref » puis le cas complet,
@@ -818,11 +844,11 @@ afin de juger le cas et d'en lire la preuve.
 
 **Couvre :** FR-5 à FR-9, FR-12, FR-20, FR-25, FR-26 · AD-3, AD-4, AD-6
 **Dépendances :** 2.3
-**Bloquée par :** — (le titre définitif relève de la story 10.4, bloquée par Q9)
+**Bloquée par :** —
 **Prérequis de contenu :** —
 **Opération manuelle (Arnaud) :** non
 
-Périmètre : `content/cases/_index.{fr,en}.md` (jamais rendu), `content/cases/chiliz/_index.{fr,en}.md` (`translationKey: group-chiliz`, cascade ciblée), `layouts/cases/section.html`, `_partials/case.html`, `_shortcodes/live-material.html` (éléments « prévus »), libellés d'`i18n/`. Le shortcode est dans cette story parce que le pilote l'utilise.
+Périmètre : `content/cases/_index.{fr,en}.md` (jamais rendu), `content/cases/chiliz/_index.{fr,en}.md` (`translationKey: group-chiliz`, titre « Chiliz » en FR et en EN sans introduction, `draft: true` tant que le cas 02 n'est pas publié, cascade ciblée ; AD-4, D-3 et D-4), `layouts/cases/section.html`, `_partials/case.html`, `_shortcodes/live-material.html` (éléments « prévus »), libellés d'`i18n/`. Le shortcode est dans cette story parce que le pilote l'utilise.
 
 **Critères d'acceptation :**
 
@@ -835,9 +861,13 @@ Périmètre : `content/cases/_index.{fr,en}.md` (jamais rendu), `content/cases/c
 **Quand** on regarde les trois emplacements du pilote
 **Alors** chacun s'affiche en encart avec son type et sa description, sans que sa source soit cherchée.
 
-**Étant donné** une copie locale non commitée du pilote en `draft: false`
+**Étant donné** une copie locale non commitée du pilote et du `_index` Chiliz en `draft: false`
 **Quand** on lance le build de production
 **Alors** la section 02 est présente, et les éléments « prévus » ne laissent aucune trace dans `public/`.
+
+**Étant donné** le pilote et le `_index` Chiliz en brouillon, tels que commités
+**Quand** on lance le build de production, puis le rendu de travail
+**Alors** `public/` ne contient aucune page `/cas/chiliz/` ni `/en/cases/chiliz/`, puis le rendu de travail affiche la page Chiliz avec la section 02 : le `_index` en brouillon ne casse ni la cascade ni `case-url.html` (constat ; s'il échoue, repli d'AD-4 : C12 exclut les pages de groupe sans section).
 
 **Étant donné** un identifiant placé mais non déclaré (copie locale)
 **Quand** on lance un build
@@ -850,11 +880,7 @@ Périmètre : `content/cases/_index.{fr,en}.md` (jamais rendu), `content/cases/c
 - [ ] Aucune page séparée pour le cas 02 ; aucun `/cas/index.html`.
 - [ ] Le sélecteur de la page Chiliz mène à la page Chiliz de l'autre langue.
 
-**Questions à poser avant de commencer :**
-- Tant que Q9 est ouverte, le `_index` Chiliz porte-t-il un titre `[TODO: …]` avec `draft: true` ? `DESIGN.md` montre « Chiliz » comme titre de page, mais Q9 reste ouverte au PRD.
-- Un `_index` en brouillon laisse-t-il la cascade et les cas du dossier se comporter comme prévu ? À constater.
-
-### Story 2.6 : Numéros de rubrique par cas et sommaire
+### Story 2.6 : Case section numbers and table of contents
 
 En tant que Claire, CTO (UJ-1),
 je veux voir chaque rubrique numérotée par cas et un sommaire de la page,
@@ -885,7 +911,7 @@ afin d'aller directement à « Ce que j'ai décidé ».
 **Questions à poser avant de commencer :**
 - Libellé du résumé du sommaire (« Sommaire · N rubriques », « à valider » dans `EXPERIENCE.md`) ?
 
-### Story 2.7 : Poste Chiliz en brouillon, cas sous son poste et retour au parcours
+### Story 2.7 : Draft Chiliz position and back to career link
 
 En tant que Claire, CTO (UJ-1),
 je veux voir sur l'accueil le poste Chiliz avec le lien du cas 02, et revenir au poste depuis le cas,
@@ -916,7 +942,7 @@ Périmètre : `content/career/_index.{fr,en}.md` (jamais rendu), `content/career
 
 **Étant donné** le build de production avec pilote et poste en brouillon
 **Quand** on inspecte l'accueil
-**Alors** aucun poste ni aucun cas n'y figure, et aucun `draft-marker` n'existe dans `public/`.
+**Alors** aucun poste ni aucun cas n'y figure, aucune page Chiliz n'est construite, et aucun `draft-marker` n'existe dans `public/`.
 
 **Étant donné** une copie locale d'un poste publié sans cas
 **Quand** on lance le build de production
@@ -924,15 +950,11 @@ Périmètre : `content/career/_index.{fr,en}.md` (jamais rendu), `content/career
 
 - [ ] Démonstration de WS-2 : accueil de travail avec le poste Chiliz et le cas 02, section et trois éléments « prévus ».
 
-**Questions à poser avant de commencer :**
-- Libellé EN de `back_to_career` (*Back to experience*, « à valider » dans `EXPERIENCE.md`) ?
-- Arnaud valide-t-il le marqueur « Brouillon », décidé par AD-5 mais encore « à valider » dans `EXPERIENCE.md` ?
-
 ## Epic 3 : Contrôles bloquants, CI des deux forges et README-cas (WS-3, WS-4)
 
 Arnaud reçoit un refus explicite, qui nomme le fichier et l'écart ; les mêmes contrôles tournent en local, sur Gitea et publiquement sur GitHub. Le README accueille le lecteur du dépôt comme un cas.
 
-### Story 3.1 : Manifeste `checks.json` émis par Hugo
+### Story 3.1 : Checks json manifest emitted by Hugo
 
 En tant qu'Arnaud, mainteneur,
 je veux que Hugo émette la liste de tous les fichiers de contenu avec leurs métadonnées,
@@ -956,9 +978,9 @@ afin que les contrôles lisent exactement ce que Hugo voit.
 **Alors** il liste tous les fichiers de `content/` avec `kind`, rôle (`home`, `case`, `group`, `position`, `education`, `page`), fichier, langue, `translationKey`, brouillon, les clés de front matter utiles aux contrôles (dont `position`, `order`, `track`, `period`, `live_material`, `stack`, `summary`), identifiants placés, titres H2 du Markdown brut, présence de `[TODO`, et le vocabulaire de `data/stack.yaml`.
 
 - [ ] La forme n'est définie que dans `layouts/home.checks.json`, documentée en tête de `scripts/checks/lib.sh`.
-- [ ] Entrée du pilote : cinq titres H2 tels qu'écrits, trois identifiants placés, `position-chiliz`, `draft: true`.
+- [ ] Entrée du pilote : six titres H2 tels qu'écrits, trois identifiants placés, `position-chiliz`, `draft: true`.
 
-### Story 3.2 : Point d'entrée `scripts/check.sh`, build sans avertissement et règle des brouillons
+### Story 3.2 : Check script entry point and draft rule
 
 En tant qu'Arnaud, mainteneur,
 je veux lancer tous les contrôles bloquants par une seule commande, identique en local et en CI,
@@ -991,7 +1013,7 @@ afin qu'un contrôle local ne diffère jamais de la CI et qu'un brouillon légit
 - `check.sh` cumule-t-il les signalements de tous les scripts, ou s'arrête-t-il au premier en échec ?
 - Forme des cas de test des contrôles sous `tests/fixtures/` (mini-site Hugo, manifestes écrits à la main, copies locales) ? La réponse vaut pour les stories 3.3 à 3.11.
 
-### Story 3.3 : Script de parité FR/EN (C3)
+### Story 3.3 : FR EN parity script
 
 En tant qu'Arnaud qui corrige un chiffre (UJ-4),
 je veux que la CI refuse toute différence mécanique entre FR et EN,
@@ -1022,7 +1044,7 @@ afin qu'aucune page ne soit publiée avec une métadonnée ou une rubrique d'un 
 **Questions à poser avant de commencer :**
 - « Mêmes rubriques à la même position » : correspondance FR↔EN par la table de `docs/format-cas.md` ?
 
-### Story 3.4 : Rubriques, marqueurs TODO et vocabulaire de la stack (C4, C5, C6)
+### Story 3.4 : Headings, TODO markers and stack vocabulary
 
 En tant qu'Arnaud, mainteneur,
 je veux que la CI refuse un cas aux rubriques hors format, un `[TODO` publié ou une technologie hors vocabulaire,
@@ -1048,7 +1070,7 @@ afin que le format soit tenu sans relecture mécanique.
 **Quand** on lance les contrôles
 **Alors** C6 la signale ; une valeur `[TODO…]` dans un brouillon est acceptée.
 
-### Story 3.5 : Matériel vivant et groupes (C7, C8)
+### Story 3.5 : Live material and group checks
 
 En tant qu'Arnaud, mainteneur,
 je veux que la CI refuse un élément de matériel vivant mal déclaré ou un cas mal rangé dans son groupe,
@@ -1074,7 +1096,7 @@ afin qu'aucun emplacement ni aucune section ne disparaisse par erreur.
 **Quand** on lance les contrôles
 **Alors** C8 le signale.
 
-### Story 3.6 : Encart « En bref » et règles du format (C16, C18)
+### Story 3.6 : At a glance box and format rules
 
 En tant que Claire, CTO (UJ-1),
 je veux que chaque « En bref » tienne en trois phrases et 400 caractères au plus,
@@ -1096,14 +1118,11 @@ afin de saisir l'enjeu et le résultat d'un coup d'œil.
 **Quand** on lance les contrôles
 **Alors** C18 le signale, sauf valeur `[TODO…]` dans un brouillon.
 
-**Étant donné** `ci/legal-placeholder.env` qui ne liste pas exactement les sept variables d'AD-9, ou `.env.example` auquel l'une d'elles manque
+**Étant donné** `ci/legal-placeholder.env` qui ne liste pas exactement les sept variables d'AD-9, ou `.env.example` qui ne liste pas exactement les sept `HUGO_LEGAL_*` d'AD-9 et les trois `GITEA_*` d'AD-24
 **Quand** on lance les contrôles
 **Alors** C18 le signale.
 
-**Questions à poser avant de commencer :**
-- C18 et AD-9 exigent que `.env.example` liste **exactement** les sept `HUGO_LEGAL_*`, alors qu'il porte aussi les variables Gitea (story 0.1) : Arnaud fait-il mettre C18 et AD-9 à jour ?
-
-### Story 3.7 : Contrôle du parcours (C19)
+### Story 3.7 : Career path check
 
 En tant que Claire, CTO (UJ-1),
 je veux que chaque cas publié soit rattaché à un poste publié,
@@ -1131,7 +1150,7 @@ afin de ne jamais trouver un cas orphelin ou un poste incohérent entre FR et EN
 
 - [ ] Le pilote et `position-chiliz`, tous deux en brouillon avec `[TODO`, passent.
 
-### Story 3.8 : Zéro JavaScript hors JSON-LD, aucune origine tierce, aucun TODO publié (C10, C5)
+### Story 3.8 : Zero JavaScript, no third party, no TODO
 
 En tant que lectrice ou lecteur,
 je veux qu'aucune page n'exécute de script ni ne charge de ressource d'un autre site,
@@ -1150,8 +1169,8 @@ afin de lire sans cookie ni traçage.
 **Alors** il signale toute balise `<script>` dont le `type` n'est pas exactement `application/ld+json` ou qui porte `src`, tout attribut `on*=`, toute `<iframe>`, tout `<form>`, toute ressource d'une autre origine, et toute occurrence de `[TODO`.
 
 **Étant donné** une fixture d'accueil
-**Quand** elle contient zéro ou deux blocs JSON-LD, un bloc JSON invalide, un `@type` autre que `Person`, une clé hors FR-35, ou un bloc sur une autre page que l'accueil
-**Alors** C10 échoue ; un bloc conforme passe.
+**Quand** elle contient deux blocs JSON-LD, un bloc JSON invalide, un `@type` autre que `Person`, une clé hors FR-35, ou un bloc sur une autre page que l'accueil
+**Alors** C10 échoue ; un bloc conforme passe, et l'absence de bloc passe aussi : la règle est « au plus un bloc, conforme, et seulement sur l'accueil » jusqu'à la story 9.6, qui la passe à « exactement un ».
 
 **Étant donné** un lien `<a href>` vers un site tiers
 **Quand** le contrôle s'exécute
@@ -1159,10 +1178,7 @@ afin de lire sans cookie ni traçage.
 
 - [ ] Attributs vérifiés par XPath avec `xmllint --html`, validés sur une page minifiée réelle ; `grep` pour les chaînes seulement.
 
-**Questions à poser avant de commencer :**
-- Tant que le bloc JSON-LD n'existe pas (story 9.6), la règle « exactement un bloc sur l'accueil » est-elle désactivée, ou la story 9.6 l'active-t-elle ?
-
-### Story 3.9 : Accessibilité automatisable (C11)
+### Story 3.9 : Automated accessibility checks
 
 En tant que lectrice ou lecteur au clavier ou avec un lecteur d'écran,
 je veux que chaque page ait une structure accessible,
@@ -1184,13 +1200,13 @@ afin de parcourir le site sans obstacle.
 **Quand** on lance les contrôles
 **Alors** chaque défaut est signalé avec la page.
 
-### Story 3.10 : Liens internes, ancres, pages orphelines et liens conditionnels (C12)
+### Story 3.10 : Internal links, anchors and orphan pages
 
 En tant que Claire, CTO (UJ-1),
 je veux que tout lien mène quelque part et que toute page soit atteignable,
 afin de ne jamais tomber sur une page absente.
 
-**Couvre :** FR-2, FR-15, SM-3 · AD-3, AD-18, AD-21 · C12
+**Couvre :** FR-2, FR-15, SM-3 · AD-3, AD-4, AD-18, AD-21 · C12
 **Dépendances :** 3.9
 **Bloquée par :** —
 **Prérequis de contenu :** —
@@ -1210,10 +1226,11 @@ afin de ne jamais tomber sur une page absente.
 **Quand** le contrôle s'exécute
 **Alors** il signale des liens de CV présents alors que les deux PDF ne sont pas publiés (ou absents alors qu'ils le sont), et un lien du dépôt présent alors que `params.source_url` est vide (ou l'inverse).
 
-**Questions à poser avant de commencer :**
-- Tant que le pilote est un brouillon, l'architecture accepte en CI une page Chiliz vide en production ; aucun lien n'y mène : faut-il l'exclure de C12, ou garder le `_index` Chiliz en brouillon pour qu'elle ne soit pas construite ?
+**Étant donné** le pilote et le `_index` Chiliz en brouillon (AD-4, D-3)
+**Quand** le contrôle s'exécute sur le build de production
+**Alors** aucune page Chiliz n'existe dans `public/`, et C12 passe ; si le constat de la story 2.5 a échoué, C12 exclut les pages de groupe sans section (repli d'AD-4).
 
-### Story 3.11 : Budget de poids et d'éléments (C13)
+### Story 3.11 : Page weight and element budget
 
 En tant que lectrice ou lecteur sur mobile,
 je veux que chaque page reste légère,
@@ -1235,7 +1252,7 @@ afin qu'elle s'affiche vite.
 **Questions à poser avant de commencer :**
 - 1 Ko = 1 000 ou 1 024 octets ? Les variantes 1x et 2x d'une même photo comptent-elles toutes deux dans la page ?
 
-### Story 3.12 : Job de contrôles commun `scripts/ci/checks-job.sh` (C1)
+### Story 3.12 : Shared checks job
 
 En tant qu'Arnaud, mainteneur,
 je veux un seul script qui lance les contrôles dans le conteneur de contrôle, en local et dans les deux CI,
@@ -1260,11 +1277,11 @@ afin que Gitea et GitHub exécutent la même chose.
 
 - [ ] Le job ne lit aucun secret et ne construit aucune image.
 
-### Story 3.13 : Workflow de contrôles sur la forge principale
+### Story 3.13 : Checks workflow on main forge
 
 En tant qu'Arnaud qui ouvre une PR (UJ-4),
-je veux que chaque PR et chaque push sur `main` lancent les contrôles sur la forge,
-afin qu'aucun écart n'arrive sur `main`.
+je veux que chaque PR et chaque push sur `dev` et sur `main` lancent les contrôles sur la forge,
+afin qu'aucun écart n'arrive sur `dev` ni sur `main`.
 
 **Couvre :** FR-23, FR-28 · AD-11
 **Dépendances :** 3.12
@@ -1276,7 +1293,7 @@ afin qu'aucun écart n'arrive sur `main`.
 
 **Étant donné** `.gitea/workflows/checks.yaml`
 **Quand** on le lit
-**Alors** il ne contient que les déclencheurs (`push` sur `main`, `pull_request`), le checkout avec `fetch-depth: 0` et l'appel de `checks-job.sh`, sur le label en mode hôte.
+**Alors** il ne contient que les déclencheurs (`push` sur `dev` et sur `main`, `pull_request`, comme le fixe AD-11), le checkout avec `fetch-depth: 0` et l'appel de `checks-job.sh`, sur le label en mode hôte.
 
 **Étant donné** une PR sur la forge
 **Quand** elle est ouverte, puis fusionnée
@@ -1285,7 +1302,7 @@ afin qu'aucun écart n'arrive sur `main`.
 **Questions à poser avant de commencer :**
 - Nom exact du label en mode hôte, fixé dans WS-4 (l'architecture cite `linux_amd64:host` en exemple) ?
 
-### Story 3.14 : Workflow de contrôles publics sur GitHub
+### Story 3.14 : Public checks workflow on GitHub
 
 En tant que Sam, tech lead (UJ-3),
 je veux voir sur GitHub les exécutions publiques des contrôles,
@@ -1303,25 +1320,29 @@ afin de vérifier que la parité, les schémas et le garde-fou des chemins sont 
 **Quand** on le lit
 **Alors** il se déclenche sur `push` et `workflow_dispatch`, tourne sur `ubuntu-24.04`, appelle `checks-job.sh` depuis la machine virtuelle (pas de conteneur de job), sans secret ni `docker build`, avec des actions tierces épinglées par SHA.
 
-**Étant donné** un push sur `main` de la forge
+**Étant donné** un push sur `dev` de la forge
 **Quand** le miroir le publie
 **Alors** exactement un run a lieu sur Gitea et un sur GitHub (démonstration de WS-4), et Gitea n'exécute pas `.github/workflows/`.
 
 - [ ] Le journal public ne contient ni secret ni motif privé ; C21 y tourne sans liste de motifs.
 
-### Story 3.15 : README-cas du dépôt public
+### Story 3.15 : Public repository case README
 
 En tant que Sam, tech lead (UJ-3),
 je veux que le README se lise comme un cas,
 afin de comprendre comment le site a été cadré et construit.
 
-**Couvre :** FR-30, FR-31, UJ-3 · section « README-cas » de l'architecture
+**Couvre :** FR-30, FR-31, UJ-3 · AD-24, section « README-cas » de l'architecture
 **Dépendances :** 0.2, 3.14
 **Bloquée par :** —
-**Prérequis de contenu :** texte du README, rédigé ou validé par Arnaud (voix du site ; aucune entrée n'attribue sa rédaction).
+**Prérequis de contenu :** relecture par Arnaud de la voix et des faits du premier jet (D-12).
 **Opération manuelle (Arnaud) :** non
 
 **Critères d'acceptation :**
+
+**Étant donné** la rédaction du README
+**Quand** le développeur écrit le premier jet
+**Alors** il l'écrit en anglais à partir des seuls documents publics (PRD UJ-3 et FR-30, AD-12, AD-24, historique git, branches `design/*` et `experiment/d2-bilingue`), sans source privée, puis Arnaud relit la voix et les faits (D-12).
 
 **Étant donné** `README.md` à la racine
 **Quand** Sam le lit sur GitHub
@@ -1331,20 +1352,17 @@ afin de comprendre comment le site a été cadré et construit.
 **Étant donné** les références du README
 **Quand** Sam les suit
 **Alors** elles mènent aux workflows, à `scripts/check.sh` et à la liste des contrôles, aux exécutions publiques, à l'architecture, aux artefacts de cadrage, à `docs/format-cas.md`, à `docs/measures/`, et aux branches `experiment/d2-bilingue`, `design/dossier-architecture` et `design/suisse`
-**Et** il documente le modèle de branches linéaire : `feat/*` et `fix/*` en squash vers `dev`, `dev` vers `main` en fast-forward, `hotfix`, aucun merge commit.
+**Et** il documente le modèle de branches linéaire : `feat/*` et `fix/*` en squash vers `dev`, `dev` vers `main` en fast-forward, `hotfix/*` depuis `main` par le skill `hotfix`, aucun merge commit.
 
 - [ ] Aucun fichier privé nommé (nommer `docs/private/` est permis), aucune donnée de NFR-9 *(relecture)*.
 
-**Questions à poser avant de commencer :**
-- Qui rédige le texte : Arnaud avec son agent de rédaction, ou le développeur sur une trame relue ?
-
-### Story 3.16 : Verrou « CI verte » de `verify-and-merge-pr`
+### Story 3.16 : Green CI gate in verify-and-merge-pr
 
 En tant qu'Arnaud, mainteneur,
 je veux que la fusion d'une PR exige la CI verte dès que la CI existe,
 afin que le verrou signalé « absent » depuis la story 0.7 devienne réel.
 
-**Couvre :** FR-23, FR-28 · AD-11
+**Couvre :** FR-23, FR-28 · AD-11, AD-24
 **Dépendances :** 0.7, 3.13
 **Bloquée par :** —
 **Prérequis de contenu :** —
@@ -1360,15 +1378,19 @@ afin que le verrou signalé « absent » depuis la story 0.7 devienne réel.
 **Quand** on lance `--merge`
 **Alors** la PR est fusionnée selon sa base (squash vers `dev`).
 
-- [ ] La procédure `docs/procedures/verify-and-merge-pr.md` ne mentionne plus le verrou comme absent.
+**Étant donné** `.gitea/workflows/checks.yaml` présent sur la base de la PR
+**Quand** aucun statut de CI n'existe pour le SHA de tête
+**Alors** l'état `absent` bloque la fusion : la règle d'amorçage ne s'applique plus (D-1).
 
-### Story 3.17 : Skill `publish-case`
+- [ ] La procédure `docs/procedures/verify-and-merge-pr.md` ne décrit plus l'état `absent` qu'au titre de la règle d'amorçage.
+
+### Story 3.17 : Publish-case skill
 
 En tant qu'Arnaud, mainteneur,
 je veux qu'un cas passe tous ses contrôles puis passe en `draft: false` dans une PR, toujours de la même façon,
 afin de publier un cas sans oublier un contrôle.
 
-**Couvre :** FR-25, FR-26, FR-32 · AD-10, AD-18 · C3 à C8, C16, C18, C19
+**Couvre :** FR-25, FR-26, FR-32 · AD-10, AD-18, AD-24 · C3 à C8, C16, C18, C19
 **Dépendances :** 0.4, 3.12
 **Bloquée par :** —
 **Prérequis de contenu :** —
@@ -1382,9 +1404,10 @@ afin de publier un cas sans oublier un contrôle.
 
 **Étant donné** un cas qui passe tout
 **Quand** le script s'exécute
-**Alors** il passe les deux fichiers du cas en `draft: false` dans le même commit, sur une branche `feat/*`, relance `scripts/check.sh` et ouvre la PR par `create-pull-request`.
+**Alors** il passe les deux fichiers du cas en `draft: false` et ajoute à `ci/release-pages.txt` le `translationKey` du cas et, pour un cas groupé, `group-<group>` s'il n'y figure pas (D-5), dans le même commit, sur une branche `feat/*`, relance `scripts/check.sh` et ouvre la PR par `create-pull-request`.
 
 - [ ] Le script ne publie jamais le poste du cas à sa place : un poste en brouillon fait échouer C19, et le script le signale.
+- [ ] Pour un cas groupé, le script ne publie pas non plus le `_index` du groupe : un `_index` encore en brouillon est signalé (AD-4).
 - [ ] SKILL.md et `docs/procedures/publish-case.md` suivent le principe des trois niveaux.
 
 **Questions à poser avant de commencer :**
@@ -1394,7 +1417,7 @@ afin de publier un cas sans oublier un contrôle.
 
 Le build de production est emballé dans une image nginx et servi localement, avec ses en-têtes, son cache, ses 404 par langue et des journaux sans donnée personnelle.
 
-### Story 4.1 : Image multi-étapes du site
+### Story 4.1 : Multi-stage site image
 
 En tant qu'Arnaud, mainteneur,
 je veux une image qui ne contient que le site construit et contrôlé,
@@ -1425,7 +1448,7 @@ afin de servir exactement ce qui a passé les contrôles.
 **Questions à poser avant de commencer :**
 - Pour la démonstration locale, quel fichier passer en secret ? `ENV_MODE=release` refuse le fichier factice et `.env` comme `LEGAL_ENV_FILE` : faut-il un fichier local de test hors dépôt ?
 
-### Story 4.2 : Configuration nginx : en-têtes, cache, 404 par langue, journaux sans IP
+### Story 4.2 : Nginx headers, cache, 404 and IP-free logs
 
 En tant que lectrice ou lecteur,
 je veux des réponses sûres, bien mises en cache, une erreur dans ma langue, et aucun enregistrement de mon adresse,
@@ -1464,7 +1487,7 @@ afin de lire le site vite et sans être tracé.
 
 Claire lit sur son téléphone, en clair ou en sombre, un accueil qui est un CV : identité, photo, parcours avec les cas par poste, « En parallèle », formation. Toutes les stories dépendent de `DESIGN.md` et `EXPERIENCE.md`, validés le 13/09/2026 ; aucune n'est bloquée.
 
-### Story 5.1 : Intégrer le design validé : tokens CSS, échelle typographique, mode sombre
+### Story 5.1 : Design tokens, typography and dark mode
 
 En tant que Claire, CTO (UJ-1),
 je veux un site sobre et lisible, en clair comme en sombre,
@@ -1505,7 +1528,7 @@ afin de lire le CV et les cas sans effort, quel que soit le réglage de mon tél
 - Libellé `skip_to_content` (« à valider » dans `EXPERIENCE.md`) ?
 - Où noter les mesures de contraste faites dans les deux modes ?
 
-### Story 5.2 : Gabarit de l'accueil CV : identité, parcours, cas par poste, « En parallèle »
+### Story 5.2 : CV home page template
 
 En tant que Claire, CTO (UJ-1),
 je veux voir en haut qui est Arnaud, puis ses postes du plus récent au plus ancien avec les cas qui les prouvent,
@@ -1548,7 +1571,7 @@ afin de passer le test des trente secondes et d'ouvrir une preuve en un clic.
 - Nom accessible de la liste des cas d'un poste (`cases_of_position`, « à valider ») ?
 - Format du libellé `via` (« prestation Modis » / *via Modis*) : texte i18n autour de la valeur ?
 
-### Story 5.3 : Gabarit du bloc formation, certification et langues
+### Story 5.3 : Education, certification and languages template
 
 En tant que Claire, CTO (UJ-1),
 je veux voir la formation, les certifications et les langues d'Arnaud après son parcours,
@@ -1577,7 +1600,7 @@ afin de compléter la lecture du CV.
 - Libellés `education_kind_*` (« à valider » dans `EXPERIENCE.md`) ?
 - Un bloc sans entrée publiée doit-il vraiment disparaître ? Les documents disent seulement « ne rien écrire pour ce qui n'existe pas ».
 
-### Story 5.4 : Préparation de la photo et contrôle des images (C20)
+### Story 5.4 : Photo preparation and image check
 
 En tant qu'Arnaud, mainteneur,
 je veux préparer la photo par un seul script et vérifier qu'aucune métadonnée ne subsiste,
@@ -1608,7 +1631,7 @@ afin que ni l'original ni ses données de prise de vue n'arrivent sur le dépôt
 **Questions à poser avant de commencer :**
 - Faut-il une image de test commitée sous `tests/fixtures/` (sans métadonnée, donc sans valeur de démonstration pour C20), ou une image générée à la volée ?
 
-### Story 5.5 : Photo publiée sur l'accueil
+### Story 5.5 : Photo published on home page
 
 En tant que Claire, CTO (UJ-1),
 je veux voir la photo d'Arnaud à côté de son nom,
@@ -1637,7 +1660,7 @@ afin de mettre un visage sur le CV.
 
 Claire lit un cas mis en page selon `DESIGN.md` : « Contexte mission » en note de marge, sommaire, rubriques numérotées, retour au parcours. Les pages françaises suivent la typographie française.
 
-### Story 6.1 : Page Chiliz mise en forme
+### Story 6.1 : Styled Chiliz page
 
 En tant que Claire, CTO (UJ-1),
 je veux une page Chiliz composée comme un dossier technique,
@@ -1667,7 +1690,7 @@ afin de trouver en quelques secondes le contexte, le résumé et la décision.
 - [ ] Sous md, le sommaire est un `<details>` fermé ; dès md, visible et collant dans la marge, sans recouvrir le texte.
 - [ ] Check-list d'AD-17 sur la page de groupe, en clair et en sombre.
 
-### Story 6.2 : Page d'un cas sans groupe
+### Story 6.2 : Ungrouped case page
 
 En tant que Claire, CTO (UJ-1),
 je veux qu'un cas sans groupe ait sa page, avec les mêmes encarts et le même retour au parcours,
@@ -1689,7 +1712,7 @@ afin de lire les cas 01, 05 et 06 comme le cas 02.
 - [ ] La copie locale est supprimée ; seul le gabarit est commité.
 - [ ] Check-list d'AD-17 sur la page de cas, en clair et en sombre.
 
-### Story 6.3 : Typographie française appliquée au build (C24)
+### Story 6.3 : French typography applied at build
 
 En tant que lectrice ou lecteur francophone,
 je veux une ponctuation composée selon la typographie française,
@@ -1722,7 +1745,7 @@ afin de lire un texte soigné sans qu'Arnaud tape d'espaces insécables.
 
 Claire peut garder un CV en PDF dans sa langue ; aucun PDF contenant un téléphone ou une ville de résidence n'entre dans l'historique, et les liens n'apparaissent que si les deux fichiers ont passé leur contrôle.
 
-### Story 7.1 : Contrôle des CV PDF (C21) et pre-commit
+### Story 7.1 : CV PDF check and pre-commit
 
 En tant qu'Arnaud, mainteneur,
 je veux qu'un script extraie le texte et les métadonnées de chaque CV PDF et les confronte à la liste des motifs,
@@ -1761,7 +1784,7 @@ afin qu'un PDF contenant un téléphone ou une ville de résidence soit refusé 
 **Questions à poser avant de commencer :**
 - Tant que ce chemin est interdit, `check-private.sh staged` refuse déjà tout PDF indexé : le pre-commit se démontre-t-il sur un dépôt jetable où la règle est retirée ?
 
-### Story 7.2 : Liens conditionnels vers les CV dans le pied de page
+### Story 7.2 : Conditional CV links in footer
 
 En tant que Claire, CTO (UJ-1),
 je veux trouver dans le pied de page les deux CV, avec leur langue et leur taille,
@@ -1788,7 +1811,7 @@ afin d'en garder un sans chercher.
 **Questions à poser avant de commencer :**
 - Libellés `cv_pdf` (« à valider » dans `EXPERIENCE.md`) ?
 
-### Story 7.3 : Extraction des PDF dans le hook pre-receive et image Gitea dérivée
+### Story 7.3 : PDF extraction in pre-receive hook
 
 En tant qu'Arnaud, mainteneur,
 je veux que la forge refuse côté serveur un PDF qui contient un motif,
@@ -1816,7 +1839,7 @@ afin de pouvoir commiter des CV PDF sans risque pour le dépôt public.
 
 - [ ] L'image dérivée et sa reconstruction à chaque montée de version sont notées dans la procédure d'Arnaud, sans nom d'hôte.
 
-### Story 7.4 : Publication des CV PDF
+### Story 7.4 : Publish CV PDFs
 
 En tant que Claire, CTO (UJ-1),
 je veux télécharger le CV d'Arnaud en PDF dans ma langue,
@@ -1844,7 +1867,7 @@ afin de le garder et de le transmettre.
 
 Un schéma bilingue suit le mode du lecteur (ou son repli validé), et la CI refuse tout SVG désynchronisé. Le spike passe avant toute story du pipeline (AD-7).
 
-### Story 8.1 : Spike « D2 à double thème »
+### Story 8.1 : Dual-theme D2 spike
 
 En tant qu'Arnaud, mainteneur,
 je veux savoir si un SVG D2 qui embarque les deux thèmes tient dans `<img>`, reste déterministe et reste léger,
@@ -1877,7 +1900,7 @@ afin de choisir, preuve à l'appui, entre le double thème et le repli en planch
 **Questions à poser avant de commencer :**
 - Où consigner le résultat du spike (note dans `docs/measures/`, PR, `.memlog.md` de l'architecture) ?
 
-### Story 8.2 : Thème D2 et rendu bilingue d'un schéma de démonstration
+### Story 8.2 : D2 theme and bilingual demo diagram
 
 En tant qu'Arnaud, mainteneur,
 je veux rendre un schéma en un SVG français et un anglais par un script unique, avec le thème retenu,
@@ -1908,7 +1931,7 @@ afin de produire des schémas identiques à l'octet sur toutes les machines x86_
 **Questions à poser avant de commencer :**
 - Le schéma de démonstration reprend-il celui de la branche `experiment/d2-bilingue` ?
 
-### Story 8.3 : Contrôle de synchronisation des SVG (C9)
+### Story 8.3 : SVG sync check
 
 En tant qu'Arnaud, mainteneur,
 je veux que la CI refuse tout SVG qui ne correspond plus à sa source,
@@ -1940,7 +1963,7 @@ afin que les schémas publiés soient toujours ceux des sources.
 
 Un lecteur trouve, dans chaque langue, les mentions légales et la confidentialité depuis toute page, la page Contact et « À propos » depuis l'en-tête, le lien vers le dépôt ; les moteurs lisent l'identité d'Arnaud.
 
-### Story 9.1 : Mentions légales et adresse confinée (C23)
+### Story 9.1 : Legal notice and confined address
 
 En tant que lectrice ou lecteur,
 je veux trouver depuis toute page des mentions légales complètes,
@@ -1972,11 +1995,12 @@ afin de savoir qui édite et qui héberge le site.
 **Alors** il porte le lien vers les mentions légales de sa langue.
 
 - [ ] C3, C11, C12 passent ; check-list d'AD-17 sur la page simple, en clair et en sombre.
+- [ ] `ci/release-pages.txt` gagne `legal-notice` (D-5).
 
 **Questions à poser avant de commencer :**
 - Les intitulés qui entourent les valeurs sont-ils rédigés par le développeur d'après FR-18, puis relus par Arnaud ?
 
-### Story 9.2 : Politique de confidentialité
+### Story 9.2 : Privacy policy
 
 En tant que lectrice ou lecteur,
 je veux savoir, depuis toute page, ce que le site collecte,
@@ -1999,8 +2023,9 @@ afin de lire en sachant qu'aucune donnée personnelle n'est enregistrée.
 **Alors** il porte le lien vers la politique de confidentialité de sa langue.
 
 - [ ] Rien n'est affirmé au-delà de FR-19 *(relecture)* ; la véracité sur le proxy est vérifiée à la story 11.11.
+- [ ] `ci/release-pages.txt` gagne `privacy` (D-5).
 
-### Story 9.3 : Contact et appel à contact
+### Story 9.3 : Contact page and call to contact
 
 En tant que Claire, CTO (UJ-1),
 je veux atteindre depuis l'accueil et l'en-tête une page qui donne l'adresse mail et le LinkedIn d'Arnaud,
@@ -2027,12 +2052,13 @@ afin de le contacter sans formulaire.
 **Alors** elle arrive en un clic sur la page Contact de la même langue.
 
 - [ ] Aucun formulaire (C10) ; la page n'est pas orpheline (C12).
+- [ ] `ci/release-pages.txt` gagne `contact` (D-5).
 
 **Questions à poser avant de commencer :**
 - Libellés `block_contact` et `contact_cta` (« à valider » dans `EXPERIENCE.md`) ?
 - La liste des motifs du garde-fou ne contient-elle ni l'adresse mail ni l'URL LinkedIn (sinon le push serait refusé) ?
 
-### Story 9.4 : Page « À propos »
+### Story 9.4 : About page
 
 En tant que Claire, CTO (UJ-1),
 je veux lire en une page ce qu'Arnaud fait bien, ce qu'il ne veut pas être et comment il travaille, avec sa photo et ses CV,
@@ -2060,8 +2086,9 @@ afin de situer son profil.
 **Alors** il porte le lien « À propos ».
 
 - [ ] Aucune donnée interdite par NFR-9, rien d'absent des sources *(relecture)* ; C3, C11, C12, C20 passent.
+- [ ] `ci/release-pages.txt` gagne `about` (D-5).
 
-### Story 9.5 : Lien conditionnel vers le dépôt public
+### Story 9.5 : Conditional public repository link
 
 En tant que Sam, tech lead (UJ-3),
 je veux trouver dans le pied de page un lien vers le code source du site,
@@ -2088,16 +2115,16 @@ afin de voir comment le site a été construit.
 **Questions à poser avant de commencer :**
 - Libellés `footer_source` (« à valider » dans `EXPERIENCE.md`) ?
 
-### Story 9.6 : Données structurées « Person » (JSON-LD)
+### Story 9.6 : Person structured data
 
 En tant qu'Arnaud, mainteneur,
 je veux que l'accueil décrive mon identité pour les moteurs de recherche, par des données seulement,
 afin d'être trouvé sous mon nom sans ajouter de JavaScript.
 
-**Couvre :** FR-35, NFR-9, NFR-12 · AD-20 · C10
+**Couvre :** FR-35, NFR-9, NFR-12 · AD-3, AD-19, AD-20 · C3, C10
 **Dépendances :** 3.8, 9.3
 **Bloquée par :** —
-**Prérequis de contenu :** lien GitHub à inscrire dans le bloc (voir question).
+**Prérequis de contenu :** URL du profil GitHub d'Arnaud ; intitulé `job_title` FR et EN.
 **Opération manuelle (Arnaud) :** non
 
 **Critères d'acceptation :**
@@ -2107,186 +2134,22 @@ afin d'être trouvé sous mon nom sans ajouter de JavaScript.
 **Alors** l'accueil contient exactement un `<script type="application/ld+json">`, construit par `jsonify` à partir du contenu, avec les seules clés `@context`, `@type: Person`, `name`, `alternateName`, `jobTitle`, `address.addressCountry: FR`, `url` et `sameAs` (LinkedIn et GitHub)
 **Et** aucune autre page n'en contient.
 
+**Étant donné** les sources d'AD-20 (D-7)
+**Quand** le bloc est construit
+**Alors** `name` et `alternateName` viennent d'`identity`, `jobTitle` de la nouvelle clé `job_title` de `content/_index.{fr,en}.md` dans la langue du fichier, `url` de `baseURL`, et `sameAs` de `linkedin` et de la nouvelle clé `github` (URL du profil, identique en FR et en EN, comparée par C3) de `content/contact.{fr,en}.md`
+**Et** un lien vide est omis de `sameAs`, jamais remplacé par une valeur factice.
+
 **Étant donné** C10
 **Quand** on lance les contrôles
 **Alors** la règle « exactement un bloc conforme sur chaque accueil » est active et passe.
 
 - [ ] Ni ville, ni téléphone, ni photo dans le bloc ; la CSP d'AD-13 est inchangée.
 
-**Questions à poser avant de commencer :**
-- D'où viennent `jobTitle` (titre du site ?), le lien LinkedIn (front matter de Contact ?) et le lien GitHub (profil ou dépôt, `params.source_url` ?) ? AD-20 dit seulement « à partir du contenu ».
-
-## Epic 10 : Contenu du socle
-
-Stories d'**intégration** : le contenu fourni par Arnaud passe les contrôles et quitte l'état de brouillon. Les cas passent par le skill `publish-case` (story 3.17).
-
-### Story 10.1 : Pitch de l'accueil
-
-En tant que Claire, CTO (UJ-1),
-je veux lire sous le titre un pitch de trois phrases,
-afin de comprendre en trente secondes ce qu'Arnaud fait bien.
-
-**Couvre :** FR-1, FR-20, FR-37, SM-1 · AD-3, AD-17
-**Dépendances :** 5.5
-**Bloquée par :** —
-**Prérequis de contenu :** pitch FR et EN, trois phrases chacun.
-**Opération manuelle (Arnaud) :** non
-
-**Critères d'acceptation :**
-
-**Étant donné** le pitch ajouté à `content/_index.{fr,en}.md`
-**Quand** on ouvre `/` et `/en/`
-**Alors** il suit le titre du site et « Basé en France », en trois phrases, et les deux versions disent la même chose *(relecture)*.
-
-**Étant donné** l'accueil sur 390 × 844 px, photo comprise, en FR et en EN
-**Quand** la page s'ouvre sans défilement
-**Alors** on voit la ligne d'identité, le titre, le pitch et le début du premier poste avec le lien de son premier cas (vérifié de nouveau à la story 11.11).
-
-- [ ] La PR ne touche que les deux fichiers de contenu (FR-25).
-
-### Story 10.2 : Postes du parcours
-
-En tant que Claire, CTO (UJ-1),
-je veux lire le parcours d'Arnaud du plus récent au plus ancien,
-afin de reconnaître un CV et d'y trouver les preuves.
-
-**Couvre :** FR-2, FR-4, FR-20, FR-22, FR-25, NFR-10 · AD-18 · C3, C19
-**Dépendances :** 3.7, 5.2
-**Bloquée par :** —
-**Prérequis de contenu :** données de parcours FR et EN tirées du CV d'Arnaud (société, intitulé, période, ville de travail ou mode, cadre, société de prestation) ; URL de Ton Pote le Geek ; ligne de contexte EN sur Ton Pote le Geek.
-**Opération manuelle (Arnaud) :** non
-
-Identifiants : `position-chiliz` et `position-ton-pote-le-geek` sont fixés par l'architecture ; `position-april-technologies` (poste de 2017, en prestation Modis) est donné par la consigne de réalignement. Tout autre identifiant est proposé par le développeur et **confirmé par Arnaud** avant commit (par exemple, pour le poste du cas 05, `position-orange`, à confirmer).
-
-**Critères d'acceptation :**
-
-**Étant donné** les fichiers `content/career/position-<id>.{fr,en}.md`
-**Quand** on lance les contrôles
-**Alors** C3 et C19 passent : `order` unique par `track`, `period` renseignée, `location` ou `setup` présents, `position-ton-pote-le-geek` en `track: parallel`.
-
-**Étant donné** le build de production
-**Quand** on ouvre l'accueil FR puis EN
-**Alors** les mêmes postes apparaissent dans le même ordre ; le poste April Technologies de 2017 indique la prestation Modis, et son corps peut mentionner le même projet chez April pour le compte de CGI en 2013–2014.
-
-- [ ] Chaque donnée figure dans le CV d'Arnaud *(relecture)* ; aucune ville de résidence.
-- [ ] La PR ne touche que `content/career/` (FR-25).
-
-**Questions à poser avant de commencer :**
-- Une ville de travail qui figurerait aussi dans la liste des motifs serait refusée par le garde-fou et par C22 : Arnaud vérifie-t-il ce cas avant la saisie ?
-
-### Story 10.3 : Formation, certification et langues
-
-En tant que Claire, CTO (UJ-1),
-je veux voir la formation, les certifications et les langues d'Arnaud,
-afin de compléter la lecture du CV.
-
-**Couvre :** FR-20, FR-25, FR-36, NFR-10 · AD-18 · C3, C19
-**Dépendances :** 5.3
-**Bloquée par :** —
-**Prérequis de contenu :** entrées FR et EN tirées du CV d'Arnaud.
-**Opération manuelle (Arnaud) :** non
-
-**Critères d'acceptation :**
-
-**Étant donné** les fichiers `content/education/education-<id>.{fr,en}.md`
-**Quand** on lance les contrôles puis le build de production
-**Alors** C3 et C19 passent, et le bloc s'affiche après « En parallèle » dans les deux langues.
-
-- [ ] Chaque donnée figure dans le CV *(relecture)* ; identifiants proposés par le développeur et confirmés par Arnaud.
-
-### Story 10.4 : Titre et introduction de la page Chiliz
-
-En tant que Claire, CTO (UJ-1),
-je veux que la page Chiliz ait un titre, et au besoin une introduction,
-afin de comprendre ce que la page réunit.
-
-**Couvre :** FR-9, NFR-10 · AD-4
-**Dépendances :** 6.1
-**Bloquée par :** **Q9** (titre et introduction de la page Chiliz)
-**Prérequis de contenu :** texte selon la réponse à Q9.
-**Opération manuelle (Arnaud) :** non
-
-**Critères d'acceptation :**
-
-**Étant donné** la réponse à Q9
-**Quand** `content/cases/chiliz/_index.{fr,en}.md` est mis à jour
-**Alors** la page affiche ce titre, et l'introduction si Q9 en prévoit une, sans `[TODO` et hors brouillon.
-
-- [ ] Rien d'ajouté au-delà du texte fourni *(relecture)*.
-
-### Story 10.5 : Cas pilote 02 publiable
-
-En tant que Claire, CTO (UJ-1),
-je veux que le cas 02 soit prêt à être mis en ligne sous le poste Chiliz,
-afin de trouver en un clic la preuve « Chiliz, source de vérité ».
-
-**Couvre :** FR-2, FR-5 à FR-9, FR-12, FR-20, FR-22 (NCS/CS), FR-25, FR-26, SM-7
-**Dépendances :** 3.17, 10.2, 10.4
-**Bloquée par :** **Q9** (par la story 10.4)
-**Prérequis de contenu :** relecture et accord d'Arnaud.
-**Opération manuelle (Arnaud) :** non
-
-**Critères d'acceptation :**
-
-**Étant donné** le skill `publish-case` sur `case-02`, avec `position-chiliz` publié
-**Quand** il s'exécute
-**Alors** tous les contrôles passent et les deux fichiers passent en `draft: false` dans une PR.
-
-**Étant donné** le build de production
-**Quand** on ouvre l'accueil puis `/cas/chiliz/#case-02`
-**Alors** le poste Chiliz liste le cas 02, la section est présente, et les trois éléments « prévus » ne laissent aucune trace.
-
-- [ ] La PR ne touche que les deux fichiers du cas (SM-7).
-
-### Story 10.6 : Intégration du cas 01
-
-En tant que Claire, CTO (UJ-1),
-je veux lire le cas 01 (« Calculette de rentabilité ») depuis le bloc « En parallèle »,
-afin de voir un cas mené de bout en bout dans le cadre de Ton Pote le Geek.
-
-**Couvre :** FR-4, FR-5 à FR-8, FR-11, FR-12, FR-20, FR-22 (Systeme.io, Ton Pote le Geek), FR-25, FR-26
-**Dépendances :** 3.17, 6.2, 10.2
-**Bloquée par :** **Q2** (période du cas 01)
-**Prérequis de contenu :** cas 01 FR et EN rédigé par Arnaud selon `docs/format-cas.md` v0.4, après les corrections préalables des sources (§9 du PRD).
-**Opération manuelle (Arnaud) :** non
-
-**Critères d'acceptation :**
-
-**Étant donné** `content/cases/case-01-<nom-court>.{fr,en}.md` avec `position: "position-ton-pote-le-geek"`
-**Quand** `publish-case` s'exécute
-**Alors** tous les contrôles passent et le cas passe en `draft: false` dans une PR.
-
-**Étant donné** le build de production
-**Quand** on ouvre l'accueil puis la page du cas
-**Alors** le cas est lié depuis « En parallèle », son encart affiche le cadre Ton Pote le Geek, et la version EN porte les lignes de contexte sur Systeme.io et Ton Pote le Geek.
-
-### Story 10.7 : Intégration du cas 05
-
-En tant que Claire, CTO (UJ-1),
-je veux lire le cas 05 (« Orange, performance ») sous son poste,
-afin de voir comment Arnaud mesure une performance et en nomme les limites.
-
-**Couvre :** FR-2, FR-5 à FR-8, FR-10, FR-12, FR-20, FR-22 (Orange), FR-25, FR-26
-**Dépendances :** 3.17, 6.2, 10.2
-**Bloquée par :** **Q2** (période et cadre du cas 05)
-**Prérequis de contenu :** cas 05 FR et EN rédigé par Arnaud ; identifiant du poste confirmé.
-**Opération manuelle (Arnaud) :** non
-
-**Critères d'acceptation :**
-
-**Étant donné** `content/cases/case-05-<nom-court>.{fr,en}.md` avec la clé `position` de son poste
-**Quand** `publish-case` s'exécute
-**Alors** tous les contrôles passent et le cas passe en `draft: false` dans une PR.
-
-**Étant donné** le build de production
-**Quand** on ouvre l'accueil puis la page du cas
-**Alors** le cas est lié sous son poste, nomme les limites de sa mesure *(relecture)*, et la version EN porte la ligne de contexte sur Orange.
-
 ## Epic 11 : Mise en ligne, répétition générale et socle
 
-La chaîne de mise en ligne est construite, répétée sur le serveur de production sans DNS, le test des trente secondes est passé, puis le socle est mis en ligne par le flux linéaire, derrière un proxy sans journal d'IP.
+La chaîne de mise en ligne est construite et répétée tôt sur le serveur de production, sans DNS : stories 11.1 à 11.9, placées avant l'Epic 10, dont elles ne dépendent pas (décision D-5). Après le contenu du socle, le test des trente secondes est passé, puis le socle est mis en ligne par le flux linéaire, derrière un proxy sans journal d'IP : stories 11.10 à 11.13, dans la section « Mise en ligne du socle » qui suit l'Epic 10.
 
-### Story 11.1 : Contrôles de mise en ligne (C15) et pages attendues
+### Story 11.1 : Release checks and expected pages
 
 En tant qu'Arnaud, mainteneur,
 je veux qu'une mise en ligne soit refusée si une page attendue manque ou si une trace de travail reste,
@@ -2300,18 +2163,17 @@ afin de ne jamais publier un socle incomplet.
 
 **Critères d'acceptation :**
 
-**Étant donné** `ci/release-pages.txt` (pages du socle par `translationKey`, sans les CV PDF)
+**Étant donné** `ci/release-pages.txt`, liste cumulative des pages publiées attendues à ce commit, par `translationKey`, sans les CV PDF (créée à la story 2.2, D-5)
 **Quand** on lance `scripts/check.sh --release`
-**Alors** il échoue si une page de groupe est vide, si une page listée manque en FR ou en EN, ou si `VALEUR-FACTICE`, un `checks.json`, un `noindex` ou un `draft-marker` apparaît dans `public/`.
+**Alors** il échoue si une page de groupe est vide, si une page ou une section listée manque en FR ou en EN, ou si `VALEUR-FACTICE`, un `checks.json`, un `noindex` ou un `draft-marker` apparaît dans `public/`.
 
 **Étant donné** l'état actuel (pilote en brouillon, valeurs factices)
 **Quand** on lance `--release`
 **Alors** il échoue et liste chaque écart.
 
-**Questions à poser avant de commencer :**
-- Quels `translationKey` exacts : `group-chiliz` seul, ou aussi les cas et les postes ?
+- [ ] La complétude du socle n'est pas vérifiée ici : `release` la vérifie pour `v1.0.0` seulement (stories 11.7 et 11.11).
 
-### Story 11.2 : Motifs interdits sur la sortie de production (C22)
+### Story 11.2 : Forbidden patterns on production output
 
 En tant qu'Arnaud, mainteneur,
 je veux confronter la sortie de production à la liste des motifs,
@@ -2335,7 +2197,7 @@ afin qu'aucune donnée privée n'apparaisse sur le site, hors valeurs injectées
 
 - [ ] Le fichier temporaire est supprimé en fin d'exécution ; C22 ne tourne que dans le job `release`.
 
-### Story 11.3 : Construction de l'image de mise en ligne
+### Story 11.3 : Release image build
 
 En tant qu'Arnaud, mainteneur,
 je veux construire l'image d'une mise en ligne avec les vraies valeurs légales et la liste des motifs passées en secret,
@@ -2363,7 +2225,7 @@ afin qu'aucune valeur n'apparaisse dans le dépôt, l'image ou une page périmé
 
 - [ ] Aucun `set -x` ; aucune valeur dans `docker history` ni dans les journaux.
 
-### Story 11.4 : Commande forcée `deploy-site`, services de production et de répétition
+### Story 11.4 : Forced deploy-site command and services
 
 En tant qu'Arnaud, mainteneur,
 je veux que le serveur de production n'accepte que des demandes précises, sur deux canaux séparés,
@@ -2396,7 +2258,7 @@ afin qu'une clé volée ne permette rien d'autre et qu'une répétition ne touch
 - [ ] `deploy/compose.yaml` : service `site` sans port publié, sur le réseau du proxy nommé par variable, journaux `json-file` 10 m × 3.
 - [ ] `deploy/compose.rehearsal.yaml` : projet `site-rehearsal`, hors du réseau du proxy, publié sur `127.0.0.1:18080` seulement.
 
-### Story 11.5 : Livraison et workflow `release`
+### Story 11.5 : Delivery and release workflow
 
 En tant qu'Arnaud, mainteneur,
 je veux qu'un tag de mise en ligne ou de répétition contrôle, construise et livre l'image vers le bon canal,
@@ -2422,9 +2284,13 @@ afin que chaque mise en ligne ou répétition soit explicite et reproductible.
 **Quand** le workflow démarre
 **Alors** il échoue avant toute construction.
 
+**Étant donné** le tag `v1.0.0`
+**Quand** aucun tag `v1.0.0-rc.N` ne pointe sur un commit de même arbre (`git diff --quiet`)
+**Alors** le workflow échoue avant toute construction ; pour un tag de production suivant, cette règle ne bloque pas (AD-22, D-6).
+
 - [ ] Un push sur `dev` ou `main` ne déclenche pas `release` ; aucun secret affiché.
 
-### Story 11.6 : Préparation du serveur de production et des secrets
+### Story 11.6 : Production server and secrets setup
 
 En tant qu'Arnaud, mainteneur,
 je veux un compte de déploiement restreint, les deux services en place et les secrets de la forge,
@@ -2448,13 +2314,13 @@ afin que le workflow `release` puisse livrer sans accès plus large.
 
 - [ ] Serveur en x86_64 confirmé ; aucun nom d'hôte, adresse ni nom de compte commité.
 
-### Story 11.7 : Skill `release`
+### Story 11.7 : Release skill
 
 En tant qu'Arnaud, mainteneur,
 je veux une procédure unique pour publier `dev` sur `main`, taguer, livrer et revenir en arrière,
 afin que chaque mise en ligne suive le flux linéaire sans merge commit.
 
-**Couvre :** FR-32, NFR-7 · AD-11, AD-14
+**Couvre :** FR-32, NFR-7 · AD-11, AD-14, AD-22, AD-24
 **Dépendances :** 0.2, 0.4, 11.5
 **Bloquée par :** —
 **Prérequis de contenu :** —
@@ -2468,29 +2334,30 @@ afin que chaque mise en ligne suive le flux linéaire sans merge commit.
 
 **Étant donné** l'invariant vérifié
 **Quand** la publication se déroule
-**Alors** le script ouvre la PR `dev` vers `main` (fusion en fast-forward), vérifie que `main` et `dev` pointent sur le même commit, pose le tag `vX.Y.Z` sur `main`, puis suit le workflow `release` et `deploy-site status`.
+**Alors** le script ouvre la PR `dev` vers `main`, applique les verrous de la publication (AD-24, D-13 : revue tenue si chaque commit de `main..dev` est le squash d'une PR fusionnée par `verify-and-merge-pr`, repérée par son numéro dans le message de commit ; garde-fou, CI et suivi de sprint tels quels), fusionne en fast-forward **seulement avec `--merge` lancé par Arnaud**, vérifie que `main` et `dev` pointent sur le même commit, pose le tag `vX.Y.Z` sur `main`, puis suit le workflow `release` et `deploy-site status`.
 
-**Étant donné** un tag `vX.Y.Z` demandé (par exemple `v1.0.0`)
-**Quand** aucun tag `vX.Y.Z-rc.N` ne pointe sur un commit de même arbre que la tête de `dev`
-**Alors** le script refuse la publication avant toute action.
+**Étant donné** le tag `v1.0.0` demandé
+**Quand** aucun tag `v1.0.0-rc.N` ne pointe sur un commit de même arbre que la tête de `dev`, ou que `ci/release-pages.txt` ne contient pas toutes les pages du socle (FR-32)
+**Alors** le script refuse la publication avant toute action (D-5, D-6).
+
+**Étant donné** un tag de production suivant sans tag `-rc` de même arbre
+**Quand** le script s'exécute
+**Alors** il affiche un avertissement, sans bloquer (AD-22, D-6).
 
 **Étant donné** la commande de retour arrière du skill
 **Quand** Arnaud la lance avec un tag précédent
 **Alors** elle appelle `rollback <tag>` (ou `rehearse rollback <tag>`) et confirme par `status`.
 
-- [ ] La procédure `docs/procedures/release.md` reprend les réglages de la story 0.2 et le flux linéaire ; aucun merge commit.
+- [ ] La procédure `docs/procedures/release.md` renvoie aux réglages de `docs/procedures/gitea-branches.md` (story 0.2) et décrit le flux linéaire ; aucun merge commit.
 - [ ] Le script charge `.env` sans afficher de valeur ; sans variable Gitea, il échoue en renvoyant à la story 0.1.
 
-**Questions à poser avant de commencer :**
-- Le script fusionne-t-il la PR `dev` vers `main` lui-même, ou Arnaud la fusionne-t-il dans Gitea après contrôle ?
-
-### Story 11.8 : Skill `rehearse-release`
+### Story 11.8 : Rehearse-release skill
 
 En tant qu'Arnaud, mainteneur,
 je veux une procédure pour la répétition générale d'AD-22,
 afin de l'exécuter et de la refaire à l'identique.
 
-**Couvre :** FR-39, NFR-7 · AD-22
+**Couvre :** FR-39, NFR-7 · AD-22, AD-24
 **Dépendances :** 11.6, 11.7
 **Bloquée par :** —
 **Prérequis de contenu :** —
@@ -2507,48 +2374,226 @@ afin de l'exécuter et de la refaire à l'identique.
 **Alors** il contrôle par `curl -I` les en-têtes d'AD-13 sur un HTML, un SVG s'il existe, une 404 FR et EN, et vérifie que `docker logs` du conteneur de répétition ne contient aucune IP.
 
 - [ ] Le script ne touche ni au service de production, ni à NPM, ni au DNS.
+- [ ] La procédure vaut pour tout tag `vX.Y.Z-rc.N`, dont une première répétition sur `v0.1.0-rc.1` avec les seules pages déjà publiées (D-5).
 
-### Story 11.9 : Répétition générale
+### Story 11.9 : First release chain rehearsal
 
 En tant qu'Arnaud, mainteneur,
-je veux exercer toute la chaîne sur le serveur de production avant le premier tag du socle,
-afin de ne découvrir aucune erreur de chaîne en production.
+je veux exercer tôt toute la chaîne sur le serveur de production, avant le contenu du socle,
+afin de découvrir une erreur de chaîne bien avant la mise en ligne.
 
-**Couvre :** FR-39, NFR-2 · AD-22, procédure « premier déploiement » (étape 3)
+**Couvre :** FR-39, NFR-2 · AD-22
 **Dépendances :** 11.8
-**Bloquée par :** — (voir le point à trancher)
+**Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, tags `v1.0.0-rc.1` et `v1.0.0-rc.2` sur `dev`, tunnel SSH, vérifications.
+**Opération manuelle (Arnaud) :** **oui**, tags `v0.1.0-rc.1` et `v0.1.0-rc.2` sur `dev`, tunnel SSH, vérifications.
 
 **Critères d'acceptation :**
 
-**Étant donné** `v1.0.0-rc.1` posé sur `dev`
+**Étant donné** `v0.1.0-rc.1` posé sur `dev`
 **Quand** le workflow `release` se termine
-**Alors** `status` montre `v1.0.0-rc.1` en répétition, et le site répond par le tunnel sur `http://127.0.0.1:18080/`, sans DNS ni port public.
+**Alors** `status` montre `v0.1.0-rc.1` en répétition, et le site répond par le tunnel sur `http://127.0.0.1:18080/`, sans DNS ni port public
+**Et** les contrôles de mise en ligne passent, C15 compris, puisque `ci/release-pages.txt` ne liste que les pages publiées attendues à ce commit (D-5).
 
 **Étant donné** les vérifications de la story 11.8
 **Quand** Arnaud les lance
 **Alors** les en-têtes sont conformes, les pages légales montrent les vraies valeurs, et les journaux ne contiennent aucune IP.
 
-**Étant donné** `v1.0.0-rc.2` déployé
-**Quand** Arnaud lance `rehearse rollback v1.0.0-rc.1`
-**Alors** `status` montre `v1.0.0-rc.1`, vérifié par le tunnel ; puis `rehearse stop` arrête le conteneur et supprime les images `-rc`.
+**Étant donné** `v0.1.0-rc.2` déployé
+**Quand** Arnaud lance `rehearse rollback v0.1.0-rc.1`
+**Alors** `status` montre `v0.1.0-rc.1`, vérifié par le tunnel ; puis `rehearse stop` arrête le conteneur et supprime les images `-rc`.
 
-**Point à trancher avant de commencer :** le workflow `release` d'un tag `-rc` lance les contrôles de mise en ligne, dont C15 (pages du socle présentes, aucune page de groupe vide). Tant que le contenu du socle n'est pas publié (Q2, Q9), C15 échoue et la répétition ne peut pas avoir lieu « tôt » comme le demande FR-39. Arnaud décide : liste de pages propre aux tags `-rc`, ou répétition après l'Epic 10.
+- [ ] Le jalon « répétition générale » d'AD-22, sur l'arbre du socle (`v1.0.0-rc.1` puis `v1.0.0-rc.2`), est déroulé à la story 11.10.
 
-### Story 11.10 : Test des trente secondes
+## Epic 10 : Contenu du socle
+
+Stories d'**intégration** : le contenu fourni par Arnaud passe les contrôles et quitte l'état de brouillon. Les cas passent par le skill `publish-case` (story 3.17).
+
+### Story 10.1 : Home page pitch
+
+En tant que Claire, CTO (UJ-1),
+je veux lire sous le titre un pitch de trois phrases,
+afin de comprendre en trente secondes ce qu'Arnaud fait bien.
+
+**Couvre :** FR-1, FR-20, FR-37, SM-1 · AD-3, AD-17
+**Dépendances :** 5.5
+**Bloquée par :** —
+**Prérequis de contenu :** pitch FR et EN, trois phrases chacun.
+**Opération manuelle (Arnaud) :** non
+
+**Critères d'acceptation :**
+
+**Étant donné** le pitch ajouté à `content/_index.{fr,en}.md`
+**Quand** on ouvre `/` et `/en/`
+**Alors** il suit le titre du site et « Basé en France », en trois phrases, et les deux versions disent la même chose *(relecture)*.
+
+**Étant donné** l'accueil sur 390 × 844 px, photo comprise, en FR et en EN
+**Quand** la page s'ouvre sans défilement
+**Alors** on voit la ligne d'identité, le titre, le pitch et le début du premier poste avec le lien de son premier cas (vérifié de nouveau à la story 11.11).
+
+- [ ] La PR ne touche que les deux fichiers de contenu (FR-25).
+
+### Story 10.2 : Career positions
+
+En tant que Claire, CTO (UJ-1),
+je veux lire le parcours d'Arnaud du plus récent au plus ancien,
+afin de reconnaître un CV et d'y trouver les preuves.
+
+**Couvre :** FR-2, FR-4, FR-20, FR-22, FR-25, NFR-10 · AD-18 · C3, C19
+**Dépendances :** 3.7, 5.2
+**Bloquée par :** —
+**Prérequis de contenu :** données de parcours FR et EN tirées du CV d'Arnaud (société, intitulé, période, ville de travail ou mode, cadre, société de prestation) ; URL de Ton Pote le Geek ; ligne de contexte EN sur Ton Pote le Geek.
+**Opération manuelle (Arnaud) :** non
+
+Identifiants : exactement la liste figée d'AD-18 (D-8, précisée le 13/09/2026) : `position-chiliz`, `position-synolia`, `position-mister-auto`, `position-april-technologies-2017`, `position-orange`, `position-earlier-career` (« Parcours antérieur », 2008–2014, regroupement et non société) et `position-ton-pote-le-geek`. Aucun autre poste n'est créé. La mission de 2013–2014 chez April pour le compte de CGI est une ligne de détail de `position-earlier-career`.
+
+**Critères d'acceptation :**
+
+**Étant donné** les fichiers `content/career/position-<id>.{fr,en}.md`
+**Quand** on lance les contrôles
+**Alors** C3 et C19 passent : `order` unique par `track`, `period` renseignée, `location` ou `setup` présents, `position-ton-pote-le-geek` en `track: parallel`.
+
+**Étant donné** le build de production
+**Quand** on ouvre l'accueil FR puis EN
+**Alors** les mêmes postes apparaissent dans le même ordre ; le poste April Technologies de 2017 indique la prestation Modis, et son corps peut mentionner le même projet chez April pour le compte de CGI en 2013–2014, mission qui figure comme ligne de détail de `position-earlier-career`.
+
+- [ ] Chaque donnée figure dans le CV d'Arnaud *(relecture)* ; aucune ville de résidence.
+- [ ] Sept fichiers de poste, un par identifiant d'AD-18 ; `position-synolia`, `position-mister-auto` et `position-earlier-career` sans cas rattaché.
+- [ ] La PR ne touche que `content/career/` (FR-25).
+
+**Questions à poser avant de commencer :**
+- Une ville de travail qui figurerait aussi dans la liste des motifs serait refusée par le garde-fou et par C22 : Arnaud vérifie-t-il ce cas avant la saisie ?
+
+### Story 10.3 : Education, certification and languages content
+
+En tant que Claire, CTO (UJ-1),
+je veux voir la formation, les certifications et les langues d'Arnaud,
+afin de compléter la lecture du CV.
+
+**Couvre :** FR-20, FR-25, FR-36, NFR-10 · AD-18 · C3, C19
+**Dépendances :** 5.3
+**Bloquée par :** —
+**Prérequis de contenu :** entrées FR et EN tirées du CV d'Arnaud.
+**Opération manuelle (Arnaud) :** non
+
+**Critères d'acceptation :**
+
+**Étant donné** les fichiers `content/education/education-<id>.{fr,en}.md`
+**Quand** on lance les contrôles puis le build de production
+**Alors** C3 et C19 passent, et le bloc s'affiche après « En parallèle » dans les deux langues.
+
+- [ ] Chaque donnée figure dans le CV *(relecture)* ; identifiants proposés par le développeur et confirmés par Arnaud.
+
+### Story 10.4 : Chiliz page title and introduction
+
+En tant que Claire, CTO (UJ-1),
+je veux que la page Chiliz porte son titre « Chiliz »,
+afin de comprendre ce que la page réunit.
+
+**Couvre :** FR-9, NFR-10 · AD-4
+**Dépendances :** 6.1 ; **livrée dans la même PR que la story 10.5** (décision d'Arnaud du 13/09/2026)
+**Bloquée par :** — (Q9 tranchée : titre « Chiliz », sans introduction)
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** non
+
+**Critères d'acceptation :**
+
+**Étant donné** la décision sur Q9 (titre « Chiliz » en FR et en EN, sans introduction en v1)
+**Quand** `content/cases/chiliz/_index.{fr,en}.md` est relu, puis passé en `draft: false` dans la PR qui publie le cas 02 (story 10.5 ; AD-4, D-3)
+**Alors** la page affiche le titre « Chiliz », sans introduction ni `[TODO`
+**Et** aucun commit de `dev` ne contient le `_index` Chiliz hors brouillon sans le cas 02 publié : aucune page de groupe vide n'existe en production.
+
+- [ ] Aucune introduction ajoutée (NFR-10) *(relecture)*.
+
+### Story 10.5 : Publish pilot case 02
+
+En tant que Claire, CTO (UJ-1),
+je veux que le cas 02 soit prêt à être mis en ligne sous le poste Chiliz,
+afin de trouver en un clic la preuve « Chiliz, source de vérité ».
+
+**Couvre :** FR-2, FR-5 à FR-9, FR-12, FR-20, FR-22 (NCS/CS), FR-25, FR-26, SM-7
+**Dépendances :** 3.17, 10.2 ; livre aussi la story 10.4, dans la même PR
+**Bloquée par :** —
+**Prérequis de contenu :** relecture et accord d'Arnaud.
+**Opération manuelle (Arnaud) :** non
+
+**Critères d'acceptation :**
+
+**Étant donné** le skill `publish-case` sur `case-02`, avec `position-chiliz` publié
+**Quand** il s'exécute
+**Alors** tous les contrôles passent et, dans une seule PR, les deux fichiers du cas et `content/cases/chiliz/_index.{fr,en}.md` passent en `draft: false` (story 10.4), et `case-02` et `group-chiliz` sont ajoutés à `ci/release-pages.txt` (D-5).
+
+**Étant donné** le build de production
+**Quand** on ouvre l'accueil puis `/cas/chiliz/#case-02`
+**Alors** le poste Chiliz liste le cas 02, la section est présente, et les trois éléments « prévus » ne laissent aucune trace.
+
+- [ ] La PR ne touche que les fichiers du cas, le `_index` Chiliz et `ci/release-pages.txt` (SM-7).
+
+### Story 10.6 : Integrate case 01
+
+En tant que Claire, CTO (UJ-1),
+je veux lire le cas 01 (« Calculette de rentabilité ») depuis le bloc « En parallèle »,
+afin de voir un cas mené de bout en bout dans le cadre de Ton Pote le Geek.
+
+**Couvre :** FR-4, FR-5 à FR-8, FR-11, FR-12, FR-20, FR-22 (Systeme.io, Ton Pote le Geek), FR-25, FR-26
+**Dépendances :** 3.17, 6.2, 10.2
+**Bloquée par :** **Q2** (période du cas 01)
+**Prérequis de contenu :** cas 01 FR et EN rédigé par Arnaud selon `docs/format-cas.md` v0.4, après les corrections préalables des sources (§9 du PRD).
+**Opération manuelle (Arnaud) :** non
+
+**Critères d'acceptation :**
+
+**Étant donné** `content/cases/case-01-<nom-court>.{fr,en}.md` avec `position: "position-ton-pote-le-geek"`
+**Quand** `publish-case` s'exécute
+**Alors** tous les contrôles passent et le cas passe en `draft: false` dans une PR.
+
+**Étant donné** le build de production
+**Quand** on ouvre l'accueil puis la page du cas
+**Alors** le cas est lié depuis « En parallèle », son encart affiche le cadre Ton Pote le Geek, et la version EN porte les lignes de contexte sur Systeme.io et Ton Pote le Geek.
+
+### Story 10.7 : Integrate case 05
+
+En tant que Claire, CTO (UJ-1),
+je veux lire le cas 05 (« Orange, performance ») sous son poste,
+afin de voir comment Arnaud mesure une performance et en nomme les limites.
+
+**Couvre :** FR-2, FR-5 à FR-8, FR-10, FR-12, FR-20, FR-22 (Orange), FR-25, FR-26
+**Dépendances :** 3.17, 6.2, 10.2
+**Bloquée par :** **Q2** (période et cadre du cas 05)
+**Prérequis de contenu :** cas 05 FR et EN rédigé par Arnaud.
+**Opération manuelle (Arnaud) :** non
+
+**Critères d'acceptation :**
+
+**Étant donné** `content/cases/case-05-<nom-court>.{fr,en}.md` avec `position: "position-orange"` (AD-18)
+**Quand** `publish-case` s'exécute
+**Alors** tous les contrôles passent et le cas passe en `draft: false` dans une PR.
+
+**Étant donné** le build de production
+**Quand** on ouvre l'accueil puis la page du cas
+**Alors** le cas est lié sous son poste, nomme les limites de sa mesure *(relecture)*, et la version EN porte la ligne de contexte sur Orange.
+
+## Mise en ligne du socle (stories 11.10 à 11.13)
+
+Suite de l'Epic 11, placée après l'Epic 10 (décision D-5) : ces stories demandent le contenu du socle. Les numéros sont conservés.
+
+### Story 11.10 : Thirty-second test
 
 En tant qu'Arnaud, mainteneur,
 je veux vérifier avec cinq testeurs que l'accueil dit en trente secondes qui je suis et ce que je fais bien,
 afin de retoucher le haut de l'accueil avant la mise en ligne s'il le faut.
 
-**Couvre :** SM-1, SM-3, FR-1, FR-2, FR-37 · UX-DR24
+**Couvre :** SM-1, SM-3, FR-1, FR-2, FR-37, FR-39 · AD-22, procédure « premier déploiement » (étape 3) · UX-DR24
 **Dépendances :** 9.4, 10.1 à 10.7, 11.9
-**Bloquée par :** **Q2** et **Q9** (le socle doit être complet : stories 10.4 à 10.7)
+**Bloquée par :** **Q2** (le socle doit être complet : stories 10.6 et 10.7)
 **Prérequis de contenu :** cinq testeurs selon `EXPERIENCE.md`.
-**Opération manuelle (Arnaud) :** **oui**, Arnaud mène le test, par partage d'écran sur le site de répétition (canal non public).
+**Opération manuelle (Arnaud) :** **oui**, jalon « répétition générale » d'AD-22 sur l'arbre du socle (tags `v1.0.0-rc.1` et `v1.0.0-rc.2` sur `dev`, par `rehearse-release`), puis Arnaud mène le test, par partage d'écran sur le site de répétition (canal non public).
 
 **Critères d'acceptation :**
+
+**Étant donné** le socle complet sur `dev`
+**Quand** Arnaud déroule le jalon « répétition générale » d'AD-22 (`v1.0.0-rc.1`, vérifications, `v1.0.0-rc.2`, `rehearse rollback v1.0.0-rc.1`, vérifications)
+**Alors** chaque vérification de la story 11.8 passe, et le site de répétition sert l'arbre du socle pour le test ; `rehearse stop` suit le dernier passage.
 
 **Étant donné** la méthode d'`EXPERIENCE.md` (cinq testeurs dont au moins un CTO ou tech lead, un recruteur tech francophone et un lecteur de la version anglaise ; trente secondes ; trois questions ; une preuve demandée)
 **Quand** Arnaud mène les cinq passages
@@ -2558,7 +2603,7 @@ afin de retoucher le haut de l'accueil avant la mise en ligne s'il le faut.
 **Quand** moins de quatre testeurs réussissent
 **Alors** le titre, le pitch ou le premier poste sont retouchés, FR-37 est revérifié, et le test est refait avant la story 11.11.
 
-### Story 11.11 : Premier déploiement du socle et hôte proxy sans journal d'IP
+### Story 11.11 : First base deployment and IP-free proxy
 
 En tant que Claire, CTO (UJ-1),
 je veux ouvrir le site en ligne, en HTTPS, dans ma langue,
@@ -2566,7 +2611,7 @@ afin de lire le CV et les preuves depuis le lien reçu.
 
 **Couvre :** FR-19, FR-32, FR-37, NFR-2 à NFR-5, NFR-13, SM-6, SM-8 · AD-14, AD-15, AD-17, procédure « premier déploiement » (étapes 4 à 8) · C15
 **Dépendances :** 11.7, 11.10 ; socle prêt (stories 9.1 à 9.4, 10.1 à 10.7)
-**Bloquée par :** **Q2** et **Q9** (par le socle)
+**Bloquée par :** **Q2** (par le socle)
 **Prérequis de contenu :** ceux des stories du socle ; les CV PDF ne sont pas requis.
 **Opération manuelle (Arnaud) :** **oui**, tag `v1.0.0` par le skill `release`, hôte proxy dans Nginx Proxy Manager configuré sans IP dès sa création, vérifications, DNS en dernier, mesures.
 
@@ -2574,7 +2619,7 @@ afin de lire le CV et les preuves depuis le lien reçu.
 
 **Étant donné** le socle prêt, répété sous un tag `v1.0.0-rc.N` de même arbre, et publié sur `main` en fast-forward
 **Quand** Arnaud pose `v1.0.0` par le skill `release`
-**Alors** le workflow `release` passe (C15, C21, C22 compris) et `status` montre `v1.0.0` en production.
+**Alors** le skill `release` a vérifié que `ci/release-pages.txt` contient toutes les pages du socle (FR-32, D-5), le workflow `release` passe (C15, C21, C22 compris) et `status` montre `v1.0.0` en production.
 
 **Étant donné** l'hôte proxy créé (destination `site:80` ; `access_log off;` dans *Advanced* ; *Custom Location* `/` avec `access_log off; error_log /dev/null crit;` ; « Cache Assets » désactivée ; TLS et HSTS)
 **Quand** Arnaud lance `nginx -t`, `nginx -T | grep access_log`, puis une requête
@@ -2592,13 +2637,13 @@ afin de lire le CV et les preuves depuis le lien reçu.
 - [ ] Mesure PageSpeed Insights mobile de chaque gabarit (accueil CV, page de cas, page de groupe, page simple, 404) consignée dans `docs/measures/v1.0.0.md` par une PR ordinaire.
 - [ ] La politique de confidentialité est vraie sur toute la chaîne.
 
-### Story 11.12 : Skill `hotfix`
+### Story 11.12 : Hotfix skill
 
 En tant qu'Arnaud, mainteneur,
 je veux corriger la production sans merge commit ni cherry-pick,
 afin de garder `main` ancêtre de `dev` après un correctif urgent.
 
-**Couvre :** FR-32, NFR-7 · AD-11, AD-14
+**Couvre :** FR-32, NFR-7 · AD-11, AD-14, AD-24
 **Dépendances :** 0.2, 11.7, 11.11
 **Bloquée par :** — (utilisable dès qu'une production existe)
 **Prérequis de contenu :** —
@@ -2608,11 +2653,11 @@ afin de garder `main` ancêtre de `dev` après un correctif urgent.
 
 **Étant donné** `scripts/hotfix.sh`
 **Quand** un correctif démarre
-**Alors** une branche `fix/*` est créée depuis `main`, la PR vers `main` se fusionne en fast-forward, et le tag `vX.Y.(Z+1)` est posé sur `main`.
+**Alors** une branche `hotfix/*` est créée depuis `main` (préfixe réservé, D-14), la PR vers `main` se fusionne en fast-forward, et le tag `vX.Y.(Z+1)` est posé sur `main`.
 
 **Étant donné** le correctif publié
 **Quand** le script poursuit
-**Alors** `dev` est rebasée sur `main`, puis poussée avec `--force-with-lease` **seulement après l'approbation explicite d'Arnaud au moment de l'opération**, puis le script liste les branches `feat/*` ouvertes à rebaser
+**Alors** `dev` est rebasée sur `main`, puis poussée avec `--force-with-lease` **seulement après l'approbation explicite d'Arnaud au moment de l'opération**, puis le script liste les PR ouvertes vers `dev` à rebaser puis à relire par `llm-review`, leur rapport portant sur un SHA réécrit (D-14)
 **Et** aucun cherry-pick n'est utilisé ; `main` redevient un ancêtre de `dev`.
 
 **Étant donné** l'absence d'approbation explicite d'Arnaud
@@ -2626,11 +2671,9 @@ afin de garder `main` ancêtre de `dev` après un correctif urgent.
 - [ ] `docs/procedures/hotfix.md` trace l'exception de force-push, l'approbation requise et ses conséquences (revues à refaire sur les SHA réécrits).
 - [ ] Le script charge `.env` sans afficher de valeur ; sans variable Gitea, il échoue en renvoyant à la story 0.1.
 
-**Questions à poser avant de commencer :**
-- Après le rebase de `dev`, les commentaires de revue des PR ouvertes ne portent plus sur le SHA de tête : faut-il relancer la revue de chaque PR ?
-- Le miroir push accepte-t-il la réécriture de `dev` sur GitHub ?
+- [ ] L'acceptation par le miroir d'une réécriture de `dev` est constatée à la story 1.4.
 
-### Story 11.13 : Retour arrière en production au deuxième déploiement
+### Story 11.13 : Production rollback on second deployment
 
 En tant qu'Arnaud, mainteneur,
 je veux vérifier en production que je peux revenir à la version précédente,
@@ -2654,7 +2697,7 @@ afin de corriger en quelques secondes une mise en ligne ratée.
 
 Sur une PR de contenu de la forge, Arnaud (UJ-4) reçoit un commentaire qui signale un chiffre ou une phrase modifiés d'un seul côté, sans que la CI soit bloquée ni la clé exposée.
 
-### Story 12.1 : Script de l'agent de parité
+### Story 12.1 : Parity agent script
 
 En tant qu'Arnaud qui corrige un chiffre (UJ-4),
 je veux un script qui compare FR et EN des fichiers modifiés et liste les écarts,
@@ -2680,12 +2723,13 @@ afin de repérer ce que le script de parité ne voit pas.
 **Quand** le script s'exécute
 **Alors** il s'arrête avec un message, sort avec 0, et n'appelle pas l'API sans contenu modifié.
 
+**Étant donné** un fichier modifié sans `translationKey`
+**Quand** le script forme les paires
+**Alors** il apparie par nom de fichier (AD-16) : `diagrams/<id>/fr.d2` avec `en.d2`, `assets/live-material/<id>.fr.md` avec `<id>.en.md`, `i18n/fr.yaml` avec `i18n/en.yaml`.
+
 - [ ] Clé jamais affichée ; seuls des fichiers publics envoyés.
 
-**Questions à poser avant de commencer :**
-- Le filtre couvre `diagrams/**`, `assets/live-material/**` et `i18n/**`, sans `translationKey` : comment ces paires sont-elles formées ?
-
-### Story 12.2 : Workflow `parity-agent` sur les PR de contenu
+### Story 12.2 : Parity-agent workflow on content PRs
 
 En tant qu'Arnaud qui ouvre une PR de contenu (UJ-4),
 je veux que l'agent commente la PR sans jamais la bloquer,
@@ -2718,7 +2762,7 @@ afin de corriger un oubli avant la fusion.
 
 Les cas 03, 04 et 06 sont mis en ligne un par un sous leur poste, chacun par son tag ; le matériel vivant retenu pour la v1 passe à « prêt ».
 
-### Story 13.1 : Intégration et mise en ligne du cas 03
+### Story 13.1 : Integrate and release case 03
 
 En tant que Claire, CTO (UJ-1),
 je veux lire sous le poste Chiliz le cas 03 (« Chiliz, batch de transactions »), présenté comme non mis en production,
@@ -2744,7 +2788,7 @@ afin de voir comment Arnaud arbitre quand un sujet n'aboutit pas.
 **Quand** Arnaud publie un nouveau tag par `release`
 **Alors** le cas est mis en ligne seul, sans modifier le contenu des autres pages.
 
-### Story 13.2 : Intégration et mise en ligne du cas 04
+### Story 13.2 : Integrate and release case 04
 
 En tant que Claire, CTO (UJ-1),
 je veux lire sous le poste Chiliz le cas 04 (« Chiliz, reprise d'un sujet en dérive »),
@@ -2766,7 +2810,7 @@ afin de voir comment Arnaud reprend un sujet sans écraser celui qui le portait.
 **Quand** Arnaud publie un nouveau tag
 **Alors** le cas est mis en ligne seul.
 
-### Story 13.3 : Intégration et mise en ligne du cas 06
+### Story 13.3 : Integrate and release case 06
 
 En tant que Daniel, recruteur qui lit en anglais (UJ-2),
 je veux lire sous le poste April Technologies de 2017 le cas 06 (« April, hors périmètre »), avec une ligne qui explique ce qu'est April Technologies,
@@ -2780,7 +2824,7 @@ afin de mesurer la portée du cas.
 
 **Critères d'acceptation :**
 
-**Étant donné** `content/cases/case-06-<nom-court>.{fr,en}.md` avec `position: "position-april-technologies"`
+**Étant donné** `content/cases/case-06-<nom-court>.{fr,en}.md` avec `position: "position-april-technologies-2017"`
 **Quand** `publish-case` s'exécute puis le build de production
 **Alors** le cas est lié sous le poste April Technologies de 2017, la société est nommée April Technologies, et la version EN porte sa ligne de contexte *(relecture)*.
 
@@ -2788,7 +2832,7 @@ afin de mesurer la portée du cas.
 **Quand** Arnaud publie un nouveau tag
 **Alors** le cas est mis en ligne seul et atteint en un clic depuis l'accueil.
 
-### Story 13.4 : Premier schéma « prêt » publié
+### Story 13.4 : First ready diagram published
 
 En tant que Claire, CTO (UJ-1),
 je veux voir à son emplacement le schéma d'un cas, dans ma langue et dans mon mode,
@@ -2820,7 +2864,7 @@ afin de comprendre un flux d'un coup d'œil.
 
 - [ ] Libellés lisibles à 320 px, alternative pertinente (check-list, en clair et en sombre).
 
-### Story 13.5 : Extraits et encarts thématiques « prêts »
+### Story 13.5 : Ready snippets and thematic boxes
 
 En tant que Claire, CTO (UJ-1),
 je veux lire l'extrait ou l'encart thématique d'un cas à son emplacement,
@@ -2840,7 +2884,7 @@ afin d'approfondir un point précis.
 
 - [ ] Un élément `ready` sans source fait échouer le build ; aucun code propriétaire *(relecture)*.
 
-### Story 13.6 : Vidéo « prête » en simple lien
+### Story 13.6 : Ready video as plain link
 
 En tant que Claire, CTO (UJ-1),
 je veux suivre un lien vers la vidéo d'un cas,
@@ -2865,8 +2909,9 @@ afin de la regarder sur YouTube sans cookie sur le site.
 
 ### Validation finale
 
-- **Couverture** : chaque FR (FR-1 à FR-39), chaque NFR (NFR-1 à NFR-13), chaque contrôle (C1 à C24) et chaque AD (AD-1 à AD-23) est cité par au moins une story ; chaque UX-DR est rattachée à une story.
-- **Dépendances** : aucune story ne dépend d'une story suivante. Les skills d'Epic 0 qui s'appuient sur des stories ultérieures sont placés après elles (3.16, 3.17, 11.7, 11.8, 11.12).
+- **Couverture** : chaque FR (FR-1 à FR-39), chaque NFR (NFR-1 à NFR-13), chaque contrôle (C1 à C24) et chaque AD (AD-1 à AD-24) est cité par au moins une story ; chaque UX-DR est rattachée à une story.
+- **Dépendances** : aucune story ne dépend d'une story suivante. Les skills d'Epic 0 qui s'appuient sur des stories ultérieures sont placés après elles (3.16, 3.17, 11.7, 11.8, 11.12). Les stories 11.1 à 11.9 sont placées avant l'Epic 10 (D-5).
+- **Note pour la planification de sprint** (décision d'Arnaud du 13/09/2026) : les numéros de stories sont conservés. `sprint-status.yaml` les trie par numéro, donc l'Epic 11 après l'Epic 10 : l'ordre de travail, stories 11.1 à 11.9 avant l'Epic 10, puis 11.10 à 11.13 après lui, est fixé lors de la planification de sprint. Les stories 10.4 et 10.5 sont livrées dans une seule PR.
 - **Répétition sur les mêmes fichiers** : `layouts/` est touché par les epics 2 (structure), 5 et 6 (mise en page), 9 (pages) et 13 (matériel prêt). Le regroupement est écarté : la structure précède les contrôles (walking skeleton), et chaque epic de mise en page est démontrable seul.
 - **Pas de gabarit de démarrage** ni de base de données.
 
@@ -2874,12 +2919,10 @@ afin de la regarder sur YouTube sans cookie sur le site.
 
 | Story | Bloquée par |
 | --- | --- |
-| 10.4 Titre et introduction de la page Chiliz | Q9 |
-| 10.5 Cas pilote 02 publiable | Q9 (par 10.4) |
 | 10.6 Cas 01 | Q2 |
 | 10.7 Cas 05 | Q2 |
-| 11.10 Test des trente secondes | Q2, Q9 (par le socle) |
-| 11.11 Premier déploiement du socle | Q2, Q9 (par le socle) |
+| 11.10 Test des trente secondes | Q2 (par le socle) |
+| 11.11 Premier déploiement du socle | Q2 (par le socle) |
 | 13.1 Cas 03 | Q2, Q4, Q5 |
 | 13.2 Cas 04 | Q2 |
 | 13.3 Cas 06 | Q2 |
@@ -2887,7 +2930,7 @@ afin de la regarder sur YouTube sans cookie sur le site.
 | 13.5 Extraits et encarts prêts | Q1 |
 | 13.6 Vidéo prête | Q1, Q3 |
 
-Q13 (v1.1) ne bloque rien. La story 11.9 (répétition générale) n'est bloquée par aucune question, mais porte un point à trancher (C15, voir « Tensions restantes »).
+Q13 (v1.1) ne bloque rien. Q9 est tranchée (D-4) : les stories 10.4 et 10.5 ne sont plus bloquées. La story 11.9 (première répétition) n'est bloquée par rien, puisque `ci/release-pages.txt` est cumulative (D-5).
 
 ### Prérequis de contenu (non bloquants au sens des questions)
 
@@ -2901,8 +2944,8 @@ Q13 (v1.1) ne bloque rien. La story 11.9 (répétition générale) n'est bloqué
 | Adresse mail et URL LinkedIn | 9.3 |
 | URL de la politique de confidentialité de l'hébergeur | 9.2 |
 | Texte de « À propos » | 9.4 |
-| Lien GitHub du JSON-LD | 9.6 |
-| Texte du README-cas | 3.15 |
+| URL du profil GitHub et intitulé `job_title` (JSON-LD) | 9.6 |
+| Relecture du premier jet du README-cas (voix et faits) | 3.15 |
 | Cas 01, 03, 04, 05, 06 ; ligne de contexte sur April Technologies | 10.6, 10.7, 13.1 à 13.3 |
 
 ### Stories avec opérations manuelles d'Arnaud
@@ -2910,11 +2953,13 @@ Q13 (v1.1) ne bloque rien. La story 11.9 (répétition générale) n'est bloqué
 | Story | Opération |
 | --- | --- |
 | 0.1 | Gitea : jeton d'accès (portées minimales, expiration) ; `GITEA_URL`, `GITEA_USER`, `GITEA_TOKEN` dans `.env` |
-| 0.4 | Poste de développement : installation de `jq` (`sudo apt install jq`), prérequis de `create-pull-request` et `verify-and-merge-pr` |
-| 0.2 | Gitea : création de `main`, protection de `dev` et `main`, squash vers `dev`, fast-forward seul vers `main`, force-push sur `dev` réservé à Arnaud |
+| 0.4 | Poste de développement : constat de `jq` (installé), prérequis de `create-pull-request` et `verify-and-merge-pr` |
+| 0.2 | Gitea : création de `main` ; `main` sans push ni force-push ; `dev` avec le compte d'Arnaud en liste de push et seul en liste de force-push ; squash vers `dev`, fast-forward seul vers `main` |
+| 0.5 | Poste de développement : `agy` authentifié, `agy models` répond |
 | 1.2 | Serveur Gitea (Docker) : hook pre-receive et tests |
 | 1.3 | Poste d'Arnaud : audit de l'historique avec la liste des motifs |
-| 1.4 | GitHub et Gitea : dépôt public (branche par défaut `main`), jeton, miroir push |
+| 1.4 | GitHub et Gitea : dépôt public (branche par défaut `main`), identité du miroir, rulesets, miroir push |
+| 2.1 | Poste de développement : Docker dans le shell WSL |
 | 3.13 | Gitea : runner x86_64 en mode hôte, label, `WORKFLOW_DIRS` |
 | 3.14 | GitHub : activation d'Actions si nécessaire |
 | 5.5 | Préparation de la photo depuis l'original, ancrage et contrôle à l'œil |
@@ -2922,8 +2967,8 @@ Q13 (v1.1) ne bloque rien. La story 11.9 (répétition générale) n'est bloqué
 | 7.4 | Fourniture et commit des CV PDF conformes |
 | 8.1 | Test dans Safari, si un appareil d'Arnaud est nécessaire |
 | 11.6 | Serveur de production : compte restreint, deux fichiers compose ; secrets Gitea |
-| 11.9 | Répétition générale : tags `-rc`, tunnel SSH, vérifications |
-| 11.10 | Test des trente secondes avec cinq testeurs |
+| 11.9 | Première répétition : tags `v0.1.0-rc.N`, tunnel SSH, vérifications |
+| 11.10 | Répétition générale (`v1.0.0-rc.N`), puis test des trente secondes avec cinq testeurs |
 | 11.11 | Tag `v1.0.0`, hôte NPM sans IP, vérifications, DNS, mesures |
 | 11.12 | Approbation explicite du push forcé de `dev` lors d'un hotfix |
 | 11.13 | Retour arrière en production |
@@ -2932,21 +2977,26 @@ Q13 (v1.1) ne bloque rien. La story 11.9 (répétition générale) n'est bloqué
 
 ### Tensions restantes
 
-Ce document ne les tranche pas ; chacune figure dans les questions de la story concernée.
+Ce document ne les tranche pas ; chacune figure dans la story concernée.
 
-1. **Répétition « tôt » et C15** (FR-39, AD-22) : un tag `-rc` lance les contrôles de mise en ligne, dont C15, qui exige les pages du socle. La répétition ne peut donc pas précéder le contenu du socle (Q2, Q9) sans une liste de pages propre aux tags `-rc` (story 11.9).
-2. **Tags `-rc.N` sur `dev`** : décidé par Arnaud ; AD-11 et AD-22 posent encore ces tags sur `main`, et le workflow `release` de l'architecture vérifie qu'un tag pointe sur `main` (stories 11.5, 11.9).
-3. **CV PDF** : les PDF actuels contiennent un téléphone et une commune ; FR-38 bloque leur publication jusqu'à des versions conformes (story 7.4).
-4. **JSON-LD** : AD-20 dit « à partir du contenu » sans dire d'où viennent `jobTitle`, LinkedIn et GitHub (profil ou dépôt) (story 9.6).
-5. **Page Chiliz vide et C12** : l'architecture accepte en CI une page Chiliz vide en production tant que le pilote est un brouillon, mais C12 la signalerait comme orpheline (story 3.10).
-6. **Q9 ouverte, maquette « Chiliz »** : `DESIGN.md` montre « Chiliz » comme titre de page alors que Q9 reste ouverte au PRD (stories 2.5, 10.4).
-7. **Documents à jour partiellement** : FR-23 du PRD cite encore la « mise en avant » parmi les métadonnées comparées, alors que le format v0.4 a supprimé `featured` ; le PRD (§0), `DESIGN.md` et `EXPERIENCE.md` citent le format v0.3 ; l'impact I-1 d'`EXPERIENCE.md` parle de `static/cv/` quand AD-21 fixe `assets/cv/` ; `EXPERIENCE.md` garde « à valider » pour le marqueur « Brouillon » (décidé par AD-5), pour la méthode du test (Q14 tranchée) et pour plusieurs libellés.
-8. **Identifiants de poste** : l'architecture ne fixe que `position-chiliz` et `position-ton-pote-le-geek` ; `position-april-technologies` vient de la consigne ; les autres (dont le poste du cas 05) restent à confirmer (story 10.2).
-9. **Epic 0 et dépendances** : les skills `release`, `rehearse-release`, `hotfix` et `publish-case`, et le verrou « CI verte », ne peuvent pas être livrés dans l'Epic 0 sans dépendre de stories ultérieures ; ils sont placés après elles.
-10. **Verrous sans objet au démarrage** : avant la CI (story 3.13), une PR documentaire n'exige que la CI, dont le verrou est « absent » ; avant la planification de sprint, le verrou de suivi n'a pas de `sprint-status.yaml`. La possibilité de fusionner dans ces deux cas n'est pas fixée (stories 0.6, 0.7).
-11. **`.env.example` et C18** : les identifiants Gitea se définissent dans `.env` (décision d'Arnaud), donc `.env.example` liste aussi `GITEA_URL`, `GITEA_USER` et `GITEA_TOKEN` ; C18 et AD-9 exigent qu'il liste **exactement** les sept `HUGO_LEGAL_*`, et `scripts/env.sh` charge `.env` pour les builds (stories 0.1, 2.4, 3.6).
-12. **Hotfix et revues** : le rebase de `dev` réécrit les SHA ; les rapports de revue attachés au SHA de tête des PR ouvertes deviennent caducs, et le miroir doit accepter la réécriture de `dev` (story 11.12).
-13. **Outillage hors architecture** : `agy`, les procédures `docs/procedures/` et le flux de branches ne figurent dans aucun AD ; l'identifiant exact du modèle Claude reviewer est consigné au premier usage (story 0.5).
-14. **README-cas** : la rédaction du texte n'est attribuée par aucune entrée ; les branches `design/*` et le flux linéaire, décidés par Arnaud, ne figurent pas dans la section « README-cas » de l'architecture (story 3.15).
-15. **Aucun push direct sur GitHub** (AD-12) : aucun mécanisme n'est fixé (story 1.4).
-16. **Spike D2** : le test dans Safari suppose un appareil Apple (story 8.1).
+1. **CV PDF** : les PDF actuels contiennent un téléphone et une commune ; FR-38 bloque leur publication jusqu'à des versions conformes (story 7.4).
+2. **Epic 0 et dépendances** : les skills `release`, `rehearse-release`, `hotfix` et `publish-case`, et le verrou « CI verte », ne peuvent pas être livrés dans l'Epic 0 sans dépendre de stories ultérieures ; ils sont placés après elles.
+3. **Spike D2** : le test dans Safari suppose un appareil Apple (story 8.1).
+
+### Tensions résolues le 13/09/2026
+
+Par les décisions D-1 à D-17 et les corrections M-1 à M-18 du contrôle de préparation à l'implémentation (`implementation-readiness.md`) :
+
+- répétition « tôt » et C15 : liste cumulative `ci/release-pages.txt`, stories 11.1 à 11.9 avant l'Epic 10 (D-5 ; stories 2.2, 3.17, 11.1, 11.9) ;
+- tags `-rc.N` sur `dev` : déjà écrits dans AD-11 et AD-22 ;
+- JSON-LD : sources des champs fixées dans AD-20 (D-7 ; story 9.6) ;
+- page Chiliz vide et C12 : `_index` de groupe en brouillon (D-3 ; stories 2.5, 3.10, 10.4) ;
+- Q9 : titre « Chiliz », sans introduction (D-4) ;
+- documents partiellement à jour : corrections M-1 à M-18 appliquées ;
+- identifiants de poste : liste figée dans AD-18 (D-8 ; stories 10.2, 10.7, 13.3) ;
+- verrous sans objet au démarrage : règle d'amorçage (D-1, D-2 ; règle 11, stories 0.6, 0.7, 3.16) ;
+- `.env.example` et C18 : déjà résolus par AD-9 et C18 ; filtrage de `env.sh` en critère (story 2.4) ;
+- hotfix et revues : préfixe `hotfix/*`, PR ouvertes relues (D-14 ; story 11.12) ; réécriture de `dev` par le miroir testée (story 1.4) ;
+- outillage hors architecture : AD-24 ;
+- README-cas : rédaction attribuée (D-12 ; story 3.15) ; branches déjà citées par la section « README-cas » ;
+- push direct sur GitHub : rulesets (D-9 ; AD-12, story 1.4).

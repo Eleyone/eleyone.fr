@@ -1,0 +1,303 @@
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created, ready for development
+#   - in-progress: Developer actively working on implementation
+#   - review: Implementation complete, ready for review
+#   - done: Story completed
+
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+
+# Action Item Status:
+#   - open: Committed during a retrospective, not yet addressed
+#   - in-progress: Actively being worked on
+#   - done: Completed
+
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when its first story starts (via build's sprint sync)
+# - Stories can be worked in parallel if team capacity allows
+# - Developer typically creates the next story after the previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+# - Retrospective appends its action items to action_items; the status view surfaces open ones
+generated: 09-13-2026 22:58
+last_updated: '2026-09-13'
+project: eleyone.fr
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+development_status:
+  epic-0: backlog
+  0-1-gitea-token-in-env-and-env-example: backlog
+  0-2-main-branch-protections-and-merge-styles: backlog
+  0-3-check-private-skill: backlog
+  0-4-create-pull-request-skill: backlog
+  0-5-llm-review-skill-with-cross-vendor-review: backlog
+  0-6-sprint-consistency-skill: backlog
+  0-7-verify-and-merge-pr-skill: backlog
+  epic-0-retrospective: optional
+
+  epic-1: backlog
+  1-1-pre-receive-guard-fails-without-pattern-list: backlog
+  1-2-pre-receive-hook-installed-on-main-forge: backlog
+  1-3-full-history-audit-with-pattern-list: backlog
+  1-4-push-mirror-to-public-github-repository: backlog
+  epic-1-retrospective: optional
+
+  epic-2: backlog
+  2-1-pinned-tools-installed-and-verified: backlog
+  2-2-bilingual-hugo-build-with-minimal-home: backlog
+  2-3-language-switcher-hreflang-and-404-pages: backlog
+  2-4-single-env-loader-and-dummy-legal-values: backlog
+  2-5-chiliz-page-case-partial-and-planned-material: backlog
+  2-6-case-section-numbers-and-table-of-contents: backlog
+  2-7-draft-chiliz-position-and-back-to-career-link: backlog
+  epic-2-retrospective: optional
+
+  epic-3: backlog
+  3-1-checks-json-manifest-emitted-by-hugo: backlog
+  3-2-check-script-entry-point-and-draft-rule: backlog
+  3-3-fr-en-parity-script: backlog
+  3-4-headings-todo-markers-and-stack-vocabulary: backlog
+  3-5-live-material-and-group-checks: backlog
+  3-6-at-a-glance-box-and-format-rules: backlog
+  3-7-career-path-check: backlog
+  3-8-zero-javascript-no-third-party-no-todo: backlog
+  3-9-automated-accessibility-checks: backlog
+  3-10-internal-links-anchors-and-orphan-pages: backlog
+  3-11-page-weight-and-element-budget: backlog
+  3-12-shared-checks-job: backlog
+  3-13-checks-workflow-on-main-forge: backlog
+  3-14-public-checks-workflow-on-github: backlog
+  3-15-public-repository-case-readme: backlog
+  3-16-green-ci-gate-in-verify-and-merge-pr: backlog
+  3-17-publish-case-skill: backlog
+  epic-3-retrospective: optional
+
+  epic-4: backlog
+  4-1-multi-stage-site-image: backlog
+  4-2-nginx-headers-cache-404-and-ip-free-logs: backlog
+  epic-4-retrospective: optional
+
+  epic-5: backlog
+  5-1-design-tokens-typography-and-dark-mode: backlog
+  5-2-cv-home-page-template: backlog
+  5-3-education-certification-and-languages-template: backlog
+  5-4-photo-preparation-and-image-check: backlog
+  5-5-photo-published-on-home-page: backlog
+  epic-5-retrospective: optional
+
+  epic-6: backlog
+  6-1-styled-chiliz-page: backlog
+  6-2-ungrouped-case-page: backlog
+  6-3-french-typography-applied-at-build: backlog
+  epic-6-retrospective: optional
+
+  epic-7: backlog
+  7-1-cv-pdf-check-and-pre-commit: backlog
+  7-2-conditional-cv-links-in-footer: backlog
+  7-3-pdf-extraction-in-pre-receive-hook: backlog
+  7-4-publish-cv-pdfs: backlog
+  epic-7-retrospective: optional
+
+  epic-8: backlog
+  8-1-dual-theme-d2-spike: backlog
+  8-2-d2-theme-and-bilingual-demo-diagram: backlog
+  8-3-svg-sync-check: backlog
+  epic-8-retrospective: optional
+
+  epic-9: backlog
+  9-1-legal-notice-and-confined-address: backlog
+  9-2-privacy-policy: backlog
+  9-3-contact-page-and-call-to-contact: backlog
+  9-4-about-page: backlog
+  9-5-conditional-public-repository-link: backlog
+  9-6-person-structured-data: backlog
+  epic-9-retrospective: optional
+
+  epic-10: backlog
+  10-1-home-page-pitch: backlog
+  10-2-career-positions: backlog
+  10-3-education-certification-and-languages-content: backlog
+  10-4-chiliz-page-title-and-introduction: backlog
+  10-5-publish-pilot-case-02: backlog
+  10-6-integrate-case-01: backlog
+  10-7-integrate-case-05: backlog
+  epic-10-retrospective: optional
+
+  epic-11: backlog
+  11-1-release-checks-and-expected-pages: backlog
+  11-2-forbidden-patterns-on-production-output: backlog
+  11-3-release-image-build: backlog
+  11-4-forced-deploy-site-command-and-services: backlog
+  11-5-delivery-and-release-workflow: backlog
+  11-6-production-server-and-secrets-setup: backlog
+  11-7-release-skill: backlog
+  11-8-rehearse-release-skill: backlog
+  11-9-first-release-chain-rehearsal: backlog
+  11-10-thirty-second-test: backlog
+  11-11-first-base-deployment-and-ip-free-proxy: backlog
+  11-12-hotfix-skill: backlog
+  11-13-production-rollback-on-second-deployment: backlog
+  epic-11-retrospective: optional
+
+  epic-12: backlog
+  12-1-parity-agent-script: backlog
+  12-2-parity-agent-workflow-on-content-prs: backlog
+  epic-12-retrospective: optional
+
+  epic-13: backlog
+  13-1-integrate-and-release-case-03: backlog
+  13-2-integrate-and-release-case-04: backlog
+  13-3-integrate-and-release-case-06: backlog
+  13-4-first-ready-diagram-published: backlog
+  13-5-ready-snippets-and-thematic-boxes: backlog
+  13-6-ready-video-as-plain-link: backlog
+  epic-13-retrospective: optional
+work_order:
+  # ORDRE DE TRAVAIL (décision D-5, note de planification d'epics.md)
+  # development_status est trié par numéro d'epic (outil de planification) :
+  # l'Epic 10 y apparaît avant l'Epic 11. L'ordre de travail fait foi ici :
+  # Epics 0 à 9, stories 11.1 à 11.9, Epic 10, stories 11.10 à 11.13,
+  # puis Epics 12 et 13. Numéros des stories conservés.
+  # Statuts : seulement dans development_status. Une story bloquée reste en
+  # backlog ; ses blocages sont dans blocked_by_open_questions.
+  - 0-1-gitea-token-in-env-and-env-example
+  - 0-2-main-branch-protections-and-merge-styles
+  - 0-3-check-private-skill
+  - 0-4-create-pull-request-skill
+  - 0-5-llm-review-skill-with-cross-vendor-review
+  - 0-6-sprint-consistency-skill
+  - 0-7-verify-and-merge-pr-skill
+  - 1-1-pre-receive-guard-fails-without-pattern-list
+  - 1-2-pre-receive-hook-installed-on-main-forge
+  - 1-3-full-history-audit-with-pattern-list
+  - 1-4-push-mirror-to-public-github-repository
+  - 2-1-pinned-tools-installed-and-verified
+  - 2-2-bilingual-hugo-build-with-minimal-home
+  - 2-3-language-switcher-hreflang-and-404-pages
+  - 2-4-single-env-loader-and-dummy-legal-values
+  - 2-5-chiliz-page-case-partial-and-planned-material
+  - 2-6-case-section-numbers-and-table-of-contents
+  - 2-7-draft-chiliz-position-and-back-to-career-link
+  - 3-1-checks-json-manifest-emitted-by-hugo
+  - 3-2-check-script-entry-point-and-draft-rule
+  - 3-3-fr-en-parity-script
+  - 3-4-headings-todo-markers-and-stack-vocabulary
+  - 3-5-live-material-and-group-checks
+  - 3-6-at-a-glance-box-and-format-rules
+  - 3-7-career-path-check
+  - 3-8-zero-javascript-no-third-party-no-todo
+  - 3-9-automated-accessibility-checks
+  - 3-10-internal-links-anchors-and-orphan-pages
+  - 3-11-page-weight-and-element-budget
+  - 3-12-shared-checks-job
+  - 3-13-checks-workflow-on-main-forge
+  - 3-14-public-checks-workflow-on-github
+  - 3-15-public-repository-case-readme
+  - 3-16-green-ci-gate-in-verify-and-merge-pr
+  - 3-17-publish-case-skill
+  - 4-1-multi-stage-site-image
+  - 4-2-nginx-headers-cache-404-and-ip-free-logs
+  - 5-1-design-tokens-typography-and-dark-mode
+  - 5-2-cv-home-page-template
+  - 5-3-education-certification-and-languages-template
+  - 5-4-photo-preparation-and-image-check
+  - 5-5-photo-published-on-home-page
+  - 6-1-styled-chiliz-page
+  - 6-2-ungrouped-case-page
+  - 6-3-french-typography-applied-at-build
+  - 7-1-cv-pdf-check-and-pre-commit
+  - 7-2-conditional-cv-links-in-footer
+  - 7-3-pdf-extraction-in-pre-receive-hook
+  - 7-4-publish-cv-pdfs
+  - 8-1-dual-theme-d2-spike
+  - 8-2-d2-theme-and-bilingual-demo-diagram
+  - 8-3-svg-sync-check
+  - 9-1-legal-notice-and-confined-address
+  - 9-2-privacy-policy
+  - 9-3-contact-page-and-call-to-contact
+  - 9-4-about-page
+  - 9-5-conditional-public-repository-link
+  - 9-6-person-structured-data
+  - 11-1-release-checks-and-expected-pages
+  - 11-2-forbidden-patterns-on-production-output
+  - 11-3-release-image-build
+  - 11-4-forced-deploy-site-command-and-services
+  - 11-5-delivery-and-release-workflow
+  - 11-6-production-server-and-secrets-setup
+  - 11-7-release-skill
+  - 11-8-rehearse-release-skill
+  - 11-9-first-release-chain-rehearsal
+  - 10-1-home-page-pitch
+  - 10-2-career-positions
+  - 10-3-education-certification-and-languages-content
+  - 10-4-chiliz-page-title-and-introduction
+  - 10-5-publish-pilot-case-02
+  - 10-6-integrate-case-01
+  - 10-7-integrate-case-05
+  - 11-10-thirty-second-test
+  - 11-11-first-base-deployment-and-ip-free-proxy
+  - 11-12-hotfix-skill
+  - 11-13-production-rollback-on-second-deployment
+  - 12-1-parity-agent-script
+  - 12-2-parity-agent-workflow-on-content-prs
+  - 13-1-integrate-and-release-case-03
+  - 13-2-integrate-and-release-case-04
+  - 13-3-integrate-and-release-case-06
+  - 13-4-first-ready-diagram-published
+  - 13-5-ready-snippets-and-thematic-boxes
+  - 13-6-ready-video-as-plain-link
+
+# Stories livrées dans une seule PR (complément 2 du 13/09/2026 ; AD-4, D-3) :
+# le _index Chiliz sort du brouillon dans la PR qui publie le cas 02.
+single_pr_groups:
+  - stories:
+      - 10-4-chiliz-page-title-and-introduction
+      - 10-5-publish-pilot-case-02
+    reason: "Aucune page de groupe vide en production (AD-4, D-3)"
+
+# Blocages par une question encore ouverte du PRD (§11.2). Q9 tranchée (D-4) ;
+# Q13 (v1.1) ne bloque rien en v1.
+blocked_by_open_questions:
+  10-6-integrate-case-01: [Q2]
+  10-7-integrate-case-05: [Q2]
+  11-10-thirty-second-test: [Q2]
+  11-11-first-base-deployment-and-ip-free-proxy: [Q2]
+  13-1-integrate-and-release-case-03: [Q2, Q4, Q5]
+  13-2-integrate-and-release-case-04: [Q2]
+  13-3-integrate-and-release-case-06: [Q2]
+  13-4-first-ready-diagram-published: [Q1]
+  13-5-ready-snippets-and-thematic-boxes: [Q1]
+  13-6-ready-video-as-plain-link: [Q1, Q3]
+content_prerequisites:
+  3-15-public-repository-case-readme: "Relecture du premier jet du README-cas (D-12)"
+  5-5-photo-published-on-home-page: "Photo originale hors dépôt ; portrait_alt"
+  7-4-publish-cv-pdfs: "CV PDF FR et EN conformes à FR-38"
+  9-2-privacy-policy: "URL de la politique de confidentialité de l'hébergeur"
+  9-3-contact-page-and-call-to-contact: "Adresse mail et URL LinkedIn"
+  9-4-about-page: "Texte de la page « À propos », FR et EN"
+  9-6-person-structured-data: "URL du profil GitHub ; job_title"
+  10-1-home-page-pitch: "Pitch FR et EN"
+  10-2-career-positions: "Parcours tiré du CV ; Ton Pote le Geek"
+  10-3-education-certification-and-languages-content: "Formation et langues tirées
+    du CV"
+  10-5-publish-pilot-case-02: "Relecture et accord d'Arnaud"
+  10-6-integrate-case-01: "Cas 01 FR et EN rédigé par Arnaud"
+  10-7-integrate-case-05: "Cas 05 FR et EN rédigé par Arnaud"
+  11-10-thirty-second-test: "Cinq testeurs selon EXPERIENCE.md"
+  13-1-integrate-and-release-case-03: "Cas 03 FR et EN rédigé par Arnaud"
+  13-2-integrate-and-release-case-04: "Cas 04 FR et EN rédigé par Arnaud"
+  13-3-integrate-and-release-case-06: "Cas 06 FR et EN, contexte April"
+  13-4-first-ready-diagram-published: "Sources D2 du schéma retenu, libellés FR et
+    EN"
+  13-5-ready-snippets-and-thematic-boxes: "Fichiers de matériel vivant"
+  13-6-ready-video-as-plain-link: "URL YouTube non répertoriée"

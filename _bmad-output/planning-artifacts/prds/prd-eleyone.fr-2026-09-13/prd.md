@@ -1,6 +1,6 @@
 ---
 title: "PRD : eleyone.fr"
-status: draft
+status: validated
 created: 2026-09-13
 updated: 2026-09-13
 ---
@@ -15,13 +15,14 @@ Il s'appuie sur les entrées suivantes, qu'il ne recopie pas :
 
 - le brief produit, validé le 13/09/2026 : `_bmad-output/planning-artifacts/briefs/brief-eleyone.fr-2026-09-13/brief.md` ;
 - son addendum, validé à la même date (inventaire des cas, contenu connu des encarts, matériel vivant, détail technique) : `_bmad-output/planning-artifacts/briefs/brief-eleyone.fr-2026-09-13/addendum.md` ;
-- le contrat de format des cas, `docs/format-cas.md`, en version 0.3 (statut draft), et le vocabulaire contrôlé de la stack, `data/stack.yaml`. Le PRD s'y réfère sans les redéfinir ;
+- le contrat de format des cas, `docs/format-cas.md`, en version 0.4, et le vocabulaire contrôlé de la stack, `data/stack.yaml`. Le PRD s'y réfère sans les redéfinir ;
 - l'architecture, `_bmad-output/planning-artifacts/architecture/architecture-eleyone.fr-2026-09-13/ARCHITECTURE-SPINE.md`, dont Arnaud a validé les recommandations le 13/09/2026. Le PRD en cite quelques décisions (AD-n) comme références, sans les détailler ;
 - le CV d'Arnaud, seule source des données de parcours, de formation, de certification et de langues ;
 - l'UX, validée par Arnaud le 13/09/2026 : `_bmad-output/planning-artifacts/ux-designs/ux-eleyone.fr-2026-09-13/DESIGN.md` (direction visuelle) et `EXPERIENCE.md` (comportement, premier écran, test des trente secondes). Le PRD n'en fixe aucun détail visuel ;
 - le cas pilote 02, rédigé en FR et en EN (§9) ;
 - les décisions d'Arnaud du 13/09/2026, postérieures au brief et recensées au §11.1, dont l'accueil conçu comme un CV ;
-- les consignes du dépôt (`AGENTS.md`), pour le contexte du dépôt et la manière de livrer les stories.
+- les consignes du dépôt (`AGENTS.md`), pour le contexte du dépôt et la manière de livrer les stories ;
+- le contrôle de préparation à l'implémentation du 13/09/2026 (`_bmad-output/planning-artifacts/implementation-readiness.md`), dont Arnaud a accepté les décisions D-1 à D-17, appliquées par `_bmad-output/planning-artifacts/sprint-change-proposal-2026-09-13.md`.
 
 Conventions de lecture :
 
@@ -79,7 +80,7 @@ Le site lui-même sert de preuve. Il est statique, bilingue et sobre, parce que 
 - **Vocabulaire contrôlé** : liste des technologies autorisées, une seule écriture chacune, tenue dans `data/stack.yaml`, qui fait foi.
 - **Encart « En bref »** : bloc placé après l'encart « Contexte mission ». Il donne l'enjeu puis le résultat, en trois phrases et 400 caractères au plus par langue, lisibles par un dirigeant.
 - **Cas complet** : corps du cas, au niveau CTO, découpé en rubriques.
-- **Cas mis en avant** : les cas 01, 02 et 05, qui font partie du socle (FR-32). Sur l'accueil, ils ne sont plus présentés à part : chaque cas mis en ligne apparaît sous son poste ou dans le bloc « En parallèle ».
+- **Cas mis en avant** *(terme obsolète)* : désignait les cas 01, 02 et 05 dans l'ancienne logique de l'accueil, remplacée le 13/09/2026 par l'accueil conçu comme un CV (§11.1). Il n'y a plus de cas mis en avant : chaque cas mis en ligne apparaît sous son poste ou dans le bloc « En parallèle ». Les cas 01, 02 et 05 restent ceux du socle (FR-32).
 - **Ligne d'identité** : ligne placée en tête de l'accueil, « Arnaud Grousset · Eleyone ». Le nom est le repère principal ; le pseudonyme est affiché à côté.
 - **Parcours professionnel** : liste des postes d'Arnaud sur l'accueil, du plus récent au plus ancien, tirée du CV d'Arnaud.
 - **Poste** : entrée du parcours professionnel : société, intitulé du poste, période, ville de travail ou cadre (par exemple full remote, prestation), et les liens vers les cas qui le prouvent.
@@ -287,9 +288,9 @@ La page Chiliz réunit les cas 02, 03 et 04, dans cet ordre, chacun dans sa sect
 - Quand le cas 03 ou le cas 04 est mis en ligne, sa section s'intègre à la page à sa place, sans modification de la page elle-même.
 - Les sections mises en ligne apparaissent dans l'ordre 02, 03, 04. Chacune a son titre du cas, son encart « Contexte mission », son encart « En bref » et son cas complet.
 - Chaque section peut être atteinte directement par un lien, notamment depuis le poste auquel son cas se rattache (FR-2).
-- Le titre de la page et son éventuelle introduction dépendent de la question 9.
+- La page s'intitule « Chiliz » en FR et en EN, sans introduction en v1 (question 9, tranchée le 13/09/2026).
 
-**Notes :** la page Chiliz ne peut pas être mise en ligne tant que le cas 02 est un brouillon : un contrôle de mise en ligne l'empêche (C15 dans l'architecture).
+**Notes :** la page Chiliz ne peut pas être mise en ligne tant que le cas 02 est un brouillon : un contrôle de mise en ligne l'empêche (C15 dans l'architecture). Tant qu'aucun de ses cas n'est publié, la page reste elle-même en brouillon et n'existe pas en production (AD-4).
 
 #### FR-10 : Limites présentées telles quelles
 
@@ -447,7 +448,7 @@ Un script de parité vérifie en CI la partie mécanique de la parité linguisti
 
 **Conséquences (testables) :**
 - Le script signale toute page FR sans page EN, et inversement.
-- Il signale, entre les deux fichiers d'un cas, toute différence dans les métadonnées qui ne se traduisent pas selon `docs/format-cas.md` : identifiants, numéro, groupe, ordre, mise en avant, brouillon, cadre, stack, et identifiants, types et statuts du matériel vivant.
+- Il signale, entre les deux fichiers d'un cas, toute différence dans les métadonnées qui ne se traduisent pas selon `docs/format-cas.md` : identifiants, numéro, groupe, poste (`position`), ordre, brouillon, cadre, stack, et identifiants, types et statuts du matériel vivant.
 - Il signale toute différence de rubriques entre les deux fichiers d'un cas.
 - Il signale tout schéma auquel manque l'un de ses deux SVG.
 - Chaque signalement nomme le fichier et l'écart.
@@ -475,7 +476,7 @@ Un agent de parité signale en commentaire de PR, sur la forge principale, les �
 Arnaud modifie le contenu sans toucher aux gabarits ni aux scripts.
 
 **Conséquences (testables) :**
-- Modifier le texte ou les métadonnées d'un cas ne touche que les fichiers Markdown de ce cas.
+- Modifier le texte ou les métadonnées d'un cas ne touche que les fichiers Markdown de ce cas. Publier un cas touche en plus `ci/release-pages.txt` et, pour le premier cas d'un groupe, le fichier de la page de groupe (AD-4) : aucun gabarit ni script.
 - Ajouter ou modifier un schéma ne touche que les fichiers Markdown du cas, la source D2 du schéma et les SVG qui en sont régénérés. La régénération se fait en lançant les scripts existants, sans les modifier.
 - Utiliser une technologie nouvelle dans une stack ne demande en plus que de l'ajouter à `data/stack.yaml`, comme le prévoit `docs/format-cas.md`.
 - Ajouter, modifier ou réordonner un poste, rattacher un cas à un poste, ou modifier le bloc formation, certification et langues ne touche que le contenu, sans toucher aux gabarits.
@@ -706,7 +707,7 @@ Le PRD rappelle les décisions déjà prises et nomme les points confiés à l'a
 - **SM-4. Parité linguistique.** Le script de parité passe sur la version mise en ligne. Les commentaires de l'agent de parité éclairent la relecture sans conditionner la mise en ligne. Valide FR-20, FR-23 et FR-24.
 - **SM-5. Aucune fuite.** Aucun push contenant un chemin privé ou un motif privé n'est accepté par la forge principale ; aucune photo publiée ne garde de métadonnée ; aucun CV PDF contenant un numéro de téléphone ou une ville de résidence n'entre dans l'historique ; l'audit de tout l'historique est propre avant la première publication sur GitHub. Valide FR-28, FR-34, FR-38 et NFR-9.
 - **SM-6. Aucun cookie.** Aucune page mise en ligne ne crée de cookie. Valide NFR-3 et FR-14.
-- **SM-7. Édition sans code.** Les PR de contenu ne touchent que les fichiers listés par FR-25. *Mesure :* le diff des PR de contenu. Valide FR-25.
+- **SM-7. Édition sans code.** Les PR de contenu ne touchent que les fichiers listés par FR-25. Une PR de publication peut toucher les fichiers de contenu et `ci/release-pages.txt`, la liste des pages attendues à la mise en ligne (élargi le 13/09/2026). *Mesure :* le diff des PR de contenu. Valide FR-25.
 - **SM-8. Qualité mesurée.** Chaque gabarit de page mis en ligne satisfait WCAG 2.2 AA en mode clair et sombre, les seuils « bons » des Core Web Vitals sur mobile, le budget de poids et le premier écran mobile, sans JavaScript hors bloc JSON-LD. Valide NFR-4, NFR-5, NFR-12, NFR-13 et FR-37.
 
 **Contre-indicateurs (à ne pas optimiser)**
@@ -746,6 +747,7 @@ Le PRD rappelle les décisions déjà prises et nomme les points confiés à l'a
 | 13/09/2026 | Direction visuelle | « Dossier d'architecture », accent vert ; un poste sans cas n'affiche rien à la place des cas ; détails dans `DESIGN.md`, en cours de rédaction | NFR-6, NFR-13, FR-2, §9 |
 | 13/09/2026 | UX validée (`DESIGN.md`, `EXPERIENCE.md`) ; étape UX (question 12, numéro conservé) | Direction visuelle et comportement décrits dans les deux documents validés. Sous un poste, les cas affichent numéro et titre, sans « En bref » ; le corps d'un poste ne s'affiche que s'il n'a aucun cas. CV PDF publiés ensemble ou pas du tout. Photo aussi sur la page « À propos ». Lien « Retour au parcours » de chaque page cas vers son poste sur l'accueil | NFR-6, FR-2, FR-15, FR-16, FR-34, FR-38, §0, §9 |
 | 13/09/2026 | Méthode du test des trente secondes (question 14, numéro conservé) | Méthode décrite dans `EXPERIENCE.md` : cinq testeurs, trois questions, seuil de quatre sur cinq | SM-1 |
+| 13/09/2026 | Titre et introduction de la page Chiliz (question 9, numéro conservé ; décision D-4 du contrôle de préparation à l'implémentation) | Titre « Chiliz » en FR et en EN, sans introduction en v1 : les sources n'en donnent pas (NFR-10), et la ligne de contexte EN du cas 02 présente déjà l'entreprise | FR-9 |
 
 Les mentions « ex-question N » renvoient à la numérotation des versions antérieures de la liste, avant son gel ; « numéro conservé » renvoie à la numérotation figée du §11.2.
 
@@ -768,7 +770,7 @@ La numérotation est figée, car l'architecture y renvoie. Une question tranché
 6. ~~**Accès aux cas non mis en avant.**~~ Tranchée le 13/09/2026, voir §11.1 : chaque cas est lié depuis son poste ou depuis le bloc « En parallèle » de l'accueil.
 7. ~~**Informations affichées pour un cas mis en avant.**~~ Tranchée le 13/09/2026, voir §11.1 : sans objet, l'accueil ne présente plus de cas mis en avant à part.
 8. ~~**Emplacement de la mention de l'activité parallèle.**~~ Tranchée le 13/09/2026, voir §11.1 : bloc « En parallèle » de l'accueil.
-9. **Titre et introduction de la page Chiliz.** Les sources ne donnent ni l'un ni l'autre. La page a-t-elle un titre seul, ou aussi une introduction ? *Impact :* FR-9 et NFR-10. *Bloque :* la story de la page Chiliz.
+9. ~~**Titre et introduction de la page Chiliz.**~~ Tranchée le 13/09/2026, voir §11.1 : titre « Chiliz » en FR et en EN, sans introduction en v1.
 10. ~~**Libellés anglais des encarts et des cadres.**~~ Tranchée le 13/09/2026, voir §11.1.
 11. ~~**Mesure des « trois lignes » de l'encart « En bref ».**~~ Tranchée le 13/09/2026, voir §11.1.
 12. ~~**Étape UX.**~~ Tranchée le 13/09/2026, voir §11.1 : `DESIGN.md` et `EXPERIENCE.md`, validés, couvrent la mise en page de l'accueil CV et le premier écran de chaque page.
@@ -783,6 +785,7 @@ La numérotation est figée, car l'architecture y renvoie. Une question tranché
 - L'adresse mail et l'URL LinkedIn, à écrire dans le contenu (FR-17).
 - L'URL du site de Ton Pote le Geek (FR-4).
 - L'URL du dépôt public (FR-29).
+- L'URL de son profil GitHub, pour les données structurées « Person » (FR-35).
 - La ligne de contexte EN sur April Technologies (FR-22).
 - Les données de parcours, de formation, de certification et de langues, tirées de son CV, en FR et en EN (FR-2, FR-36).
 - La photo originale, hors dépôt (FR-34).

@@ -1,12 +1,12 @@
 ---
 name: eleyone.fr — Dossier d'architecture
 description: Portfolio et CV en ligne d'Arnaud Grousset (Eleyone), composé comme un dossier technique bien imprimé ; HTML statique, CSS seule, polices système, clair et sombre.
-status: draft
+status: validated
 updated: 2026-09-13
 sources:
   - _bmad-output/planning-artifacts/prds/prd-eleyone.fr-2026-09-13/prd.md
   - _bmad-output/planning-artifacts/architecture/architecture-eleyone.fr-2026-09-13/ARCHITECTURE-SPINE.md
-  - docs/format-cas.md (v0.3)
+  - docs/format-cas.md (v0.4)
   - data/stack.yaml
   - content/cases/chiliz/case-02-chiliz.fr.md
   - content/cases/chiliz/case-02-chiliz.en.md
@@ -260,7 +260,7 @@ components:
 >
 > Les maquettes « Dossier d'architecture » ont servi de base : le tour 1 pour la page cas (fichiers `cas-chiliz.html` et `style.css`, avec leurs captures), le tour 2 pour l'accueil CV (`index-vert.html`, `style.css` et captures). Elles sont restées hors du dépôt. **En cas de conflit, ce document et `EXPERIENCE.md` l'emportent sur les maquettes.**
 >
-> Les décisions d'Arnaud sont datées dans le texte ; celles du 13/09/2026 sur la mise en page sont récapitulées à la fin. Le document reste un brouillon jusqu'à sa relecture complète par Arnaud.
+> Les décisions d'Arnaud sont datées dans le texte ; celles du 13/09/2026 sur la mise en page sont récapitulées à la fin. Le document est validé par Arnaud (13/09/2026).
 
 ## Brand & Style
 
@@ -468,7 +468,7 @@ Pas de numéro de section « § » sur l'accueil (validé par Arnaud le 13/09/20
 
 Même grille que la page cas seul, avec ces différences :
 
-- `page-title` « Chiliz », suivi de l'introduction si la question 9 en prévoit une ;
+- `page-title` « Chiliz », sans introduction en v1 (question 9, tranchée le 13/09/2026) ;
 - un sommaire unique qui liste chaque section publiée (« Cas 02 — titre ») et, en retrait, ses rubriques ;
 - chaque section commence par un filet `rule` plein cadre, puis « Cas 02 » en `meta` et le titre en `case-title` ;
 - « Contexte mission » et « En bref » se répètent dans chaque section. Dès lg, chaque « Contexte mission » se place dans la colonne de note, à hauteur de sa propre section.
@@ -662,7 +662,7 @@ Emplacement de matériel vivant (AD-6). En production, un élément « prévu »
 Filet `rule` en haut, espace `{spacing.6}` au-dessus, `body-sm`, dans la colonne de texte. Lignes, dans cet ordre :
 
 1. `cv-links`, si les fichiers existent et ont passé le contrôle ; sinon la ligne n'existe pas.
-2. « Mentions légales » · « Confidentialité » · « Code source du site » (dépôt public, FR-29) ; en EN, *Legal notice* · *Privacy* · *Site source code*.
+2. « Mentions légales » · « Confidentialité » · « Code source du site » (dépôt public, FR-29), ce dernier seulement si `params.source_url` est renseigné (impact I-2, AD-3) ; en EN, *Legal notice* · *Privacy* · *Site source code*.
 
 Pas de copyright, de logo ni de réseaux sociaux. Chaque lien est une entrée de liste, avec un interligne qui garantit une cible d'au moins 24 px.
 
@@ -698,4 +698,4 @@ Liste de définitions des mentions légales. Termes en `meta` et `ink-muted` (No
 9. Typographie française appliquée au rendu des pages FR.
 10. Portrait aussi sur À propos : 160 × 200 px dès md, variantes 160 × 200 et 320 × 400.
 
-Le statut reste `draft` jusqu'à la relecture complète d'Arnaud. Les libellés encore ouverts et les impacts d'architecture sont dans `EXPERIENCE.md`.
+Document validé par Arnaud le 13/09/2026 (statut `validated`). Les libellés encore ouverts et les impacts d'architecture sont dans `EXPERIENCE.md`.

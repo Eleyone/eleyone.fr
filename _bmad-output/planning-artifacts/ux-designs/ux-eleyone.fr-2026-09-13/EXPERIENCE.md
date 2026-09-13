@@ -1,11 +1,11 @@
 ---
 name: eleyone.fr — Expérience
-status: draft
+status: validated
 updated: 2026-09-13
 sources:
   - _bmad-output/planning-artifacts/prds/prd-eleyone.fr-2026-09-13/prd.md
   - _bmad-output/planning-artifacts/architecture/architecture-eleyone.fr-2026-09-13/ARCHITECTURE-SPINE.md
-  - docs/format-cas.md (v0.3)
+  - docs/format-cas.md (v0.4)
   - content/cases/chiliz/case-02-chiliz.fr.md
   - content/cases/chiliz/case-02-chiliz.en.md
   - décisions d'Arnaud du 13/09/2026
@@ -35,7 +35,7 @@ companions:
 |---|---|---|---|---|
 | Accueil (CV) | `/` · `/en/` | marque de l'en-tête, lien de retour d'une page cas, 404 | identité, pitch, parcours avec preuves, « En parallèle », formation, appel à contact | FR-1 à FR-4, FR-33 à FR-37 |
 | Page cas seul | `/cas/<slug>/` · `/en/cases/<slug>/` | lien du cas sous son poste ou dans « En parallèle » | un cas : Contexte mission, En bref, cas complet | FR-5 à FR-8, FR-10 à FR-15 |
-| Page Chiliz | `/cas/chiliz/` · `/en/cases/chiliz/` | lien d'un cas 02, 03 ou 04 sous le poste Chiliz (vers `#case-NN`) | cas 02, 03 et 04 publiés, dans l'ordre, un par section | FR-9, FR-10 |
+| Page Chiliz | `/cas/chiliz/` · `/en/cases/chiliz/` | lien d'un cas 02, 03 ou 04 sous le poste Chiliz (vers `#case-NN`) | titre « Chiliz », sans introduction (question 9, tranchée) ; cas 02, 03 et 04 publiés, dans l'ordre, un par section | FR-9, FR-10 |
 | À propos | `/a-propos/` · `/en/about/` | en-tête | positionnement ; CV PDF en évidence | FR-16, FR-38 |
 | Contact | `/contact/` · `/en/contact/` | en-tête, appel à contact de l'accueil | adresse mail et LinkedIn | FR-17, FR-3 |
 | Mentions légales | `/mentions-legales/` · `/en/legal-notice/` | pied de page | mentions exigées par la loi | FR-18 |
@@ -81,9 +81,9 @@ Microcopie de l'interface (libellés i18n, AD-3). La voix du contenu est celle d
 | `summary_box` | En bref | At a glance | décidé (AD-3) |
 | Champs de l'encart | Société · Cadre · Rôle · Période · Stack | Company · Engagement · Role · Period · Stack | décidé (AD-3) |
 | Cadres | Salarié · Freelance · ESN · Ton Pote le Geek | Employee · Freelance · IT consultancy · Ton Pote le Geek | décidé (AD-3) |
-| `based_in` | Basé en France | Based in France | décidé (AD-19) |
+| `based_in` (clé de front matter de `content/_index`, pas un libellé i18n) | Basé en France | Based in France | décidé (AD-19) : contenu, pas interface (AD-3) |
 | `toc` | Sommaire · 6 rubriques | Contents · 6 sections | à valider par Arnaud |
-| `back_to_career` | Retour au parcours | Back to experience | lien décidé (13/09/2026) ; libellé EN à valider |
+| `back_to_career` | Retour au parcours | Back to experience | décidé (13/09/2026, FR-15) |
 | `skip_to_content` | Aller au contenu | Skip to content | à valider par Arnaud |
 | `language_switch` | English | Français | décidé (13/09/2026) |
 | `cv_pdf` | CV en PDF, français (NNN Ko) · CV en PDF, anglais (NNN Ko) | CV (PDF, English, NNN KB) · CV (PDF, French, NNN KB) | emplacement décidé, libellé à valider |
@@ -134,7 +134,7 @@ Comportement. L'aspect visuel est dans `DESIGN.md.Components`, sous les mêmes n
 | Cas en brouillon | rendu de travail | Affiché, lié depuis son poste ; un marqueur `label` « Brouillon » précède le titre du cas. |
 | Page Chiliz avec la seule section 02 | page Chiliz | Page complète : titre, sommaire du seul cas 02, section 02. Aucun emplacement, aucune mention des cas 03 et 04 (FR-9). |
 | Cas 03 ou 04 publié plus tard | page Chiliz, accueil | La section s'insère à sa place (`order`), le sommaire gagne une entrée, le poste Chiliz gagne un lien. Les numéros « 02.x » ne changent pas. |
-| Page de groupe sans cas publié | production | N'existe pas : le contrôle de mise en ligne C15 bloque. |
+| Page de groupe sans cas publié | production | N'existe pas : son `_index` reste en brouillon tant qu'aucun cas du groupe n'est publié, donc la page n'est pas construite (AD-4) ; le contrôle de mise en ligne C15 bloque en dernier recours. |
 | CV PDF absents (socle) | pied de page, À propos | Rien n'est rendu : pas de ligne dans le pied de page, pas de bloc sur À propos, aucun lien cassé. Le socle sort ainsi (décision d'Arnaud, 13/09/2026). |
 | Un seul des deux PDF valide | pied de page, À propos | Aucun lien, comme si les deux manquaient : les deux CV sont publiés ensemble ou pas du tout, pour la parité FR/EN (décidé par Arnaud le 13/09/2026). |
 | PDF présent mais refusé par C21 | build | Le contrôle échoue et bloque la mise en ligne. Aucun PDF refusé n'est jamais servi. |
@@ -209,7 +209,7 @@ Référence : 390 × 844 px sans défilement (FR-37 pour l'accueil). Sur les aut
 | Page Chiliz | en-tête ; retour au parcours ; « Chiliz » ; sommaire replié ; « Cas 02 » et titre ; « Contexte mission » complet ; début de « En bref » | titre, sommaire en marge, titre du cas 02, « En bref » complet, « Contexte mission » en note, début de « Contexte » |
 | Arrivée sur `#case-02` | titre du cas 02 en haut de fenêtre ; « Contexte mission » ; début de « En bref » | titre, « En bref », « Contexte mission » en note |
 | Page cas seul | en-tête ; retour au parcours ; « Cas 05 » ; titre ; sommaire replié ; « Contexte mission » ; début de « En bref » | idem page Chiliz, sans « Chiliz » |
-| À propos | titre ; portrait 120 × 150 (si retenu) ; bloc CV (si publié) ; début du texte | titre, portrait en marge, bloc CV, premiers paragraphes |
+| À propos | titre ; portrait 120 × 150 ; bloc CV (si publié) ; début du texte | titre, portrait en marge, bloc CV, premiers paragraphes |
 | Contact | titre ; introduction ; adresse mail ; LinkedIn | idem |
 | Mentions légales | titre ; bloc Éditeur | les trois blocs |
 | Confidentialité | titre ; début du texte | idem |
@@ -274,9 +274,9 @@ Le retrait de l'en-tête des liens de CV (44 px au lieu de 69 px dans la maquett
 
 **Échec** : un identifiant placé mais non déclaré fait échouer le build (AD-6), avant toute relecture visuelle.
 
-## Test des trente secondes (proposition pour la question 14)
+## Test des trente secondes (question 14)
 
-Proposition de méthode pour SM-1 [à valider par Arnaud]. Qualitative, sans outil ni analytics.
+Méthode pour SM-1, validée par Arnaud (question 14, tranchée le 13/09/2026). Qualitative, sans outil ni analytics.
 
 - **Quand** : une fois sur le site de répétition, par partage d'écran depuis le poste d'Arnaud (le canal de répétition n'est pas public, AD-22), puis une fois après la mise en ligne du socle, sur le téléphone du testeur.
 - **Qui** : cinq personnes qui ne connaissent pas le parcours d'Arnaud dans le détail. Au moins un CTO ou tech lead, un recruteur tech qui lit en français, et un lecteur qui teste la version anglaise.
@@ -293,7 +293,7 @@ Proposition de méthode pour SM-1 [à valider par Arnaud]. Qualitative, sans out
   - il cite au moins une idée du titre du site ou du pitch (architecture, fiabilisation, jugement) ;
   - il désigne un cas ou un poste avec cas ;
   - il atteint une section de cas en un toucher depuis l'accueil (SM-3).
-- **Seuil proposé** : quatre testeurs sur cinq. En dessous, on retouche le titre, le pitch ou le premier poste, puis on refait le test (le critère mobile FR-37 est revérifié à chaque retouche).
+- **Seuil** : quatre testeurs sur cinq. En dessous, on retouche le titre, le pitch ou le premier poste, puis on refait le test (le critère mobile FR-37 est revérifié à chaque retouche).
 - **Trace** : une note par passage dans `docs/measures/`, avec le rôle du testeur, sa langue, son appareil, ses réponses résumées et le verdict. Aucun nom, aucune donnée personnelle : le fichier est public.
 
 ## Décisions validées par Arnaud (13/09/2026)
@@ -311,21 +311,21 @@ Proposition de méthode pour SM-1 [à valider par Arnaud]. Qualitative, sans out
 11. Même cadre de 77,5 rem sur toutes les pages larges.
 12. Portrait aussi sur la page À propos (160 × 200 et 320 × 400).
 
-Le statut des deux documents reste `draft` jusqu'à leur relecture complète par Arnaud.
+Les deux documents sont validés par Arnaud (statut `validated`).
 
 ## Points encore à valider par Arnaud
 
 1. Libellés restés « à valider » dans « Voice and Tone » (dont le libellé et le poids affichés des liens de CV).
-2. Méthode du test des trente secondes (question 14).
-3. Marqueur « Brouillon » dans le rendu de travail.
+
+La méthode du test des trente secondes (question 14) et le marqueur « Brouillon » du rendu de travail (AD-5) sont décidés.
 
 ## Impacts sur l'architecture
 
-À reporter dans `ARCHITECTURE-SPINE.md` (ou dans les stories de gabarits), après validation.
+Reportés dans `ARCHITECTURE-SPINE.md` (décision 34 de l'architecture) ; les stories de gabarits s'y réfèrent.
 
 | # | Sujet | Impact | AD touchés |
 |---|---|---|---|
-| I-1 | CV PDF conditionnels | La décision d'Arnaud rend les liens conditionnels : le gabarit teste l'existence des deux fichiers de `static/cv/` et lit leur taille au build. C21 doit passer de « les deux fichiers existent, partout » à « aucun fichier, ou les deux et valides » ; C12 ne doit plus attendre les liens de CV dans le pied de page quand ils sont absents ; `ci/release-pages.txt` n'inclut pas les PDF pour le socle. Cela tranche la question 16 du PRD. | AD-21, AD-10 (C12, C15, C21) |
+| I-1 | CV PDF conditionnels | La décision d'Arnaud rend les liens conditionnels : le gabarit teste l'existence des deux fichiers de `assets/cv/` (AD-21) et lit leur taille au build. C21 doit passer de « les deux fichiers existent, partout » à « aucun fichier, ou les deux et valides » ; C12 ne doit plus attendre les liens de CV dans le pied de page quand ils sont absents ; `ci/release-pages.txt` n'inclut pas les PDF pour le socle. Cela tranche la question 16 du PRD. | AD-21, AD-10 (C12, C15, C21) |
 | I-2 | Lien du dépôt public conditionnel | Même traitement tant que l'URL n'est pas fournie : pas de lien plutôt qu'un lien factice. | AD-3, C12 |
 | I-3 | Schémas en mode sombre | Cible : `dark-theme-id` et `dark-theme-overrides` dans `diagrams/theme.d2`, donc un SVG unique par langue qui embarque les deux thèmes. À vérifier par un spike : le rendu de `prefers-color-scheme` dans un SVG chargé par `<img>` (Safari, Firefox, Chrome), le déterminisme octet par octet (C9), le poids (≤ 60 Ko). Sort le « thème sombre des schémas D2 » de la section « Reporté ». Repli sans impact : planche claire encadrée. | AD-7, AD-8, « Reporté » |
 | I-4 | Schéma large | Le shortcode `live-material` pose une classe et un attribut `width` à 75 % de la largeur intrinsèque quand celle-ci dépasse 480 px, enveloppe l'image d'un conteneur focalisable étiqueté, et ajoute le lien « Ouvrir en taille réelle » vers le SVG empreinté. Pas de `style` en ligne (CSP). | AD-6, AD-13 |
@@ -335,4 +335,4 @@ Le statut des deux documents reste `draft` jusqu'à leur relecture complète par
 | I-8 | Typographie française | Un partial appliqué au contenu rendu des pages FR (`replaceRE` hors `pre` et `code`), ou une règle de rédaction contrôlée par script. À trancher ; aucune dépendance ajoutée. | AD-3, AD-10 |
 | I-9 | Sommaire | `<details>` natif : aucun JavaScript, aucune exception CSP. Le libellé « Sommaire · N rubriques » demande un comptage par le gabarit. | AD-3, AD-8 |
 | I-10 | Marqueur « Brouillon » | Rendu de travail seulement, derrière `hugo.IsProduction`. | AD-5 |
-| I-11 | Portrait recadré | `scripts/photo/prepare.sh` recadre en 4:5 sur le visage et les épaules (copie commitée de 640 × 800, ancrage choisi et vérifié à l'œil) au lieu du simple redimensionnement 800 × 800 d'AD-19. `_partials/portrait.html` reçoit la taille voulue : variantes 120 × 150 et 240 × 300 pour l'accueil, plus 160 × 200 et 320 × 400 si la version À propos est retenue. C20 vérifie chaque variante (≤ 40 Ko) et le ratio 4:5. | AD-19, C20 |
+| I-11 | Portrait recadré | `scripts/photo/prepare.sh` recadre en 4:5 sur le visage et les épaules (copie commitée de 640 × 800, ancrage choisi et vérifié à l'œil) au lieu du simple redimensionnement 800 × 800 d'AD-19. `_partials/portrait.html` reçoit la taille voulue : variantes 120 × 150 et 240 × 300 pour l'accueil, plus 160 × 200 et 320 × 400 pour la page À propos (retenue le 13/09/2026). C20 vérifie chaque variante (≤ 40 Ko) et le ratio 4:5. | AD-19, C20 |

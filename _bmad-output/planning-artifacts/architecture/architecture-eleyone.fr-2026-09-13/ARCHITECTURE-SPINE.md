@@ -5,7 +5,7 @@ purpose: build-substrate
 altitude: initiative
 paradigm: 'pipes-and-filters de génération statique (le contenu est une donnée, les gabarits assemblent)'
 scope: 'Dépôt, configuration Hugo, modèle de contenu (cas, parcours, identité) et gabarits, pipeline D2, photo et CV PDF, contrôles, CI Gitea et GitHub, garde-fou public/privé, agent de parité, image nginx, répétition à blanc, déploiement, journalisation et flux de développement'
-status: draft
+status: validated
 created: '2026-09-13'
 updated: '2026-09-13'
 binds: [FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, FR-10, FR-11, FR-12, FR-13, FR-14, FR-15, FR-16, FR-17, FR-18, FR-19, FR-20, FR-21, FR-22, FR-23, FR-24, FR-25, FR-26, FR-27, FR-28, FR-29, FR-30, FR-31, FR-32, FR-33, FR-34, FR-35, FR-36, FR-37, FR-38, FR-39, NFR-1, NFR-2, NFR-3, NFR-4, NFR-5, NFR-6, NFR-7, NFR-8, NFR-9, NFR-10, NFR-11, NFR-12, NFR-13]
@@ -13,7 +13,8 @@ sources:
   - _bmad-output/planning-artifacts/prds/prd-eleyone.fr-2026-09-13/prd.md
   - _bmad-output/planning-artifacts/briefs/brief-eleyone.fr-2026-09-13/brief.md
   - _bmad-output/planning-artifacts/briefs/brief-eleyone.fr-2026-09-13/addendum.md
-  - docs/format-cas.md (v0.3 ; v0.4 proposée ici)
+  - docs/format-cas.md (v0.4)
+  - _bmad-output/planning-artifacts/implementation-readiness.md (décisions D-1 à D-17 du 13/09/2026)
   - data/stack.yaml
   - content/cases/chiliz/case-02-chiliz.fr.md
   - content/cases/chiliz/case-02-chiliz.en.md
@@ -26,9 +27,9 @@ companions:
 
 # Architecture : eleyone.fr
 
-Document de référence pour les stories. Il fixe ce que deux stories construites séparément ne doivent pas décider chacune de leur côté. Les décisions portent un identifiant stable `AD-n` ; leur justification courte est en fin de document (« Décisions clés ») et, en détail, dans `.memlog.md`. Les décisions d'Arnaud du 13/09/2026 sont consignées dans la section du même nom. Les propositions ouvertes sont marquées **[à valider par Arnaud]** et récapitulées à la fin.
+Document de référence pour les stories. Il fixe ce que deux stories construites séparément ne doivent pas décider chacune de leur côté. Les décisions portent un identifiant stable `AD-n` ; leur justification courte est en fin de document (« Décisions clés ») et, en détail, dans `.memlog.md`. Les décisions d'Arnaud du 13/09/2026 sont consignées dans la section du même nom. Une proposition ouverte serait marquée **[à valider par Arnaud]** et récapitulée à la fin ; il n'en reste aucune.
 
-Statut : brouillon rédigé sans interlocuteur (run headless), sur la base du PRD en brouillon, du brief et de son addendum validés, du format des cas v0.3, du cas pilote 02, du test D2 bilingue et des décisions d'Arnaud du 13/09/2026. Les affirmations sur Hugo ont été vérifiées par des spikes (Hugo v0.166.0, hors dépôt) ; les autres, par recherche web et lecture du code source (voir « Sources vérifiées »). Les renvois « question N » visent le §11.2 du PRD, dont la numérotation Q1 à Q17 est figée ; une question tranchée est citée par son intitulé au §11.1. La direction visuelle est tranchée et décrite par `DESIGN.md` et `EXPERIENCE.md` : ce document n'en fixe aucune valeur.
+Statut : validé par Arnaud le 13/09/2026, puis mis à jour le même jour avec les décisions D-1 à D-17 du contrôle de préparation à l'implémentation (`implementation-readiness.md`, appliquées par `sprint-change-proposal-2026-09-13.md`). Première rédaction sans interlocuteur (run headless), sur la base du PRD, du brief et de son addendum, du format des cas, du cas pilote 02, du test D2 bilingue et des décisions d'Arnaud du 13/09/2026. Les affirmations sur Hugo ont été vérifiées par des spikes (Hugo v0.166.0, hors dépôt) ; les autres, par recherche web et lecture du code source (voir « Sources vérifiées »). Les renvois « question N » visent le §11.2 du PRD, dont la numérotation Q1 à Q17 est figée ; une question tranchée est citée par son intitulé au §11.1. La direction visuelle est tranchée et décrite par `DESIGN.md` et `EXPERIENCE.md` : ce document n'en fixe aucune valeur.
 
 ## Paradigme
 
@@ -93,7 +94,7 @@ flowchart TD
 
 - **Binds:** NFR-1, NFR-7, NFR-8, FR-27 ; tout script, workflow et le `Dockerfile`.
 - **Prevents:** qu'une CI, le poste de travail et l'image utilisent des versions différentes de Hugo, de D2 ou des outils de contrôle, ce qui casserait la comparaison octet par octet des SVG ou produirait un site différent de celui contrôlé.
-- **Rule:** le site est généré par Hugo (binaire standard, sans module ni dépendance Node). Les versions et empreintes sha256 de Hugo et de D2 sont déclarées **uniquement** dans `tools.env`, avec l'image de contrôle `CHECK_IMAGE` (`alpine:3.24` épinglée par digest). `scripts/ci/install-tools.sh` télécharge et vérifie Hugo et D2 et installe par `apk` les outils de contrôle (`bash`, `git`, `grep` GNU, `jq`, `libxml2-utils`, `poppler-utils`) ; il sert au conteneur de contrôle des deux CI et à l'étape `tools` du `Dockerfile`. Les runners n'apportent donc aucun outil de contrôle : l'image `ubuntu-24.04` de GitHub n'a pas `xmllint`, et libxml2 existe en 2.9.14 sur Ubuntu 24.04 contre 2.13.9 sur Alpine 3.24. Tout script qui appelle `hugo` ou `d2` compare d'abord la version présente à `tools.env` et échoue si elle diffère. La version de l'image nginx est épinglée dans le `Dockerfile` (tag et digest), seul endroit où elle sert. Une montée de version de D2 se fait dans un commit dédié qui régénère tous les SVG.
+- **Rule:** le site est généré par Hugo (binaire standard, sans module ni dépendance Node). Les versions et empreintes sha256 de Hugo et de D2 sont déclarées **uniquement** dans `tools.env`, avec l'image de contrôle `CHECK_IMAGE` (`alpine:3.24` épinglée par digest). `scripts/ci/install-tools.sh` télécharge et vérifie Hugo et D2 et installe par `apk` les outils de contrôle (`bash`, `git`, `grep` GNU, `jq`, `libxml2-utils`, `poppler-utils`) ; il sert au conteneur de contrôle des deux CI et à l'étape `tools` du `Dockerfile`. Avec l'option `--local`, il installe seulement Hugo et D2, vérifiés par sha256, dans `.tools/` à la racine du dépôt (ignoré par git), que `scripts/build.sh` et `scripts/dev.sh` placent en tête du `PATH` : le poste de développement tire ses versions du même `tools.env` (décidé le 13/09/2026, D-15). Les runners n'apportent donc aucun outil de contrôle : l'image `ubuntu-24.04` de GitHub n'a pas `xmllint`, et libxml2 existe en 2.9.14 sur Ubuntu 24.04 contre 2.13.9 sur Alpine 3.24. Tout script qui appelle `hugo` ou `d2` compare d'abord la version présente à `tools.env` et échoue si elle diffère. La version de l'image nginx est épinglée dans le `Dockerfile` (tag et digest), seul endroit où elle sert. Une montée de version de D2 se fait dans un commit dédié qui régénère tous les SVG.
 
 ### AD-2 — Langues, URL, traductions et titre des pages
 
@@ -113,7 +114,7 @@ flowchart TD
 - **Prevents:** du texte de contenu écrit dans un gabarit (qui obligerait à toucher au code pour le modifier), des libellés d'interface éparpillés, un cas qui dépend de sa mise en page.
 - **Rule:**
   - Les cas suivent `docs/format-cas.md` ; les postes et formations suivent AD-18. Aucun gabarit ne contient de texte de contenu : identité, titre du site et pitch sont dans `content/_index.{fr,en}.md` ; les autres pages, dans leur fichier Markdown.
-  - **Contact** : l'adresse mail et l'URL LinkedIn sont du contenu commité, dans le front matter de `content/contact.{fr,en}.md` (`email`, `linkedin`, identiques en FR et en EN), et non des variables d'environnement (décidé le 13/09/2026).
+  - **Contact** : l'adresse mail et l'URL LinkedIn sont du contenu commité, dans le front matter de `content/contact.{fr,en}.md` (`email`, `linkedin` et `github`, URL du profil GitHub d'Arnaud, identiques en FR et en EN ; `github` ajoutée le 13/09/2026, D-7), et non des variables d'environnement (décidé le 13/09/2026).
   - **Lien vers le dépôt public** : URL dans `params.source_url` de `config/_default/hugo.yaml` ; tant qu'elle est vide, aucun lien n'est rendu (pas de lien factice), et C12 ne l'attend pas.
   - Les libellés d'interface (encarts, champs, cadres, blocs de l'accueil, sélecteur, pied de page) sont dans `i18n/fr.yaml` et `i18n/en.yaml`, en clés `snake_case` anglaises. Le libellé d'un cadre s'obtient par `T (printf "setup_%s" (replace .setup "-" "_"))`.
   - Un seul partial rend un cas (`_partials/case.html`) : titre, encart « Contexte mission », encart « En bref », cas complet, dans cet ordre (FR-5). Il reçoit le niveau de titre (1 sur une page de cas, 2 dans une section de groupe) et ne se duplique pas.
@@ -125,8 +126,8 @@ flowchart TD
 - **Prevents:** une page séparée pour les cas 02, 03 ou 04, une page Chiliz à modifier à chaque cas ajouté, deux façons de construire un lien vers un cas, des ancres différentes entre FR et EN.
 - **Rule:**
   - Un cas sans groupe : `content/cases/case-NN-<short>.{fr,en}.md`, rendu à son URL.
-  - Un cas groupé : `content/cases/<group>/case-NN-<short>.{fr,en}.md`. Le dossier du groupe contient `_index.{fr,en}.md`, qui **est** la page de groupe (titre et introduction éventuelle : question 9). Ce `_index` porte `cascade: [{build: {render: never, list: always}, target: {kind: page}}]`. Le `target` est obligatoire : le spike montre que, sans lui, la page de groupe elle-même n'est plus rendue.
-  - La clé `group` est obligatoire pour un cas groupé et égale au nom du dossier (contrôle bloquant), comme le fixe `docs/format-cas.md` v0.3 ; le `_index` du groupe ne relève pas de la rédaction des cas. Le cas pilote se trouve dans `content/cases/chiliz/case-02-chiliz.{fr,en}.md`.
+  - Un cas groupé : `content/cases/<group>/case-NN-<short>.{fr,en}.md`. Le dossier du groupe contient `_index.{fr,en}.md`, qui **est** la page de groupe (titre « Chiliz », sans introduction en v1 : question 9, tranchée le 13/09/2026). Ce `_index` porte `cascade: [{build: {render: never, list: always}, target: {kind: page}}]`. Le `target` est obligatoire : le spike montre que, sans lui, la page de groupe elle-même n'est plus rendue.
+  - La clé `group` est obligatoire pour un cas groupé et égale au nom du dossier (contrôle bloquant), comme le fixe `docs/format-cas.md` v0.4 ; le `_index` du groupe ne relève pas de la rédaction des cas. Le cas pilote se trouve dans `content/cases/chiliz/case-02-chiliz.{fr,en}.md`.
   - Les titres du Markdown d'un cas passent par un seul hook, `layouts/_markup/render-heading.html`. Il :
     - préfixe chaque identifiant par le `translationKey` (`case-02-contexte`) ;
     - pour un cas groupé, descend chaque titre d'un niveau (`##` rendu en `<h3>`) ;
@@ -136,9 +137,13 @@ flowchart TD
   - **Sommaire** : `_partials/toc.html` construit le sommaire d'une page cas ou de groupe à partir des mêmes titres, dans un `<details>` natif (sans JavaScript ni exception CSP), avec le nombre de rubriques calculé par le gabarit ; il ne liste que les rubriques et sections publiées.
   - La page de groupe rend ses cas par `sort .RegularPages "Params.order"`, chacun dans `<section id="<translationKey>">` (par exemple `id="case-02"`, identique en FR et en EN). Les brouillons sont exclus par Hugo en production, et une section absente ne laisse aucune trace.
   - Tout lien vers un cas passe par `_partials/case-url.html` : `.Parent.RelPermalink#<translationKey>` pour un cas groupé, `.RelPermalink` sinon (spike : `/cas/chiliz/#case-02` depuis l'accueil).
-  - L'accueil liste les cas publiés sous leur poste ou dans le bloc « En parallèle » (FR-2, FR-4, AD-18) : chaque cas publié est atteint en un clic depuis l'accueil de sa langue. L'accueil ne présente plus de cas mis en avant à part (PRD §11.1) : aucun gabarit ne lit `featured`, dont la suppression est proposée pour le format v0.4.
+  - L'accueil liste les cas publiés sous leur poste ou dans le bloc « En parallèle » (FR-2, FR-4, AD-18) : chaque cas publié est atteint en un clic depuis l'accueil de sa langue. L'accueil ne présente plus de cas mis en avant à part (PRD §11.1) : aucun gabarit ne lit `featured`, supprimée par le format v0.4.
   - `content/cases/_index.{fr,en}.md` porte `build: {render: never}` : l'accès aux cas passe par l'accueil (question 6, tranchée).
-  - Une page de groupe sans aucun cas publié est rendue vide par Hugo (constaté dans le spike). Le contrôle de mise en ligne l'interdit (C15).
+  - Une page de groupe sans aucun cas publié est rendue vide par Hugo (constaté dans le spike). **Page de groupe en brouillon** (décidé le 13/09/2026, D-3) : le `_index` d'un groupe reste en `draft: true` tant qu'aucun de ses cas n'est publié.
+    - En production, la page de groupe n'est alors pas construite : ni C12 ni C15 ne la voient. En rendu de travail (`--buildDrafts`), elle s'affiche avec ses cas.
+    - Le `_index` passe en `draft: false` dans la même PR que la publication du premier cas du groupe (pour Chiliz, stories 10.4 et 10.5 livrées ensemble), si bien qu'aucune page de groupe vide n'existe en production. La règle vaut pour tout groupe futur.
+    - La story 2.5 constate qu'un `_index` en brouillon ne casse ni la cascade ni `case-url.html` en rendu de travail. Si le constat échoue, repli : C12 exclut les pages de groupe sans section, comme C15 les traite déjà.
+    - C15 garde l'interdiction d'une page de groupe vide à la mise en ligne.
 
 ### AD-5 — Deux environnements de rendu : production et travail
 
@@ -220,7 +225,7 @@ flowchart TD
     - avec `ENV_MODE=release` : variables déjà définies, puis le fichier désigné par `LEGAL_ENV_FILE`, obligatoire ; `.env` et le fichier factice sont refusés, et toute variable manquante fait échouer le chargeur.
   - **Build de contrôle** (GitHub, job de contrôles Gitea, poste sans `.env`) : charge `ci/legal-placeholder.env`, commité, dont chaque valeur contient `VALEUR-FACTICE`, uniquement dans le processus du conteneur de contrôle.
   - **Build de mise en ligne** (workflow `release`, production ou répétition) : le workflow écrit les secrets Gitea dans un fichier temporaire au format dotenv et le passe en secret BuildKit (`docker build --secret id=legal_env,src=<fichier>`). Dans le `Dockerfile`, une seule instruction `RUN --mount=type=secret,id=legal_env,required=true` exécute `ENV_MODE=release LEGAL_ENV_FILE=/run/secrets/legal_env scripts/build.sh production` puis `scripts/check.sh`. L'étape `build` est reconstruite sans cache (`--no-cache-filter build`), puisqu'un secret ne change pas la clé de cache. Le contrôle de mise en ligne échoue si `VALEUR-FACTICE` apparaît dans `public/`.
-  - `.env`, à la racine du dépôt et jamais commité, contient **tous** les jetons, identifiants et secrets utilisés en local : les sept `HUGO_LEGAL_*`, et `GITEA_URL`, `GITEA_USER`, `GITEA_TOKEN` d'AD-24 (décidé le 13/09/2026). `scripts/env.sh` ne transmet à Hugo que les variables `HUGO_LEGAL_*` ; les autres ne servent qu'aux scripts du poste de développement. `.env.example`, commité, liste exactement ces noms sous la forme `NOM=` sans valeur ; `ci/legal-placeholder.env` contient les sept noms légaux avec des valeurs `VALEUR-FACTICE-…` (C18). `.env` est ignoré par git, exclu par `.dockerignore`, et figure déjà dans les chemins interdits de `scripts/check-private.sh`.
+  - `.env`, à la racine du dépôt et jamais commité, contient **tous** les jetons, identifiants et secrets utilisés en local : les sept `HUGO_LEGAL_*`, et `GITEA_URL`, `GITEA_USER`, `GITEA_TOKEN` d'AD-24 (décidé le 13/09/2026). `scripts/env.sh` ne transmet à Hugo que les variables `HUGO_LEGAL_*` : il ne lit dans `.env` que les lignes `^HUGO_LEGAL_`, sans `source` du fichier entier ni `set -a`, si bien qu'un `GITEA_TOKEN` défini dans `.env` n'est jamais visible du processus `hugo` (critère de la story 2.4). Les autres variables ne servent qu'aux scripts du poste de développement. `.env.example`, commité, liste exactement ces dix noms (les sept `HUGO_LEGAL_*`, `GITEA_URL`, `GITEA_USER`, `GITEA_TOKEN`) sous la forme `NOM=` sans valeur ; `ci/legal-placeholder.env` contient les sept noms légaux avec des valeurs `VALEUR-FACTICE-…` (C18). `.env` est ignoré par git, exclu par `.dockerignore`, et figure déjà dans les chemins interdits de `scripts/check-private.sh`.
   - Ces valeurs sont publiques une fois le site en ligne : le but est de les tenir hors du dépôt, pas de les cacher.
   - **Motifs interdits et sortie du build** : la liste des motifs, qui contient la commune de résidence, s'applique aux sources versionnées (garde-fou, AD-12) et aux PDF (C21). Sur la sortie de production `public/`, le contrôle C22 du job `release` confronte chaque page à la liste : toute occurrence fait échouer la mise en ligne, sauf sur les deux pages des mentions légales, où une occurrence n'est admise que si elle est contenue dans l'une des valeurs `HUGO_LEGAL_*` injectées. Le build de contrôle de GitHub, avec ses valeurs factices et sans liste de motifs, n'est pas concerné.
 
@@ -255,7 +260,11 @@ flowchart TD
 - **Prevents:** l'entrée d'un chemin ou d'un motif privé dans l'historique de Gitea, donc sur GitHub ; un contournement par un poste sans hook ; la divergence entre la version du script dans le dépôt et celle du serveur.
 - **Rule:**
   - **Local** : `scripts/check-private.sh staged` en pre-commit (`git config core.hooksPath .githooks`).
-  - **Serveur (autorité)** : hook pre-receive sur le dépôt Gitea, fermé en cas de doute (procédure plus bas). Aucun push ne va directement sur GitHub : seul le miroir push de Gitea y écrit.
+  - **Serveur (autorité)** : hook pre-receive sur le dépôt Gitea, fermé en cas de doute (procédure plus bas).
+  - **Dépôt public GitHub** (décidé le 13/09/2026, D-9) : aucun push ne va directement sur GitHub, seul le miroir push de Gitea y écrit, et GitHub l'impose :
+    - un ruleset couvre toutes les branches et tous les tags : création, mise à jour et suppression restreintes, avec un seul acteur autorisé à contourner, l'identité du miroir. D'après la documentation de GitHub, une clé de déploiement peut être cet acteur. La story 1.4 vérifie que le miroir push de la version de Gitea en service sait pousser en SSH ; sinon, l'identité du miroir est un compte machine dédié, avec un jeton à grain fin limité à ce dépôt ;
+    - `main` porte en plus « Block force pushes », puisqu'elle n'est jamais réécrite. `dev` ne le porte pas, pour que la réécriture qui suit un hotfix passe par le miroir (AD-24). Un acteur de contournement échappe à toutes les règles du ruleset qui l'autorise : ce blocage vit donc dans un second ruleset, limité à `main` et sans acteur de contournement ;
+    - test (story 1.4) : un push direct depuis le compte personnel d'Arnaud est refusé par GitHub.
   - **CI** (Gitea et GitHub) : `scripts/check-private.sh history` sur tout l'historique, en mode chemins seulement.
   - Chemins interdits (déjà en place) : `docs/private/`, `docs/context/`, `.env`. **Nommer** `docs/private/` dans un fichier public est autorisé (NFR-9, décidé le 13/09/2026) : le garde-fou refuse les fichiers sous ce chemin, pas la mention du chemin.
   - La recherche de motifs de `check-private.sh` utilise `git grep -I`, qui ignore les fichiers binaires : le texte des PDF et les métadonnées des images échappent donc à ce garde-fou, et sont couverts par C20 et C21 (AD-19, AD-21) ; pour les PDF, avant l'historique (pre-commit et pre-receive).
@@ -328,7 +337,7 @@ flowchart TD
   - Déclencheur : `pull_request` (`opened`, `synchronize`, `reopened`), filtré par `paths` sur `content/**`, `diagrams/**`, `assets/live-material/**` et `i18n/**`. **Jamais `pull_request_target`** : Gitea ne transmet aucun secret à une PR de fork, sauf avec `pull_request_target` (vérifié dans `models/secret/secret.go`).
   - Le job est en `continue-on-error: true` et le script sort toujours avec le code 0. Sans clé, il s'arrête proprement.
   - `scripts/parity-agent/run.sh` (`bash`, `curl`, `jq`) :
-    1. identifie les `translationKey` modifiés (cas, postes, formations, pages) et envoie les deux fichiers complets de chaque paire à `POST https://api.anthropic.com/v1/messages` (en-têtes `x-api-key`, `anthropic-version: 2023-06-01`) ;
+    1. identifie les paires modifiées et envoie les deux fichiers complets de chaque paire à `POST https://api.anthropic.com/v1/messages` (en-têtes `x-api-key`, `anthropic-version: 2023-06-01`). Un fichier de `content/` s'apparie par son `translationKey` (cas, postes, formations, pages) ; un fichier sans `translationKey` s'apparie par son nom : `diagrams/<id>/fr.d2` avec `diagrams/<id>/en.d2`, `assets/live-material/<id>.fr.md` avec `<id>.en.md`, `i18n/fr.yaml` avec `i18n/en.yaml` ;
     2. demande la liste des écarts de faits, de chiffres et de phrases entre FR et EN, sans réécriture ; les lignes de contexte propres à l'anglais (FR-22) ne comptent pas comme des écarts ;
     3. publie **un** commentaire par exécution avec `POST /api/v1/repos/{owner}/{repo}/issues/{index}/comments` et le jeton `GITEA_TOKEN` du job (`permissions:` limitées, portée exacte à confirmer dans la story).
   - Secret : `ANTHROPIC_API_KEY`, jamais affiché (pas de `set -x`). Seuls des fichiers publics du dépôt sont envoyés.
@@ -353,7 +362,7 @@ flowchart TD
 
 ### AD-18 — Parcours, formation, certifications et langues : l'accueil est un CV
 
-- **Binds:** FR-1, FR-2, FR-3, FR-4, FR-11, FR-15, FR-20, FR-32, FR-36, FR-37, FR-38, NFR-10 ; `content/career/`, `content/education/`, `layouts/home.html`, `_partials/position.html`, format des cas v0.4 (proposé).
+- **Binds:** FR-1, FR-2, FR-3, FR-4, FR-11, FR-15, FR-20, FR-32, FR-36, FR-37, FR-38, NFR-10 ; `content/career/`, `content/education/`, `layouts/home.html`, `_partials/position.html`, format des cas v0.4.
 - **Prevents:** deux sources du parcours (données et contenu), un poste qui liste ses cas à la main et doit être modifié à chaque cas publié, une période calculée ou inventée par un gabarit, un cas publié rattaché à un poste absent ou différent entre FR et EN.
 - **Rule:**
   - **Emplacement** : le parcours est du contenu Markdown bilingue, pas un fichier de `data/` :
@@ -361,6 +370,19 @@ flowchart TD
     - une formation, une certification ou une langue = `content/education/education-<id>.{fr,en}.md` (FR-36) ;
     - `content/career/_index.{fr,en}.md` et `content/education/_index.{fr,en}.md` portent `build: {render: never, list: never}` et `cascade: [{build: {render: never, list: always}, target: {kind: page}}]` : ces fichiers ne produisent aucune page et ne servent qu'à l'accueil.
   - **Identifiant stable** : `translationKey: position-<id>` (ou `education-<id>`), kebab-case anglais, identique au nom de fichier, jamais renommé une fois publié (un cas y fait référence).
+  - **Identifiants de poste** (décidé le 13/09/2026, D-8) : `position-<société en kebab-case>` quand la société n'apparaît qu'une fois dans le parcours ; `position-<société>-<année de début>` quand elle apparaît plusieurs fois. Exception : `position-earlier-career` désigne un regroupement (« Parcours antérieur », 2008–2014), pas une société. La liste est figée ici, avant la rédaction des cas 01, 05 et 06 et avant la story 10.2 ; `docs/format-cas.md` y renvoie. Liste exacte décidée par Arnaud le 13/09/2026 (compléments de la proposition de changement) :
+
+    | Identifiant | Poste | Cas rattachés |
+    | --- | --- | --- |
+    | `position-chiliz` | Chiliz | 02, 03, 04 |
+    | `position-synolia` | Synolia | — |
+    | `position-mister-auto` | Mister Auto | — |
+    | `position-april-technologies-2017` | April Technologies, 2017, en prestation Modis | 06 |
+    | `position-orange` | Orange | 05 |
+    | `position-earlier-career` | « Parcours antérieur », 2008–2014 : regroupement, pas une société | — |
+    | `position-ton-pote-le-geek` | Ton Pote le Geek (`track: parallel`) | 01 |
+
+    La liste est complète : aucun autre poste n'est créé sans modifier cet AD, et aucun identifiant du tableau n'est renommé. La mission de 2013–2014 chez April pour le compte de CGI n'est pas un poste : c'est une ligne de détail de `position-earlier-career`.
   - **Front matter d'un poste** (clés en anglais) :
     - `company` (non traduit) ; `role` (dans la langue du fichier) ;
     - `period` : texte donné par l'auteur, dans la langue du fichier, jamais calculé ; `[TODO: période]` impose `draft: true` ;
@@ -373,10 +395,10 @@ flowchart TD
     - `draft`.
     Le corps Markdown, facultatif, décrit le poste ; il n'est rendu que si le poste n'a aucun cas publié dans la langue de la page. Un poste sans cas publié affiche ses champs puis son corps éventuel, sans zone de cas ni mention d'absence (décidé le 13/09/2026).
   - **Front matter d'une entrée de `content/education/`** : `kind` (`education`, `certification` ou `language`), `title`, `institution` (facultatif), `period` (facultatif, même règle que pour un poste), `level` (facultatif, pour une langue), `order` (unique par `kind`), `draft`. Ces données, comme celles des postes, viennent du CV d'Arnaud (NFR-10).
-  - **Lien cas → poste** : la clé `position: "position-<id>"` est dans le **cas** (format v0.4 proposé), identique en FR et en EN, obligatoire pour un cas publié. Le poste ne liste pas ses cas : `_partials/position.html` les retrouve par `where site.RegularPages "Params.position" $translationKey`, triés par `number`, et Hugo exclut les brouillons en production. Un cas se publie ainsi sans modifier aucun autre fichier (FR-25, FR-32), et un brouillon ne peut pas apparaître par erreur sous un poste.
+  - **Lien cas → poste** : la clé `position: "position-<id>"` est dans le **cas** (format v0.4), identique en FR et en EN, obligatoire pour un cas publié. Le poste ne liste pas ses cas : `_partials/position.html` les retrouve par `where site.RegularPages "Params.position" $translationKey`, triés par `number`, et Hugo exclut les brouillons en production. Un cas se publie ainsi sans modifier aucun autre fichier (FR-25, FR-32), et un brouillon ne peut pas apparaître par erreur sous un poste.
   - **Ancres et retour au parcours** : `_partials/position.html` pose `id="<translationKey>"` sur chaque poste (par exemple `#position-chiliz`). La page d'un cas (page seule ou section de groupe) rend un lien « Retour au parcours » (i18n `back_to_career`) vers l'accueil de sa langue suivi de `#<position>`, construit par `_partials/career-url.html` à partir de la clé `position` du cas. C12 vérifie ces ancres.
   - **Bloc « En parallèle »** : poste `position-ton-pote-le-geek` avec `track: parallel` ; le cas 01 porte `position: "position-ton-pote-le-geek"` (FR-4, FR-11).
-  - **Cas 06** : rattaché au poste April Technologies de 2017, en prestation Modis (PRD §11.1, question 15) ; le lien avec la mission de 2013–2014 peut figurer dans le corps du poste, sans clé dédiée.
+  - **Cas 06** : rattaché au poste `position-april-technologies-2017` (April Technologies, 2017, en prestation Modis ; PRD §11.1, question 15) ; le lien avec la mission de 2013–2014 (ligne de détail de `position-earlier-career`) peut figurer dans le corps du poste, sans clé dédiée.
   - **Accueil** (`layouts/home.html`) : ligne d'identité, titre du site et pitch (AD-19, AD-3), puis postes `track: main` par `order`, chacun avec ses cas publiés, affichés par numéro (i18n `case_number`) et titre seulement, sans encart « En bref » (lien par `case-url.html`), puis le bloc « En parallèle », puis le bloc formation, certification et langues (entrées de `content/education/` par `kind` puis `order`), l'appel à contact (FR-3) ; les liens vers les CV PDF passent par le pied de page commun (AD-21). Libellés des blocs dans `i18n/`. La mise en page et les valeurs visuelles relèvent de `DESIGN.md` et `EXPERIENCE.md` : aucune n'est fixée ici.
   - Les villes de travail peuvent apparaître ; la ville de résidence reste privée (liste des motifs du garde-fou).
   - Contrôles : C19 (AD-10).
@@ -386,7 +408,7 @@ flowchart TD
 - **Binds:** FR-1, FR-33, FR-34, FR-37, NFR-4, NFR-5, NFR-9 ; `content/_index.{fr,en}.md`, `assets/images/portrait.webp`, `scripts/photo/prepare.sh`, `_partials/portrait.html`, `scripts/checks/images.sh`.
 - **Prevents:** une photo publiée avec ses métadonnées (appareil, date, coordonnées GPS), l'original commité dans l'historique public, deux outils de traitement d'image, une photo sans alternative textuelle ou hors budget.
 - **Rule:**
-  - **Identité** : `content/_index.{fr,en}.md` porte `identity` (nom et pseudonyme, identique en FR et en EN), `based_in` (« Basé en France » / *Based in France*) et `portrait_alt` (texte alternatif de la photo, dans la langue du fichier). `baseof.html` reprend `identity` dans le `<title>` de chaque page (AD-2). Aucune ville de résidence n'est publiée.
+  - **Identité** : `content/_index.{fr,en}.md` porte `identity` (nom et pseudonyme, identique en FR et en EN), `based_in` (« Basé en France » / *Based in France*), `job_title` (intitulé repris par le JSON-LD, dans la langue du fichier ; ajoutée le 13/09/2026, D-7, AD-20) et `portrait_alt` (texte alternatif de la photo, dans la langue du fichier). `baseof.html` reprend `identity` dans le `<title>` de chaque page (AD-2). Aucune ville de résidence n'est publiée.
   - **Original hors dépôt** : l'original de la photo n'est jamais commité ni placé sous le dossier du dépôt.
   - **Copie commitée** : `scripts/photo/prepare.sh <original> <ancrage>` lance le Hugo épinglé de `tools.env` sur un mini-projet temporaire hors dépôt, qui recadre l'original au ratio 4:5 et le ramène à 640 × 800 par `.Process "crop 640x800 <ancrage> webp q80"`, puis écrit `assets/images/portrait.webp` (impact I-11). L'ancrage (`Top`, `Center`…) est obligatoire, choisi à la main et vérifié à l'œil ; le script refuse `Smart`. Le spike (Hugo v0.166.0) montre qu'un JPEG portant des données EXIF et GPS ressort en WebP comme en JPEG sans aucune trace d'`Exif`, de XMP ni de `GPS`, et que le WebP produit est un VP8 simple, sans bloc `VP8X`, donc sans emplacement de métadonnées. La documentation de Hugo indique que les métadonnées ne sont pas conservées à la transformation. WebP est encodé par l'édition standard depuis Hugo v0.153.0. Aucun autre outil d'image n'est ajouté.
   - **Copies publiées** : `_partials/portrait.html` reçoit un emplacement (`home` ou `about`) et produit, depuis la copie commitée, les variantes WebP de cet emplacement par `.Process "resize"`, empreintées, en `srcset` 1x/2x, avec `width` et `height` (taille 1x) et `alt` = `portrait_alt` : accueil 120 × 150 et 240 × 300 ; « À propos » 160 × 200 et 320 × 400 (décidé le 13/09/2026, `DESIGN.md`). Quatre variantes au plus, toutes au ratio 4:5 et ≤ 640 px de large ; aucune page ne recadre autrement.
@@ -399,7 +421,13 @@ flowchart TD
 - **Prevents:** qu'une exception de données serve de porte d'entrée à du code, plusieurs blocs contradictoires, des données personnelles non publiques dans le bloc.
 - **Rule:**
   - Un seul bloc `<script type="application/ld+json">`, rendu par `_partials/jsonld-person.html` sur l'accueil de chaque langue, construit par `jsonify` à partir du contenu, avec exactement les champs de FR-35 : nom (`name`), pseudonyme (`alternateName`), intitulé (`jobTitle`), pays (`address.addressCountry: FR`), URL du site (`url`), liens LinkedIn et GitHub (`sameAs`). Aucun autre champ : ni ville, ni téléphone, ni photo.
-  - C10 : toute balise `<script>` dont le `type` n'est pas exactement `application/ld+json`, ou qui porte `src`, fait échouer le contrôle ; exactement un bloc JSON-LD sur l'accueil de chaque langue et aucun sur les autres pages ; son contenu est un JSON valide (`jq`) de `@type` `Person`, aux seules clés de FR-35.
+  - **Sources des champs** (décidé le 13/09/2026, D-7) :
+    - `name` et `alternateName` ← `identity` de `content/_index` (AD-19) ;
+    - `jobTitle` ← `job_title` de `content/_index.{fr,en}.md`, dans la langue du fichier (par exemple le premier segment du titre du site) ;
+    - `address.addressCountry` ← constante `FR` ; `url` ← `baseURL` ;
+    - `sameAs` ← `linkedin` et `github` du front matter de `content/contact` (AD-3). `github` est l'URL du **profil** GitHub, pas du dépôt : `params.source_url` n'entre pas dans le bloc ;
+    - un lien vide est omis de `sameAs`, jamais remplacé par une valeur factice.
+  - C10 : toute balise `<script>` dont le `type` n'est pas exactement `application/ld+json`, ou qui porte `src`, fait échouer le contrôle ; au plus un bloc JSON-LD, sur l'accueil seulement, jusqu'à la story qui crée le bloc (9.6), puis exactement un sur l'accueil de chaque langue ; aucun sur les autres pages ; son contenu est un JSON valide (`jq`) de `@type` `Person`, aux seules clés de FR-35.
   - La CSP d'AD-13 reste inchangée : un bloc de données n'est pas exécuté par le navigateur et n'est pas soumis à `script-src`.
 
 ### AD-21 — CV PDF
@@ -427,8 +455,9 @@ flowchart TD
 - **Rule:**
   - **Canal de répétition** sur le serveur de production, séparé de la production : projet compose `site-rehearsal` (`deploy/compose.rehearsal.yaml`), conteneur **hors** du réseau de NPM, publié seulement sur la boucle locale (`127.0.0.1:18080:80`, décidé le 13/09/2026). Aucun DNS, aucun hôte proxy, aucun port public.
   - **Accès** : tunnel SSH depuis le poste (`ssh -L 18080:127.0.0.1:18080 <compte>`), puis `curl -I` et navigateur sur `http://127.0.0.1:18080/`.
-  - **Déclencheur** : tag `vX.Y.Z-rc.N` sur un commit de `dev` (AD-24), avant la PR `dev` → `main`. `dev` plutôt qu'une branche `release/*` : `dev` est déjà ce que la PR de publication porte vers `main`, et une branche `release/*` ajouterait une branche à tenir sans rien contrôler de plus. Avec la publication en fast-forward, le commit tagué `vX.Y.Z` sur `main` est un commit de `dev` : pour `v1.0.0`, le workflow `release` refuse le tag si aucun tag `v1.0.0-rc.N` ne pointe sur un commit de même arbre (`git diff --quiet`, FR-39 ; décidé le 13/09/2026). Le workflow `release` fait exactement la chaîne de production (contrôles de mise en ligne, vraies valeurs légales, image `eleyone-site:<tag>`, envoi), mais `ship.sh` envoie `rehearse deploy <tag>`. `deploy-site` refuse un tag `-rc` en production et un tag sans `-rc` en répétition.
+  - **Déclencheur** : tag `vX.Y.Z-rc.N` sur un commit de `dev` (AD-24), avant la PR `dev` → `main`. `dev` plutôt qu'une branche `release/*` : `dev` est déjà ce que la PR de publication porte vers `main`, et une branche `release/*` ajouterait une branche à tenir sans rien contrôler de plus. Avec la publication en fast-forward, le commit tagué `vX.Y.Z` sur `main` est un commit de `dev` : pour `v1.0.0`, le workflow `release` refuse le tag si aucun tag `v1.0.0-rc.N` ne pointe sur un commit de même arbre (`git diff --quiet`, FR-39 ; décidé le 13/09/2026). Ce refus bloquant ne vaut que pour `v1.0.0` : pour les tags de production suivants, le script `release` avertit seulement si aucun tag `-rc` de même arbre n'existe (décidé le 13/09/2026, D-6). Le workflow `release` fait exactement la chaîne de production (contrôles de mise en ligne, vraies valeurs légales, image `eleyone-site:<tag>`, envoi), mais `ship.sh` envoie `rehearse deploy <tag>`. `deploy-site` refuse un tag `-rc` en production et un tag sans `-rc` en répétition.
   - **Commandes** : `rehearse deploy <tag>` ; `rehearse rollback <tag>` (image `-rc` déjà présente) ; `rehearse stop` (arrête le conteneur et supprime les images `-rc`).
+  - **Première répétition, tôt** (décidé le 13/09/2026, D-5) : dès que la chaîne existe (stories 11.1 à 11.9, placées avant le contenu du socle), une répétition sur un tag `v0.1.0-rc.N` exerce toute la chaîne, avec les pages déjà publiées et les vraies valeurs légales. C15 ne la bloque pas, puisque `ci/release-pages.txt` ne liste que les pages publiées attendues à ce commit. Le jalon ci-dessous reste la répétition générale sur l'arbre du socle.
   - **Jalon « répétition générale »**, avant `v1.0.0` : tag `v1.0.0-rc.1`, vérifications, tag `v1.0.0-rc.2`, `rehearse rollback v1.0.0-rc.1`, vérifications, `rehearse stop`. Vérifications : en-têtes d'AD-13 sur un HTML, un SVG, une 404 FR et EN ; pages légales avec les vraies valeurs ; journaux du conteneur sans IP (`docker logs`). Les tags `-rc` sont poussés sur GitHub par le miroir, sans effet sur les contrôles publics.
 
 ### AD-23 — Typographie française appliquée au build
@@ -449,14 +478,16 @@ flowchart TD
   - **Branches** :
     - `feat/*` et `fix/*` partent de `dev` et y reviennent par PR, fusionnées en **squash**, ce qui garde `dev` linéaire ;
     - **aucun merge commit** : la publication `dev` → `main` garde un historique linéaire. Les tags `vX.Y.Z` se posent sur `main` (AD-14), les tags `vX.Y.Z-rc.N` sur `dev` (AD-22) ;
-    - **hotfix de production** : une branche `fix/*` part de `main`, revient dans `main`, puis est réintégrée dans `dev` ;
-    - `dev` et `main` sont protégées sur Gitea : push direct désactivé, merge bloqué si la branche est en retard, contrôles d'état requis dès que la CI existe. Force-push interdit sur `main` ; sur `dev`, réservé à Arnaud par liste d'autorisation, pour le seul rebase qui suit un hotfix. `main` est à créer à la main ;
-    - sur le miroir GitHub, la branche par défaut est `main`. `main` n'est jamais réécrite ; `dev` peut l'être après un hotfix, et le miroir la remplace alors sur GitHub.
+    - **hotfix de production** : une branche `hotfix/*` part de `main`, revient dans `main`, puis est réintégrée dans `dev`. Le préfixe `hotfix/*` est réservé aux branches issues de `main` ; `fix/*` ne sert qu'aux correctifs vers `dev` (décidé le 13/09/2026, D-14) ;
+    - `dev` et `main` sont protégées sur Gitea : merge bloqué si la branche est en retard, contrôles d'état requis dès que la CI existe. `main` est à créer à la main. Réglages (décidés le 13/09/2026, D-10), notés dans `docs/procedures/gitea-branches.md` (story 0.2) :
+      - `main` : aucun push ni force-push, pour aucun compte ; les fusions passent par l'API ;
+      - `dev` : push direct refusé aux autres comptes. Gitea n'accepte un force-push de la liste d'autorisation que d'un compte qui a déjà le droit de push : le compte d'Arnaud figure donc dans la liste de push de `dev` et, seul, dans celle du force-push, pour le seul rebase qui suit un hotfix. Pour son compte, le push direct sur `dev` reste techniquement possible et n'est interdit que par la procédure ;
+    - sur le miroir GitHub, la branche par défaut est `main`. `main` n'est jamais réécrite ; `dev` peut l'être après un hotfix, et le miroir la remplace alors sur GitHub, où seul le miroir écrit (ruleset d'AD-12).
   - **Publication en fast-forward** (décidé le 13/09/2026) : invariant, `main` est toujours un ancêtre de `dev`. La PR `dev` → `main` est fusionnée avec le style Gitea `fast-forward-only` (disponible depuis Gitea 1.22.0, valeur du champ `do` de l'API), plutôt que `rebase` : si `main` a divergé, la fusion échoue bruyamment au lieu de réécrire les commits en silence. Les SHA publiés sont ceux de `dev`, donc ceux des tags `-rc.N` répétés, et les tags restent stables. Styles autorisés dans les réglages du dépôt : `squash` et `fast-forward-only`.
   - **Hotfix** (décidé le 13/09/2026) :
-    1. `fix/*` part de `main` ; PR vers `main`, fusionnée en fast-forward après les verrous ; tag `vX.Y.(Z+1)` sur `main` ;
+    1. `hotfix/*` part de `main` ; PR vers `main`, fusionnée en fast-forward après les verrous ; tag `vX.Y.(Z+1)` sur `main` ;
     2. `dev` est rebasée sur `main` (`git rebase main`) puis poussée par `git push --force-with-lease`. C'est l'exception tracée au force-push de `dev`. Le skill `hotfix` peut la faire lui-même, mais seulement après l'approbation explicite d'Arnaud, demandée au moment de l'opération ; dans Gitea, le force-push sur `dev` est limité au compte d'Arnaud, seul sur le projet. Le skill vérifie ensuite que `main` est un ancêtre de `dev` ;
-    3. les branches `feat/*` ouvertes se rebasent sur la nouvelle `dev`.
+    3. chaque branche ouverte vers `dev` (`feat/*`, `fix/*`) est rebasée sur la nouvelle `dev`, puis sa PR est relue de nouveau par `llm-review` : le rapport précédent porte sur un SHA qui n'existe plus, et le verrou 1 ne le reconnaît donc pas (décidé le 13/09/2026, D-14).
     Pas de cherry-pick : la copie aurait un autre SHA et casserait le fast-forward de la publication suivante.
   - **Style de fusion** : Gitea ne fixe pas le style de fusion par branche (documentation 1.27 des branches protégées). Les scripts l'imposent par l'API (`POST /repos/{owner}/{repo}/pulls/{index}/merge`, avec `head_commit_id` égal au SHA relu, pour que la fusion échoue si la tête a bougé) :
     - `verify-and-merge-pr` ne fusionne que vers `dev`, en `do: squash`, et **refuse toute base `main`**, en renvoyant vers `release` ou `hotfix` ;
@@ -476,28 +507,38 @@ flowchart TD
       **Limites** : un refus sur un fichier n'arrête pas toutes les commandes shell, et la documentation d'Antigravity ne dit pas si `deny` résiste à `--dangerously-skip-permissions`. La garantie pour la revue externe reste le worktree isolé de `llm-review`, qui ne contient ni `.env` ni `docs/private/`.
   - **Outillage en trois niveaux**, sous le même nom : `.claude/skills/<nom>/SKILL.md` (déclenchement et consignes pour l'agent) → `docs/procedures/<nom>.md` (étapes lisibles par une personne, qui font foi) → `scripts/<nom>.sh` (exécution). Un skill ne décrit aucune étape absente de sa procédure ; une procédure ne cite aucune commande absente de son script. Les neuf outils :
     - `llm-review` : revue par un LLM tiers (ci-dessous) ;
-    - `create-pull-request` : PR Gitea par l'API, base déduite de la branche (`feat/*` et `fix/*` → `dev`) ; une PR vers `main` n'est créée que par `release` ou `hotfix` ;
+    - `create-pull-request` : PR Gitea par l'API, base déduite de la branche (`feat/*` et `fix/*` → `dev`) ; une PR vers `main` n'est créée que par `release` (depuis `dev`) ou `hotfix` (depuis `hotfix/*`), et `create-pull-request` refuse une branche `hotfix/*` ;
     - `verify-and-merge-pr` : verrous de merge (ci-dessous) ;
-    - `sprint-consistency` : cohérence entre le suivi de sprint de `_bmad-output/implementation-artifacts/`, les stories et les branches ;
+    - `sprint-consistency` : cohérence entre `sprint-status.yaml` (dans `_bmad-output/implementation-artifacts/`) et l'en-tête `Status:` des fichiers de story. En v1, les statuts seulement, sans vérification des branches, qui pourra s'ajouter si un écart se produit (décidé le 13/09/2026, D-17) ;
     - `check-private` : garde-fou public/privé (AD-12 ; le script existe déjà) ;
     - `rehearse-release` : tag `vX.Y.Z-rc.N` sur `dev` et vérifications par tunnel (AD-22) ;
-    - `release` : vérifie d'abord que `main` est un ancêtre de `dev`, crée la PR `dev` → `main`, applique les verrous, fusionne en fast-forward, puis pose le tag `vX.Y.Z` sur `main` (AD-14) ;
-    - `hotfix` : crée `fix/*` depuis `main`, la PR vers `main`, applique les verrous, fusionne en fast-forward et pose le tag `vX.Y.(Z+1)` ; puis, après approbation explicite d'Arnaud demandée au moment de l'opération, rebase `dev` sur `main`, pousse par `--force-with-lease`, vérifie que `main` est un ancêtre de `dev` et liste les `feat/*` à rebaser ;
-    - `publish-case` : passage d'un cas en `draft: false` en FR et en EN et ajout à `ci/release-pages.txt`, dans une PR `feat/*`.
+    - `release` : vérifie d'abord que `main` est un ancêtre de `dev`, crée la PR `dev` → `main`, applique les verrous de la publication (ci-dessous), fusionne en fast-forward seulement avec `--merge` lancé par Arnaud, puis pose le tag `vX.Y.Z` sur `main` (AD-14). Pour `v1.0.0`, il refuse la publication si `ci/release-pages.txt` ne contient pas toutes les pages du socle (FR-32 ; D-5) ; pour les tags suivants, l'absence de tag `-rc` de même arbre n'est qu'un avertissement (AD-22, D-6) ;
+    - `hotfix` : crée `hotfix/*` depuis `main`, la PR vers `main`, applique les verrous, fusionne en fast-forward et pose le tag `vX.Y.(Z+1)` ; puis, après approbation explicite d'Arnaud demandée au moment de l'opération, rebase `dev` sur `main`, pousse par `--force-with-lease`, vérifie que `main` est un ancêtre de `dev` et liste les PR ouvertes vers `dev` à rebaser puis à relire ;
+    - `publish-case` : passage d'un cas en `draft: false` en FR et en EN et ajout à `ci/release-pages.txt` du cas et, pour un cas groupé, de `group-<group>` s'il n'y figure pas (D-5), dans une PR `feat/*`.
   - **Revue par un LLM tiers** (`llm-review`), sur le poste de développement :
-    - CLI `agy` (Antigravity) en `--mode plan`, avec un modèle d'un autre fournisseur que l'auteur : auteur Claude → Gemini 3.1 Pro High. L'identifiant exact se relève par `agy models`, et le caractère lecture seule de `--mode plan` n'est pas documenté : la sécurité n'en dépend pas. Critères d'acceptation de la story `llm-review` : vérifier au premier usage que `--mode plan` ne modifie rien, et relever l'identifiant exact du modèle ;
+    - CLI `agy` (Antigravity) en `--mode plan`, avec un modèle d'un autre fournisseur que l'auteur : auteur Claude → Gemini 3.1 Pro High ; auteur Gemini → un modèle Claude, par la même CLI (sens inverse, gardé pour le cas où Gemini écrirait du code ; auteur donné par `AUTHOR_LLM`, `claude` par défaut ; décidé le 13/09/2026, D-11). L'identifiant exact se relève par `agy models`, et le caractère lecture seule de `--mode plan` n'est pas documenté : la sécurité n'en dépend pas. Critères d'acceptation de la story `llm-review` : vérifier au premier usage que `--mode plan` ne modifie rien, et relever l'identifiant exact du modèle ;
     - **isolement** : `docs/private/` est présent dans l'arborescence de travail et le reviewer lit son répertoire courant. La revue tourne donc dans un worktree git temporaire créé **hors du dépôt** (`git worktree add <dossier temporaire> <SHA>`), qui ne contient que les fichiers suivis. `scripts/check-private.sh` passe sur ce périmètre (arbre du SHA et plage de commits relue) avant tout envoi, et le worktree est supprimé à la fin ;
     - périmètre : la branche entière par rapport à sa base (`git diff <base>...<SHA>`), au SHA de tête ;
     - le diff part vers un service externe : c'est acceptable seulement parce que tout le contenu versionné est déjà public ;
-    - rapport : un commentaire de la PR Gitea, par l'API, dont la première ligne est `llm-review sha=<SHA> base=<base> model=<modèle> verdict=<pass|block>`. Aucun rapport n'est commité, puisqu'il changerait le SHA relu (décidé le 13/09/2026).
+    - rapport : un commentaire de la PR Gitea, par l'API, dont la première ligne est `llm-review sha=<SHA> base=<base> model=<modèle> verdict=<pass|block>`. Aucun rapport n'est commité, puisqu'il changerait le SHA relu (décidé le 13/09/2026). Cette ligne est le seul format de rapport : `llm-review` l'écrit, suivie du texte de la revue, et `verify-and-merge-pr` ne lit qu'elle. Sans verdict `pass` ou `block` lisible dans la réponse du reviewer, `llm-review` échoue et ne publie rien.
   - **Verrous de `verify-and-merge-pr`** (poste de développement, `bash`, `curl` et `jq`, jamais en CI) :
-    1. un rapport `llm-review` existe pour le SHA de tête et la branche entière, avec un verdict non bloquant ;
+    1. un commentaire `llm-review` dont la première ligne porte `sha=` égal au SHA de tête, `base=` égal à la base de la PR (donc la branche entière) et `verdict=pass` ;
     2. `scripts/check-private.sh` passe sur l'arbre de tête ;
-    3. la CI est verte sur le SHA de tête (statuts Gitea) ; tant que la CI n'existe pas, le verrou est signalé absent au lieu de réussir en silence ;
+    3. la CI est verte sur le SHA de tête (statuts Gitea), avec trois états : `pass` passe, `fail` bloque, `absent` n'est admis que selon la règle d'amorçage ci-dessous, jamais comme une réussite silencieuse ;
     4. `sprint-consistency` passe.
     Par défaut, le script audite et affiche l'état de chaque verrou ; il ne fusionne qu'avec `--merge` explicite. Il n'a pas d'option `--force` et n'utilise jamais `force_merge`. `release` et `hotfix` appliquent les mêmes verrous avant leur fusion vers `main` ; le `--force-with-lease` de `hotfix` ne concerne que la réécriture de `dev`, jamais une fusion.
-  - **Prérequis du poste de développement** : `jq` n'y est pas installé (constat du 13/09/2026), alors que `create-pull-request`, `verify-and-merge-pr`, `release`, `hotfix` et `sprint-consistency` en dépendent. Il s'installe à la main par Arnaud (`sudo apt install jq`) et figure parmi les prérequis de chaque procédure concernée ; chaque script vérifie `command -v jq` au démarrage et échoue en renvoyant à sa procédure. Les scripts du poste ne sont pas portés en python3, pour garder un seul outil de lecture JSON avec la CI **[à valider par Arnaud]**.
-  - **Exception documentaire** : une PR dont tous les fichiers modifiés sont des `.md` sous `_bmad-output/` n'exige que la CI verte, qui inclut le garde-fou C1. L'exception ne s'applique jamais si la PR touche `content/**`, `AGENTS.md`, `CLAUDE.md`, `docs/procedures/**`, `.claude/**` ou `docs/format-cas.md`.
+  - **Verrous de la PR de publication `dev` → `main`** (décidé le 13/09/2026, D-13) : le verrou 1 est tenu si chaque commit de `main..dev` est le squash d'une PR fusionnée par `verify-and-merge-pr`, repérée par le numéro de PR dans le message de commit, sans nouvelle revue de tout l'écart ; les verrous 2, 3 et 4 s'appliquent tels quels ; `release` ne fusionne qu'avec `--merge` explicite, lancé par Arnaud.
+  - **Règle d'amorçage** (décidé le 13/09/2026, D-1), pour les premières PR, avant que la CI et les skills de l'Epic 0 existent :
+    1. `absent` n'est admis au verrou 3 que tant que `.gitea/workflows/checks.yaml` n'existe pas sur la branche de base, ce que le script détecte lui-même, sans interrupteur manuel. Dès que le fichier existe, `absent` bloque ;
+    2. tant que la CI est absente, son substitut est `scripts/check-private.sh history` (C1), puis aussi `scripts/check.sh` dès qu'il existe (story 3.2), lancés en local sur le SHA de tête, avec le résultat noté dans la PR. Pour une PR documentaire, ce substitut est alors le seul verrou ;
+    3. la planification de sprint est faite avant la story 0.1 ; la PR qui ajoute `sprint-status.yaml` est la seule fusionnée sans le verrou 4 ;
+    4. tant que les skills de l'Epic 0 n'existent pas, la revue se fait par `agy --mode plan`, lancé à la main dans un worktree temporaire hors du dépôt, avec le rapport collé en commentaire de PR au format ci-dessus ; Arnaud fusionne à la main.
+  - **Prérequis du poste de développement** (constats du 13/09/2026 ; décidés le 13/09/2026, D-15), listés dans chaque procédure concernée :
+    - `jq`, installé : `create-pull-request`, `verify-and-merge-pr`, `release`, `hotfix` et `sprint-consistency` en dépendent ; chaque script vérifie `command -v jq` au démarrage et échoue en renvoyant à sa procédure. Les scripts du poste ne sont pas portés en python3, pour garder un seul outil de lecture JSON avec la CI ;
+    - `agy`, installé et authentifié : `agy models` répond (prérequis de `llm-review`), avec le réglage `deny` d'Antigravity du poste ;
+    - Docker disponible dans le shell WSL : `scripts/ci/checks-job.sh`, le build d'image et les démonstrations sur `CHECK_IMAGE` en dépendent ;
+    - Hugo et D2 installés en local par `scripts/ci/install-tools.sh --local`, vérifiés par sha256, dans `.tools/` (ignoré par git), que `scripts/dev.sh` et `scripts/build.sh` placent en tête du `PATH` ; les versions ne viennent que de `tools.env` (AD-1).
+  - **Exception documentaire** (périmètre décidé le 13/09/2026, D-2) : une PR dont tous les fichiers modifiés sont sous `_bmad-output/` (artefacts de cadrage et suivi de sprint, `sprint-status.yaml` compris) n'exige que la CI verte, qui inclut le garde-fou C1, ou son substitut tant que la CI est absente (règle d'amorçage). L'exception ne s'applique jamais si la PR touche un autre fichier, dont `content/**`, `AGENTS.md`, `CLAUDE.md`, `docs/procedures/**`, `.claude/**` ou `docs/format-cas.md`.
   - **README-cas** : il documente ce flux et renvoie aux branches `design/dossier-architecture`, `design/suisse` et `experiment/d2-bilingue`.
 
 ## Procédure : hook pre-receive sur Gitea
@@ -539,28 +580,28 @@ Procédure recommandée, qui laisse `DISABLE_GIT_HOOKS=true` :
 
 ## Liste des contrôles
 
-Portée : C3 porte sur tout fichier de `content/`. C4, C6 à C8, C16 et C18 ne portent que sur les cas ; C19 sur les cas, postes et formations. Pour un brouillon, les règles de forme acceptent les valeurs `[TODO…]` (AD-10). C11 et C12 portent sur toutes les pages de `public/`, sauf les 404, exclues du contrôle des pages orphelines. La liste des pages attendues à chaque mise en ligne, par `translationKey`, est tenue dans `ci/release-pages.txt` et lue par C15. Pour C12 : l'en-tête commun lie l'accueil, « À propos » et Contact ; le pied de page lie les mentions légales, la politique de confidentialité, le dépôt public si son URL est renseignée (lien externe, non suivi) et les CV PDF si les deux sont publiés ; chaque cas publié est lié depuis son poste sur l'accueil (AD-18).
+Portée : C3 porte sur tout fichier de `content/`. C4, C6 à C8, C16 et C18 ne portent que sur les cas ; C19 sur les cas, postes et formations. Pour un brouillon, les règles de forme acceptent les valeurs `[TODO…]` (AD-10). C11 et C12 portent sur toutes les pages de `public/`, sauf les 404, exclues du contrôle des pages orphelines. `ci/release-pages.txt`, lu par C15, est la liste **cumulative** des pages publiées attendues à ce commit, par `translationKey` (décidé le 13/09/2026, D-5) : créée à la story 2.2 avec `home`, elle gagne une entrée à chaque story qui publie une page et, par `publish-case`, chaque cas publié (attendu comme section de sa page de groupe s'il est groupé) avec `group-<group>`. Aucune page attendue ne disparaît ; la complétude du socle n'est vérifiée qu'une fois, par `release` pour `v1.0.0` (AD-24). Pour C12 : l'en-tête commun lie l'accueil, « À propos » et Contact ; le pied de page lie les mentions légales, la politique de confidentialité, le dépôt public si son URL est renseignée (lien externe, non suivi) et les CV PDF si les deux sont publiés ; chaque cas publié est lié depuis son poste sur l'accueil (AD-18).
 
 | # | Contrôle | Script | Gitea | GitHub | Exigence |
 | --- | --- | --- | --- | --- | --- |
 | C1 | Chemins interdits sur tout l'historique | `scripts/check-private.sh history` (chemins seulement) | oui | oui | FR-28 |
 | C2 | Chemins et motifs privés à chaque push | hook `pre-receive.d/check-private` | serveur | non | FR-28, NFR-9 |
-| C3 | Parité FR/EN : paire de fichiers par `translationKey` ; mêmes clés non traduites (cas : `number`, `group`, `order`, `draft`, `setup`, `stack`, `position`, `live_material` id/type/statut ; postes : `company`, `via`, `setup`, `track`, `order`, `draft` ; entrées de formation : `kind`, `order`, `draft` ; accueil : `identity` ; contact : `email`, `linkedin`) ; mêmes rubriques à la même position | `scripts/checks/parity.sh` | oui | oui | FR-20, FR-23 |
+| C3 | Parité FR/EN : paire de fichiers par `translationKey` ; mêmes clés non traduites (cas : `number`, `group`, `order`, `draft`, `setup`, `stack`, `position`, `live_material` id/type/statut ; postes : `company`, `via`, `setup`, `track`, `order`, `draft` ; entrées de formation : `kind`, `order`, `draft` ; accueil : `identity` ; contact : `email`, `linkedin`, `github`) ; mêmes rubriques à la même position | `scripts/checks/parity.sh` | oui | oui | FR-20, FR-23 |
 | C4 | Rubriques H2 dans la liste de `docs/format-cas.md`, dans l'ordre | `scripts/checks/content.sh` | oui | oui | FR-8 |
 | C5 | Marqueur `[TODO` dans un fichier ⇒ `draft: true` ; aucun `[TODO` dans `public/` | `scripts/checks/content.sh`, `scripts/checks/html.sh` | oui | oui | FR-26 |
 | C6 | `stack` ⊂ `data/stack.yaml` | `scripts/checks/content.sh` | oui | oui | FR-6 |
 | C7 | Matériel vivant : identifiants déclarés ⇔ placés, uniques, préfixés par le type ; source présente pour chaque élément `ready` | `scripts/checks/content.sh` | oui | oui | FR-12, FR-13 |
 | C8 | Groupe : `group` = dossier ; `order` unique dans le groupe | `scripts/checks/content.sh` | oui | oui | FR-9 |
 | C9 | SVG régénérés identiques, sans SVG manquant ou orphelin ; mêmes clés `vars` en FR et en EN, égales aux variables de `structure.d2` ; chaque SVG ≤ 60 Ko, les deux thèmes compris si le spike D2 est concluant | `scripts/diagrams/check.sh` | oui | oui | FR-27, NFR-8 |
-| C10 | Zéro JS : aucune balise `<script>` autre qu'un bloc `application/ld+json` sans `src` (exactement un sur l'accueil de chaque langue, aucun ailleurs, JSON valide de `@type` `Person` aux seules clés de FR-35) ; pas d'attribut `on*=`, d'iframe, de formulaire ni d'origine tierce | `scripts/checks/html.sh` | oui | oui | NFR-12, FR-14, FR-17, NFR-3 |
+| C10 | Zéro JS : aucune balise `<script>` autre qu'un bloc `application/ld+json` sans `src` (au plus un sur l'accueil jusqu'à la story 9.6, puis exactement un sur l'accueil de chaque langue ; aucun ailleurs ; JSON valide de `@type` `Person` aux seules clés de FR-35, sans lien vide dans `sameAs`) ; pas d'attribut `on*=`, d'iframe, de formulaire ni d'origine tierce | `scripts/checks/html.sh` | oui | oui | NFR-12, FR-14, FR-17, NFR-3 |
 | C11 | Accessibilité automatisable (AD-17) | `scripts/checks/html.sh` | oui | oui | NFR-4 |
 | C12 | Liens internes et ancres résolus (dont `#case-NN`, `#<translationKey>-<rubrique>` et `#position-<id>` des liens « Retour au parcours ») ; aucune page orpheline par langue ; liens de CV présents si et seulement si les deux PDF sont publiés ; lien du dépôt présent si et seulement si son URL est renseignée | `scripts/checks/links.sh` | oui | oui | FR-2, FR-15 |
 | C13 | Budget de poids et d'éléments | `scripts/checks/budget.sh` | oui | oui | NFR-5 |
 | C14 | Build Hugo sans avertissement (`--panicOnWarning`) | `scripts/check.sh` | oui | oui | NFR-7 |
-| C15 | Mise en ligne : aucune page de groupe vide ; pages de `ci/release-pages.txt` présentes en FR et en EN ; aucun `VALEUR-FACTICE`, aucun `checks.json`, aucun `noindex`, aucun marqueur `draft-marker` dans `public/` | `scripts/check.sh --release` | `release` | non | FR-9, FR-32, FR-18, FR-26 |
+| C15 | Mise en ligne : aucune page de groupe vide ; pages et sections de `ci/release-pages.txt` (liste cumulative) présentes en FR et en EN ; aucun `VALEUR-FACTICE`, aucun `checks.json`, aucun `noindex`, aucun marqueur `draft-marker` dans `public/` | `scripts/check.sh --release` | `release` | non | FR-9, FR-32, FR-18, FR-26 |
 | C16 | « En bref », **bloquant** (PRD §11.1, « Mesure des trois lignes ») : au plus 3 phrases et 400 caractères par langue sur `summary` (points de code Unicode ; phrase = segment terminé par `.`, `!`, `?` ou `…` suivi d'une espace ou de la fin). Pilote 02 : FR 354 caractères, EN 346, 3 phrases chacun | `scripts/checks/content.sh` | oui | oui | FR-7 |
 | C17 | Agent de parité, non bloquant | `scripts/parity-agent/run.sh` | PR | non | FR-24 |
-| C18 | Règles du format : `title` ≤ 70 caractères ; `setup`, `type` et `status` dans leurs valeurs autorisées ; numéro du nom de fichier = `number` = suffixe du `translationKey` ; `.env.example` liste exactement les noms d'AD-9 et d'AD-24 ; `ci/legal-placeholder.env` exactement les sept variables légales | `scripts/checks/content.sh` | oui | oui | FR-6, FR-12, FR-18 |
+| C18 | Règles du format : `title` ≤ 70 caractères ; `setup`, `type` et `status` dans leurs valeurs autorisées ; numéro du nom de fichier = `number` = suffixe du `translationKey` ; `.env.example` liste exactement les noms d'AD-9 et d'AD-24 (sept `HUGO_LEGAL_*`, `GITEA_URL`, `GITEA_USER`, `GITEA_TOKEN`) ; `ci/legal-placeholder.env` exactement les sept variables légales | `scripts/checks/content.sh` | oui | oui | FR-6, FR-12, FR-18 |
 | C19 | Parcours : tout cas publié porte `position`, qui désigne un poste publié de même langue ; `translationKey` d'un poste = nom de fichier ; `order` unique par `track` ; `track`, `setup` et `kind` dans leurs valeurs ; `location` ou `setup` présent pour un poste ; `order` unique par `kind` dans `content/education/` ; `period` non vide pour un poste ; aucun poste ni aucune entrée publiés ne contiennent `[TODO` | `scripts/checks/content.sh` | oui | oui | FR-2, FR-4, FR-11, FR-15, FR-36 |
 | C20 | Images : aucun `Exif`, XMP ni `GPS` dans `assets/images/` et dans les images de `public/` ; WebP sans bloc `VP8X` ; copie commitée en 640 × 800 et ≤ 150 Ko ; variantes publiées au ratio 4:5, aux seules dimensions d'AD-19 (lues dans l'en-tête WebP), ≤ 40 Ko chacune ; toute photo publiée a un `alt` | `scripts/checks/images.sh` | oui | oui | FR-34, NFR-9, NFR-4, NFR-5 |
 | C21 | CV PDF : aucun ou les deux (FR et EN), un seul présent fait échouer ; pour chaque fichier présent, en-tête, pages, ≤ 500 Ko ; texte, métadonnées et XMP confrontés à la liste des motifs quand elle est disponible (pre-commit, hook pre-receive une fois `poppler-utils` installé, job `release`) | `scripts/checks/pdf.sh` | pre-commit, hook et `release` (motifs), `checks` (sans motifs) | oui (sans motifs) | FR-38, NFR-9 |
@@ -610,17 +651,18 @@ Portée : C3 porte sur tout fichier de `content/`. C4, C6 à C8, C16 et C18 ne p
 ├── .claude/skills/          # skills BMAD installés, plus llm-review, create-pull-request, verify-and-merge-pr, sprint-consistency, check-private, rehearse-release, release, hotfix, publish-case (SKILL.md)
 ├── .githooks/pre-commit     # garde-fou local (existant) ; pdf.sh si assets/cv/ est indexé
 ├── .dockerignore  .gitignore
+├── .tools/                  # Hugo et D2 du poste (install-tools.sh --local), ignoré par git (D-15)
 ├── .env.example             # noms des variables de .env (HUGO_LEGAL_*, GITEA_URL, GITEA_USER, GITEA_TOKEN), sans valeur
 ├── Dockerfile               # tools → build → runtime (nginx)
 ├── README.md                # README-cas
 ├── tools.env                # versions et sha256 de Hugo et D2, CHECK_IMAGE
 ├── ci/legal-placeholder.env # valeurs factices marquées VALEUR-FACTICE
-├── ci/release-pages.txt     # translationKey attendus à la mise en ligne
+├── ci/release-pages.txt     # translationKey des pages publiées attendues, liste cumulative (D-5)
 ├── config/
 │   ├── _default/hugo.yaml   # langues, permaliens, sécurité, formats de sortie
 │   └── work/hugo.yaml       # sortie checks (manifeste) du rendu de travail
 ├── content/
-│   ├── _index.{fr,en}.md    # accueil CV : identité, basé en France, titre, pitch, alt de la photo
+│   ├── _index.{fr,en}.md    # accueil CV : identité, basé en France, titre, pitch, job_title, alt de la photo
 │   ├── about.{fr,en}.md  contact.{fr,en}.md  legal-notice.{fr,en}.md  privacy.{fr,en}.md
 │   ├── career/
 │   │   ├── _index.{fr,en}.md               # jamais rendu
@@ -632,7 +674,7 @@ Portée : C3 porte sur tout fichier de `content/`. C4, C6 à C8, C16 et C18 ne p
 │       ├── _index.{fr,en}.md               # jamais rendu
 │       ├── case-01-<short>.{fr,en}.md      # cas sans groupe
 │       └── chiliz/
-│           ├── _index.{fr,en}.md           # page Chiliz, cascade render never sur les cas
+│           ├── _index.{fr,en}.md           # page Chiliz, cascade render never sur les cas ; brouillon tant qu'aucun cas n'est publié
 │           └── case-02-chiliz.{fr,en}.md
 ├── data/stack.yaml          # vocabulaire contrôlé (existant)
 ├── i18n/{fr,en}.yaml        # libellés d'interface
@@ -665,7 +707,7 @@ Portée : C3 porte sur tout fichier de `content/`. C4, C6 à C8, C16 et C18 ne p
 ├── tests/fixtures/          # schéma de démonstration et cas de test des contrôles, jamais publiés
 ├── docs/
 │   ├── format-cas.md
-│   ├── procedures/          # une procédure par skill, sous le même nom (AD-24)
+│   ├── procedures/          # une procédure par skill, sous le même nom (AD-24), plus gitea-branches.md (D-10)
 │   └── measures/            # mesures PageSpeed par tag
 └── _bmad-output/            # artefacts de cadrage
 ```
@@ -704,13 +746,14 @@ flowchart LR
 
 ## `docs/format-cas.md` v0.4
 
-Décidé le 13/09/2026. Le passage du fichier en v0.4 et la mise à jour du cas pilote sont faits hors de ce document ; les points ci-dessous en sont le contenu attendu.
+Décidé le 13/09/2026 et en place : `docs/format-cas.md` est en v0.4 et le cas pilote porte `position`. Contenu de la version :
 
 - **Nouvelle clé** `position: "position-<id>"` dans le front matter du cas, entre `group` et `order` : identifiant du poste auquel le cas est rattaché (AD-18), identique en FR et en EN, obligatoire pour un cas publié (`draft: false`), `[TODO: poste]` accepté en brouillon.
 - **`featured`** : supprimée. L'accueil ne présente plus de cas mis en avant à part (PRD §11.1) ; le pilote 02 la retire au passage en v0.4, et C3 ne la compare plus.
 - **Modèle vide** : ajouter `position: "[TODO: poste]"`.
 - **Renvoi** : le format des postes et formations est décrit par AD-18 ; un `docs/format-parcours.md` pourra le reprendre si la rédaction du parcours est confiée à un agent.
-- **Règle de rédaction 5** : inchangée ; la v0.3 autorise déjà les villes de mission et réserve le lieu public à « basé en France ».
+- **Règle de rédaction 5** : inchangée ; la version précédente autorisait déjà les villes de mission et réservait le lieu public à « basé en France ».
+- **Identifiants de poste** : `docs/format-cas.md` renvoie à la liste figée d'AD-18 (D-8).
 
 ## README-cas
 
@@ -718,6 +761,7 @@ Décidé le 13/09/2026. Le passage du fichier en v0.4 et la mise à jour du cas 
 - **Structure** : celle des cas (contexte, problème, la solution facile et pourquoi elle a été écartée, ce qui a été décidé, ce qui a résisté, résultat), sans nommer de fichier privé (FR-30). Nommer le dossier `docs/private/` est autorisé (NFR-9).
 - **Références** : workflows `.github/workflows/checks.yaml` et `.gitea/workflows/` ; `scripts/check.sh` et la liste des contrôles ; exécutions publiques des contrôles sur GitHub ; ce document, dont la section « Décisions clés » tient lieu d'ADR ; le test D2 bilingue de la branche `experiment/d2-bilingue` ; les artefacts de `_bmad-output/planning-artifacts/` ; `docs/format-cas.md` ; `docs/measures/` ; le flux de développement d'AD-24 (branches, outillage en trois niveaux, revue par un LLM tiers, verrous de merge) et les branches `design/dossier-architecture`, `design/suisse` et `experiment/d2-bilingue`.
 - **Langue** : anglais (PRD §11.1, « Langue du README-cas ») ; les artefacts de cadrage restent en français.
+- **Rédaction** (décidé le 13/09/2026, D-12) : le développeur écrit un premier jet en anglais à partir des seuls documents publics (PRD UJ-3 et FR-30, AD-12, AD-24, historique git, branches `design/*` et `experiment/d2-bilingue`), puis Arnaud relit la voix et les faits. Aucune source privée n'est nécessaire : le fait « sources privées repérées avant publication, historique réécrit » est déjà public dans le PRD.
 
 ## Capacités → architecture
 
@@ -758,9 +802,9 @@ Décidé le 13/09/2026. Le passage du fichier en v0.4 et la mise à jour du cas 
 
 Première tranche démontrable avec le seul cas pilote, sur le rendu de travail (le pilote est encore `draft: true`). Chaque tranche est une story courte.
 
-0. **WS-0. Garde-fou serveur avant tout miroir** : `scripts/check-private.sh` en échec sans fichier de motifs en mode `pre-receive`, hook installé et testé sur Gitea (procédure), audit `history` complet avec la liste des motifs. *Démo* : les deux pushs de test sont refusés, et l'audit est propre. Le miroir GitHub ne se configure qu'ensuite. Dans la foulée : création de `main`, protection de `dev` et `main`, puis `llm-review`, `create-pull-request` et `verify-and-merge-pr` en mode audit (CI signalée absente), pour que toutes les PR suivantes passent par les verrous d'AD-24.
+0. **WS-0. Garde-fou serveur avant tout miroir** : `scripts/check-private.sh` en échec sans fichier de motifs en mode `pre-receive`, hook installé et testé sur Gitea (procédure), audit `history` complet avec la liste des motifs. *Démo* : les deux pushs de test sont refusés, et l'audit est propre. Le miroir GitHub ne se configure qu'ensuite. Dans la foulée : création de `main`, protection de `dev` et `main`, puis `llm-review`, `create-pull-request` et `verify-and-merge-pr` en mode audit (CI signalée absente, admise par la règle d'amorçage d'AD-24), pour que toutes les PR suivantes passent par les verrous d'AD-24.
 1. **WS-1. Base Hugo bilingue** : `tools.env`, `scripts/ci/install-tools.sh`, `config/_default/hugo.yaml`, `baseof.html` (lang, hreflang, sélecteur, `<title>` avec l'identité), accueil minimal tiré de `content/_index.*` (identité, basé en France, titre, pitch), 404 FR et EN. *Démo* : `/` et `/en/` se répondent par le sélecteur, sans `/fr/`.
-2. **WS-2. Cas pilote sous son poste** : le pilote est déjà dans `content/cases/chiliz/` ; reste à créer le `_index` Chiliz (titre seul en attendant la question 9) avec sa cascade, `_partials/case.html` avec les deux encarts et les libellés i18n, le shortcode `live-material`, `case-url.html`, puis le poste Chiliz en brouillon (`content/career/position-chiliz.*`, période en `[TODO]`) ; le pilote porte `position: "position-chiliz"` (format v0.4). *Démo* : en rendu de travail, l'accueil montre le poste Chiliz avec le cas 02, et `/cas/chiliz/#case-02` montre la section et ses trois éléments « prévus ».
+2. **WS-2. Cas pilote sous son poste** : le pilote est déjà dans `content/cases/chiliz/` ; reste à créer le `_index` Chiliz (titre « Chiliz », en brouillon tant que le cas 02 n'est pas publié, D-3) avec sa cascade, `_partials/case.html` avec les deux encarts et les libellés i18n, le shortcode `live-material`, `case-url.html`, puis le poste Chiliz en brouillon (`content/career/position-chiliz.*`, période en `[TODO]`) ; le pilote porte `position: "position-chiliz"` (format v0.4). *Démo* : en rendu de travail, l'accueil montre le poste Chiliz avec le cas 02, et `/cas/chiliz/#case-02` montre la section et ses trois éléments « prévus ».
 3. **WS-3. Contrôles v1** : manifeste `checks.json`, `parity.sh`, `content.sh` (C3 à C8, C16, C18, C19), `html.sh` (C10, C11), `links.sh`, `scripts/check.sh`. *Démo* : supprimer une rubrique en EN fait échouer `scripts/check.sh` avec le nom du fichier ; le pilote en brouillon avec un `[TODO]` passe.
 4. **WS-4. CI des deux forges** : `scripts/ci/checks-job.sh`, `ci/legal-placeholder.env`, `.gitea/workflows/checks.yaml` sur le label en mode hôte, `.github/workflows/checks.yaml`, garde-fou C1. *Démo* : un push sur `dev` de Gitea déclenche un seul run sur Gitea et un seul sur GitHub ; branche par défaut `main` sur GitHub ; le verrou « CI verte » de `verify-and-merge-pr` passe de « absent » à actif. *Prérequis* : WS-0 terminé avant d'activer le miroir.
 5. **WS-5. Image et nginx** : `Dockerfile`, `.dockerignore`, `deploy/nginx/` (en-têtes, cache, 404 par langue, journaux sans IP), lancement local. *Démo* : `curl -I` montre la CSP sur le HTML et non sur un SVG, et la 404 anglaise sous `/en/`.
@@ -812,7 +856,7 @@ Justifications courtes, en guise d'ADR. Le détail est dans `.memlog.md`.
 2. Libellés anglais des encarts et des cadres, tels que proposés (AD-3).
 3. Police système, sans police web (AD-8).
 4. URL `/cas/…` et `/en/cases/…`, locales `fr` et `en`, `x-default` vers le français (AD-2).
-5. Format des cas v0.3 : cas groupés dans `content/cases/<group>/`, `group` égal au nom du dossier, `_index` du groupe hors rédaction des cas ; pilote déplacé (AD-4).
+5. Format des cas, cas groupés : dans `content/cases/<group>/`, `group` égal au nom du dossier, `_index` du groupe hors rédaction des cas ; pilote déplacé (AD-4).
 6. Mise en ligne par tag `vX.Y.Z`, livraison par SSH sans registre, trois images gardées (AD-14).
 7. README-cas en anglais.
 8. Agent de parité sur `claude-sonnet-5` (AD-16).
@@ -854,27 +898,47 @@ Justifications courtes, en guise d'ADR. Le détail est dans `.memlog.md`.
     - I-10 : marqueur « Brouillon » en rendu de travail (AD-5, C15) ;
     - I-11 : portrait 4:5 et ses variantes (AD-19, C20) ;
     - sélecteur de langue libellé « English » / « Français » (AD-2).
-35. Flux de développement (AD-24) : `feat/*` et `fix/*` depuis `dev` ; aucun merge commit, publication `dev` → `main` en historique linéaire ; hotfix `fix/*` depuis `main`, réintégré dans `dev` ensuite ; tags `vX.Y.Z` sur `main` ; `dev` et `main` protégées, `main` à créer, branche par défaut `main` sur GitHub ; outillage en trois niveaux (skill, procédure, script) ; revue par un LLM d'un autre fournisseur via `agy`, dans un worktree hors du dépôt ; verrous de merge en audit par défaut, `--merge` explicite, jamais de `--force` ; exception documentaire pour les `.md` de `_bmad-output/` ; README qui documente le flux.
+35. Flux de développement (AD-24) : `feat/*` et `fix/*` depuis `dev` ; aucun merge commit, publication `dev` → `main` en historique linéaire ; hotfix `fix/*` depuis `main` (préfixe `hotfix/*` depuis la décision 52), réintégré dans `dev` ensuite ; tags `vX.Y.Z` sur `main` ; `dev` et `main` protégées, `main` à créer, branche par défaut `main` sur GitHub ; outillage en trois niveaux (skill, procédure, script) ; revue par un LLM d'un autre fournisseur via `agy`, dans un worktree hors du dépôt ; verrous de merge en audit par défaut, `--merge` explicite, jamais de `--force` ; exception documentaire pour les `.md` de `_bmad-output/` (élargie à tout `_bmad-output/` par la décision 40) ; README qui documente le flux.
 36. Compléments d'AD-24 : publication `dev` → `main` en `fast-forward-only`, qui échoue si `main` n'est pas un ancêtre de `dev` ; après un hotfix, `dev` est rebasée sur `main` et poussée en `--force-with-lease`, ce que le skill `hotfix` peut faire lui-même après approbation explicite d'Arnaud au moment de l'opération (force-push sur `dev` limité à son compte dans Gitea) ; `feat/*` → `dev` en squash ; skill `hotfix` ajouté.
 37. Derniers points d'AD-24 et d'AD-22 : rapport de `llm-review` en commentaire de la PR Gitea, sans fichier commité ; tags `-rc.N` sur `dev`, et `v1.0.0` refusé sans tag `-rc` de même arbre ; vérification de `agy` (`--mode plan` sans modification, identifiant du modèle) comme critère d'acceptation de la story `llm-review` ; `experiment/d2-bilingue` poussée sur la forge ; `main` jamais réécrite et `dev` remplacée sur le miroir après un hotfix ; `verify-and-merge-pr` refuse la base `main` et `release` vérifie l'ancêtre ; authentification des skills par un jeton d'accès personnel Gitea défini dans `.env` (`GITEA_URL`, `GITEA_USER`, `GITEA_TOKEN`), comme tous les secrets du projet en local ; le magasin d'identifiants git n'est pas retenu.
 38. Refus de lecture de `.env` pour les agents : `permissions.deny` dans `.claude/settings.json` (versionné), `deny` dans le réglage Antigravity du poste (non versionné), `.antigravityignore` en défense en profondeur, consigne dans `AGENTS.md` ; limites documentées, la garantie restant le worktree isolé de `llm-review` (AD-24).
 
+Décisions du contrôle de préparation à l'implémentation (D-1 à D-17), acceptées par Arnaud le 13/09/2026 :
+
+39. Règle d'amorçage des verrous : verrou CI à trois états, `absent` admis tant que `.gitea/workflows/checks.yaml` n'existe pas sur la base (détection par le script) ; substitut local `check-private.sh history`, puis `check.sh`, noté dans la PR ; planification de sprint avant la story 0.1, la PR de `sprint-status.yaml` étant la seule sans verrou de suivi ; revue manuelle par `agy --mode plan` hors dépôt avant les skills de l'Epic 0, fusion à la main par Arnaud (D-1 ; AD-24).
+40. Exception documentaire étendue à tous les fichiers sous `_bmad-output/` (D-2 ; AD-24).
+41. `_index` de groupe en `draft: true` tant qu'aucun cas du groupe n'est publié ; constat dans la story 2.5, repli par C12 (D-3 ; AD-4).
+42. Question 9 : page Chiliz titrée « Chiliz » en FR et en EN, sans introduction en v1 (D-4 ; AD-4, PRD §11.1).
+43. `ci/release-pages.txt` cumulative, créée à la story 2.2 ; complétude du socle vérifiée pour `v1.0.0` seulement ; première répétition tôt sur `v0.1.0-rc.N` ; stories 11.1 à 11.9 avant l'Epic 10 (D-5 ; AD-22, AD-24, C15).
+44. Tag `-rc` de même arbre bloquant pour `v1.0.0` seulement, dans le workflow ; avertissement du script `release` pour les tags suivants (D-6 ; AD-22).
+45. Sources du JSON-LD : `job_title` de `content/_index`, `linkedin` et `github` (profil) de `content/contact`, lien vide omis (D-7 ; AD-3, AD-19, AD-20, C3, C10).
+46. Identifiants de poste : `position-<société>`, suivi de `-<année de début>` pour une société répétée ; liste figée dans AD-18 (D-8), précisée par Arnaud le même jour : sept identifiants, dont le regroupement `position-earlier-career`, sans `position-april-technologies-2013`.
+47. Ruleset GitHub : écritures restreintes sur toutes les branches et tous les tags, identité du miroir seule autorisée à contourner, `main` en « Block force pushes », test de refus d'un push direct (D-9 ; AD-12).
+48. Protections Gitea : aucun push ni force-push sur `main` ; sur `dev`, compte d'Arnaud dans la liste de push, condition du force-push, et push direct interdit par la procédure (D-10 ; AD-24).
+49. Revue dans le sens inverse gardée : un code écrit par Gemini est relu par un modèle Claude (D-11 ; AD-24).
+50. README-cas : premier jet en anglais par le développeur à partir des documents publics, relu par Arnaud (D-12 ; section « README-cas »).
+51. PR de publication `dev` → `main` : verrou de revue tenu par les squashs de PR déjà vérifiées, fusion seulement par `--merge` lancé par Arnaud (D-13 ; AD-24).
+52. Hotfix : préfixe `hotfix/*` réservé aux branches issues de `main` ; chaque PR ouverte est rebasée puis relue après le rebase de `dev` (D-14 ; AD-24).
+53. Prérequis du poste : Docker dans le shell WSL ; Hugo et D2 installés par `install-tools.sh --local` dans `.tools/` (D-15 ; AD-1, AD-24).
+54. Statut `validated` pour le PRD, l'architecture, `DESIGN.md`, `EXPERIENCE.md` et `epics.md` (D-16).
+55. `sprint-consistency` : statuts seulement en v1 (D-17 ; AD-24).
+
 ## Recommandations à valider par Arnaud
 
-1. `jq` sur le poste de développement : installation manuelle par Arnaud (`sudo apt install jq`), déclarée prérequis des procédures du poste, plutôt qu'un portage des scripts en python3 (AD-24).
+Aucune. La recommandation sur `jq` est close : `jq` est installé sur le poste (constat du 13/09/2026) et figure parmi les prérequis du poste d'AD-24 ; les scripts du poste ne sont pas portés en python3.
 
 ## Écarts et tensions avec les entrées
 
 - **FR-38 et garde-fou** : FR-38 exige de bloquer un PDF fautif avant son entrée dans l'historique de la forge principale ; le hook pre-receive ne lit pas les binaires (`git grep -I`), donc cette exigence n'est tenue côté serveur qu'avec l'extraction de texte sur la machine Gitea (décision 30) ; d'ici là, aucun PDF ne peut être commité.
 - **Garde-fou et images** : `git grep -I` ignore aussi les images ; C20 vérifie leurs métadonnées sur les deux forges, mais après l'entrée dans l'historique, d'où la préparation obligatoire par `scripts/photo/prepare.sh` avant tout commit de photo.
-- **Question 17** : tranchée par Arnaud (option a) ; la commune de résidence figure sur les mentions légales publiées, ce qui oblige à exclure les valeurs injectées de cette page du contrôle des motifs sur la sortie (C22). FR-33 et NFR-9 (« aucune page ne donne de ville de résidence ») reçoivent cette exception dans la mise à jour du PRD en cours.
+- **Question 17** : tranchée par Arnaud (option a) ; la commune de résidence figure sur les mentions légales publiées, ce qui oblige à exclure les valeurs injectées de cette page du contrôle des motifs sur la sortie (C22). FR-33 et NFR-9 portent cette exception dans le PRD.
 - **FR-2** : « ville de travail ou cadre (par exemple full remote, prestation) » ne correspond pas aux valeurs du cadre des cas (`setup`) ; résolu par les champs `location` et `via` du poste (décision 33).
-- **Question 16** : tranchée le 13/09/2026 (socle possible sans CV PDF, liens conditionnels, AD-21) ; le PRD est mis à jour en parallèle. FR-38 (« l'accueil propose le téléchargement ») est tenue par le pied de page de l'accueil dès qu'un PDF existe.
+- **Question 16** : tranchée le 13/09/2026 (socle possible sans CV PDF, liens conditionnels, AD-21) ; le PRD en tient compte (FR-38, FR-32). FR-38 (« l'accueil propose le téléchargement ») est tenue par le pied de page de l'accueil dès qu'un PDF existe.
 - **NFR-4 et NFR-5** : automatisation partielle, check-list manuelle et mesure consignée dans `docs/measures/` (AD-17), sans mesure en CI.
-- **FR-9** : tant que le cas 02 est un brouillon, le build de production contient une page Chiliz vide ; seule la mise en ligne l'interdit (C15).
+- **FR-9** : résolu par la décision 41 (D-3). Tant qu'aucun cas du groupe n'est publié, le `_index` Chiliz reste en brouillon et la page n'existe pas en production : C12 ne voit pas de page orpheline, et C15 reste un filet. Repli si le constat de la story 2.5 échoue : C12 exclut les pages de groupe sans section.
 - **NFR-2** : TLS et HSTS restent au reverse proxy existant, non géré par le dépôt, alors que la règle « aucune IP journalisée » s'y applique aussi (AD-15).
 - **Script `check-private.sh`** : en mode `pre-receive`, il doit encore échouer sans fichier de motifs (WS-0).
-- **Statut** : le document reste en brouillon, en attente de la relecture d'Arnaud.
+- **Statut** : validé par Arnaud le 13/09/2026 (décision 54).
 
 ## Sources vérifiées
 
@@ -895,3 +959,4 @@ Justifications courtes, en guise d'ADR. Le détail est dans `.memlog.md`.
 - Typst 0.15.0 (15/06/2026), `--creation-timestamp` et `SOURCE_DATE_EPOCH` : [release v0.15.0](https://github.com/typst/typst/releases/tag/v0.15.0), [issue #3806](https://github.com/typst/typst/issues/3806).
 - JSON-LD et CSP (bloc de données non exécuté) : [Mathias Bynens, JSON dans le DOM avec CSP](https://mathiasbynens.be/notes/json-dom-csp) (source secondaire).
 - API Claude : modèles et tarifs d'après la référence de l'API (juin 2026) ; en-têtes de la Messages API.
+- Contrôle de préparation à l'implémentation (13/09/2026) : Gitea, un force-push par liste d'autorisation suppose le droit de push ([protected branches](https://docs.gitea.com/usage/access-control/protected-branches/)) ; GitHub, rulesets : restriction des créations, mises à jour et suppressions, blocage des force-pushes, clés de déploiement parmi les acteurs de contournement ([managing code rulesets](https://docs.github.com/en/enterprise-cloud@latest/admin/enforcing-policies/enforcing-policies-for-your-enterprise/managing-policies-for-code-governance)) ; constats locaux : `jq` et `agy` présents, `docker`, `hugo` et `d2` absents du `PATH`, six titres H2 dans chaque fichier du pilote.

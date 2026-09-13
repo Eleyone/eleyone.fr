@@ -1,7 +1,7 @@
 ---
 title: "Format de sortie des cas clients"
 version: 0.4
-status: draft
+status: validated
 updated: 2026-09-13
 ---
 
@@ -27,6 +27,7 @@ content/career/position-chiliz.fr.md             ← poste du parcours : créé 
 - **Noms de fichiers en anglais**, en minuscules et en kebab-case : `case-<NN>-<nom-court>.<langue>.md`. Le nom de fichier est un identifiant ; l'URL publique vient du `slug` de chaque langue.
 - **Cas groupé** : le fichier est dans `content/cases/<group>/`, et la clé `group` est obligatoire et **égale au nom du dossier**. Un contrôle bloquant le vérifie.
 - **Rattachement au parcours** : la clé `position` désigne le poste (`position-<id>`, par exemple `position-chiliz`). Le poste ne liste pas ses cas : c'est le cas qui pointe vers lui, et un cas se publie sans toucher au poste.
+- **Identifiants de poste** : ils sont figés dans l'architecture (AD-18, règle `position-<société>`, suivie de `-<année de début>` quand la société revient dans le parcours ; `position-earlier-career` regroupe le parcours antérieur). Un cas reprend l'identifiant de cette liste et n'en invente aucun ; un identifiant publié n'est jamais renommé.
 - Le suffixe `.fr.md` / `.en.md` est la convention multilingue native de Hugo. Les deux fichiers d'un même cas partagent le même `translationKey`.
 - **URL** : un cas seul est publié à `/cas/<slug>/` et `/en/cases/<slug>/`. Un cas groupé est une section de la page du groupe, avec pour ancre son `translationKey` (par exemple `/cas/chiliz/#case-02`).
 
@@ -122,7 +123,7 @@ translationKey: "case-NN"
 number: "NN"
 slug: "[TODO: slug]"
 group: ""                             # à retirer pour un cas sans groupe
-position: "[TODO: poste]"             # position-<id> du parcours
+position: "[TODO: poste]"             # identifiant de poste figé dans AD-18
 order: 0
 draft: true
 context:
