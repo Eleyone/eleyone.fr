@@ -37,7 +37,7 @@ Champs : société, cadre (salarié, freelance, ESN ou Ton Pote le Geek), rôle,
 
 Le cadre du cas 01 vient de la réponse d'Arnaud du 13/09/2026, pas de la source.
 
-**Règle de la stack.** Seules les technologies citées dans le cas concerné y figurent, sans rien déduire du profil général ni d'un autre cas. Les noms sont identiques en FR et en EN, pour que le script de parité puisse comparer les listes. Choix faits en appliquant cette règle, à valider par Arnaud :
+**Règle de la stack.** Seules les technologies citées dans le cas concerné y figurent, sans rien déduire du profil général ni d'un autre cas. Les noms sont identiques en FR et en EN, pour que le script de parité puisse comparer les listes. Choix faits en appliquant cette règle, validés par Arnaud le 13/09/2026 :
 
 - **Cas 01.** n8n et Stripe sont cités pour d'autres automatisations de la cliente, pas pour la calculette : ils sont exclus.
 - **Cas 02.** Python est cité comme point de départ abandonné du projet : il est exclu.
@@ -91,13 +91,13 @@ Contrainte transversale : aucun code propriétaire d'un client n'est publié. Se
 ### Parité FR/EN (tranché le 13/09/2026)
 
 - **Script en CI.** Il vérifie ce qui est mécanique : chaque page FR a sa page EN, avec les mêmes métadonnées, la même stack et les mêmes schémas.
-- **Agent IA consultatif.** Il signale ce qu'un script ne voit pas, comme une phrase disparue ou un chiffre modifié d'un seul côté. Il commente la PR sans jamais bloquer le build, et ne tourne que si du contenu change. Sa clé d'API est un secret GitHub non exposé aux PR venant de forks.
+- **Agent IA consultatif.** Il signale ce qu'un script ne voit pas, comme une phrase disparue ou un chiffre modifié d'un seul côté. Il commente la PR sans jamais bloquer le build, et ne tourne que si du contenu change. Sa clé d'API reste un secret de CI, jamais exposé à des contributions externes ; la CI où il tourne est un choix d'architecture.
 - **Outil de l'agent.** Son choix revient à l'architecture.
 
 ### Pages légales et contrôle public/privé
 
 - **Pages légales.** Mentions légales et politique de confidentialité, statiques, en v1. Avec des liens YouTube simples, la politique de confidentialité reste minimale.
-- **Contrôle public/privé.** Un script vérifie que ni les chemins interdits ni les motifs privés n'apparaissent. Il tourne en hook local sur l'historique complet avant chaque push GitHub ; un hook côté serveur du miroir est prévu.
+- **Contrôle public/privé.** Un script vérifie que ni les chemins interdits ni les motifs privés n'apparaissent. Il tourne en hook local, audite l'historique complet avant la première publication sur GitHub, et est prévu en hook pre-receive côté Gitea pour ne pas pouvoir être contourné.
 
 ## README du dépôt
 

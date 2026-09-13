@@ -31,18 +31,24 @@ Git repository. The remote is a self-hosted server (the self-hosted forge), mean
 
 ## Decisions taken (2026-09-13)
 
-These supersede the original brief; the project brief has not been rewritten yet.
+These supersede the original brief. The validated project brief is in `_bmad-output/planning-artifacts/briefs/`; the PRD draft is in `_bmad-output/planning-artifacts/prds/`.
 
 - **Purpose and brand:** eleyone.fr is Arnaud's portfolio and CV. "Ton Pote le Geek" already exists and is only mentioned or linked, not developed on this site.
 - **Languages:** French and English, both complete. English is a full version aimed at international recruiters, not a subset.
 - **Generator:** Hugo (native multilingual, single binary, no dependency tree). Build output is served by an nginx container on existing Docker infrastructure behind a reverse proxy.
-- **Diagrams:** D2, rendered to SVG before the Hugo build, one SVG per language.
-- **Chiliz cases (02, 03, 04):** one page with several sections.
-- **Videos:** unlisted YouTube.
+- **URLs:** French at the domain root, English under `/en/`. No automatic redirect based on browser language.
+- **Diagrams:** D2, one shared `structure.d2` per diagram plus `fr.d2`/`en.d2` label entry points, ELK layout, rendered with `--omit-version`. SVGs are committed and CI regenerates them and fails on any diff; the D2 version is pinned. See the `experiment/d2-bilingue` branch.
+- **Chiliz cases (02, 03, 04):** one page, one "Contexte mission" box per section. Each case is its own file; the page assembles them (`group: chiliz`) and must render with only the published sections.
+- **Videos:** plain links to unlisted YouTube videos. No iframe, no cookie banner.
+- **No small-business offer page:** the presentation mentions the automation side activity with a link to Ton Pote le Geek; case 01 was done under it.
+- **Quality targets:** zero JavaScript in v1 where possible, WCAG 2.2 AA, Core Web Vitals "good" thresholds on mobile, a per-page weight budget. Checked with scripts rather than Chrome/Node tooling.
+- **Planned live material** is invisible in production and shown only in the draft build.
+- **Release:** a base (home, about, contact, legal pages, featured cases 01, 02, 05) first, then the remaining cases one at a time.
+- **CI and hosting:** the main forge is a private Gitea on a homelab (x86_64 Actions runners), separate from the production server that will serve the site. The homelab can go down at any time; it is never exposed publicly. Gitea runs checks, pull requests, image build and deployment. GitHub is the public mirror and runs **checks only**: no image build, no deployment. How to share the same check scripts between both CIs is an open architecture task. The public/private guard also belongs in a Gitea pre-receive hook.
 - **Repository:** public on GitHub, including BMAD planning artifacts, because showing the framing process is part of the point. No private files, no raw cases.
 - **Tooling:** the right tool for the job. Plain scripts rather than heavy tooling in CI or build images; no Symfony or React for a static site.
 
-Still open: whether generated SVGs are committed (visible on GitHub, with a CI regeneration check) or only produced at build time; whether D2 variables and imports can share one diagram structure across FR/EN labels; how YouTube embeds avoid loading cookies before consent; whether the small-business offer page survives or becomes a link to Ton Pote le Geek.
+Pilot case: `content/cases/case-02-chiliz.{fr,en}.md` follows `docs/format-cas.md` and is the architecture's test fixture. The stack vocabulary lives in `data/stack.yaml`.
 
 Unchanged constraints: static site, Markdown content editable without touching code, no database, no backend to maintain, sober and readable design, simplicity over everything. Out of scope for v1: blog, client area, contact form, advanced analytics.
 

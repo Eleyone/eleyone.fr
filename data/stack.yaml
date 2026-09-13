@@ -1,0 +1,34 @@
+# Vocabulaire contrôlé de la stack des cas. Ce fichier fait foi.
+#
+# - Une seule écriture par technologie, identique en FR et en EN.
+# - Seules les technologies citées dans le texte d'un cas figurent dans sa `stack`.
+# - Une technologie absente de cette liste s'y ajoute ici avant d'être utilisée dans un cas.
+# - Notes en fin de ligne : cas où la technologie apparaît, remarques.
+#
+# Exclusions décidées :
+# - Python (cas 02) : départ abandonné du projet, non utilisé ; l'abandon reste dans le récit.
+# - n8n, Stripe (cas 01) : automatisations annexes de la cliente, hors du cas.
+# - REST (cas 06) : cité comme alternative émergente, non utilisée.
+#
+# En attente :
+# - Cas 03 : aucune technologie nommée dans la source (patterns seulement : outbox, worker,
+#   listener). [TODO: stack] — à préciser par l'auteur avant ajout ici
+#   (bus de messages ? bibliothèque blockchain ?).
+
+technologies:
+  - Claude Code      # cas 01
+  - Docker Compose   # cas 01
+  - Fireblocks       # cas 04 ; gestion des wallets d'entreprise
+  - Java             # cas 06
+  - Oracle           # cas 05 ; base de données
+  - PHP              # cas 02, 05
+  - PostgreSQL       # cas 01
+  - Redshift         # cas 02 ; écriture courte retenue plutôt que « Amazon Redshift »
+  - SOAP             # cas 06
+  - Symfony          # cas 01, 02 ; sans numéro de version sauf cas 06
+  - Symfony 1.3      # cas 06 ; version explicite : c'est le sujet
+  - Symfony UX       # cas 02
+  - Systeme.io       # cas 01
+  - Twig             # cas 02
+  - Xdebug           # cas 05
+  - Zend Framework   # cas 05

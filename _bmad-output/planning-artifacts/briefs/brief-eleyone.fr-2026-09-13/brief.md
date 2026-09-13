@@ -9,7 +9,7 @@ updated: 2026-09-13
 
 ## Résumé
 
-eleyone.fr est le portfolio et le CV en ligne d'Arnaud (Eleyone), développeur backend senior : vingt ans de PHP, surtout Symfony. Il l'envoie aux recruteurs pour une recherche de poste ou de mission freelance avant avril 2027, en France et à l'international.
+eleyone.fr est le portfolio et le CV en ligne d'Arnaud (Eleyone), développeur backend senior : plus de dix-huit ans de PHP, surtout Symfony. Il l'envoie aux recruteurs pour une recherche de poste ou de mission freelance avant avril 2027, en France et à l'international.
 
 Arnaud ne vend plus la vitesse à laquelle il écrit du code. Il vend du jugement : savoir quoi construire, quand, à quel coût, et ce qui casse si on se trompe. Un CV le montre mal, parce qu'il liste des technologies et des années. Le site montre ce jugement à travers des cas réels, racontés avec leurs arbitrages, leurs limites et ce qui n'est pas allé au bout.
 
@@ -79,7 +79,7 @@ Il n'y a pas d'avantage concurrentiel durable à revendiquer. La valeur tient à
 - **Schémas.** D2, une structure commune et un point d'entrée par langue ; SVG commités, avec une vérification de régénération en CI (détail dans l'addendum).
 - **Vidéos.** Simples liens vers des vidéos YouTube non répertoriées, sans intégration dans la page.
 - **Contenu.** Markdown. Le contenu reprend les cas existants en les reformulant le moins possible. Rien n'est inventé : ni cas, ni chiffre, ni client, ni technologie. La stack d'un cas ne cite que les technologies nommées dans ce cas, avec les mêmes noms en FR et en EN. Les passages encore entre crochets dans les sources restent en attente et ne sont pas publiés comme des faits.
-- **Agent IA de parité.** Consultatif : il commente la PR et ne bloque jamais le build. Il ne tourne que si du contenu change. Sa clé d'API est un secret GitHub non exposé aux PR venant de forks. Le choix de l'outil revient à l'architecture.
+- **Agent IA de parité.** Consultatif : il commente la PR et ne bloque jamais le build. Il ne tourne que si du contenu change. Sa clé d'API reste un secret de CI, jamais exposé à des contributions externes. Le choix de l'outil, et de la CI où il tourne, revient à l'architecture.
 - **Design.** Sobre, professionnel et lisible, sans effets. Accessibilité et performance correctes par défaut.
 - **Frontière public/privé.** Le dépôt est public : les sources brutes et les informations personnelles n'y entrent jamais. Les artefacts publics citent les cas par leur numéro et leur titre court.
 
