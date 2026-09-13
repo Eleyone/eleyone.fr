@@ -1,5 +1,8 @@
 # Sources privées (cas bruts, noyau narratif, mémoire des réunions) : jamais versionnées
 docs/private/
 
+# Worktrees temporaires des agents
+.claude/worktrees/
+
 # Artefacts de téléchargement Windows
 *:Zone.Identifier

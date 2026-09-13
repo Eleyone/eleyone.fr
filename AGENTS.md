@@ -8,7 +8,9 @@ Git repository. The remote is a self-hosted server (the self-hosted forge), mean
 
 ## Public / private boundary
 
-`docs/private/` is gitignored and never versioned, anywhere. It holds the raw source content, the party-mode memory, and `forbidden-patterns.txt`. A fresh clone does not contain it.
+`docs/private/` is gitignored by this repository and never enters its history. It holds the raw source content, the party-mode memory, and `forbidden-patterns.txt`. A fresh clone does not contain it.
+
+`docs/private/` is its own nested git repository, pushed to a separate private repo on the self-hosted forge that must never be mirrored. Commit private changes there explicitly (`git -C docs/private commit`), never through a hook. `git clean -ffdx` in this repository deletes the nested repo; a single `-f` spares it.
 
 - Never commit anything from `docs/private/`, and never copy personal details from it into tracked files: pay or day-rate expectations, location and relocation constraints, interview self-assessment, names of relatives.
 - `scripts/check-private.sh` enforces this. It rejects forbidden paths, plus the strings listed in `docs/private/forbidden-patterns.txt`. Enable the local hook once per clone with `git config core.hooksPath .githooks`. Audit the full history with `scripts/check-private.sh history`, and run it before any push to GitHub: a commit pushed there stays reachable by SHA even after a force push.
@@ -56,7 +58,9 @@ Config is a four-layer TOML merge. `_bmad/config.toml` and `_bmad/config.user.to
 
 Key values: project `eleyone.fr`, user `Eleyone`, output folder `_bmad-output/`, planning artifacts in `_bmad-output/planning-artifacts/`, implementation artifacts in `_bmad-output/implementation-artifacts/`, project knowledge in `docs/`, skill level `intermediate`. `_bmad/custom/bmad-party-mode.toml` moves party-mode memory and keepsakes into `docs/private/party-mode/`.
 
-**Language:** talk to Arnaud in French. Planning documents are written in French too (`document_output_language` is overridden to French in `_bmad/custom/config.toml`).
+**Language:** talk to Arnaud in French. Planning documents are written in French too (`document_output_language` is overridden to French in `_bmad/custom/config.toml`). Code is in English: identifiers, front matter keys, file and directory names. Site content exists in French and English.
+
+**Case content format:** `docs/format-cas.md` is the contract every case file follows: one file per case per language, English front matter keys, fixed FR/EN headings, `[TODO: …]` markers for anything missing.
 
 ### Scripts
 
