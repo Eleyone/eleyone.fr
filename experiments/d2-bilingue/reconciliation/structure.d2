@@ -1,0 +1,54 @@
+# Structure commune du schéma, indépendante de la langue.
+# Aucun libellé ici : uniquement des identifiants, des formes et des liens.
+# Les libellés sont des variables ${...} définies par fr.d2 et en.d2.
+# Ne pas déclarer ici de variable de libellé : elle masquerait celle du fichier
+# de langue (voir approches/a7-*). Seul d2-config (thème) est importé.
+
+...@../theme
+
+direction: down
+
+titre: ${titre} {
+  shape: text
+  near: top-center
+  style.font-size: 24
+  style.bold: true
+}
+
+export: ${export} {
+  shape: document
+}
+
+import: ${import}
+
+calcul: ${calcul}
+
+reference: ${reference} {
+  shape: cylinder
+}
+
+reconciliation: ${reconciliation}
+
+tolerance: ${tolerance} {
+  shape: diamond
+}
+
+publication: ${publication}
+
+alerte: ${alerte}
+
+analyse: ${analyse} {
+  shape: step
+}
+
+export -> import
+import -> calcul
+calcul -> reconciliation: ${valeurs_calculees}
+reference -> reconciliation: ${valeurs_attendues}
+reconciliation -> tolerance
+tolerance -> publication: ${oui}
+tolerance -> alerte: ${non}
+alerte -> analyse
+analyse -> calcul: ${correction} {
+  style.stroke-dash: 4
+}
