@@ -12,7 +12,7 @@ Git repository. The remote is a self-hosted server (the self-hosted forge), mean
 
 `docs/private/` is its own nested git repository, pushed to a separate private repo on the self-hosted forge that must never be mirrored. Commit private changes there explicitly (`git -C docs/private commit`), never through a hook. `git clean -ffdx` in this repository deletes the nested repo; a single `-f` spares it.
 
-- Never commit anything from `docs/private/`, and never copy personal details from it into tracked files: pay or day-rate expectations, location and relocation constraints, interview self-assessment, names of relatives.
+- Never commit anything from `docs/private/`, and never copy personal details from it into tracked files: pay or day-rate expectations, city of residence, location and relocation constraints, phone number, interview self-assessment, names of relatives. Public identity is deliberate and allowed: his full name, Arnaud Grousset, his pseudonym "Eleyone", a photo, and "based in France" at country level only. The original photo stays in `docs/private/assets/`; only a resized copy stripped of all metadata (EXIF, GPS) may be committed. Never put his name in `forbidden-patterns.txt`.
 - `scripts/check-private.sh` enforces this. It rejects forbidden paths, plus the strings listed in `docs/private/forbidden-patterns.txt`. Enable the local hook once per clone with `git config core.hooksPath .githooks`. Audit the full history with `scripts/check-private.sh history`, and run it before any push to GitHub: a commit pushed there stays reachable by SHA even after a force push.
 - The mirror pushes from the server, so the same script should run there as a `pre-receive` hook.
 - Public planning artifacts cite the published site pages, not the raw cases.
@@ -51,6 +51,17 @@ These supersede the original brief. The validated project brief is in `_bmad-out
 Pilot case: `content/cases/chiliz/case-02-chiliz.{fr,en}.md` follows `docs/format-cas.md` (v0.3: grouped cases live in their group's folder) and is the architecture's test fixture. The stack vocabulary lives in `data/stack.yaml`. The architecture draft is in `_bmad-output/planning-artifacts/architecture/`.
 
 Unchanged constraints: static site, Markdown content editable without touching code, no database, no backend to maintain, sober and readable design, simplicity over everything. Out of scope for v1: blog, client area, contact form, advanced analytics.
+
+## Development workflow (decided 2026-09-13)
+
+1. **Branches, linear history, no merge commits.** Work on `feat/*` or `fix/*` branched from `dev`, then open a PR to `dev` (squash). Releases bring `dev` into `main` by **rebase, never a merge commit** (fast-forward: `main` must stay an ancestor of `dev`), tagged `vX.Y.Z` on `main`. A **production hotfix** branches from `main`, goes back into `main` (fast-forward), then `dev` is rebased onto `main` and pushed with `--force-with-lease`. The `hotfix` skill may run that force push only after Arnaud's explicit approval at that moment; never cherry-pick a hotfix into `dev` (a copied commit breaks the next fast-forward). `dev` and `main` are protected; `main` is the default branch on the GitHub mirror and is never rewritten; `dev` is the working branch.
+2. **Code review by another LLM is mandatory before any merge.** The reviewer comes from a different vendor than the author (code written by Claude → reviewed by Gemini through the `agy` CLI, read-only `--mode plan`). The review runs in a **temporary git worktree outside this repository**, so the external reviewer can never read `docs/private/`, and `scripts/check-private.sh` runs on the reviewed scope first.
+3. **Documentation exception.** A PR touching only planning documents under `_bmad-output/` needs green CI only. The exception never covers `content/**`, `AGENTS.md`, `CLAUDE.md`, `docs/procedures/**`, `.claude/**` or `docs/format-cas.md`.
+4. **Merge gates.** Nothing is merged without a review report on the head SHA with a non-blocking verdict, the public/private guard passing, green CI once CI exists, and a consistent sprint status. The agent prepares the PR and waits; merging is a human decision.
+
+5. **Secrets.** Every token, credential or secret the project needs (Gitea API token, legal values, anything else) is defined in `.env` at the repository root, which is never committed: it is gitignored and rejected by `scripts/check-private.sh`. `.env.example` lists the variable names without values. Scripts load `.env` without printing any value; agents never print or copy a secret value into files, commits or conversation output. In CI, the legal values are Gitea secrets under the same names; the `GITEA_*` API variables stay on the dev machine only, because Gitea rejects secret names starting with `GITEA_`, and CI jobs use their built-in token instead.
+
+The dev skills (`llm-review`, `create-pull-request`, `verify-and-merge-pr`, `sprint-consistency`, `check-private`, `rehearse-release`, `release`, `publish-case`) follow the three-level pattern `.claude/skills/<name>/SKILL.md` → `docs/procedures/<name>.md` → `scripts/<name>.sh`. They are built as epic 0 of the backlog; until they exist, apply these rules by hand.
 
 ## BMAD workflow
 

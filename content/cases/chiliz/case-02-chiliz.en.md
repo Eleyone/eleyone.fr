@@ -4,8 +4,8 @@ translationKey: "case-02"
 number: "02"
 slug: "chiliz-source-of-truth"
 group: "chiliz"
+position: "position-chiliz"
 order: 1
-featured: true
 draft: true
 
 context:

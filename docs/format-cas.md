@@ -1,17 +1,17 @@
 ---
 title: "Format de sortie des cas clients"
-version: 0.3
+version: 0.4
 status: draft
 updated: 2026-09-13
 ---
 
 # Format de sortie des cas clients
 
-Contrat entre la rédaction des cas et le site Hugo. Un agent ou une personne qui rédige un cas produit exactement ce format. L'emplacement des fichiers est fixé par l'architecture (AD-4) ; les métadonnées et la structure du texte sont stables.
+Contrat entre la rédaction des cas et le site Hugo. Un agent ou une personne qui rédige un cas produit exactement ce format. L'emplacement des fichiers est fixé par l'architecture (AD-4, AD-18) ; les métadonnées et la structure du texte sont stables.
 
 ## Principe : un fichier par cas et par langue
 
-On écrit **un cas**, pas une page. Le site assemble les pages : un cas qui appartient à un groupe vit dans le dossier de ce groupe, et la page du groupe (la page Chiliz) réunit ses cas dans l'ordre de `order`. La rédaction ne dépend donc pas de la mise en page.
+On écrit **un cas**, pas une page. Le site assemble les pages : un cas qui appartient à un groupe vit dans le dossier de ce groupe, et la page du groupe (la page Chiliz) réunit ses cas dans l'ordre de `order`. Sur l'accueil, qui est le CV, chaque cas apparaît sous **le poste** qu'il prouve, désigné par la clé `position`. La rédaction ne dépend donc pas de la mise en page.
 
 ```
 content/cases/case-01-<nom-court>.fr.md          ← cas sans groupe
@@ -20,17 +20,19 @@ content/cases/chiliz/case-02-chiliz.fr.md        ← cas groupé : dans le dossi
 content/cases/chiliz/case-02-chiliz.en.md
 content/cases/chiliz/_index.fr.md                ← page du groupe : créée avec le site, pas par la rédaction des cas
 content/cases/chiliz/_index.en.md
+content/career/position-chiliz.fr.md             ← poste du parcours : créé avec le site, pas par la rédaction des cas
 …
 ```
 
 - **Noms de fichiers en anglais**, en minuscules et en kebab-case : `case-<NN>-<nom-court>.<langue>.md`. Le nom de fichier est un identifiant ; l'URL publique vient du `slug` de chaque langue.
 - **Cas groupé** : le fichier est dans `content/cases/<group>/`, et la clé `group` est obligatoire et **égale au nom du dossier**. Un contrôle bloquant le vérifie.
+- **Rattachement au parcours** : la clé `position` désigne le poste (`position-<id>`, par exemple `position-chiliz`). Le poste ne liste pas ses cas : c'est le cas qui pointe vers lui, et un cas se publie sans toucher au poste.
 - Le suffixe `.fr.md` / `.en.md` est la convention multilingue native de Hugo. Les deux fichiers d'un même cas partagent le même `translationKey`.
 - **URL** : un cas seul est publié à `/cas/<slug>/` et `/en/cases/<slug>/`. Un cas groupé est une section de la page du groupe, avec pour ancre son `translationKey` (par exemple `/cas/chiliz/#case-02`).
 
 ## Métadonnées (front matter YAML)
 
-Les **clés** et les **identifiants** (`translationKey`, `group`, `setup`, `live_material[].id`, `type`, `status`) sont en anglais et identiques dans les deux langues. Les **valeurs** textuelles sont dans la langue du fichier, sauf `stack`, qui ne se traduit pas.
+Les **clés** et les **identifiants** (`translationKey`, `group`, `position`, `setup`, `live_material[].id`, `type`, `status`) sont en anglais et identiques dans les deux langues. Les **valeurs** textuelles sont dans la langue du fichier, sauf `stack`, qui ne se traduit pas.
 
 ```yaml
 ---
@@ -39,8 +41,8 @@ translationKey: "case-02"             # identique FR/EN ; sert aussi d'ancre dan
 number: "02"
 slug: "chiliz-source-de-verite"       # dans la langue du fichier : c'est l'URL
 group: "chiliz"                       # cas groupé seulement : égal au nom du dossier
-order: 1                              # position dans le groupe, ou sur la liste des cas
-featured: true                        # mis en avant sur l'accueil (cas 01, 02, 05)
+position: "position-chiliz"           # poste du parcours prouvé par ce cas ; obligatoire si publié
+order: 1                              # position dans le groupe
 draft: true                           # passe à false quand plus aucun [TODO] ne reste et que le cas est relu
 
 context:                              # encart « Contexte mission »
@@ -61,6 +63,8 @@ live_material:                        # matériel vivant prévu (vide si aucun)
     url: ""                           # vidéos seulement : lien YouTube non répertorié
 ---
 ```
+
+La clé `featured` des versions précédentes n'existe plus : l'accueil est le CV, et chaque cas apparaît sous son poste.
 
 ### Vocabulaire de la stack
 
@@ -104,7 +108,7 @@ Tout ce qui manque s'écrit `[TODO: précision]`, dans les deux langues. Un cas 
 2. **Reformulation minimale** des sources, à la première personne.
 3. **Mêmes faits et mêmes chiffres en FR et en EN.** L'anglais n'est pas une traduction littérale : il ajoute les lignes de contexte dont un lecteur international a besoin (ce qu'est l'entreprise, un sigle, une plateforme).
 4. **Aucun code propriétaire d'un client** : pseudo-code et extraits illustratifs seulement.
-5. **Aucune information personnelle** : ni rémunération, ni lieu ou mobilité, ni auto-évaluation d'entretien, ni proches.
+5. **Aucune information personnelle** : ni rémunération, ni ville de résidence, téléphone ou mobilité, ni auto-évaluation d'entretien, ni proches. Le lieu de résidence public se limite à « basé en France », porté par le site ; les villes où se sont déroulées les missions peuvent apparaître.
 6. Un sujet **jamais mis en production** le reste explicitement dans le texte.
 7. **Ton factuel envers les anciens employeurs et clients** : le texte est public et nominatif.
 8. **Le texte se lit sans le matériel vivant.** Un élément `planned` est invisible en production : aucune phrase ne s'appuie sur lui (« comme le montre le schéma »).
@@ -118,8 +122,8 @@ translationKey: "case-NN"
 number: "NN"
 slug: "[TODO: slug]"
 group: ""                             # à retirer pour un cas sans groupe
+position: "[TODO: poste]"             # position-<id> du parcours
 order: 0
-featured: false
 draft: true
 context:
   company: "[TODO: société]"

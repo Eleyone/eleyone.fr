@@ -10,7 +10,8 @@
 # Sans ce fichier, seuls les chemins interdits sont vérifiés.
 set -euo pipefail
 
-forbidden_paths='^docs/(private|context)/|(^|/)\.env$'
+# assets/cv/*.pdf reste interdit tant que le pre-receive Gitea ne sait pas lire les PDF (AD-21)
+forbidden_paths='^docs/(private|context)/|(^|/)\.env$|^assets/cv/.*\.pdf$'
 patterns_file="${PRIVATE_PATTERNS_FILE:-$(git rev-parse --show-toplevel 2>/dev/null || true)/docs/private/forbidden-patterns.txt}"
 status=0
 

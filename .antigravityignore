@@ -1,0 +1,5 @@
+# Fichiers qu'Antigravity/Gemini ne doit ni indexer ni lire.
+# Défense en profondeur seulement : certaines versions de la CLI n'appliquent pas ce fichier.
+# La vraie protection : refus dans ~/.gemini/antigravity-cli/settings.json et revue dans un worktree isolé.
+.env
+docs/private/
