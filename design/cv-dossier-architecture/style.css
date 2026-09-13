@@ -1,0 +1,247 @@
+/* eleyone.fr — maquette « Dossier d'architecture », accueil CV.
+   Polices système, aucune ressource externe, aucun script. */
+
+/* 1. Jetons */
+:root {
+  color-scheme: light;
+  --bg: #fbfbf9;
+  --text: #1c2030;
+  --muted: #555b6e;
+  --rule: #c9cdd8;
+  --photo: #dfe2e9;
+  --photo-text: #4a5063;
+  --blue: #1f4f8f;
+  --green: #1c6b45;
+  --accent: var(--blue);
+  --serif: Charter, 'Bitstream Charter', 'Sitka Text', Cambria, serif;
+  --mono: ui-monospace, 'SF Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  --gutter: 1rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --bg: #14161d;
+    --text: #e6e8ee;
+    --muted: #a3a9b8;
+    --rule: #3a3f4d;
+    --photo: #2b2f3a;
+    --photo-text: #b8bdca;
+    --blue: #8db4ea;
+    --green: #7cc79d;
+  }
+}
+
+.accent-blue { --accent: var(--blue); }
+.accent-green { --accent: var(--green); }
+
+/* 2. Base */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 1.0625rem/1.5 var(--serif);
+  font-kerning: normal;
+}
+
+h1, h2, h3, p, ol, ul { margin: 0; }
+ol, ul { padding: 0; list-style: none; }
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: .18em;
+}
+a:hover { text-decoration-thickness: 2px; }
+
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+.mono, .when, .num, .size, .status, .sec, .mark, .place {
+  font-family: var(--mono);
+  font-size: .8125rem;
+  line-height: 1.5;
+}
+
+.wrap {
+  max-width: 58rem;
+  margin: 0 auto;
+  padding-inline: var(--gutter);
+}
+
+.skip {
+  position: absolute;
+  left: var(--gutter);
+  top: -4rem;
+  padding: .25rem .5rem;
+  background: var(--bg);
+}
+.skip:focus { top: .5rem; }
+
+/* 3. En-tête : marque, navigation, langues, CV */
+.site { border-bottom: 1px solid var(--rule); }
+
+.site .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 1rem;
+  padding-block: .375rem;
+}
+
+.mark { color: var(--muted); margin-right: auto; }
+
+.nav, .dl {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 1rem;
+  font-size: .9375rem;
+}
+
+.nav a, .dl a { display: inline-block; padding-block: .1875rem; }
+
+.lang { color: var(--muted); }
+.lang [aria-current] { color: var(--text); font-weight: 700; }
+
+.dl { flex-basis: 100%; font-size: .875rem; }
+.size { color: inherit; }
+
+/* 4. Identité */
+.identity {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 1rem;
+  padding-block: 1rem 1.25rem;
+}
+
+.photo {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+  position: relative;
+  width: 4.5rem;
+  height: 5.625rem;
+  background: var(--photo);
+}
+.photo img { display: block; width: 100%; height: 100%; }
+.photo span {
+  position: absolute;
+  inset: auto 0 .375rem;
+  text-align: center;
+  color: var(--photo-text);
+  font: .75rem/1 var(--mono);
+}
+
+h1 {
+  grid-column: 1;
+  font-size: 1.625rem;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -.005em;
+}
+.alias { font-size: .72em; font-weight: 400; color: var(--muted); white-space: nowrap; }
+
+.role {
+  grid-column: 1;
+  margin-top: .375rem;
+  font-size: 1.125rem;
+  line-height: 1.3;
+  font-weight: 600;
+}
+
+.place { grid-column: 1; margin-top: .25rem; color: var(--muted); }
+
+.pitch { grid-column: 1 / -1; margin-top: .75rem; max-width: 36rem; }
+
+/* 5. Sections : titre, registre des postes, cas rattachés */
+.section { border-top: 1px solid var(--rule); padding-block: .75rem 1.25rem; }
+
+.head { display: flex; align-items: baseline; gap: .5rem; }
+.sec { color: var(--muted); }
+h2 { font-size: 1.25rem; line-height: 1.3; font-weight: 700; }
+
+.entry { padding-block: .75rem; }
+.entry + .entry { border-top: 1px solid var(--rule); }
+
+.when { color: var(--muted); }
+.where { display: block; }
+.detail { margin-top: .25rem; font-size: 1rem; }
+.detail .mono { color: var(--muted); }
+
+h3 { font-size: 1.1875rem; line-height: 1.3; font-weight: 700; }
+h3 .qual { font-weight: 400; }
+
+.post { margin-top: .0625rem; }
+.sector { color: var(--muted); font-style: italic; }
+
+.proof {
+  margin-top: .5rem;
+  padding-left: .875rem;
+  border-left: 2px solid var(--accent);
+}
+
+.case + .case { margin-top: .5rem; }
+.num { display: block; color: var(--muted); }
+.case a { font-weight: 600; line-height: 1.3; }
+.summary { margin-top: .25rem; max-width: 36rem; font-size: 1rem; }
+.status { display: block; color: var(--muted); }
+
+/* 6. Pied de page */
+.foot {
+  border-top: 1px solid var(--rule);
+  padding-block: .75rem 2rem;
+}
+.foot p + p, .foot p + h2 { margin-top: .5rem; }
+
+/* 7. Écran large : une colonne de marge (dates, photo, numéros) et une colonne de texte */
+@media (min-width: 48rem) {
+  :root { --gutter: 2rem; }
+  body { font-size: 1.125rem; }
+
+  .row {
+    display: grid;
+    grid-template-columns: 13.5rem minmax(0, 40rem);
+    column-gap: 2.5rem;
+  }
+
+  .site .wrap { padding-block: .625rem; }
+  .dl { flex-basis: auto; margin-left: 1.25rem; font-size: .9375rem; }
+
+  .identity {
+    grid-template-columns: 13.5rem minmax(0, 40rem);
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: 2.5rem;
+    padding-block: 3rem 2.5rem;
+  }
+  .photo { justify-self: end; }
+  .photo { grid-column: 1; grid-row: 1 / span 4; width: 7.5rem; height: 9.375rem; }
+  h1, .role, .place, .pitch { grid-column: 2; }
+  h1 { font-size: 2.25rem; }
+  .role { font-size: 1.3125rem; margin-top: .5rem; }
+  .place { margin-top: .375rem; }
+  .pitch { margin-top: 1.25rem; font-size: 1.1875rem; line-height: 1.55; }
+
+  .section { padding-block: 1.5rem 2rem; }
+  .head { display: grid; }
+  .head .sec { text-align: right; }
+
+  .entry { padding-block: 1.25rem; }
+  .entry + .entry { border-top: 0; padding-top: 0; }
+  .entry + .entry > * { border-top: 1px solid var(--rule); padding-top: 1.25rem; }
+  .when { text-align: right; margin-top: .3rem; }
+
+  .proof { margin-top: .75rem; padding-left: 1.25rem; }
+  .case { display: grid; grid-template-columns: 3.75rem minmax(0, 1fr); }
+  .case + .case { margin-top: .625rem; }
+  .num { grid-row: 1 / span 2; padding-top: .2rem; }
+  .summary, .status { grid-column: 2; }
+
+  .foot { padding-block: 1.5rem 4rem; }
+  .foot .sec { text-align: right; }
+}
