@@ -1,0 +1,320 @@
+/* Maquette « Dossier d'architecture » : un document technique bien composé.
+   Aucune police web, aucun script, aucune ressource externe. */
+
+/* ---- Jetons : couleurs (contrastes calculés dans README.md) ---- */
+:root {
+  color-scheme: light dark;
+  --paper: #fbfaf7;
+  --tint: #f0f2f4;      /* fond des encarts */
+  --ink: #1f2933;       /* = texte des schémas D2 */
+  --muted: #52606d;
+  --accent: #9c3b1b;    /* unique couleur d'accent : liens, numéros, focus */
+  --rule: #7b8794;      /* filets de structure */
+  --hairline: #d9dee3;  /* filets décoratifs */
+  --plate: #ffffff;     /* planche des schémas */
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #15191e;
+    --tint: #1e252c;
+    --ink: #e4e7eb;
+    --muted: #a3aeba;
+    --accent: #f0a07e;
+    --rule: #6b7785;
+    --hairline: #2e3740;
+    --plate: #ffffff;
+  }
+}
+
+/* ---- Jetons : typographie et espacement (échelle 1.2) ---- */
+:root {
+  --serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, "Noto Serif", "DejaVu Serif", serif;
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", "DejaVu Sans Mono", monospace;
+  --step--1: 0.833rem;
+  --step-0: 1rem;
+  --step-1: 1.2rem;
+  --step-2: 1.44rem;
+  --step-3: 1.728rem;
+  --step-4: 2.074rem;
+  --measure: 38rem;     /* ≈ 68 caractères en serif */
+  --margin: 15rem;      /* colonne de marge (grands écrans) */
+  --s1: 0.25rem;
+  --s2: 0.5rem;
+  --s3: 1rem;
+  --s4: 1.5rem;
+  --s5: 2.5rem;
+  --s6: 4rem;
+}
+
+/* ---- Base ---- */
+*, *::before, *::after { box-sizing: border-box; }
+html {
+  font-size: 106.25%;               /* 17 px par défaut, suit le réglage utilisateur */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+@media (min-width: 48rem) { html { font-size: 112.5%; } }   /* 18 px */
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--serif);
+  line-height: 1.55;
+  font-kerning: normal;
+  hanging-punctuation: first;
+  overflow-wrap: break-word;        /* texte agrandi : aucun mot ne force un défilement horizontal */
+}
+p, ul, ol, dl, figure { margin: 0 0 var(--s3); }
+h1, h2, h3 { line-height: 1.2; font-weight: 700; margin: 0; text-wrap: balance; }
+p { text-wrap: pretty; }
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+a:hover { text-decoration-thickness: 2px; }
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+.meta, .kicker {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  color: var(--muted);
+  letter-spacing: 0.01em;
+}
+.kicker { display: block; margin-bottom: var(--s1); }
+
+.skip {
+  position: absolute;
+  left: var(--s3);
+  top: -3rem;
+  background: var(--paper);
+  padding: var(--s2);
+}
+.skip:focus { top: var(--s2); }
+
+/* ---- Cadre de page ---- */
+.wrap, .wrap-wide {
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+.site-header { border-bottom: 1px solid var(--hairline); }
+.site-header .wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--s3);
+  padding-block: 0.6rem;
+}
+.brand {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 600;
+}
+.lang { font-family: var(--mono); font-size: var(--step--1); margin: 0; }
+.lang [aria-current] { color: var(--ink); text-decoration: none; font-weight: 600; }
+
+.site-footer {
+  border-top: 1px solid var(--hairline);
+  margin-top: var(--s6);
+  padding-block: var(--s4);
+}
+.site-footer p { margin: 0; }
+
+/* ---- Accueil ---- */
+.hero { padding-block: var(--s4) var(--s3); }
+.hero h1 { font-size: var(--step-2); letter-spacing: -0.005em; margin-bottom: var(--s3); text-wrap: wrap; }
+.hero h1 .seg { display: inline-block; max-width: 100%; }   /* coupe le titre au « · » quand la largeur le permet */
+.lead { font-size: var(--step-0); margin: 0; }
+
+.index-title {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  border-top: 1px solid var(--rule);
+  padding-top: var(--s2);
+  margin-top: var(--s4);
+  margin-bottom: var(--s3);
+}
+.cases { list-style: none; padding: 0; margin: 0; }
+.case-item {
+  display: grid;
+  grid-template-columns: 2.25rem 1fr;
+  column-gap: var(--s2);
+  padding-bottom: var(--s4);
+}
+.case-item > * { min-width: 0; }
+.case-item + .case-item { border-top: 1px solid var(--hairline); padding-top: var(--s3); }
+.case-num {
+  font-family: var(--mono);
+  font-size: var(--step-0);
+  color: var(--accent);
+  line-height: 1.45;
+}
+.case-item h3 { font-size: var(--step-1); margin-bottom: var(--s2); }
+.case-item h3 a { color: var(--ink); text-decoration-color: var(--accent); }
+.case-item .meta { margin-bottom: var(--s2); }
+.case-item p:last-child { margin-bottom: 0; }
+.pending {
+  font-style: italic;
+  color: var(--muted);
+  border: 1px dashed var(--rule);
+  padding: var(--s1) var(--s2);
+  display: inline-block;
+}
+
+.aside-note { color: var(--muted); }
+
+/* ---- Page de cas ---- */
+.breadcrumb { padding-top: var(--s4); margin: 0; }
+.breadcrumb ol { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; }
+.breadcrumb li + li::before { content: "/"; padding-inline: 0.5ch; color: var(--muted); }
+
+.doc-title { padding-block: var(--s3) var(--s4); border-bottom: 1px solid var(--rule); }
+.doc-title h1 { font-size: var(--step-4); }
+.doc-title p { margin: var(--s2) 0 0; }
+
+.toc { padding-block: var(--s3); border-bottom: 1px solid var(--hairline); }
+.toc h2 { font-family: var(--mono); font-size: var(--step--1); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: var(--s2); }
+.toc ol { list-style: none; padding: 0; margin: 0; font-size: var(--step--1); line-height: 1.5; }
+.toc ol ol { padding-left: 2.5ch; }
+.toc a { color: var(--ink); text-decoration-color: var(--hairline); }
+.toc a:hover { text-decoration-color: var(--accent); }
+.toc .n { font-family: var(--mono); color: var(--accent); }
+
+.case { padding-top: var(--s5); }
+.case > header h2 { font-size: var(--step-3); margin-bottom: var(--s4); }
+
+/* Encarts : notes au sens RFC, filet et étiquette, sans ombre */
+.note {
+  background: var(--tint);
+  border-left: 3px solid var(--rule);
+  padding: var(--s3);
+  margin: 0 0 var(--s4);
+}
+.note-label {
+  font-family: var(--mono);
+  font-size: var(--step--1);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 0 0 var(--s2);
+}
+.note p:last-child { margin: 0; }
+.summary { border-left-color: var(--accent); }
+.summary p { font-size: var(--step-0); }
+
+.context dl { margin: 0; font-size: var(--step--1); line-height: 1.45; }
+.context dt { font-family: var(--mono); color: var(--muted); margin-top: var(--s2); }
+.context dt:first-child { margin-top: 0; }
+.context dd { margin: 0; }
+.stack { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: var(--s1) var(--s2); font-family: var(--mono); }
+.stack li:not(:last-child)::after { content: ","; }
+
+/* Sections du cas, numérotées comme un dossier : 2.1, 2.2… */
+.case-body { counter-reset: sec; }
+.case-body h3 {
+  counter-increment: sec;
+  font-size: var(--step-2);
+  margin: var(--s5) 0 var(--s3);
+  scroll-margin-top: var(--s3);
+}
+.case-body h3::before {
+  content: "1." counter(sec) "\2002";
+  font-family: var(--mono);
+  font-size: 0.7em;
+  font-weight: 400;
+  color: var(--accent);
+  vertical-align: 0.12em;
+}
+.case-body ul { padding-left: 1.2em; }
+.case-body li { margin-bottom: var(--s2); }
+.case-body li::marker { color: var(--muted); }
+
+/* Bloc de maquette : planche de schéma */
+.mock {
+  margin-top: var(--s6);
+  border-top: 2px dashed var(--rule);
+  padding-top: var(--s3);
+}
+.mock h2 { font-family: var(--mono); font-size: var(--step--1); font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: var(--s3); }
+.plate {
+  background: var(--plate);
+  border: 1px solid var(--hairline);
+  padding: var(--s3);
+  margin: 0;
+}
+.plate img { display: block; width: 100%; height: auto; margin-inline: auto; }
+/* Sombre : la planche reste claire (thème D2 sombre non testé), légèrement atténuée */
+@media (prefers-color-scheme: dark) {
+  .plate { --plate: #ebebeb; border-color: var(--rule); }
+  .plate img { filter: brightness(0.92); }
+}
+figcaption { font-size: var(--step--1); color: var(--muted); margin-top: var(--s2); }
+figcaption .n { font-family: var(--mono); color: var(--accent); }
+
+/* ---- Grands écrans : la marge devient un espace de lecture ---- */
+@media (min-width: 72rem) {
+  .wrap-wide {
+    max-width: calc(var(--measure) + 2 * var(--margin) + 6rem);
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+    display: grid;
+    grid-template-columns: var(--margin) minmax(0, var(--measure)) var(--margin);
+    column-gap: 3rem;
+  }
+  .wrap-wide > * { grid-column: 2; }
+
+  /* Accueil : numéros de cas suspendus dans la marge */
+  .home .case-item { grid-template-columns: 1fr; position: relative; }
+  .home .case-num { position: absolute; left: -4rem; width: 3rem; text-align: right; top: var(--s3); }
+  .home .case-item:first-child .case-num { top: 0; }
+  .hero { padding-block: var(--s6) var(--s4); }
+  .hero h1 { font-size: var(--step-3); }
+  .lead { font-size: var(--step-1); line-height: 1.5; }
+
+  /* Cas : sommaire collant à gauche, contexte mission en marge droite */
+  .toc {
+    grid-column: 1;
+    grid-row: 2 / span 20;
+    align-self: start;
+    position: sticky;
+    top: var(--s4);
+    border: 0;
+    padding-top: var(--s5);
+  }
+  .case {
+    grid-column: 2 / 4;
+    display: grid;
+    grid-template-columns: minmax(0, var(--measure)) var(--margin);
+    column-gap: 3rem;
+    align-items: start;
+  }
+  .case > * { grid-column: 1; }
+  .case > .context {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    margin: 0;
+    background: none;
+    border-left: 0;
+    border-top: 2px solid var(--accent);
+    padding: var(--s2) 0 0;
+  }
+}
+
+@media print {
+  .site-header, .toc, .skip { display: none; }
+  body { background: #fff; color: #000; }
+}

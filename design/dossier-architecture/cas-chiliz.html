@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chiliz — cas clients — eleyone.fr</title>
+<meta name="description" content="L'équipe finance décidait d'acheter, vendre ou staker des tokens à partir d'un export recalculé à côté par la BI.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body class="case-page">
+<a class="skip" href="#contenu">Aller au contenu</a>
+
+<header class="site-header">
+  <div class="wrap">
+    <a class="brand" href="index.html">eleyone.fr</a>
+    <nav aria-label="Langue">
+      <p class="lang"><a href="cas-chiliz.html" aria-current="page" lang="fr">FR</a> / <a href="#" lang="en" hreflang="en">EN</a></p>
+    </nav>
+  </div>
+</header>
+
+<main id="contenu" class="wrap-wide">
+    <nav class="breadcrumb meta" aria-label="Fil d'Ariane">
+      <ol>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="index.html#cas">Cas</a></li>
+        <li><span aria-current="page">Chiliz</span></li>
+      </ol>
+    </nav>
+
+    <header class="doc-title">
+      <h1>Chiliz</h1>
+    </header>
+
+  <nav class="toc" aria-labelledby="sommaire">
+    <h2 id="sommaire">Sommaire</h2>
+    <ol>
+      <li><a href="#case-02"><span class="n">1</span> Faire d'une application la source de vérité d'un calcul financier</a>
+        <ol>
+          <li><a href="#case-02-contexte"><span class="n">1.1</span> Contexte</a></li>
+          <li><a href="#case-02-probleme"><span class="n">1.2</span> Le problème</a></li>
+          <li><a href="#case-02-decide"><span class="n">1.3</span> Ce que j'ai décidé</a></li>
+          <li><a href="#case-02-resiste"><span class="n">1.4</span> Ce qui a résisté</a></li>
+          <li><a href="#case-02-resultat"><span class="n">1.5</span> Résultat</a></li>
+          <li><a href="#case-02-montre"><span class="n">1.6</span> Ce que ça montre</a></li>
+        </ol>
+      </li>
+    </ol>
+  </nav>
+
+    <article class="case" id="case-02" aria-labelledby="case-02-titre">
+      <header>
+        <span class="kicker">Cas 02</span>
+        <h2 id="case-02-titre">Faire d'une application la source de vérité d'un calcul financier</h2>
+      </header>
+
+      <section class="note summary" aria-labelledby="case-02-bref">
+        <h3 class="note-label" id="case-02-bref">En bref</h3>
+        <p>L'équipe finance décidait d'acheter, vendre ou staker des tokens à partir d'un export recalculé à côté par la BI. J'ai porté ce calcul dans l'application, prouvé qu'il était juste contre l'ancien système, et il est devenu la référence. Le plus dur n'a pas été la règle, mais les exceptions faites à la main dans l'historique — on les a toutes retrouvées.</p>
+      </section>
+
+      <aside class="note context" aria-labelledby="case-02-contexte-mission">
+        <p class="note-label" id="case-02-contexte-mission">Contexte mission</p>
+        <dl>
+          <dt>Entreprise</dt>
+          <dd>Chiliz</dd>
+          <dt>Cadre</dt>
+          <dd>Salarié</dd>
+          <dt>Rôle</dt>
+          <dd>Développeur backend, owner de l'epic NCS/CS dans une équipe de quatre à cinq développeurs</dd>
+          <dt>Période</dt>
+          <dd>septembre 2025 – février 2026</dd>
+          <dt>Stack</dt>
+          <dd>
+            <ul class="stack">
+              <li>PHP</li>
+              <li>Symfony</li>
+              <li>Symfony UX</li>
+              <li>Twig</li>
+              <li>Redshift</li>
+            </ul>
+          </dd>
+        </dl>
+      </aside>
+
+      <div class="case-body">
+        <h3 id="case-02-contexte">Contexte</h3>
+        <p>Dernière équipe sur place&#8239;: quatre à cinq développeurs back, sans front dédié, chargés de construire un nouvel outil pour la branche finance — l'équipe qui fait du trading interne sur les tokens de la société. L'outil sert à décider s'il faut acheter, vendre ou staker. Environ 90 tokens, un pool par token.</p>
+        <p>Le projet avait été démarré en Python, en interne, sur l'idée que Python est ce qui ressort le plus avec l'IA. Personne dans la société ne le maîtrisait. Retour sur ce que l'équipe savait tenir en production&#8239;: PHP et Symfony. Même logique pour le front&#8239;: plutôt qu'un framework JS que personne ne maîtrisait, Symfony UX et Twig, décision à laquelle j'ai contribué.</p>
+
+        <h3 id="case-02-probleme">Le problème</h3>
+        <p>Au cœur de l'outil, le calcul du NCS et du CS — non-circulating supply et circulating supply — c'est-à-dire combien de nos tokens sont en circulation et combien ne le sont pas. Toutes les décisions de trading en dépendent. Jusque-là, ce calcul était fait par l'équipe BI, via un export considéré comme la source de vérité. L'objectif&#8239;: que l'application prenne en charge le calcul, soit prouvée juste contre la BI, puis devienne elle-même la référence.</p>
+        <p>Particularité qui pèse sur tout le reste&#8239;: le calcul est cumulatif. Chaque valeur dépend de toutes les transactions antérieures. Pour un résultat à jour, il faut rejouer l'historique complet.</p>
+        <!-- live-material diagram-ncs-cs-flow : planned, rien n'est rendu en production -->
+
+        <h3 id="case-02-decide">Ce que j'ai décidé</h3>
+        <p>Le POC existait déjà. J'ai réécrit la documentation d'implémentation — comment on porte ça dans l'app — puis découpé l'epic en stories et en tâches. Le chiffrage a été fait en refinement par l'équipe. J'ai pris l'essentiel de l'implémentation et l'ownership du sujet. Première version en un mois.</p>
+        <p>La validation contre les données de prod s'est faite en binôme avec un collègue, parce que je n'avais pas les accès prod.</p>
+        <!-- live-material snippet-history-replay : planned, rien n'est rendu en production -->
+
+        <h3 id="case-02-resiste">Ce qui a résisté</h3>
+        <p>La règle qu'on nous avait donnée était propre. L'historique ne l'était pas. Dès les premiers tests, des écarts avec la BI&#8239;: l'existant était plein d'entorses faites à la main au fil du temps, et comme le calcul est cumulatif, une seule exception dans le passé décale tout ce qui suit.</p>
+        <p>Le travail réel a donc été une chasse aux exceptions&#8239;: retrouver qui, quoi, quand, pourquoi. On s'est aussi aperçu qu'il manquait des informations, qui vivaient sur la blockchain. Les requêter à chaque calcul coûtait trop cher en temps&#8239;; décision de les rapatrier dans notre base pour requêter directement dessus.</p>
+        <p>Dernière source d'écart&#8239;: la précision. Les montants sont à 18 décimales, bornées. Nos librairies les traitent correctement&#8239;; Redshift, côté BI, moins bien — d'où des écarts de virgule qui s'accumulent sur un calcul cumulatif. On a défini une tolérance plutôt que de courir après une égalité parfaite qui n'était pas de notre côté.</p>
+        <!-- live-material callout-18-decimals : planned, rien n'est rendu en production -->
+        <p>Côté organisation, une bonne partie du travail a consisté à s'aligner sur ce qu'on livrait avant de le construire.</p>
+
+        <h3 id="case-02-resultat">Résultat</h3>
+        <ul>
+          <li>Septembre&#8239;: démarrage. Un mois plus tard&#8239;: première version. Fin février&#8239;: calculs stabilisés et justes, après cinq mois de recherche d'exceptions et de fiabilisation de l'historique.</li>
+          <li>À mon départ, les décisions de trading dans l'application se prenaient sur nos données, plus sur l'export BI.</li>
+          <li>L'export BI continuait de tourner, en consolidation&#8239;: une réconciliation qui vérifie en continu que nos calculs restent justes.</li>
+        </ul>
+
+        <h3 id="case-02-montre">Ce que ça montre</h3>
+        <p>Je sais prendre un POC et le transformer en logiciel qui tient&#8239;: doc d'implémentation, découpage, ownership de bout en bout. Je sais que la règle métier et les données réelles sont deux choses différentes, et que le travail est presque toujours dans l'écart entre les deux. Je choisis les technos sur ce que l'équipe sait maintenir, pas sur la mode. Et quand un calcul sert à décider, je ne le considère pas livré tant qu'il n'est pas prouvé contre la référence existante, avec une tolérance explicite.</p>
+      </div>
+    </article>
+
+    <!-- Bloc de maquette uniquement : absent du site. Sert à juger l'accord entre la page et un schéma D2 réel. -->
+    <section class="mock" aria-labelledby="maquette-schema">
+      <h2 id="maquette-schema">Exemple de schéma (maquette)</h2>
+      <figure class="plate">
+        <img src="diagram-example.svg" width="876" height="1344" loading="lazy" decoding="async"
+             alt="Diagramme de flux « Contrôle d'un indicateur avant publication ». Un export BI quotidien fournit les valeurs attendues ; en parallèle, l'import et la normalisation des données exportées alimentent le calcul de l'indicateur dans l'application, qui fournit les valeurs calculées. Les deux convergent vers une réconciliation ligne à ligne contre la référence, puis une question : écart dans la tolérance ? Si oui, publication de l'indicateur validé. Si non, alerte à l'équipe et suspension de la publication, puis analyse manuelle de l'écart, correction et nouveau calcul.">
+      </figure>
+      <p class="meta"><span class="n">Fig. 1</span> — Schéma de test issu de la branche <code>experiment/d2-bilingue</code> (D2, moteur ELK, thème sobre). Ce n'est pas un schéma du cas 02. <a href="diagram-example.svg">Ouvrir en taille réelle</a></p>
+    </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p class="meta">eleyone.fr · maquette « Dossier d'architecture »</p>
+  </div>
+</footer>
+</body>
+</html>
