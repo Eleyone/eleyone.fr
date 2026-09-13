@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Chiliz — Eleyone</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#contenu">Aller au contenu</a>
+
+<header class="site-header">
+  <div class="wrap bar">
+    <a class="brand" href="index.html"><span class="brand-mark" aria-hidden="true"></span>Eleyone</a>
+    <div class="menu">
+      <nav aria-label="Navigation principale">
+        <ul>
+          <li><a class="label" href="#">À propos</a></li>
+          <li><a class="label" href="#contact">Contact</a></li>
+        </ul>
+      </nav>
+      <nav class="lang" aria-label="Langue">
+        <ul>
+          <li><a class="label" href="cas-chiliz.html" aria-current="page">FR</a></li>
+          <li><a class="label" href="#" hreflang="en" lang="en">EN</a></li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</header>
+
+<main id="contenu">
+
+  <!-- Page Chiliz : titre seul, sans introduction (question 9 du PRD ouverte). Seule la section du cas 02 existe. -->
+  <div class="page-head wrap grid">
+    <nav class="crumbs label" aria-label="Fil d'Ariane">
+      <ol>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="index.html#cas">Cas</a></li>
+      </ol>
+    </nav>
+    <h1 class="display col-wide">Chiliz</h1>
+  </div>
+
+  <!-- Section du cas 02. Ses trois éléments live_material sont « planned » : ils ne produisent rien. -->
+  <article id="case-02" class="case wrap" aria-labelledby="case-02-titre">
+
+    <header class="case-head grid">
+      <p class="case-num col-label"><span class="visually-hidden">Cas </span>02</p>
+      <h2 id="case-02-titre" class="case-h col-main">Faire d'une application la source de vérité d'un calcul financier</h2>
+    </header>
+
+    <div class="boxes grid">
+      <section class="box box-context" aria-labelledby="case-02-contexte">
+        <h3 id="case-02-contexte" class="label">Contexte mission</h3>
+        <dl class="facts">
+          <div><dt class="label">Société</dt><dd>Chiliz</dd></div>
+          <div><dt class="label">Cadre</dt><dd>Salarié</dd></div>
+          <div><dt class="label">Rôle</dt><dd>Développeur backend, owner de l'epic NCS/CS dans une équipe de quatre à cinq développeurs</dd></div>
+          <div><dt class="label">Période</dt><dd>septembre 2025 – février 2026</dd></div>
+          <div><dt class="label">Stack</dt><dd>
+            <ul class="stack">
+              <li>PHP</li>
+              <li>Symfony</li>
+              <li>Symfony UX</li>
+              <li>Twig</li>
+              <li>Redshift</li>
+            </ul>
+          </dd></div>
+        </dl>
+      </section>
+
+      <section class="box box-brief" aria-labelledby="case-02-bref">
+        <h3 id="case-02-bref" class="label">En bref</h3>
+        <p>L'équipe finance décidait d'acheter, vendre ou staker des tokens à partir d'un export recalculé à côté par la BI. J'ai porté ce calcul dans l'application, prouvé qu'il était juste contre l'ancien système, et il est devenu la référence. Le plus dur n'a pas été la règle, mais les exceptions faites à la main dans l'historique — on les a toutes retrouvées.</p>
+      </section>
+    </div>
+
+    <section class="rubric grid" aria-labelledby="case-02-r1">
+      <h3 id="case-02-r1" class="rubric-h col-label">Contexte</h3>
+      <div class="prose col-text">
+        <p>Dernière équipe sur place : quatre à cinq développeurs back, sans front dédié, chargés de construire un nouvel outil pour la branche finance — l'équipe qui fait du trading interne sur les tokens de la société. L'outil sert à décider s'il faut acheter, vendre ou staker. Environ 90 tokens, un pool par token.</p>
+        <p>Le projet avait été démarré en Python, en interne, sur l'idée que Python est ce qui ressort le plus avec l'IA. Personne dans la société ne le maîtrisait. Retour sur ce que l'équipe savait tenir en production : PHP et Symfony. Même logique pour le front : plutôt qu'un framework JS que personne ne maîtrisait, Symfony UX et Twig, décision à laquelle j'ai contribué.</p>
+      </div>
+    </section>
+
+    <section class="rubric grid" aria-labelledby="case-02-r2">
+      <h3 id="case-02-r2" class="rubric-h col-label">Le problème</h3>
+      <div class="prose col-text">
+        <p>Au cœur de l'outil, le calcul du NCS et du CS — non-circulating supply et circulating supply — c'est-à-dire combien de nos tokens sont en circulation et combien ne le sont pas. Toutes les décisions de trading en dépendent. Jusque-là, ce calcul était fait par l'équipe BI, via un export considéré comme la source de vérité. L'objectif : que l'application prenne en charge le calcul, soit prouvée juste contre la BI, puis devienne elle-même la référence.</p>
+        <p>Particularité qui pèse sur tout le reste : le calcul est cumulatif. Chaque valeur dépend de toutes les transactions antérieures. Pour un résultat à jour, il faut rejouer l'historique complet.</p>
+      </div>
+    </section>
+
+    <section class="rubric grid" aria-labelledby="case-02-r3">
+      <h3 id="case-02-r3" class="rubric-h col-label">Ce que j'ai décidé</h3>
+      <div class="prose col-text">
+        <p>Le POC existait déjà. J'ai réécrit la documentation d'implémentation — comment on porte ça dans l'app — puis découpé l'epic en stories et en tâches. Le chiffrage a été fait en refinement par l'équipe. J'ai pris l'essentiel de l'implémentation et l'ownership du sujet. Première version en un mois.</p>
+        <p>La validation contre les données de prod s'est faite en binôme avec un collègue, parce que je n'avais pas les accès prod.</p>
+      </div>
+    </section>
+
+    <section class="rubric grid" aria-labelledby="case-02-r4">
+      <h3 id="case-02-r4" class="rubric-h col-label">Ce qui a résisté</h3>
+      <div class="prose col-text">
+        <p>La règle qu'on nous avait donnée était propre. L'historique ne l'était pas. Dès les premiers tests, des écarts avec la BI : l'existant était plein d'entorses faites à la main au fil du temps, et comme le calcul est cumulatif, une seule exception dans le passé décale tout ce qui suit.</p>
+        <p>Le travail réel a donc été une chasse aux exceptions : retrouver qui, quoi, quand, pourquoi. On s'est aussi aperçu qu'il manquait des informations, qui vivaient sur la blockchain. Les requêter à chaque calcul coûtait trop cher en temps ; décision de les rapatrier dans notre base pour requêter directement dessus.</p>
+        <p>Dernière source d'écart : la précision. Les montants sont à 18 décimales, bornées. Nos librairies les traitent correctement ; Redshift, côté BI, moins bien — d'où des écarts de virgule qui s'accumulent sur un calcul cumulatif. On a défini une tolérance plutôt que de courir après une égalité parfaite qui n'était pas de notre côté.</p>
+        <p>Côté organisation, une bonne partie du travail a consisté à s'aligner sur ce qu'on livrait avant de le construire.</p>
+      </div>
+    </section>
+
+    <section class="rubric grid" aria-labelledby="case-02-r5">
+      <h3 id="case-02-r5" class="rubric-h col-label">Résultat</h3>
+      <div class="prose col-text">
+        <ul>
+          <li>Septembre : démarrage. Un mois plus tard : première version. Fin février : calculs stabilisés et justes, après cinq mois de recherche d'exceptions et de fiabilisation de l'historique.</li>
+          <li>À mon départ, les décisions de trading dans l'application se prenaient sur nos données, plus sur l'export BI.</li>
+          <li>L'export BI continuait de tourner, en consolidation : une réconciliation qui vérifie en continu que nos calculs restent justes.</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="rubric grid" aria-labelledby="case-02-r6">
+      <h3 id="case-02-r6" class="rubric-h col-label">Ce que ça montre</h3>
+      <div class="prose col-text">
+        <p>Je sais prendre un POC et le transformer en logiciel qui tient : doc d'implémentation, découpage, ownership de bout en bout. Je sais que la règle métier et les données réelles sont deux choses différentes, et que le travail est presque toujours dans l'écart entre les deux. Je choisis les technos sur ce que l'équipe sait maintenir, pas sur la mode. Et quand un calcul sert à décider, je ne le considère pas livré tant qu'il n'est pas prouvé contre la référence existante, avec une tolérance explicite.</p>
+      </div>
+    </section>
+
+  </article>
+
+  <!-- MAQUETTE SEULEMENT : ce bloc n'appartient pas au cas 02 et ne sera pas publié. Il sert à juger l'accord entre la palette et un schéma D2 réel. -->
+  <section class="section mockup wrap grid" aria-labelledby="schema-titre">
+    <h2 id="schema-titre" class="label label-accent col-label">Exemple de schéma (maquette)</h2>
+    <figure class="diagram col-text">
+      <div class="plate">
+        <img src="diagram-example.svg" width="876" height="1344" alt="Schéma de test « Contrôle d'un indicateur avant publication » : export BI quotidien, import et normalisation des données exportées, calcul de l'indicateur dans l'application ; les valeurs calculées et les valeurs attendues du référentiel de contrôle (source de vérité) alimentent une réconciliation ligne à ligne contre la référence, puis un test « Écart dans la tolérance ? » menant soit à la publication de l'indicateur validé, soit à une alerte à l'équipe avec suspension de la publication, une analyse manuelle de l'écart, et une correction puis un nouveau calcul.">
+      </div>
+      <figcaption>Schéma de test de la branche <code>experiment/d2-bilingue</code> (D2, thème Neutral Grey, disposition ELK), sans rapport avec le contenu du cas 02. Son fond blanc est conservé en thème sombre.</figcaption>
+    </figure>
+  </section>
+
+  <section id="contact" class="section wrap grid" aria-labelledby="contact-titre">
+    <h2 id="contact-titre" class="label col-label">Contact</h2>
+    <p class="contact-links col-main"><a href="#">[email]</a> <a href="#">[LinkedIn]</a></p>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap bar">
+    <p>eleyone.fr — maquette de direction visuelle « Suisse », contenu non définitif.</p>
+    <p><a href="#">Mentions légales</a></p>
+  </div>
+</footer>
+</body>
+</html>
