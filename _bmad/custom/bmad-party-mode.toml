@@ -1,0 +1,4 @@
+# La mémoire et les souvenirs des réunions restent hors du dépôt public.
+[workflow]
+memory_dir = "{project-root}/docs/private/party-mode/memories"
+output_dir = "{project-root}/docs/private/party-mode"

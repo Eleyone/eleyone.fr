@@ -1,0 +1,5 @@
+# Sources privées (cas bruts, noyau narratif, mémoire des réunions) : jamais versionnées
+docs/private/
+
+# Artefacts de téléchargement Windows
+*:Zone.Identifier
