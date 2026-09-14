@@ -510,7 +510,7 @@ flowchart TD
     - `llm-review` : revue par un LLM tiers (ci-dessous) ;
     - `create-pull-request` : PR Gitea par l'API, base déduite de la branche (`feat/*`, `fix/*`, `chore/*` et `docs/*` → `dev`, tout autre préfixe refusé) ; une PR vers `main` n'est créée que par `release` (depuis `dev`) ou `hotfix` (depuis `hotfix/*`), et `create-pull-request` refuse une branche `hotfix/*`. Avant tout appel d'écriture, il vérifie le dépôt distant (`Eleyone/eleyone.fr`, constante du script), un arbre sans modification en attente, une branche poussée au même commit, `check-private.sh history` sur la branche avec la liste des motifs, l'absence de motif privé dans le titre et le corps, le compte du jeton et l'absence de PR déjà ouverte pour la branche. Le corps est lu dans `.pr-body.md` (ignoré par git, réutilisé d'une PR à l'autre) ou dans `--body-file`, puis relu sur la forge et comparé au fichier ; la sortie donne le numéro de la PR, jamais son adresse (décidé le 14/09/2026, story 0.4) ;
     - `verify-and-merge-pr` : verrous de merge (ci-dessous) ;
-    - `sprint-consistency` : cohérence entre `sprint-status.yaml` (dans `_bmad-output/implementation-artifacts/`) et l'en-tête `Status:` des fichiers de story. En v1, les statuts seulement, sans vérification des branches, qui pourra s'ajouter si un écart se produit (décidé le 13/09/2026, D-17) ;
+    - `sprint-consistency` : cohérence entre `sprint-status.yaml` (dans `_bmad-output/implementation-artifacts/`) et l'en-tête `Status:` des fichiers de story. En v1, les statuts seulement, sans vérification des branches, qui pourra s'ajouter si un écart se produit (décidé le 13/09/2026, D-17). Interface (décidé le 14/09/2026, story 0.6) : sans option, contrôle global ; `--merge <n.m>` exige la story à `done` dans le suivi et dans son fichier ; `--rev <commit>` lit un commit ; statuts d'epic vérifiés d'après leurs stories ; seule la première ligne `Status:` d'un fichier de story compte ;
     - `check-private` : garde-fou public/privé (AD-12 ; le script existe déjà) ;
     - `rehearse-release` : tag `vX.Y.Z-rc.N` sur `dev` et vérifications par tunnel (AD-22) ;
     - `release` : vérifie d'abord que `main` est un ancêtre de `dev`, crée la PR `dev` → `main`, applique les verrous de la publication (ci-dessous), fusionne en fast-forward seulement avec `--merge` lancé par Arnaud, puis pose le tag `vX.Y.Z` sur `main` (AD-14). Pour `v1.0.0`, il refuse la publication si `ci/release-pages.txt` ne contient pas toutes les pages du socle (FR-32 ; D-5) ; pour les tags suivants, l'absence de tag `-rc` de même arbre n'est qu'un avertissement (AD-22, D-6) ;
@@ -950,6 +950,10 @@ Décisions de la story 0.5, prises par Arnaud le 14/09/2026 :
 64. Fichier de story par story (`Status:`, « Revue de spec », « Revue du code ») et `deferred-work.md` ; fichiers d'historique pour les stories 0.1 à 0.4 (AD-24).
 65. Verrou de revue : le commit de statut `done` peut aussi changer l'en-tête `Status:` du fichier de story, et n'ajouter que des lignes au fichier de story et à `deferred-work.md` ; `llm-review` n'écrit que des lignes ajoutées (AD-24).
 66. `scripts/lib/gitea.sh` : lecture de `.env` et accès à l'API mis en commun, sans duplication (AD-24).
+
+Décisions de la story 0.6, prises par Arnaud le 14/09/2026 :
+
+67. `sprint-consistency` : contrôle global sans option, `--merge <n.m>` et `--rev <commit>` ; statuts d'epic dérivés de leurs stories ; fichier de story toléré pour une story en `backlog` s'il porte `Status: backlog` ; seule la première ligne `Status:` compte ; lien PR → story laissé à `verify-and-merge-pr` (AD-24).
 
 ## Recommandations à valider par Arnaud
 

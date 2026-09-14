@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '2026-09-14'
+last_updated: '2026-09-15'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -41,7 +41,7 @@ development_status:
   0-3-check-private-skill: done
   0-4-create-pull-request-skill: done
   0-5-llm-review-skill-with-cross-vendor-review: done
-  0-6-sprint-consistency-skill: backlog
+  0-6-sprint-consistency-skill: done
   0-7-verify-and-merge-pr-skill: backlog
   epic-0-retrospective: optional
 

@@ -533,34 +533,44 @@ afin qu'aucune spec ni aucun merge ne repose sur la seule relecture du modèle q
 ### Story 0.6 : Sprint-consistency skill
 
 En tant qu'Arnaud, mainteneur,
-je veux vérifier que l'état des stories et le suivi de sprint disent la même chose,
-afin qu'une PR ne soit pas fusionnée sur une story mal suivie.
+je veux vérifier que le suivi de sprint et les fichiers de story disent la même chose,
+afin qu'aucune PR ne soit fusionnée sur une story mal suivie.
 
 **Couvre :** NFR-7 · AD-24
-**Dépendances :** 0.2
+**Dépendances :** 0.2, 0.5 (fichiers de story)
 **Bloquée par :** —
-**Prérequis de contenu :** planification de sprint faite (`sprint-status.yaml` et fichiers de story portant un en-tête `Status:`), par le skill de planification de sprint à partir de ce document, avant la story 0.1 (règle d'amorçage).
+**Prérequis de contenu :** `sprint-status.yaml` et fichiers de story dans `_bmad-output/implementation-artifacts/` (stories 0.1 à 0.5).
 **Opération manuelle (Arnaud) :** non
+
+**Décisions (Arnaud, 14/09/2026, après la revue de spec) :**
+- trois niveaux, visibles dans tous les outils : `.claude/skills/sprint-consistency/SKILL.md` et ses liens, `docs/procedures/sprint-consistency.md`, `scripts/sprint-consistency.sh`, en bash seul, sans Python ni outil YAML ;
+- interface : sans option, contrôle global de l'arbre de travail ; `--merge <n.m>` exige en plus la story à `done` dans le suivi et dans son fichier ; `--rev <commit>` lit le suivi et les fichiers de story dans ce commit ; le lien entre une PR et sa story (numéro tiré du nom de la branche) relève de `verify-and-merge-pr` (story 0.7) ;
+- statuts d'epic vérifiés d'après leurs stories : `backlog` si aucune n'a commencé (`backlog` ou `ready-for-dev`), `done` si toutes sont à `done`, `in-progress` sinon ; les rétrospectives ne sont pas vérifiées ;
+- tolérances : une story en `backlog` peut avoir un fichier de story s'il porte `Status: backlog` ; seule la première ligne `Status:` du fichier compte ; une ligne absente, mal écrite ou hors vocabulaire est un écart ;
+- statuts seulement en v1, pas les branches (D-17).
 
 **Critères d'acceptation :**
 
-**Étant donné** `sprint-status.yaml` et les fichiers de story
-**Quand** `scripts/sprint-consistency.sh` s'exécute
-**Alors** il signale toute story dont l'en-tête `Status:` diffère de son état dans `sprint-status.yaml` et toute story présente d'un seul côté (une story hors `backlog` sans fichier de story, ou un fichier de story sans entrée dans le suivi), et sort avec un code non nul s'il y a un écart.
+**Étant donné** `scripts/sprint-consistency.sh` sans option
+**Quand** il s'exécute
+**Alors** il lit la section `development_status` de `_bmad-output/implementation-artifacts/sprint-status.yaml` et les fichiers de story du même dossier (`<clé>.md`)
+**Et** il signale comme écart : une story hors `backlog` sans fichier de story ; un fichier de story sans entrée dans le suivi ; un fichier dont la première ligne `Status:` manque, est mal écrite, porte une valeur hors vocabulaire ou diffère du suivi ; un statut de story ou d'epic hors vocabulaire ; un epic dont le statut ne correspond pas à ses stories, ou sans aucune story ; des stories dont l'epic n'a pas de ligne dans le suivi ; une clé non reconnue
+**Et** il liste tous les écarts et sort avec le code 1 s'il y en a au moins un ; sinon il annonce la cohérence et sort avec le code 0
+**Et** une story `in-progress` ou `review` n'est jamais un écart en soi : le contrôle passe pendant tout le développement.
 
-**Étant donné** l'absence de `sprint-status.yaml`
+**Étant donné** l'absence de `sprint-status.yaml`, ou une section `development_status` vide
 **Quand** le script s'exécute
-**Alors** il le dit explicitement et sort en échec, sans conclure à la cohérence.
+**Alors** il le dit explicitement et sort en échec (code 2), sans conclure à la cohérence ; de même si la liste des fichiers de story ne peut pas être lue.
 
-**Étant donné** la PR d'une story, au moment de la fusion
-**Quand** le script évalue la tête de la PR
-**Alors** la story y est à `done` dans `sprint-status.yaml` ; `in-progress` ou `review` bloque (suivi de sprint dans la PR de la story, AD-24).
+**Étant donné** `--merge <n.m>`
+**Quand** le script s'exécute
+**Alors** en plus du contrôle global, la story `n.m` doit exister dans le suivi sous une seule clé, y être à `done` et avoir son fichier de story à `done` ; sinon c'est un écart, et la fusion est refusée.
 
-- [ ] En v1, le script ne vérifie que les statuts, pas les branches (D-17) ; la vérification des branches pourra s'ajouter si un écart se produit.
+**Étant donné** `--rev <commit>`
+**Quand** le script s'exécute
+**Alors** il lit le suivi et les fichiers de story dans ce commit, pas dans l'arbre de travail ; un commit introuvable le fait échouer (code 2).
 
-**Questions à poser avant de commencer :**
-- Comment le script relie-t-il une PR à sa story : numéro dans le nom de la branche (`chore/0-2-…`) ou dans le titre de la PR (`(0.2)`) ?
-- Emplacement de `sprint-status.yaml` et des fichiers de story (`_bmad-output/implementation-artifacts/` d'après la configuration BMAD) ?
+- [ ] Testé sur le dépôt réel (cohérent) et sur une copie jetable présentant chaque écart et chaque tolérance.
 
 ### Story 0.7 : Verify-and-merge-pr skill
 
@@ -582,7 +592,7 @@ afin qu'aucun merge ne contourne la revue, le garde-fou ou le flux linéaire.
 
 **Étant donné** `--merge`
 **Quand** un verrou ne passe pas
-**Alors** rien n'est fusionné. Verrous : PR exploitable ; commentaire `llm-review` dont la première ligne (format d'AD-24) porte `sha=` égal au **SHA de tête**, ou à son parent dans le cas du commit de statut ci-dessous, `base=` égal à la base de la PR (branche entière) et `verdict=pass` ; `scripts/check-private.sh` sur l'arbre de tête ; CI verte ; cohérence du suivi de sprint (story 0.6).
+**Alors** rien n'est fusionné. Verrous : PR exploitable ; commentaire `llm-review` dont la première ligne (format d'AD-24) porte `sha=` égal au **SHA de tête**, ou à son parent dans le cas du commit de statut ci-dessous, `base=` égal à la base de la PR (branche entière) et `verdict=pass` ; `scripts/check-private.sh` sur l'arbre de tête ; CI verte ; cohérence du suivi de sprint (story 0.6 : `scripts/sprint-consistency.sh --merge <n.m> --rev <SHA de tête>`, numéro de story tiré du nom de la branche).
 
 **Étant donné** une PR dont tous les fichiers sont sous `_bmad-output/`, `sprint-status.yaml` compris (D-2)
 **Quand** le script évalue la revue
