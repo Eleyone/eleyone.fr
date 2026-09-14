@@ -48,7 +48,7 @@ Ces règles s'appliquent à **chaque** story.
 6. **Gabarits.** Toute story qui crée ou modifie un gabarit s'appuie sur `DESIGN.md` et `EXPERIENCE.md`, et passe la check-list manuelle d'AD-17 sur les gabarits touchés, **en mode clair et en mode sombre** : clavier et focus visible, reflow à 320 px et zoom à 200 %, contraste, cibles de 24 px, ordre de lecture, alternatives des images. Les tranches du walking skeleton (Epic 2) livrent une structure HTML sans mise en page (architecture, « Reporté ») ; la mise en page arrive à partir de l'Epic 5.
 7. **Contrôles.** Dès que `scripts/check.sh` existe (story 3.2), chaque story se termine avec `scripts/check.sh` au vert.
 8. **Libellés.** Les libellés d'interface viennent d'`EXPERIENCE.md` (« Voice and Tone »). Un libellé encore « à valider par Arnaud » est confirmé par lui avant commit.
-9. **Flux de travail.** Chaque story se développe sur une branche `feat/*` ou `fix/*` issue de `dev`, passe par `create-pull-request`, `llm-review` et `verify-and-merge-pr` (Epic 0), ou par la règle d'amorçage (règle 11) tant que ces skills n'existent pas, et se fusionne en squash vers `dev`. Aucun merge commit ; répétition sur un tag `vX.Y.Z-rc.N` posé sur `dev`, puis publication vers `main` en fast-forward par le skill `release`. Un correctif de production part de `main` sur une branche `hotfix/*` (skill `hotfix`). Les jetons et identifiants se définissent dans `.env`, jamais commité (story 0.1).
+9. **Flux de travail.** Chaque story se développe sur une branche issue de `dev` (`feat/*`, `fix/*`, `chore/*` ou `docs/*`), passe par `create-pull-request`, `llm-review` et `verify-and-merge-pr` (Epic 0), ou par la règle d'amorçage (règle 11) tant que ces skills n'existent pas, et se fusionne en squash vers `dev`. Aucun merge commit ; répétition sur un tag `vX.Y.Z-rc.N` posé sur `dev`, puis publication vers `main` en fast-forward par le skill `release`. Un correctif de production part de `main` sur une branche `hotfix/*` (skill `hotfix`). Les jetons et identifiants se définissent dans `.env`, jamais commité (story 0.1). Le statut de la story avance dans sa propre PR : `in-progress` au premier commit, `review` avant la revue LLM, `done` après une revue positive, juste avant la fusion (AD-24).
 10. **Opérations manuelles.** Les stories marquées « Opération manuelle (Arnaud) » touchent le serveur Gitea et son image Docker, le serveur de production, Nginx Proxy Manager, le DNS, les secrets, la photo originale ou les CV PDF. La procédure vient de l'architecture ; Arnaud l'exécute, le développeur prépare les fichiers versionnés et la liste de vérification.
 11. **Amorçage des verrous** (AD-24, décision D-1). Pour les premières PR, avant la CI et les skills de l'Epic 0 : le verrou CI vaut `absent`, admis seulement tant que `.gitea/workflows/checks.yaml` n'existe pas sur la branche de base, et il est remplacé par `scripts/check-private.sh history`, puis aussi `scripts/check.sh` dès la story 3.2, lancés en local sur le SHA de tête et notés dans la PR. La planification de sprint est faite avant la story 0.1, et la PR qui ajoute `sprint-status.yaml` est la seule fusionnée sans verrou de suivi. Avant `llm-review`, la revue se fait par `agy --mode plan`, lancé à la main dans un worktree temporaire hors du dépôt, avec le rapport collé en commentaire de PR au format d'AD-24 ; Arnaud fusionne à la main.
 
@@ -159,7 +159,7 @@ Pas de gabarit de démarrage ; le dépôt part de la structure initiale de l'arc
 - **AD-21** : `assets/cv/cv-{fr,en}.pdf`, liens conditionnels « ensemble ou rien », C21 en pre-commit, pre-receive (après `poppler-utils` sur Gitea) et `release`.
 - **AD-22** : canal de répétition `site-rehearsal` sur `127.0.0.1:18080`, accès par tunnel SSH, tags `-rc.N`, première répétition tôt sur `v0.1.0-rc.N`, jalon « répétition générale » avant `v1.0.0` ; tag `-rc` de même arbre exigé pour `v1.0.0` seulement.
 - **AD-23** : typographie française appliquée au build par `_partials/typo-fr.html`, pages FR seulement.
-- **AD-24** : flux de développement : `feat/*` et `fix/*` depuis `dev` en squash, `dev` → `main` en fast-forward, `hotfix/*` depuis `main` ; protections Gitea ; outillage en trois niveaux (neuf skills) ; revue par un LLM d'un autre fournisseur dans un worktree hors du dépôt, rapport `llm-review sha=… base=… model=… verdict=…` ; verrous de fusion, règle d'amorçage, exception documentaire sur tout `_bmad-output/` ; prérequis du poste (`jq`, `agy`, Docker dans WSL, Hugo et D2 locaux).
+- **AD-24** : flux de développement : `feat/*`, `fix/*`, `chore/*` et `docs/*` depuis `dev` en squash, `dev` → `main` en fast-forward, `hotfix/*` depuis `main` ; protections Gitea ; outillage en trois niveaux (neuf skills) ; revue par un LLM d'un autre fournisseur dans un worktree hors du dépôt, rapport `llm-review sha=… base=… model=… verdict=…` ; verrous de fusion, règle d'amorçage, exception documentaire sur tout `_bmad-output/` ; prérequis du poste (`jq`, `agy`, Docker dans WSL, Hugo et D2 locaux).
 - **Contrôles C1 à C24** : chacun est rattaché à une story.
 - **Procédures** : hook pre-receive (7 étapes, dont les PDF et l'image Gitea dérivée) ; premier déploiement (9 étapes, dont la répétition générale et la mesure).
 - **Walking skeleton** : WS-0 à WS-5, puis, hors squelette : parcours et formation, photo et JSON-LD, CV PDF, typographie, spike D2 puis pipeline, pages simples et légales, `release`, répétition générale, premier déploiement, agent de parité.
@@ -300,7 +300,7 @@ Arnaud et ses agents travaillent sur un flux de branches linéaire, sans merge c
 
 **Identifiants.** Tous les jetons et identifiants se définissent dans le fichier `.env` à la racine, jamais commité (déjà ignoré par git et refusé par le garde-fou). Un skill qui appelle l'API de Gitea charge `.env` sans jamais afficher de valeur ; sans variable, il échoue avec un message qui renvoie à la procédure de la story 0.1, et ne demande jamais le jeton.
 
-**Modèle de branches.** Branches de travail `feat/*` ou `fix/*` issues de `dev`, PR vers `dev` en **squash**. Publication de `dev` vers `main` en **fast-forward seulement** : `main` reste toujours un ancêtre de `dev`, et la publication échoue si `main` a divergé. Tags de répétition `vX.Y.Z-rc.N` sur `dev`, tags de mise en ligne `vX.Y.Z` sur `main`. Correctif en production par le skill `hotfix`, sur une branche `hotfix/*` issue de `main` (préfixe réservé à ces branches, D-14). Aucun merge commit, aucun cherry-pick. `dev` et `main` sont protégées. Sur le miroir GitHub, la branche par défaut est `main`, `dev` est la branche de travail.
+**Modèle de branches.** Branches de travail `feat/*`, `fix/*`, `chore/*` ou `docs/*` issues de `dev`, PR vers `dev` en **squash**. Publication de `dev` vers `main` en **fast-forward seulement** : `main` reste toujours un ancêtre de `dev`, et la publication échoue si `main` a divergé. Tags de répétition `vX.Y.Z-rc.N` sur `dev`, tags de mise en ligne `vX.Y.Z` sur `main`. Correctif en production par le skill `hotfix`, sur une branche `hotfix/*` issue de `main` (préfixe réservé à ces branches, D-14). Aucun merge commit, aucun cherry-pick. `dev` et `main` sont protégées ; le dépôt n'autorise que le squash et le fast-forward, et les scripts choisissent le style selon la base (story 0.2). Sur le miroir GitHub, la branche par défaut est `main`, `dev` est la branche de travail.
 
 **Règle de revue.** Revue LLM obligatoire avant tout merge. **Exception documentaire** : une PR dont tous les fichiers sont sous `_bmad-output/` (artefacts de cadrage et suivi de sprint, `sprint-status.yaml` compris) n'exige qu'une CI verte, ou son substitut d'amorçage (D-2). L'exception ne couvre jamais `content/**`, `AGENTS.md`, `CLAUDE.md`, `docs/procedures/**`, `.claude/**` ni `docs/format-cas.md` ; un seul fichier hors exception rétablit la revue pour toute la PR.
 
@@ -351,7 +351,7 @@ afin qu'aucun merge commit ni push direct n'entre sur les branches publiées.
 **Dépendances :** aucune
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, administration Gitea : création de `main` depuis `dev` ; protection de `dev` et `main` ; `main` sans aucun push ni force-push, pour aucun compte ; `dev` avec le compte d'Arnaud dans la liste de push (Gitea exige le droit de push pour autoriser un force-push) et seul dans la liste de force-push (exception tracée, utilisée par `hotfix` après son approbation explicite) ; PR vers `dev` en squash ; PR vers `main` en fast-forward seulement ; aucun style « merge commit » (D-10).
+**Opération manuelle (Arnaud) :** **oui**, administration Gitea : création de `main` depuis `dev` ; protection de `dev` et `main` ; `main` sans aucun push ni force-push, pour aucun compte ; `dev` avec le compte d'Arnaud dans la liste de push (Gitea exige le droit de push pour autoriser un force-push) et seul dans la liste de force-push (exception tracée, utilisée par `hotfix` après son approbation explicite) ; styles de fusion du dépôt limités au squash et au fast-forward seulement, squash par défaut, mise à jour des PR par rebase seulement ; aucun style « merge commit » (D-10). Gitea fixe les styles par dépôt et non par branche : le squash vers `dev` et le fast-forward vers `main` sont imposés par les scripts (AD-24).
 
 **Critères d'acceptation :**
 
@@ -363,12 +363,16 @@ afin qu'aucun merge commit ni push direct n'entre sur les branches publiées.
 **Quand** il tente un push direct sur `dev`
 **Alors** il est refusé ; pour le compte d'Arnaud, le push direct sur `dev` reste techniquement possible et n'est interdit que par la procédure (D-10).
 
-**Étant donné** une PR de test `feat/*` vers `dev`
-**Quand** elle est fusionnée
-**Alors** seul le squash est possible, et l'historique de `dev` reste linéaire.
+**Étant donné** une PR de test
+**Quand** elle est fusionnée par l'API avec le style `merge`, `rebase` ou `rebase-merge`
+**Alors** la fusion est refusée : seuls `squash` et `fast-forward-only` sont autorisés dans le dépôt.
 
-**Étant donné** une PR de test `dev` vers `main`
-**Quand** `main` est un ancêtre de `dev`, puis quand `main` a divergé (dépôt jetable)
+**Étant donné** la PR de cette story vers `dev`
+**Quand** elle est fusionnée
+**Alors** elle l'est en squash, et l'historique de `dev` reste linéaire.
+
+**Étant donné** une PR de test vers une base protégée comme `main` (branches temporaires)
+**Quand** la base est un ancêtre de la tête, puis quand la base a divergé
 **Alors** la fusion se fait en fast-forward, puis elle est impossible.
 
 **Étant donné** un compte autre que celui d'Arnaud, s'il en existe un
@@ -435,6 +439,7 @@ afin que chaque story arrive en revue de la même façon.
 **Alors** il échoue avant tout appel d'écriture.
 
 - [ ] Une PR vers `main` n'est pas créée par ce skill, et une branche `hotfix/*` est refusée : il renvoie vers `release` ou `hotfix`.
+- [ ] La base se déduit du préfixe : `feat/*`, `fix/*`, `chore/*` et `docs/*` → `dev` ; tout autre préfixe est refusé.
 - [ ] Sans `jq` dans le `PATH`, le script échoue avant tout appel, avec un message qui indique l'installation (`sudo apt install jq`).
 
 **Questions à poser avant de commencer :**
@@ -500,9 +505,14 @@ afin qu'une PR ne soit pas fusionnée sur une story mal suivie.
 **Quand** le script s'exécute
 **Alors** il le dit explicitement et sort en échec, sans conclure à la cohérence.
 
+**Étant donné** la PR d'une story, au moment de la fusion
+**Quand** le script évalue la tête de la PR
+**Alors** la story y est à `done` dans `sprint-status.yaml` ; `in-progress` ou `review` bloque (suivi de sprint dans la PR de la story, AD-24).
+
 - [ ] En v1, le script ne vérifie que les statuts, pas les branches (D-17) ; la vérification des branches pourra s'ajouter si un écart se produit.
 
 **Questions à poser avant de commencer :**
+- Comment le script relie-t-il une PR à sa story : numéro dans le nom de la branche (`chore/0-2-…`) ou dans le titre de la PR (`(0.2)`) ?
 - Emplacement de `sprint-status.yaml` et des fichiers de story (`_bmad-output/implementation-artifacts/` d'après la configuration BMAD) ?
 
 ### Story 0.7 : Verify-and-merge-pr skill
@@ -525,7 +535,7 @@ afin qu'aucun merge ne contourne la revue, le garde-fou ou le flux linéaire.
 
 **Étant donné** `--merge`
 **Quand** un verrou ne passe pas
-**Alors** rien n'est fusionné. Verrous : PR exploitable ; commentaire `llm-review` dont la première ligne (format d'AD-24) porte `sha=` égal au **SHA de tête**, `base=` égal à la base de la PR (branche entière) et `verdict=pass` ; `scripts/check-private.sh` sur l'arbre de tête ; CI verte ; cohérence du suivi de sprint (story 0.6).
+**Alors** rien n'est fusionné. Verrous : PR exploitable ; commentaire `llm-review` dont la première ligne (format d'AD-24) porte `sha=` égal au **SHA de tête**, ou à son parent dans le cas du commit de statut ci-dessous, `base=` égal à la base de la PR (branche entière) et `verdict=pass` ; `scripts/check-private.sh` sur l'arbre de tête ; CI verte ; cohérence du suivi de sprint (story 0.6).
 
 **Étant donné** une PR dont tous les fichiers sont sous `_bmad-output/`, `sprint-status.yaml` compris (D-2)
 **Quand** le script évalue la revue
@@ -542,6 +552,10 @@ afin qu'aucun merge ne contourne la revue, le garde-fou ou le flux linéaire.
 **Étant donné** la PR qui ajoute `sprint-status.yaml`
 **Quand** le verrou de suivi de sprint est évalué
 **Alors** c'est la seule PR admise sans ce verrou (règle d'amorçage).
+
+**Étant donné** un rapport `llm-review` à `verdict=pass` sur le parent du SHA de tête
+**Quand** le commit de tête ne modifie que `sprint-status.yaml`, et dans ce fichier que la ligne de la story (`review` → `done`), `last_updated` et, si la story clôt son epic, la ligne de l'epic (→ `done`)
+**Alors** le verrou de revue passe ; tout autre changement, ou plus d'un commit après le SHA relu, exige une nouvelle revue.
 
 - [ ] Aucune option `--force`.
 - [ ] Sans `jq` dans le `PATH`, le script échoue avant tout appel, avec un message qui indique l'installation (`sudo apt install jq`).
@@ -1352,7 +1366,7 @@ afin de comprendre comment le site a été cadré et construit.
 **Étant donné** les références du README
 **Quand** Sam les suit
 **Alors** elles mènent aux workflows, à `scripts/check.sh` et à la liste des contrôles, aux exécutions publiques, à l'architecture, aux artefacts de cadrage, à `docs/format-cas.md`, à `docs/measures/`, et aux branches `experiment/d2-bilingue`, `design/dossier-architecture` et `design/suisse`
-**Et** il documente le modèle de branches linéaire : `feat/*` et `fix/*` en squash vers `dev`, `dev` vers `main` en fast-forward, `hotfix/*` depuis `main` par le skill `hotfix`, aucun merge commit.
+**Et** il documente le modèle de branches linéaire : `feat/*`, `fix/*`, `chore/*` et `docs/*` en squash vers `dev`, `dev` vers `main` en fast-forward, `hotfix/*` depuis `main` par le skill `hotfix`, aucun merge commit.
 
 - [ ] Aucun fichier privé nommé (nommer `docs/private/` est permis), aucune donnée de NFR-9 *(relecture)*.
 
