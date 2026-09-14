@@ -38,7 +38,7 @@ development_status:
   epic-0: in-progress
   0-1-gitea-token-in-env-and-env-example: done
   0-2-main-branch-protections-and-merge-styles: done
-  0-3-check-private-skill: backlog
+  0-3-check-private-skill: done
   0-4-create-pull-request-skill: backlog
   0-5-llm-review-skill-with-cross-vendor-review: backlog
   0-6-sprint-consistency-skill: backlog

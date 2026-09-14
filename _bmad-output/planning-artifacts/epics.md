@@ -296,7 +296,7 @@ Les cas 03, 04 et 06 sont mis en ligne un par un sous leur poste ; le matériel 
 
 Arnaud et ses agents travaillent sur un flux de branches linéaire, sans merge commit : chaque PR est relue par un LLM d'un autre fournisseur, vérifiée par des verrous, et aucun contenu privé ne sort du dépôt, ni vers GitHub, ni vers le reviewer. Décidé par Arnaud le 13/09/2026.
 
-**Principe des skills.** Chaque skill tient en trois niveaux : `.claude/skills/<nom>/SKILL.md` (quelques lignes : quand l'utiliser, renvoi à la procédure), `docs/procedures/<nom>.md` (la procédure, lisible par tout agent ou humain), `scripts/<nom>.sh` (l'exécution, en shell simple). Documents publics, en français ; identifiants en anglais.
+**Principe des skills.** Chaque skill tient en trois niveaux : `.claude/skills/<nom>/SKILL.md` (quelques lignes : quand l'utiliser, renvoi à la procédure), `docs/procedures/<nom>.md` (la procédure, lisible par tout agent ou humain), `scripts/<nom>.sh` (l'exécution, en shell simple). Documents publics, en français ; identifiants en anglais. Chaque skill est disponible quel que soit l'outil : `.agents/skills/<nom>` et `.agent/skills/<nom>` sont des liens symboliques relatifs vers `.claude/skills/<nom>/` (story 0.3).
 
 **Identifiants.** Tous les jetons et identifiants se définissent dans le fichier `.env` à la racine, jamais commité (déjà ignoré par git et refusé par le garde-fou). Un skill qui appelle l'API de Gitea charge `.env` sans jamais afficher de valeur ; sans variable, il échoue avec un message qui renvoie à la procédure de la story 0.1, et ne demande jamais le jeton.
 
@@ -407,6 +407,10 @@ afin de ne jamais pousser, activer le miroir ou envoyer un diff à un reviewer s
 **Alors** elle décrit les modes `staged`, `history` et `pre-receive` de `scripts/check-private.sh` (script existant, non dupliqué), l'activation du hook local (`git config core.hooksPath .githooks`) et l'audit complet avec la liste des motifs, sans jamais en recopier le contenu.
 
 - [ ] Le skill n'ajoute pas de second script.
+- [ ] Une alerte n'affiche que l'emplacement (commit, fichier, ligne) et le numéro de ligne du motif, jamais le contenu ni le motif ; vérifié sur les trois modes avec des motifs factices, y compris des noms de fichier contenant deux-points, tabulation ou saut de ligne.
+- [ ] Chaque arbre vérifié est cherché en un seul passage avec tous les motifs ; le détail motif par motif n'a lieu qu'en cas de résultat, et une erreur de recherche fait échouer le garde-fou.
+- [ ] La procédure impose `PRIVATE_PATTERNS_FILE` pour auditer une copie sans `docs/private/`.
+- [ ] `.agents/skills/check-private` et `.agent/skills/check-private` sont des liens symboliques relatifs vers `.claude/skills/check-private/`.
 
 ### Story 0.4 : Create-pull-request skill
 
@@ -474,9 +478,17 @@ afin qu'aucun merge ne repose sur la seule relecture du modèle qui a écrit le 
 **Alors** elle est postée **en commentaire de la PR Gitea**, dont la première ligne est `llm-review sha=<SHA de tête> base=<base de la PR> model=<modèle> verdict=<pass|block>` (format d'AD-24), suivie du texte de la revue ; sans verdict lisible, le script échoue et ne publie rien
 **Et** aucun fichier de rapport n'est commité.
 
-**Étant donné** le premier usage du skill
+**Étant donné** la revue lancée dans le worktree
+**Quand** le reviewer a répondu
+**Alors** le script liste tout fichier que le reviewer a créé ou modifié dans le worktree (hors diff déposé par le script) et le signale dans sa sortie et dans le commentaire publié : `agy --mode plan` n'est pas en lecture seule (constat du 14/09/2026, story 0.3 : il a créé un fichier de rapport), et seule l'isolation du worktree protège le dépôt
+**Et** le worktree est supprimé ensuite, que des fichiers aient été créés ou non.
+
+**Étant donné** l'appel à `agy`
 **Quand** la revue s'exécute
-**Alors** on vérifie que `agy --mode plan` ne modifie aucun fichier du worktree, et l'identifiant exact de chaque modèle reviewer (sortie de `agy models`) est consigné dans `docs/procedures/llm-review.md`.
+**Alors** le worktree est passé explicitement par `--add-dir` et son chemin absolu figure dans la consigne : sans cela, le reviewer a répondu ne trouver aucun fichier (constat du 14/09/2026, story 0.2)
+**Et** un rapport qui déclare n'avoir trouvé ni le diff ni les fichiers n'est pas une revue : le script échoue et ne publie rien.
+
+- [ ] L'identifiant exact de chaque modèle reviewer (sortie de `agy models`) est consigné dans `docs/procedures/llm-review.md`.
 
 - [ ] Le script charge `.env` sans afficher de valeur ; sans variable Gitea, il échoue en renvoyant à la story 0.1.
 - [ ] Le worktree temporaire est supprimé en fin d'exécution, même en cas d'échec.
