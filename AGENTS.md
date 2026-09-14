@@ -4,7 +4,7 @@ Working directory for **eleyone.fr**, the professional portfolio site of Arnaud 
 
 **There is no application code yet.** The repository holds a BMAD v6.12 skill installation and the project's configuration. The site is meant to be produced through the BMAD planning chain (brief → PRD → architecture → stories), not improvised. Planning is done: the brief, PRD, architecture, UX documents and backlog are validated in `_bmad-output/planning-artifacts/`; nothing has been built yet.
 
-Git repository. The remote is a self-hosted server (the self-hosted forge), meant to be mirrored to a **public GitHub repository** that the site links to as proof of how it was framed and built. Treat everything committed as public. `/home/eleyone/Workspace/eleyone` is a symlink to `/mnt/wsl/HDD_1/Workspace/eleyone`; both working directories are the same files.
+Git repository. The remote is a private self-hosted Gitea forge (its address is never written in this repository), meant to be mirrored to a **public GitHub repository** that the site links to as proof of how it was framed and built. Treat everything committed as public. `/home/eleyone/Workspace/eleyone` is a symlink to `/mnt/wsl/HDD_1/Workspace/eleyone`; both working directories are the same files.
 
 ## Public / private boundary
 
