@@ -444,10 +444,15 @@ afin que chaque story arrive en revue de la même façon.
 
 - [ ] Une PR vers `main` n'est pas créée par ce skill, et une branche `hotfix/*` est refusée : il renvoie vers `release` ou `hotfix`.
 - [ ] La base se déduit du préfixe : `feat/*`, `fix/*`, `chore/*` et `docs/*` → `dev` ; tout autre préfixe est refusé.
+- [ ] Le nom canonique `Eleyone/eleyone.fr` est une constante du script, comparée au dépôt distant `origin`.
+- [ ] Le titre est obligatoire ; le corps est lu par défaut dans `.pr-body.md` à la racine (ignoré par git, réutilisé d'une PR à l'autre), ou dans `--body-file`.
+- [ ] Refus avant tout appel d'écriture : modifications en attente, branche non poussée au même commit, alerte de `check-private.sh history` sur la branche (fichier de motifs exigé), motif privé dans le titre ou le corps, jeton d'un autre compte que `GITEA_USER`, PR déjà ouverte pour la branche (dont le numéro est affiché).
+- [ ] La sortie donne le numéro de la PR, jamais son adresse ; le corps publié est relu et comparé octet par octet au fichier.
+- [ ] La PR de cette story est ouverte par le script lui-même, avec un corps contenant guillemets, retours à la ligne et accents : preuve de fonctionnement.
 - [ ] Sans `jq` dans le `PATH`, le script échoue avant tout appel, avec un message qui indique l'installation (`sudo apt install jq`).
 
 **Questions à poser avant de commencer :**
-- Où est déclaré le nom canonique du dépôt (constante du script, variable de `.env`) ?
+- Où est déclaré le nom canonique du dépôt (constante du script, variable de `.env`) ? Réponse d'Arnaud (14/09/2026) : constante du script.
 
 ### Story 0.5 : LLM-review skill with cross-vendor review
 

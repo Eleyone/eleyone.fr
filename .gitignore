@@ -9,3 +9,6 @@ docs/private/
 
 # Artefacts de téléchargement Windows
 *:Zone.Identifier
+
+# Corps de PR de scripts/create-pull-request.sh, réécrit à chaque PR
+.pr-body.md

@@ -508,7 +508,7 @@ flowchart TD
       **Limites** : un refus sur un fichier n'arrête pas toutes les commandes shell, et la documentation d'Antigravity ne dit pas si `deny` résiste à `--dangerously-skip-permissions`. La garantie pour la revue externe reste le worktree isolé de `llm-review`, qui ne contient ni `.env` ni `docs/private/`.
   - **Outillage en trois niveaux**, sous le même nom : `.claude/skills/<nom>/SKILL.md` (déclenchement et consignes pour l'agent) → `docs/procedures/<nom>.md` (étapes lisibles par une personne, qui font foi) → `scripts/<nom>.sh` (exécution). Un skill ne décrit aucune étape absente de sa procédure ; une procédure ne cite aucune commande absente de son script. **Disponibles quel que soit l'outil** (décidé le 14/09/2026, story 0.3) : le dossier du skill vit dans `.claude/skills/<nom>/`, et `.agents/skills/<nom>` et `.agent/skills/<nom>` sont des liens symboliques relatifs vers lui, lus par Antigravity, Gemini CLI et les outils qui suivent la convention `.agents/skills/`. Un seul exemplaire, donc aucune copie qui diverge ; l'installateur BMAD ne supprime pas les skills qu'il n'a pas posés. Limite : un clone sous Windows sans prise en charge des liens symboliques les réduit à de simples fichiers ; le poste de développement travaille sous WSL. Les neuf outils :
     - `llm-review` : revue par un LLM tiers (ci-dessous) ;
-    - `create-pull-request` : PR Gitea par l'API, base déduite de la branche (`feat/*`, `fix/*`, `chore/*` et `docs/*` → `dev`, tout autre préfixe refusé) ; une PR vers `main` n'est créée que par `release` (depuis `dev`) ou `hotfix` (depuis `hotfix/*`), et `create-pull-request` refuse une branche `hotfix/*` ;
+    - `create-pull-request` : PR Gitea par l'API, base déduite de la branche (`feat/*`, `fix/*`, `chore/*` et `docs/*` → `dev`, tout autre préfixe refusé) ; une PR vers `main` n'est créée que par `release` (depuis `dev`) ou `hotfix` (depuis `hotfix/*`), et `create-pull-request` refuse une branche `hotfix/*`. Avant tout appel d'écriture, il vérifie le dépôt distant (`Eleyone/eleyone.fr`, constante du script), un arbre sans modification en attente, une branche poussée au même commit, `check-private.sh history` sur la branche avec la liste des motifs, l'absence de motif privé dans le titre et le corps, le compte du jeton et l'absence de PR déjà ouverte pour la branche. Le corps est lu dans `.pr-body.md` (ignoré par git, réutilisé d'une PR à l'autre) ou dans `--body-file`, puis relu sur la forge et comparé au fichier ; la sortie donne le numéro de la PR, jamais son adresse (décidé le 14/09/2026, story 0.4) ;
     - `verify-and-merge-pr` : verrous de merge (ci-dessous) ;
     - `sprint-consistency` : cohérence entre `sprint-status.yaml` (dans `_bmad-output/implementation-artifacts/`) et l'en-tête `Status:` des fichiers de story. En v1, les statuts seulement, sans vérification des branches, qui pourra s'ajouter si un écart se produit (décidé le 13/09/2026, D-17) ;
     - `check-private` : garde-fou public/privé (AD-12 ; le script existe déjà) ;
@@ -934,7 +934,11 @@ Décisions de la story 0.2, prises par Arnaud le 14/09/2026 :
 Décisions de la story 0.3, prises par Arnaud le 14/09/2026 :
 
 59. Alertes de `check-private.sh` sans contenu : emplacement et numéro de ligne du motif seulement ; `PRIVATE_PATTERNS_FILE` obligatoire pour auditer une copie sans `docs/private/` (AD-12).
-60. Skills du projet disponibles quel que soit l'outil : dossier dans `.claude/skills/`, liens symboliques relatifs dans `.agents/skills/` et `.agent/skills/` (AD-24).
+60. Skills du projet disponibles quel que soit l'outil : dossier dans `.claude/skills/`, liens symboliques relatifs dans `.agents/skills/` et `.agent/skills/` (AD-24) ; découverte par Antigravity constatée par Arnaud le 14/09/2026.
+
+Décisions de la story 0.4, prises par Arnaud le 14/09/2026 :
+
+61. `create-pull-request` : nom canonique du dépôt en constante du script ; titre obligatoire, corps dans `.pr-body.md` réutilisé d'une PR à l'autre ou dans `--body-file` ; refus avant écriture si l'arbre a des modifications, si la branche n'est pas poussée au même commit, si le garde-fou refuse la branche, si le titre ou le corps contient un motif privé, ou si une PR est déjà ouverte ; numéro de PR affiché, jamais l'adresse ; la PR de la story 0.4 est ouverte par le script, comme preuve (AD-24).
 
 ## Recommandations à valider par Arnaud
 
