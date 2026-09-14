@@ -40,7 +40,7 @@ development_status:
   0-2-main-branch-protections-and-merge-styles: done
   0-3-check-private-skill: done
   0-4-create-pull-request-skill: done
-  0-5-llm-review-skill-with-cross-vendor-review: backlog
+  0-5-llm-review-skill-with-cross-vendor-review: done
   0-6-sprint-consistency-skill: backlog
   0-7-verify-and-merge-pr-skill: backlog
   epic-0-retrospective: optional

@@ -48,7 +48,7 @@ Ces règles s'appliquent à **chaque** story.
 6. **Gabarits.** Toute story qui crée ou modifie un gabarit s'appuie sur `DESIGN.md` et `EXPERIENCE.md`, et passe la check-list manuelle d'AD-17 sur les gabarits touchés, **en mode clair et en mode sombre** : clavier et focus visible, reflow à 320 px et zoom à 200 %, contraste, cibles de 24 px, ordre de lecture, alternatives des images. Les tranches du walking skeleton (Epic 2) livrent une structure HTML sans mise en page (architecture, « Reporté ») ; la mise en page arrive à partir de l'Epic 5.
 7. **Contrôles.** Dès que `scripts/check.sh` existe (story 3.2), chaque story se termine avec `scripts/check.sh` au vert.
 8. **Libellés.** Les libellés d'interface viennent d'`EXPERIENCE.md` (« Voice and Tone »). Un libellé encore « à valider par Arnaud » est confirmé par lui avant commit.
-9. **Flux de travail.** Chaque story se développe sur une branche issue de `dev` (`feat/*`, `fix/*`, `chore/*` ou `docs/*`), passe par `create-pull-request`, `llm-review` et `verify-and-merge-pr` (Epic 0), ou par la règle d'amorçage (règle 11) tant que ces skills n'existent pas, et se fusionne en squash vers `dev`. Aucun merge commit ; répétition sur un tag `vX.Y.Z-rc.N` posé sur `dev`, puis publication vers `main` en fast-forward par le skill `release`. Un correctif de production part de `main` sur une branche `hotfix/*` (skill `hotfix`). Les jetons et identifiants se définissent dans `.env`, jamais commité (story 0.1). Le statut de la story avance dans sa propre PR : `in-progress` au premier commit, `review` avant la revue LLM, `done` après une revue positive, juste avant la fusion (AD-24).
+9. **Flux de travail.** Chaque story se développe sur une branche issue de `dev` (`feat/*`, `fix/*`, `chore/*` ou `docs/*`), passe par `create-pull-request`, `llm-review` et `verify-and-merge-pr` (Epic 0), ou par la règle d'amorçage (règle 11) tant que ces skills n'existent pas, et se fusionne en squash vers `dev`. Aucun merge commit ; répétition sur un tag `vX.Y.Z-rc.N` posé sur `dev`, puis publication vers `main` en fast-forward par le skill `release`. Un correctif de production part de `main` sur une branche `hotfix/*` (skill `hotfix`). Les jetons et identifiants se définissent dans `.env`, jamais commité (story 0.1). Le statut de la story avance dans sa propre PR : `in-progress` au premier commit, `review` avant la revue LLM, `done` après une revue positive, juste avant la fusion (AD-24). Chaque story a son fichier de story, et commence par une revue de spec (story 0.5).
 10. **Opérations manuelles.** Les stories marquées « Opération manuelle (Arnaud) » touchent le serveur Gitea et son image Docker, le serveur de production, Nginx Proxy Manager, le DNS, les secrets, la photo originale ou les CV PDF. La procédure vient de l'architecture ; Arnaud l'exécute, le développeur prépare les fichiers versionnés et la liste de vérification.
 11. **Amorçage des verrous** (AD-24, décision D-1). Pour les premières PR, avant la CI et les skills de l'Epic 0 : le verrou CI vaut `absent`, admis seulement tant que `.gitea/workflows/checks.yaml` n'existe pas sur la branche de base, et il est remplacé par `scripts/check-private.sh history`, puis aussi `scripts/check.sh` dès la story 3.2, lancés en local sur le SHA de tête et notés dans la PR. La planification de sprint est faite avant la story 0.1, et la PR qui ajoute `sprint-status.yaml` est la seule fusionnée sans verrou de suivi. Avant `llm-review`, la revue se fait par `agy --mode plan`, lancé à la main dans un worktree temporaire hors du dépôt, avec le rapport collé en commentaire de PR au format d'AD-24 ; Arnaud fusionne à la main.
 
@@ -457,8 +457,8 @@ afin que chaque story arrive en revue de la même façon.
 ### Story 0.5 : LLM-review skill with cross-vendor review
 
 En tant qu'Arnaud, mainteneur,
-je veux qu'un LLM d'un autre fournisseur que l'auteur relise chaque diff et publie un verdict explicite sur la PR,
-afin qu'aucun merge ne repose sur la seule relecture du modèle qui a écrit le code.
+je veux qu'un LLM d'un autre fournisseur que l'auteur relise la spec de chaque story avant son implémentation, puis le diff de chaque PR avec un verdict explicite publié sur la PR,
+afin qu'aucune spec ni aucun merge ne repose sur la seule relecture du modèle qui a écrit le code.
 
 **Couvre :** NFR-7, NFR-9, NFR-11 · AD-12, AD-24
 **Dépendances :** 0.3, 0.4
@@ -466,39 +466,69 @@ afin qu'aucun merge ne repose sur la seule relecture du modèle qui a écrit le 
 **Prérequis de contenu :** —
 **Opération manuelle (Arnaud) :** **oui**, `agy` authentifié sur le poste : `agy models` répond (prérequis du poste d'AD-24).
 
+**Décisions (Arnaud, 14/09/2026, après la revue de spec) :**
+- deux usages du même script : `scripts/llm-review.sh --story <n.m>` (revue de spec) et `scripts/llm-review.sh <numéro de PR>` (revue du code) ;
+- relecteurs en constantes du script, sans option pour en changer : auteur Claude (défaut) → `gemini-3.1-pro-high` ; `AUTHOR_LLM=gemini` → `claude-opus-4-6-thinking` ;
+- c'est le relecteur qui applique le skill de revue BMAD `bmad-review`, lu comme fichier dans la copie isolée ; l'auteur ne le lance jamais à sa place ; `bmad-code-review`, qui attend des réponses, est écarté ;
+- angles : revue de spec, adverse, structure et prose ; revue du code, edge-case-hunter et verification-gap, plus la couche propre au projet (critères d'acceptation, données privées et secrets, cohérence entre skill, procédure et script, `AGENTS.md` et AD) ; une PR sans code garde la couche propre au projet et prend les angles structure et prose ;
+- consignes versionnées : `scripts/llm-review-prompt.md` (code) et `scripts/llm-review-spec-prompt.md` (spec) ; `--context <fichier>` y ajoute des précisions ;
+- classement : est bloquant ce qui casse un critère d'acceptation, fait fuiter une donnée privée ou un secret, ou laisse passer une erreur en silence ; le reste est non bloquant ;
+- lecture de `.env` et accès à l'API Gitea mis en commun dans `scripts/lib/gitea.sh`, utilisé aussi par `create-pull-request.sh` ; `.env` n'est lu que juste avant le premier appel à l'API, et jamais par la revue de spec ;
+- trace de chaque revue dans le fichier de story `_bmad-output/implementation-artifacts/<clé>.md` ; constats reportés dans `deferred-work.md`.
+
 **Critères d'acceptation :**
 
-**Étant donné** `scripts/llm-review.sh <PR>`
-**Quand** l'auteur est Claude (défaut), puis `AUTHOR_LLM=gemini`
-**Alors** la revue est envoyée par `agy --mode plan` au reviewer `gemini-3.1-pro-high`, puis à un modèle Claude (sens inverse, gardé et écrit dans AD-24, D-11).
+**Étant donné** `scripts/llm-review.sh`
+**Quand** il démarre
+**Alors** il coupe la trace du shell avant toute lecture de `.env`, échoue sans `jq` en indiquant `sudo apt install jq` et refuse une valeur d'`AUTHOR_LLM` autre que `claude` ou `gemini`
+**Et** il refuse tout appel qui ne donne pas exactement un des deux usages : `--story <n.m>` ou un numéro de PR.
 
-**Étant donné** le périmètre relu
-**Quand** la revue se prépare
-**Alors** elle tourne dans un worktree git temporaire **hors du dépôt**, qui ne contient que les fichiers suivis : ni `.env` ni `docs/private/`, présents sur disque mais ignorés par git, n'y sont jamais
-**Et** `scripts/check-private.sh` passe sur ce périmètre **avant** l'envoi ; en cas d'échec, rien n'est envoyé
-**Et** le diff relu est `git diff <base>...<SHA>` : la branche entière, au SHA de tête (AD-24).
+**Étant donné** un numéro de PR
+**Quand** le script prépare la revue du code
+**Alors** il charge `.env` par `scripts/lib/gitea.sh` sans afficher de valeur (renvoi à la procédure de la story 0.1 si une variable manque), lit par l'API la base, la branche et le SHA de tête, refuse une PR fermée, récupère ce SHA depuis la forge et crée la copie relue à ce SHA, jamais depuis l'arbre local
+**Et** le diff relu est `git diff <base>...<SHA>` : la branche entière.
 
-**Étant donné** la réponse du reviewer
-**Quand** le script la publie
-**Alors** elle est postée **en commentaire de la PR Gitea**, dont la première ligne est `llm-review sha=<SHA de tête> base=<base de la PR> model=<modèle> verdict=<pass|block>` (format d'AD-24), suivie du texte de la revue ; sans verdict lisible, le script échoue et ne publie rien
-**Et** aucun fichier de rapport n'est commité.
+**Étant donné** `--story <n.m>`
+**Quand** le script prépare la revue de spec
+**Alors** il extrait le texte de la story d'`epics.md` à la tête de `dev` lue sur la forge ; une story introuvable le fait échouer.
 
-**Étant donné** la revue lancée dans le worktree
-**Quand** le reviewer a répondu
-**Alors** le script liste tout fichier que le reviewer a créé ou modifié dans le worktree (hors diff déposé par le script) et le signale dans sa sortie et dans le commentaire publié : `agy --mode plan` n'est pas en lecture seule (constat du 14/09/2026, story 0.3 : il a créé un fichier de rapport), et seule l'isolation du worktree protège le dépôt
-**Et** le worktree est supprimé ensuite, que des fichiers aient été créés ou non.
+**Étant donné** le contenu à relire
+**Quand** le script crée la copie isolée
+**Alors** c'est un worktree git temporaire **hors du dépôt**, qui ne contient que les fichiers suivis : ni `.env`, ni `docs/private/`, ni `.pr-body.md`
+**Et** `scripts/check-private.sh history` passe sur la plage relue avec la liste des motifs **avant** tout envoi ; sans fichier de motifs ou en cas d'alerte, rien n'est envoyé
+**Et** le script écrit en tête du fichier relu un jeton de lecture aléatoire.
 
-**Étant donné** l'appel à `agy`
+**Étant donné** l'appel au relecteur
 **Quand** la revue s'exécute
-**Alors** le worktree est passé explicitement par `--add-dir` et son chemin absolu figure dans la consigne : sans cela, le reviewer a répondu ne trouver aucun fichier (constat du 14/09/2026, story 0.2)
-**Et** un rapport qui déclare n'avoir trouvé ni le diff ni les fichiers n'est pas une revue : le script échoue et ne publie rien.
+**Alors** le script lance `agy --mode plan` avec le modèle en constante, la consigne versionnée complétée du chemin absolu de la copie, et la copie passée par `--add-dir` (sans cela, le relecteur n'a trouvé aucun fichier : constat de la story 0.2)
+**Et** la consigne demande d'appliquer `bmad-review` avec les angles de l'usage, de recopier le jeton, de classer chaque constat, et de terminer par la ligne `VERDICT:` (revue du code) ou par une section « À trancher » (revue de spec)
+**Et** un délai dépassé ou un échec d'`agy` fait échouer le script sans rien publier.
 
-- [ ] L'identifiant exact de chaque modèle reviewer (sortie de `agy models`) est consigné dans `docs/procedures/llm-review.md`.
+**Étant donné** la réponse du relecteur
+**Quand** le script la contrôle
+**Alors** le rapport doit citer le jeton de lecture : sinon ce n'est pas une revue, et le script échoue sans rien publier
+**Et** en revue du code, la dernière ligne non vide du rapport doit être `VERDICT: NON BLOQUANT — …` (`pass`) ou `VERDICT: BLOQUANT — …` (`block`) ; toute autre forme fait échouer le script sans rien publier, et un verdict `block` se publie normalement
+**Et** le script ne retient le rapport qu'à partir de la ligne du jeton, et écarte ce qu'`agy` écrit avant
+**Et** il liste, dans sa sortie et dans ce qu'il écrit, tout fichier que le relecteur a créé ou modifié dans la copie : `agy --mode plan` n'est pas en lecture seule (constat de la story 0.3).
 
-- [ ] Le script charge `.env` sans afficher de valeur ; sans variable Gitea, il échoue en renvoyant à la story 0.1.
-- [ ] Le worktree temporaire est supprimé en fin d'exécution, même en cas d'échec.
-- [ ] Les refus de lecture de `.env` déjà configurés pour les agents (`.claude/settings.json` versionné, réglage d'Antigravity sur le poste, `.antigravityignore`), faits hors backlog, ne sont qu'une défense en profondeur : ils ne remplacent pas le critère du worktree.
-- [ ] Si le script utilise `jq` (par exemple pour le corps du commentaire), il échoue sans `jq` avec un message qui indique l'installation.
+**Étant donné** une revue du code contrôlée
+**Quand** le script la publie
+**Alors** il poste en commentaire de la PR le rapport, précédé d'une première ligne `llm-review sha=<SHA de tête> base=<base> model=<modèle> verdict=<pass|block>` (format d'AD-24) ; une réponse autre que HTTP 201 le fait échouer
+**Et** il ajoute à la fin de la section « Revue du code » du fichier de story le SHA, le modèle, le verdict et les constats, sans modifier ni supprimer de ligne existante ; l'auteur ajoute ensuite, sous le rapport, sa décision pour chaque constat ; le script ne commite rien.
+
+**Étant donné** une revue de spec contrôlée
+**Quand** le script termine
+**Alors** il affiche le rapport et l'ajoute à la section « Revue de spec » du fichier de story, qu'il crée s'il n'existe pas, avec l'en-tête `Status:` du suivi de sprint ; rien n'est publié sur la forge
+**Et** l'auteur trie chaque constat (corrigé dans la story, question tranchée par Arnaud, écarté avec sa raison) avant de reformuler la story et de poser ses questions.
+
+**Étant donné** la fin du script, en succès, en échec ou sur interruption
+**Quand** il se termine
+**Alors** la copie isolée et les fichiers temporaires sont supprimés.
+
+- [ ] L'identifiant exact de chaque modèle relecteur (sortie de `agy models`) est consigné dans `docs/procedures/llm-review.md`.
+- [ ] Les refus de lecture de `.env` configurés pour les agents (`.claude/settings.json`, réglage d'Antigravity sur le poste, `.antigravityignore`) ne sont qu'une défense en profondeur : ils ne remplacent pas la copie isolée.
+- [ ] Preuve : la PR de cette story est relue par le script lui-même, puis une seconde fois avec `AUTHOR_LLM=gemini` ; la revue de spec de la story 0.6 est la première faite par `--story`.
+- [ ] Les stories 0.1 à 0.4 ont un fichier de story d'historique, où leur revue de spec est notée « non faite, l'outil n'existait pas encore ».
 
 ### Story 0.6 : Sprint-consistency skill
 
@@ -516,7 +546,7 @@ afin qu'une PR ne soit pas fusionnée sur une story mal suivie.
 
 **Étant donné** `sprint-status.yaml` et les fichiers de story
 **Quand** `scripts/sprint-consistency.sh` s'exécute
-**Alors** il signale toute story dont l'en-tête `Status:` diffère de son état dans `sprint-status.yaml` et toute story présente d'un seul côté, et sort avec un code non nul s'il y a un écart.
+**Alors** il signale toute story dont l'en-tête `Status:` diffère de son état dans `sprint-status.yaml` et toute story présente d'un seul côté (une story hors `backlog` sans fichier de story, ou un fichier de story sans entrée dans le suivi), et sort avec un code non nul s'il y a un écart.
 
 **Étant donné** l'absence de `sprint-status.yaml`
 **Quand** le script s'exécute
@@ -571,7 +601,7 @@ afin qu'aucun merge ne contourne la revue, le garde-fou ou le flux linéaire.
 **Alors** c'est la seule PR admise sans ce verrou (règle d'amorçage).
 
 **Étant donné** un rapport `llm-review` à `verdict=pass` sur le parent du SHA de tête
-**Quand** le commit de tête ne modifie que `sprint-status.yaml`, et dans ce fichier que la ligne de la story (`review` → `done`), `last_updated` et, si la story clôt son epic, la ligne de l'epic (→ `done`)
+**Quand** le commit de tête ne modifie que `sprint-status.yaml` (la ligne de la story `review` → `done`, `last_updated` et, si la story clôt son epic, la ligne de l'epic → `done`) et l'en-tête `Status:` du fichier de story (`review` → `done`), et n'ajoute par ailleurs que des lignes au fichier de story et à `deferred-work.md`
 **Alors** le verrou de revue passe ; tout autre changement, ou plus d'un commit après le SHA relu, exige une nouvelle revue.
 
 - [ ] Aucune option `--force`.
