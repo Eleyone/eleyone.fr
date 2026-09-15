@@ -557,8 +557,8 @@ Vérifié dans le code de Gitea (branche `main`, documentation 1.27.3) :
 
 Procédure recommandée, qui laisse `DISABLE_GIT_HOOKS=true` :
 
-1. Sur le serveur Gitea, hors de tout dépôt, avec l'utilisateur système de Gitea : copier `scripts/check-private.sh` et la liste des motifs (droits `0600`) dans un dossier dédié du répertoire `custom/` de Gitea.
-2. Dans le dépôt nu du site (`<repositories>/<owner>/<repo>.git/hooks/pre-receive.d/`), créer `check-private` (droits `0755`). Il échoue si la liste des motifs est absente, puis lance `PRIVATE_PATTERNS_FILE=<liste> <script> pre-receive`.
+1. Sur le serveur Gitea, hors de tout dépôt, avec l'utilisateur système de Gitea : copier `scripts/check-private.sh` et la liste des motifs dans `$GITEA_CUSTOM/eleyone-check-private/`, propriétaire `git`, droits `0600` (décidé le 15/09/2026, story 1.2 ; détail dans `docs/procedures/gitea-pre-receive-hook.md`).
+2. Dans le dépôt nu du site (`<repositories>/<owner>/<repo>.git/hooks/pre-receive.d/`), créer `check-private` (propriétaire `git`, droits `0755`), copie de `scripts/gitea/pre-receive-check-private` : il refuse le push si `GITEA_CUSTOM`, le script du garde-fou ou la liste des motifs manque, puis lance `PRIVATE_PATTERNS_FILE=<liste> bash <script> pre-receive`.
 3. Tester en poussant sur une branche jetable un commit qui ajoute un fichier sous `docs/private/`, puis un commit qui contient un motif factice ajouté temporairement à la liste : les deux pushs doivent être refusés.
 4. Tester qu'un merge de PR fait depuis l'interface passe aussi par le hook (à constater).
 5. À chaque modification de `scripts/check-private.sh`, recopier le script sur le serveur ; à chaque mise à jour de Gitea ou régénération des hooks, relancer le test 3.

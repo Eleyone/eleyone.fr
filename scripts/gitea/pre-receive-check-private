@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Hook pre-receive du dépôt du site sur Gitea : lance le garde-fou public/privé avec la liste des motifs.
+#
+# À poser, droits 0755 et propriétaire git, dans <dépôt nu>/hooks/pre-receive.d/check-private.
+# Le hook pre-receive généré par Gitea lance chaque script de pre-receive.d avec l'entrée standard reçue.
+# Le script du garde-fou et la liste des motifs vivent sous $GITEA_CUSTOM/eleyone-check-private/, dans le
+# volume de données de Gitea : aucun chemin du serveur n'est écrit ici. Tout doute refuse le push.
+# Procédure : docs/procedures/gitea-pre-receive-hook.md
+set -euo pipefail
+
+refuse() { printf 'check-private: %s : push refusé.\n' "$1" >&2; exit 1; }
+
+[[ -n ${GITEA_CUSTOM:-} ]] || refuse "GITEA_CUSTOM non définie, dossier du garde-fou introuvable"
+dir="$GITEA_CUSTOM/eleyone-check-private"
+script="$dir/check-private.sh"
+list="$dir/forbidden-patterns.txt"
+[[ -f $script && -r $script ]] || refuse "script du garde-fou absent ou illisible"
+[[ -f $list && -r $list ]] || refuse "liste des motifs absente ou illisible"
+
+PRIVATE_PATTERNS_FILE=$list exec bash "$script" pre-receive

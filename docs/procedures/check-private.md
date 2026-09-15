@@ -61,7 +61,7 @@ scripts/check-private.sh pre-receive < lignes-reçues
 
 Lit sur l'entrée standard les lignes `ancien nouveau référence` que git passe à un hook pre-receive, et vérifie chaque nouveau commit qui n'est encore accessible depuis aucune référence du serveur. Une suppression de branche est ignorée.
 
-Ce mode ne se replie jamais sur les chemins : il refuse tout push, avec un message qui nomme la cause, si `PRIVATE_PATTERNS_FILE` n'est pas définie (un dépôt nu n'a pas de chemin par défaut pour la liste), si la liste est absente, ou si elle ne contient aucun motif (seulement des commentaires ou des lignes blanches). Il lit les commits reçus sans arbre de travail. Les tests de `scripts/tests/test-check-private.sh` le vérifient sur un dépôt nu muni d'un vrai hook (story 1.1). L'installation du hook sur la forge est la story 1.2 : le hook définit `PRIVATE_PATTERNS_FILE` avant d'appeler le script (procédure « hook pre-receive » d'AD-24, étape 2).
+Ce mode ne se replie jamais sur les chemins : il refuse tout push, avec un message qui nomme la cause, si `PRIVATE_PATTERNS_FILE` n'est pas définie (un dépôt nu n'a pas de chemin par défaut pour la liste), si la liste est absente, ou si elle ne contient aucun motif (seulement des commentaires ou des lignes blanches). Il lit les commits reçus sans arbre de travail. Les tests de `scripts/tests/test-check-private.sh` le vérifient sur un dépôt nu muni d'un vrai hook (story 1.1). Sur la forge, le hook `scripts/gitea/pre-receive-check-private` définit `PRIVATE_PATTERNS_FILE` avant d'appeler le script ; son installation et ses essais sont décrits dans `gitea-pre-receive-hook.md` (story 1.2).
 
 ## Copie isolée
 

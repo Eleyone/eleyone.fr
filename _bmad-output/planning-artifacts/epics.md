@@ -806,36 +806,47 @@ afin que le garde-fou soit non contournable (UJ-4).
 **Dépendances :** 1.1
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, administration du serveur Gitea (Gitea tourne en Docker) : script et liste des motifs (droits `0600`) dans le volume de données de Gitea, fichier `hooks/pre-receive.d/check-private` (droits `0755`) dans le dépôt nu, tests. Le développeur prépare le contenu du fichier `check-private` et la liste de vérification. Aucun chemin serveur ni nom d'hôte n'est commité.
+**Opération manuelle (Arnaud) :** **oui**, administration du serveur Gitea (image Docker normale, Gitea 1.27.3) : copie du script du garde-fou et de la liste des motifs dans le volume de données de Gitea, pose du hook dans le dépôt nu du site, ajout et retrait du motif factice, rendu de la liste inaccessible, recréation du conteneur, fusion de test depuis l'interface. Le développeur prépare le script du hook, ses tests et la procédure, et fait les pushs de test. Aucun chemin de la machine hôte ni nom d'hôte n'est commité.
+
+**Décisions (Arnaud, 15/09/2026, après la revue de spec) :**
+- le script du hook est versionné dans `scripts/gitea/pre-receive-check-private` et testé dans `scripts/tests/` ; il trouve le script du garde-fou et la liste des motifs sous `$GITEA_CUSTOM/eleyone-check-private/`, variable définie par les images officielles de Gitea, donc sans chemin du serveur dans le dépôt ; la procédure d'installation est `docs/procedures/gitea-pre-receive-hook.md` ;
+- les pushs de test sont faits par l'agent, depuis un clone jetable hors du dépôt de travail, avec le hook local désactivé dans ce seul clone, du contenu factice et des branches jetables supprimées ensuite ; Arnaud fait les opérations sur le serveur et la fusion depuis l'interface ;
+- la fusion depuis l'interface est prouvée par un motif factice présent dans une branche déjà poussée, ajouté ensuite à la liste : la fusion doit être refusée ;
+- les résultats sont notés dans le fichier de story (date, version de Gitea, variante de l'image, refusé ou admis), sans nom d'hôte ni chemin de la machine hôte.
 
 **Critères d'acceptation :**
 
-**Étant donné** `DISABLE_GIT_HOOKS` laissé à `true`
-**Quand** le hook est installé selon les étapes 1 et 2 de la procédure
-**Alors** l'interface web ne permet toujours pas d'éditer les hooks
-**Et** `check-private` échoue si la liste est absente, puis lance le script en mode `pre-receive`.
+**Étant donné** `scripts/gitea/pre-receive-check-private`, posé dans `hooks/pre-receive.d/check-private` d'un dépôt nu
+**Quand** un push arrive
+**Alors** il lance `check-private.sh pre-receive` avec `PRIVATE_PATTERNS_FILE`, sans reprendre sa logique ; il refuse le push, avec un message qui nomme la cause, si `GITEA_CUSTOM` n'est pas définie, si le script du garde-fou ou la liste des motifs est absent ou illisible ; les cas de `scripts/tests/` le vérifient sur un dépôt nu jetable.
+
+**Étant donné** `DISABLE_GIT_HOOKS` laissé à `true` et le hook installé selon la procédure, script et liste appartenant à l'utilisateur `git` du conteneur, liste en `0600`
+**Quand** Arnaud ouvre l'édition des hooks du dépôt dans l'interface web
+**Alors** elle n'est toujours pas proposée, et le hook posé à la main s'exécute malgré ce réglage (constaté par les pushs suivants).
 
 **Étant donné** le hook installé
-**Quand** Arnaud pousse sur une branche jetable un commit qui ajoute un fichier sous `docs/private/`, puis un commit qui contient un motif factice ajouté temporairement à la liste
-**Alors** les deux pushs sont refusés
+**Quand** l'agent pousse sur des branches jetables un commit qui ajoute un fichier sous `docs/private/`, sous `docs/context/`, un `.env`, un PDF sous `assets/cv/`, puis un commit qui contient un motif factice ajouté temporairement à la liste par Arnaud
+**Alors** chaque push est refusé, avec le commit et le chemin, sans afficher le motif
+**Et** un push sans contenu privé est admis
 **Et** le motif factice est retiré ensuite.
 
-**Étant donné** la liste temporairement inaccessible
-**Quand** Arnaud pousse un commit sans contenu privé
-**Alors** le push est refusé (fermé en cas de doute).
+**Étant donné** la liste rendue temporairement absente ou illisible par Arnaud
+**Quand** l'agent pousse un commit sans contenu privé
+**Alors** le push est refusé, par sécurité ; une fois la liste rétablie, le même push est admis.
 
-**Étant donné** une PR de test sans contenu privé
-**Quand** elle est fusionnée depuis l'interface
-**Alors** le passage par le hook est constaté et noté ; sinon, la story s'arrête et Arnaud décide.
+**Étant donné** une branche de test déjà poussée, qui contient un motif factice, et une PR ouverte depuis cette branche
+**Quand** Arnaud ajoute ce motif à la liste puis fusionne la PR depuis l'interface
+**Alors** la fusion est refusée, ce qui prouve le passage par le hook ; sinon, la story s'arrête et Arnaud décide
+**Et** le motif est retiré, la PR fermée et la branche supprimée.
 
-- [ ] Un push sans contenu privé est accepté.
-- [ ] Le dépôt privé imbriqué n'a pas ce hook et n'est pas mirroré.
-- [ ] Le script et la liste sont visibles depuis le conteneur Gitea, et survivent à sa recréation.
-- [ ] Le script fonctionne avec les outils de l'image de Gitea (dont un `grep` qui peut ne pas être celui de GNU) : les tests de l'étape 3 le constatent dans cet environnement (ajouté après la revue de spec de la story 1.1).
+**Étant donné** le conteneur Gitea recréé
+**Quand** l'agent pousse un commit qui ajoute un fichier sous `docs/private/`
+**Alors** le push est encore refusé : script, liste et hook sont dans le volume de données de Gitea.
 
-**Questions à poser avant de commencer :**
-- Le contenu du fichier `check-private` est-il versionné dans le dépôt, et où ? La structure initiale ne lui donne pas d'emplacement.
-- Où consigner le résultat des tests sans information sur le serveur ?
+- [ ] Le hook n'est posé que dans le dépôt nu du site : le dépôt privé n'en a pas et n'est pas mirroré.
+- [ ] Le garde-fou fonctionne avec les outils de l'image de Gitea, dont le `grep` de BusyBox : les tests de `scripts/tests/test-check-private.sh` réussissent dans l'image `gitea/gitea:1.27.3`, et les pushs de test le constatent sur la forge.
+- [ ] Les résultats des essais sur la forge sont notés dans le fichier de story, sans information sur le serveur.
+- [ ] Procédure `check-private.md`, AD-12 et procédure « hook pre-receive » d'AD-24 alignées avec `gitea-pre-receive-hook.md`.
 
 ### Story 1.3 : Full history audit with pattern list
 
