@@ -35,7 +35,7 @@ project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 development_status:
-  epic-0: done
+  epic-0: in-progress
   0-1-gitea-token-in-env-and-env-example: done
   0-2-main-branch-protections-and-merge-styles: done
   0-3-check-private-skill: done
@@ -43,7 +43,8 @@ development_status:
   0-5-llm-review-skill-with-cross-vendor-review: done
   0-6-sprint-consistency-skill: done
   0-7-verify-and-merge-pr-skill: done
-  epic-0-retrospective: optional
+  0-8-dev-tooling-hardening: backlog
+  epic-0-retrospective: done
 
   epic-1: backlog
   1-1-pre-receive-guard-fails-without-pattern-list: backlog
@@ -177,6 +178,7 @@ work_order:
   - 0-5-llm-review-skill-with-cross-vendor-review
   - 0-6-sprint-consistency-skill
   - 0-7-verify-and-merge-pr-skill
+  - 0-8-dev-tooling-hardening
   - 1-1-pre-receive-guard-fails-without-pattern-list
   - 1-2-pre-receive-hook-installed-on-main-forge
   - 1-3-full-history-audit-with-pattern-list

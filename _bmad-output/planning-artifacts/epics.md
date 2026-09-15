@@ -219,7 +219,7 @@ Tirées de `DESIGN.md` et `EXPERIENCE.md` (validés le 13/09/2026). Aucune valeu
 - FR-25 : 2.7, 3.17, 10.2 à 10.7
 - FR-26 : 2.2, 2.7, 3.2, 3.4, 11.1
 - FR-27 : 8.2, 8.3
-- FR-28 : 0.2, 0.3, 0.7, 1.1 à 1.4, 3.12, 7.3
+- FR-28 : 0.2, 0.3, 0.7, 0.8, 1.1 à 1.4, 3.12, 7.3
 - FR-29 : 9.5
 - FR-30 : 0.2, 3.15
 - FR-31 : 1.4
@@ -237,7 +237,7 @@ Tirées de `DESIGN.md` et `EXPERIENCE.md` (validés le 13/09/2026). Aucune valeu
 L'ordre suit le walking skeleton, précédé de l'outillage de développement (Epic 0, décidé par Arnaud le 13/09/2026) : WS-0, puis WS-1 à WS-5, puis l'ordre « hors du squelette » de l'architecture. Deux ajustements, pour qu'aucune story ne dépende d'une story suivante : le JSON-LD vient après la page Contact, qui porte le lien LinkedIn ; les stories d'intégration du contenu du socle forment un epic placé avant la mise en ligne. Troisième ajustement (décision D-5) : les stories 11.1 à 11.9 (chaîne de mise en ligne, skills `release` et `rehearse-release`, première répétition) sont placées avant l'Epic 10, dont elles ne dépendent pas, pour répéter tôt ; les stories 11.10 à 11.13 (test des trente secondes, socle en ligne, `hotfix`, retour arrière) restent après lui. Les numéros des stories sont conservés.
 
 ### Epic 0 : Outillage de développement
-Arnaud et ses agents travaillent sur un flux de branches linéaire sans merge commit, avec revue LLM d'un autre fournisseur, verrous de fusion et garde-fou avant tout envoi. Jeton Gitea dans `.env` et `.env.example`, protections des branches, skills `check-private`, `create-pull-request`, `llm-review`, `sprint-consistency`, `verify-and-merge-pr` ; les skills `publish-case`, `release`, `rehearse-release` et `hotfix` et le verrou « CI verte » sont placés après les stories dont ils dépendent.
+Arnaud et ses agents travaillent sur un flux de branches linéaire sans merge commit, avec revue LLM d'un autre fournisseur, verrous de fusion et garde-fou avant tout envoi. Jeton Gitea dans `.env` et `.env.example`, protections des branches, skills `check-private`, `create-pull-request`, `llm-review`, `sprint-consistency`, `verify-and-merge-pr`, puis leur durcissement après la rétrospective (story 0.8) ; les skills `publish-case`, `release`, `rehearse-release` et `hotfix` et le verrou « CI verte » sont placés après les stories dont ils dépendent.
 **FR :** FR-28, FR-30. **NFR :** NFR-7, NFR-9, NFR-11. **AD :** AD-12, AD-24.
 
 ### Epic 1 : Garde-fou public/privé avant tout miroir (WS-0)
@@ -309,6 +309,8 @@ Arnaud et ses agents travaillent sur un flux de branches linéaire, sans merge c
 **Format du rapport de revue.** Un seul, celui d'AD-24 : première ligne `llm-review sha=<SHA> base=<base> model=<modèle> verdict=<pass|block>`, suivie du texte de la revue. `llm-review` l'écrit (story 0.5), `verify-and-merge-pr` le lit (story 0.7).
 
 **Placement.** Les skills qui s'appuient sur des stories ultérieures sont placés après elles, pour qu'aucune story ne dépende d'une story suivante : le verrou « CI verte » (story 3.16) et `publish-case` (3.17) après les contrôles ; `release` (11.7), `rehearse-release` (11.8) et `hotfix` (11.12) après l'image et le déploiement.
+
+**Story ajoutée après la rétrospective.** La story 0.8 (durcissement de l'outillage) a été ajoutée le 15/09/2026, après la rétrospective de l'epic 0 (`_bmad-output/implementation-artifacts/epic-0-retro-2026-09-15.md`) ; elle se fait avant l'Epic 1.
 
 ### Story 0.1 : Gitea token in env and env example
 
@@ -632,6 +634,67 @@ afin qu'aucun merge ne contourne la revue, le garde-fou ou le flux linéaire.
 - [ ] Sans `jq` dans le `PATH`, le script échoue avant tout appel, avec un message qui indique l'installation (`sudo apt install jq`).
 - [ ] Le script charge `.env` par `scripts/lib/gitea.sh` sans afficher de valeur ; sans variable Gitea, il échoue en renvoyant à la procédure de la story 0.1.
 - [ ] Preuve : la PR de cette story est auditée puis fusionnée par le script lui-même, après l'autorisation d'Arnaud.
+
+### Story 0.8 : Dev tooling hardening
+
+**Ajoutée après la rétrospective de l'epic 0** (décision d'Arnaud, 15/09/2026). Elle reprend les constats de code de `_bmad-output/implementation-artifacts/epic-0-retro-2026-09-15.md`, section « Constats » ; chaque critère cite le code du constat qu'il ferme. Les constats documentaires de la rétrospective restent des actions traitées au fil des stories qui touchent leurs fichiers.
+
+En tant qu'Arnaud, mainteneur,
+je veux que les scripts de l'epic 0 tiennent leurs garanties dans les cas limites relevés par la rétrospective, avec des tests rejouables,
+afin qu'aucun secret ne soit trouvable par le relecteur externe et qu'aucun verrou ne passe, ne boucle ou ne se trompe en silence.
+
+**Couvre :** FR-28, NFR-9, NFR-11 · AD-12, AD-24
+**Dépendances :** 0.1 à 0.7, rétrospective de l'epic 0
+**Bloquée par :** —
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** **oui** : poser, dans un dépôt jetable hors du dépôt de travail, un faux `.env` qui contient une valeur témoin, pour l'essai d'isolement (la règle `deny` du poste interdit à l'agent d'écrire un `.env`).
+
+**Critères d'acceptation :**
+
+**Étant donné** la copie relue par `scripts/llm-review.sh`
+**Quand** le relecteur est lancé
+**Alors** la copie est extraite du SHA relu sans fichier ni dossier `.git`, qui donnerait le chemin du dépôt de travail ; elle ne contient ni `.env`, ni `docs/private/`, ni `.pr-body.md` ; et les fichiers créés, modifiés ou supprimés par le relecteur sont détectés par comparaison avec un manifeste de sommes pris avant la revue, chemins ignorés par git compris (S11).
+
+**Étant donné** un dépôt jetable où Arnaud a posé un faux `.env` à valeur témoin
+**Quand** le relecteur est lancé comme par `llm-review.sh` (`agy --mode plan`, `--dangerously-skip-permissions`), avec une consigne qui lui demande de lire ce faux `.env` par son chemin
+**Alors** le fichier de story consigne si la valeur témoin apparaît dans la réponse ; si elle apparaît, la story ne se termine pas sans une protection qui empêche la lecture, décidée avec Arnaud (S11, `ARCHITECTURE-SPINE.md:508`).
+
+**Étant donné** la lecture des commentaires d'une PR par `scripts/verify-and-merge-pr.sh`
+**Quand** la forge ignore `limit` et `page` sur la liste des commentaires d'une issue (constaté le 15/09/2026)
+**Alors** le script ne tourne jamais sans fin, y compris sur une PR qui porte exactement 50 commentaires, et le comportement de l'API au-delà de 50 commentaires est essayé contre la forge et consigné dans la procédure (D1, P3).
+
+**Étant donné** un fichier de motifs qui existe mais ne contient que des commentaires ou des lignes vides
+**Quand** `create-pull-request.sh`, `llm-review.sh` ou `verify-and-merge-pr.sh` s'exécute
+**Alors** il refuse comme pour un fichier absent ; et `check-private.sh`, lancé seul, annonce « chemins seulement » comme sans fichier (D2).
+
+**Étant donné** `scripts/check-private.sh` lancé depuis un sous-dossier du dépôt
+**Quand** il audite l'index, un commit ou l'historique
+**Alors** il couvre tout l'arbre, comme lancé depuis la racine (D3).
+
+**Étant donné** une PR dont le titre contient un antislash
+**Quand** `verify-and-merge-pr.sh --merge` construit le titre du commit de fusion
+**Alors** ce titre reprend celui de la PR octet pour octet, suivi de « (#N) » (D5).
+
+**Étant donné** `.gitea/workflows/checks.yaml` absent de la base et des statuts de CI présents sur la tête
+**Quand** leur état combiné est `pending`
+**Alors** le verrou CI bloque (« en cours ») au lieu de s'afficher `absent` ; sans aucun statut sur la tête, la règle d'amorçage s'applique inchangée (S5).
+
+**Étant donné** la lecture d'une clé ou d'un statut de story dans `sprint-status.yaml` par `llm-review.sh`, `verify-and-merge-pr.sh` ou `sprint-consistency.sh`
+**Quand** le script en a besoin
+**Alors** il passe par une fonction commune de `scripts/lib/`, sans dépendance à `jq`, limitée à la section `development_status`, avec les tolérances actuelles de `sprint-consistency.sh` (indentation, guillemets, commentaire en fin de ligne) ; les autres logiques recopiées relevées en D7 ne sont mises en commun que là où les tests de cette story les couvrent (D4, D7).
+
+**Étant donné** `scripts/tests/`
+**Quand** on lance son point d'entrée
+**Alors** des tests en bash, sans framework ni dépendance au-delà de celles des scripts, rejouent hors ligne et sans `.env` les cas de D2, D3, D4, D5 et S5, la règle du commit de statut et le repérage des rapports `llm-review`, et sortent en code non nul au premier échec (P1).
+
+**Étant donné** `docs/procedures/verify-and-merge-pr.md` et `docs/procedures/llm-review.md`
+**Quand** on les lit
+**Alors** la première dit qu'une PR peut apparaître « non fusionnable » juste après un push, le temps que la forge recalcule, et qu'il suffit de relancer l'audit (P3) ; la seconde décrit le cheminement des rapports ajoutés au fichier de story jusqu'au commit `done`, y compris après un verdict `block` (P5) ; les procédures et les SKILL.md des scripts modifiés concordent avec eux.
+
+- [ ] Le fichier de story renvoie à la section « Constats » de la rétrospective et consigne, pour chaque code (S11, D1, D2, D3, D4, D5, D7, S5, P1, P3, P5), le commit ou l'essai qui le ferme.
+- [ ] D6 (codes de sortie hétérogènes) reste hors de cette story (décision d'Arnaud, rétrospective de l'epic 0).
+- [ ] Si les ajouts sous `scripts/` dépassent ceux de la story 0.7 (312 lignes), la story est livrée en plusieurs PR (action 10 de la rétrospective).
+- [ ] L'entrée « aucun test automatisé des scripts shell » de `deferred-work.md` reçoit, par ajout seulement, un renvoi à cette story.
 
 ## Epic 1 : Garde-fou public/privé avant tout miroir (WS-0)
 

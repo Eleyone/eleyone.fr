@@ -233,3 +233,5 @@ Décisions de l'auteur sur les revues du code de la PR n° 11 :
 Constats de l'auteur : une erreur de syntaxe (apostrophe dans une expansion `${…:+…}`) trouvée par `bash -n` avant les tests ; une erreur de logique dans le calcul du substitut de CI trouvée en relecture avant les tests ; un incident de test (droits retirés par erreur à un dossier factice), sans effet sur les résultats.
 
 ## Reporté
+
+- Substitut de CI lançant `scripts/check.sh` sans `.tools/` : `deferred-work.md`, à traiter avec la story 3.2. Ligne ajoutée après la rétrospective de l'epic 0 (constat S9).
