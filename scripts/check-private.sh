@@ -15,6 +15,12 @@ set -euo pipefail
 # assets/cv/*.pdf reste interdit tant que le pre-receive Gitea ne sait pas lire les PDF (AD-21)
 forbidden_paths='^docs/(private|context)/|(^|/)\.env$|^assets/cv/.*\.pdf$'
 patterns_file="${PRIVATE_PATTERNS_FILE:-$(git rev-parse --show-toplevel 2>/dev/null || true)/docs/private/forbidden-patterns.txt}"
+[[ $patterns_file == /* ]] || patterns_file="$PWD/$patterns_file"
+# depuis un sous-dossier, git ls-files, git ls-tree et git grep ne verraient que ce sous-dossier :
+# l'audit part de la racine du dépôt (un dépôt nu, côté serveur, n'a pas de racine de travail)
+if top=$(git rev-parse --show-toplevel 2>/dev/null) && [[ -n $top ]]; then
+  cd "$top"
+fi
 status=0
 sep=$'\001' # séparateur des champs de git grep -z : absent des noms de fichier, contrairement à la tabulation
 
@@ -26,10 +32,15 @@ if [[ -f $patterns_file ]]; then
   patterns_text=$(mktemp)
   trap 'rm -f "$patterns" "$patterns_text"' EXIT
   # "numéro de ligne:motif", pour citer un motif par son numéro sans l'afficher
-  grep -nvE '^[[:space:]]*(#|$)' "$patterns_file" > "$patterns" || true
+  rc=0
+  grep -nvE '^[[:space:]]*(#|$)' "$patterns_file" > "$patterns" 2>/dev/null || rc=$?
+  ((rc <= 1)) || { echo "check-private: fichier de motifs illisible ($patterns_file)" >&2; exit 2; }
   # les motifs seuls, pour un premier passage avec tous les motifs à la fois
   grep -vE '^[[:space:]]*(#|$)' "$patterns_file" > "$patterns_text" || true
-  [[ -s $patterns ]] || patterns=""
+  if [[ ! -s $patterns ]]; then
+    patterns=""
+    echo "check-private: aucun motif dans le fichier de motifs ($patterns_file), chemins seulement" >&2
+  fi
 else
   echo "check-private: pas de fichier de motifs ($patterns_file), chemins seulement" >&2
 fi

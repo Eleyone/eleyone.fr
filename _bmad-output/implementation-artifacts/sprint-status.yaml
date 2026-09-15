@@ -43,7 +43,8 @@ development_status:
   0-5-llm-review-skill-with-cross-vendor-review: done
   0-6-sprint-consistency-skill: done
   0-7-verify-and-merge-pr-skill: done
-  0-8-dev-tooling-hardening: backlog
+  0-8-dev-tooling-hardening: done
+  0-9-shared-sprint-reading-and-script-tests: backlog
   epic-0-retrospective: done
 
   epic-1: backlog
@@ -179,6 +180,7 @@ work_order:
   - 0-6-sprint-consistency-skill
   - 0-7-verify-and-merge-pr-skill
   - 0-8-dev-tooling-hardening
+  - 0-9-shared-sprint-reading-and-script-tests
   - 1-1-pre-receive-guard-fails-without-pattern-list
   - 1-2-pre-receive-hook-installed-on-main-forge
   - 1-3-full-history-audit-with-pattern-list

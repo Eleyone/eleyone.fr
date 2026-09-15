@@ -13,7 +13,8 @@ Le dépôt est public : rien de `docs/private/` ni aucune donnée personnelle ne
 ## Ce qu'il vérifie
 
 - **Chemins interdits** : `docs/private/`, `docs/context/`, `.env` à toute profondeur, et `assets/cv/*.pdf` tant que le hook serveur ne sait pas lire les PDF (AD-21). Nommer `docs/private/` dans un fichier est permis ; y placer un fichier ne l'est pas.
-- **Motifs** : des chaînes fixes, cherchées sans tenir compte de la casse, une par ligne dans le **fichier de motifs**. Les lignes vides et celles qui commencent par `#` sont ignorées. La recherche ignore les fichiers binaires : le texte des PDF et les métadonnées des images relèvent d'autres contrôles (C20, C21).
+- **Tout le dépôt** : le script se place à la racine du dépôt avant de lire l'index ou les commits, où qu'il soit lancé. Un `PRIVATE_PATTERNS_FILE` relatif se lit depuis le dossier de lancement.
+- **Motifs** : des chaînes fixes, cherchées sans tenir compte de la casse, une par ligne dans le **fichier de motifs**. Les lignes vides ou blanches (espaces, tabulations) et celles qui commencent par `#` sont ignorées. La recherche ignore les fichiers binaires : le texte des PDF et les métadonnées des images relèvent d'autres contrôles (C20, C21).
 - **Un passage, puis le détail** : chaque arbre vérifié (l'index ou un commit) est d'abord cherché en un seul passage avec tous les motifs. La recherche motif par motif, qui situe chaque résultat, n'a lieu que si ce passage trouve quelque chose. Une erreur de recherche fait échouer le garde-fou : elle ne vaut jamais « rien trouvé ».
 
 Le fichier de motifs vit hors du dépôt : `docs/private/forbidden-patterns.txt`, ou le fichier désigné par la variable `PRIVATE_PATTERNS_FILE`. **Son contenu n'est jamais recopié** : ni dans un fichier suivi, ni dans un commit, une PR, un journal de CI ou une conversation d'agent. Seul Arnaud le modifie, et il le commite dans le dépôt privé. Le nom d'Arnaud n'y figure jamais : son identité publique est voulue.
@@ -64,13 +65,13 @@ L'installation de ce hook sur la forge est la story 1.2. Aujourd'hui, sans fichi
 
 ## Copie isolée
 
-Dans un worktree créé hors du dépôt, ou dans un clone, `docs/private/` n'existe pas. Le script l'annonce sur la sortie d'erreur :
+Dans une copie hors du dépôt, un worktree ou un clone, `docs/private/` n'existe pas. Le script l'annonce sur la sortie d'erreur :
 
 ```
 check-private: pas de fichier de motifs (…), chemins seulement
 ```
 
-et ne vérifie alors que les chemins. **Ce passage ne vaut pas audit.** Pour auditer une copie isolée, désigner le fichier de motifs du dépôt de travail :
+et ne vérifie alors que les chemins. Un fichier de motifs qui existe mais ne contient aucun motif (seulement des commentaires ou des lignes blanches) donne le même repli, annoncé par `check-private: aucun motif dans le fichier de motifs (…), chemins seulement` ; un fichier de motifs illisible arrête le script en code `2`. `create-pull-request`, `llm-review` et `verify-and-merge-pr` refusent un fichier de motifs absent ou sans motif. **Ce passage ne vaut pas audit.** Pour auditer une copie isolée, désigner le fichier de motifs du dépôt de travail :
 
 ```bash
 PRIVATE_PATTERNS_FILE=<dépôt de travail>/docs/private/forbidden-patterns.txt \
