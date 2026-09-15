@@ -757,7 +757,7 @@ Arnaud peut publier le dépôt sur GitHub sans qu'aucun chemin ni motif privé y
 ### Story 1.1 : Pre-receive guard fails without pattern list
 
 En tant qu'Arnaud, mainteneur,
-je veux que `scripts/check-private.sh pre-receive` refuse tout push quand la liste des motifs est absente,
+je veux que `scripts/check-private.sh pre-receive` refuse tout push quand la liste des motifs est absente ou vide,
 afin qu'un hook serveur mal installé ne laisse jamais passer un motif privé.
 
 **Couvre :** FR-28, NFR-9 · AD-12 · C2 (préparation)
@@ -766,29 +766,35 @@ afin qu'un hook serveur mal installé ne laisse jamais passer un motif privé.
 **Prérequis de contenu :** —
 **Opération manuelle (Arnaud) :** non
 
+**Décisions (Arnaud, 15/09/2026, après la revue de spec) :**
+- en mode `pre-receive`, une liste présente mais sans aucun motif (commentaires ou lignes blanches) est refusée comme une liste absente ; les modes `staged` et `history` gardent leur repli sur les chemins, avec l'avertissement ;
+- en mode `pre-receive`, `PRIVATE_PATTERNS_FILE` est obligatoire : un dépôt nu n'a pas de racine de travail, donc pas de chemin par défaut ; le hook installé par la story 1.2 la définit (procédure « hook pre-receive », étape 2) ;
+- les tests sont des cas de `scripts/tests/test-check-private.sh`, sur un dépôt nu jetable muni d'un vrai hook `pre-receive`, rejoués sur le poste, dans `CHECK_IMAGE` et en CI.
+
 **Critères d'acceptation :**
 
-**Étant donné** un dépôt nu jetable, hors du dépôt du site, dont le hook pre-receive appelle le script sans liste des motifs
+**Étant donné** un dépôt nu jetable, hors du dépôt du site, dont le hook `pre-receive` appelle le script sans `PRIVATE_PATTERNS_FILE`, avec une liste absente, ou avec une liste qui ne contient que des commentaires ou des lignes blanches
 **Quand** un push quelconque y arrive
-**Alors** le script sort avec un code non nul et un message qui signale l'absence de la liste
-**Et** le push est refusé.
+**Alors** le script sort avec un code non nul et écrit sur la sortie d'erreur, que git retransmet à l'auteur du push, un message qui nomme la cause (variable absente, liste absente, liste sans motif), sans afficher de motif
+**Et** le push est refusé : la branche n'existe pas sur le dépôt nu.
 
-**Étant donné** une liste de test contenant un motif factice
-**Quand** un push introduit un fichier sous `docs/private/` ou `docs/context/`, un fichier `.env` à n'importe quel niveau, un fichier `assets/cv/*.pdf`, ou le motif factice dans un fichier texte
-**Alors** chaque push est refusé, avec le commit et le chemin.
+**Étant donné** le même dépôt nu, avec une liste de test contenant un motif factice
+**Quand** un push tente d'ajouter un fichier sous `docs/private/` ou `docs/context/`, un fichier `.env` à la racine ou dans un sous-dossier, un fichier `assets/cv/*.pdf`, un fichier texte qui contient le motif factice, ou de renommer un fichier existant vers `docs/private/`
+**Alors** chaque push est refusé, avec le commit et le chemin, sans afficher le motif ni le contenu.
 
-**Étant donné** les modes `staged` et `history`
-**Quand** la liste des motifs est absente
+**Étant donné** le même dépôt nu et la même liste
+**Quand** un push ajoute un fichier qui nomme `docs/private/` dans son texte, ou dont le chemin ressemble à un chemin interdit sans l'être (par exemple `docs/private-notes.md`)
+**Alors** le push est admis (NFR-9).
+
+**Étant donné** l'exécution du script dans ses modes `staged` ou `history`
+**Quand** la liste des motifs est absente ou sans motif
 **Alors** leur comportement est inchangé : repli sur les chemins, avec l'avertissement (C1 en CI en dépend).
 
-- [ ] Les chemins `.env` et `assets/cv/*.pdf` figurent déjà dans le script : à constater, pas à réécrire.
-- [ ] Un fichier public qui **nomme** `docs/private/` n'est pas refusé (NFR-9).
-- [ ] Le script reste en `bash` avec `set -euo pipefail` et fonctionne dans `CHECK_IMAGE`.
+- [ ] Les chemins interdits (`docs/private/`, `docs/context/`, `.env` à toute profondeur, `assets/cv/*.pdf`) figurent déjà dans le script : à constater, pas à réécrire.
+- [ ] Le mode `pre-receive` lit les commits reçus sans arbre de travail (`git ls-tree`, `git grep <commit>`), ce que les tests prouvent sur un dépôt nu.
+- [ ] Le script reste en `bash` avec `set -euo pipefail` ; `scripts/tests/run.sh` passe sur le poste et dans `alpine:3.24` ; le fonctionnement avec les outils de l'image de Gitea est vérifié par la story 1.2.
 - [ ] Aucun motif réel dans le dépôt, la PR ou les journaux.
-
-**Questions à poser avant de commencer :**
-- Une liste présente mais vide (ou faite de commentaires) doit-elle aussi faire échouer le mode `pre-receive` ?
-- Test automatisé versionné sous `tests/`, ou démonstration dans des dépôts jetables ?
+- [ ] Procédure `check-private.md` et AD-12 alignés.
 
 ### Story 1.2 : Pre-receive hook installed on main forge
 
@@ -825,6 +831,7 @@ afin que le garde-fou soit non contournable (UJ-4).
 - [ ] Un push sans contenu privé est accepté.
 - [ ] Le dépôt privé imbriqué n'a pas ce hook et n'est pas mirroré.
 - [ ] Le script et la liste sont visibles depuis le conteneur Gitea, et survivent à sa recréation.
+- [ ] Le script fonctionne avec les outils de l'image de Gitea (dont un `grep` qui peut ne pas être celui de GNU) : les tests de l'étape 3 le constatent dans cet environnement (ajouté après la revue de spec de la story 1.1).
 
 **Questions à poser avant de commencer :**
 - Le contenu du fichier `check-private` est-il versionné dans le dépôt, et où ? La structure initiale ne lui donne pas d'emplacement.

@@ -47,8 +47,8 @@ development_status:
   0-9-shared-sprint-reading-and-script-tests: done
   epic-0-retrospective: done
 
-  epic-1: backlog
-  1-1-pre-receive-guard-fails-without-pattern-list: backlog
+  epic-1: in-progress
+  1-1-pre-receive-guard-fails-without-pattern-list: done
   1-2-pre-receive-hook-installed-on-main-forge: backlog
   1-3-full-history-audit-with-pattern-list: backlog
   1-4-push-mirror-to-public-github-repository: backlog

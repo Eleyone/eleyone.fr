@@ -269,7 +269,7 @@ flowchart TD
   - Chemins interdits (déjà en place) : `docs/private/`, `docs/context/`, `.env`. **Nommer** `docs/private/` dans un fichier public est autorisé (NFR-9, décidé le 13/09/2026) : le garde-fou refuse les fichiers sous ce chemin, pas la mention du chemin.
   - La recherche de motifs de `check-private.sh` utilise `git grep -I`, qui ignore les fichiers binaires : le texte des PDF et les métadonnées des images échappent donc à ce garde-fou, et sont couverts par C20 et C21 (AD-19, AD-21) ; pour les PDF, avant l'historique (pre-commit et pre-receive).
   - Une alerte n'affiche que l'emplacement du contenu trouvé (commit, fichier, ligne) et le numéro de ligne du motif, jamais le contenu ni le motif, pour qu'aucune donnée privée ne passe dans un terminal, une conversation d'agent, un journal de CI ou la réponse du hook serveur (décidé le 14/09/2026, story 0.3). Chaque arbre est cherché en un seul passage avec tous les motifs ; la recherche motif par motif, qui situe les résultats, n'a lieu qu'en cas de résultat, et une erreur de recherche fait échouer le garde-fou. Dans une copie sans `docs/private/`, `PRIVATE_PATTERNS_FILE` désigne le fichier de motifs : un passage « chemins seulement » ne vaut pas audit.
-  - Le mode `pre-receive` du script doit échouer si le fichier de motifs est absent (aujourd'hui, il se replie sur les chemins seulement) : modification à faire dans WS-0.
+  - Le mode `pre-receive` du script échoue si `PRIVATE_PATTERNS_FILE` n'est pas définie, si la liste des motifs est absente ou si elle ne contient aucun motif ; il ne se replie jamais sur les chemins seulement (décidé le 15/09/2026, story 1.1). Les modes `staged` et `history` gardent ce repli, avec l'avertissement.
   - **Ordre imposé** : le miroir push vers GitHub n'est activé qu'après l'installation et le test du hook pre-receive et un audit `history` complet et propre, fait avec la liste des motifs.
 
 ### AD-13 — Image multi-étapes et configuration nginx
@@ -971,6 +971,10 @@ Décisions de la story 0.9, prises par Arnaud le 15/09/2026 :
 72. Tests des scripts sur le poste et en CI : `scripts/tests/run.sh`, sans réseau, dépendances `bash`, `git`, `jq`, `grep` GNU et outils de base de `CHECK_IMAGE` ; lancé par `scripts/ci/checks-job.sh` (story 3.12) (AD-24).
 73. Deux bibliothèques de plus : `scripts/lib/sprint.sh` et `scripts/lib/merge-gates.sh` ; les fonctions de lecture du suivi répondent par leur code de retour (`0` trouvée, `1` absente, `2` illisible ou ambiguë) ; aucune variable d'environnement ne remplace un appel à la forge (AD-24).
 74. Le repère de taille d'une PR ne compte que le code de production (`scripts/*.sh`, `scripts/lib/`) : les tests et leurs fixtures en sont indissociables (AD-24).
+
+Décisions de la story 1.1, prises par Arnaud le 15/09/2026 :
+
+75. `check-private.sh pre-receive` refuse tout push sans `PRIVATE_PATTERNS_FILE`, avec une liste absente ou avec une liste sans motif ; tests sur un dépôt nu jetable muni d'un vrai hook, dans `scripts/tests/` (AD-12).
 
 ## Recommandations à valider par Arnaud
 

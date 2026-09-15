@@ -7,7 +7,8 @@
 #
 # Les motifs sensibles (une chaîne fixe par ligne, # pour commenter) vivent hors dépôt :
 # $PRIVATE_PATTERNS_FILE, sinon docs/private/forbidden-patterns.txt.
-# Sans ce fichier, seuls les chemins interdits sont vérifiés.
+# En staged et history, sans ce fichier ou sans aucun motif, seuls les chemins interdits sont vérifiés.
+# En pre-receive, PRIVATE_PATTERNS_FILE est obligatoire, et une liste absente ou sans motif refuse le push.
 # Une alerte n'affiche jamais le contenu trouvé ni le motif : seulement l'emplacement
 # (commit, fichier, ligne) et le numéro de ligne du motif dans le fichier de motifs.
 set -euo pipefail
@@ -20,6 +21,12 @@ patterns_file="${PRIVATE_PATTERNS_FILE:-$(git rev-parse --show-toplevel 2>/dev/n
 # l'audit part de la racine du dépôt (un dépôt nu, côté serveur, n'a pas de racine de travail)
 if top=$(git rev-parse --show-toplevel 2>/dev/null) && [[ -n $top ]]; then
   cd "$top"
+fi
+mode=${1:-}
+# le hook serveur ne se replie jamais sur les chemins : un dépôt nu n'a pas de chemin par défaut pour la liste
+if [[ $mode == pre-receive && -z ${PRIVATE_PATTERNS_FILE:-} ]]; then
+  echo "check-private: pre-receive sans PRIVATE_PATTERNS_FILE : push refusé, la liste des motifs est obligatoire." >&2
+  exit 1
 fi
 status=0
 sep=$'\001' # séparateur des champs de git grep -z : absent des noms de fichier, contrairement à la tabulation
@@ -41,9 +48,17 @@ if [[ -f $patterns_file ]]; then
   ((rc <= 1)) || { echo "check-private: fichier de motifs illisible ($patterns_file)" >&2; exit 2; }
   if [[ ! -s $patterns ]]; then
     patterns=""
+    if [[ $mode == pre-receive ]]; then
+      echo "check-private: aucun motif dans la liste des motifs ($patterns_file) : push refusé." >&2
+      exit 1
+    fi
     echo "check-private: aucun motif dans le fichier de motifs ($patterns_file), chemins seulement" >&2
   fi
 else
+  if [[ $mode == pre-receive ]]; then
+    echo "check-private: liste des motifs absente ($patterns_file) : push refusé." >&2
+    exit 1
+  fi
   echo "check-private: pas de fichier de motifs ($patterns_file), chemins seulement" >&2
 fi
 
