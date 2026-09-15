@@ -50,7 +50,7 @@ Ces règles s'appliquent à **chaque** story.
 8. **Libellés.** Les libellés d'interface viennent d'`EXPERIENCE.md` (« Voice and Tone »). Un libellé encore « à valider par Arnaud » est confirmé par lui avant commit.
 9. **Flux de travail.** Chaque story se développe sur une branche issue de `dev` (`feat/*`, `fix/*`, `chore/*` ou `docs/*`), passe par `create-pull-request`, `llm-review` et `verify-and-merge-pr` (Epic 0), ou par la règle d'amorçage (règle 11) tant que ces skills n'existent pas, et se fusionne en squash vers `dev`. Aucun merge commit ; répétition sur un tag `vX.Y.Z-rc.N` posé sur `dev`, puis publication vers `main` en fast-forward par le skill `release`. Un correctif de production part de `main` sur une branche `hotfix/*` (skill `hotfix`). Les jetons et identifiants se définissent dans `.env`, jamais commité (story 0.1). Le statut de la story avance dans sa propre PR : `in-progress` au premier commit, `review` avant la revue LLM, `done` après une revue positive, juste avant la fusion (AD-24). Chaque story a son fichier de story, et commence par une revue de spec (story 0.5).
 10. **Opérations manuelles.** Les stories marquées « Opération manuelle (Arnaud) » touchent le serveur Gitea et son image Docker, le serveur de production, Nginx Proxy Manager, le DNS, les secrets, la photo originale ou les CV PDF. La procédure vient de l'architecture ; Arnaud l'exécute, le développeur prépare les fichiers versionnés et la liste de vérification.
-11. **Amorçage des verrous** (AD-24, décision D-1). Pour les premières PR, avant la CI et les skills de l'Epic 0 : le verrou CI vaut `absent`, admis seulement tant que `.gitea/workflows/checks.yaml` n'existe pas sur la branche de base, et il est remplacé par `scripts/check-private.sh history`, puis aussi `scripts/check.sh` dès la story 3.2, lancés en local sur le SHA de tête et notés dans la PR. La planification de sprint est faite avant la story 0.1, et la PR qui ajoute `sprint-status.yaml` est la seule fusionnée sans verrou de suivi. Avant `llm-review`, la revue se fait par `agy --mode plan`, lancé à la main dans un worktree temporaire hors du dépôt, avec le rapport collé en commentaire de PR au format d'AD-24 ; Arnaud fusionne à la main.
+11. **Amorçage des verrous** (AD-24, décision D-1). Pour les premières PR, avant la CI et les skills de l'Epic 0 : le verrou CI vaut `absent`, admis seulement tant que `.gitea/workflows/checks.yaml` n'existe pas sur la branche de base, et il est remplacé par `scripts/check-private.sh history`, puis aussi `scripts/check.sh` dès la story 3.2, lancés sur le SHA de tête par `verify-and-merge-pr` (story 0.7), qui affiche le verrou CI « absent » avec leur résultat. La planification de sprint est faite avant la story 0.1, et la PR qui ajoute `sprint-status.yaml` est la seule fusionnée sans verrou de suivi. Avant `llm-review`, la revue se fait par `agy --mode plan`, lancé à la main dans un worktree temporaire hors du dépôt, avec le rapport collé en commentaire de PR au format d'AD-24 ; Arnaud fusionne à la main.
 
 ### Lecture des stories
 
@@ -584,39 +584,54 @@ afin qu'aucun merge ne contourne la revue, le garde-fou ou le flux linéaire.
 **Prérequis de contenu :** —
 **Opération manuelle (Arnaud) :** non (prérequis : `jq`, constaté à la story 0.4)
 
+**Décisions (Arnaud, 15/09/2026, après la revue de spec) :**
+- trois niveaux, visibles dans tous les outils : `.claude/skills/verify-and-merge-pr/SKILL.md` et ses liens, `docs/procedures/verify-and-merge-pr.md`, `scripts/verify-and-merge-pr.sh`, qui s'appuie sur `scripts/lib/gitea.sh`, `check-private.sh` et `sprint-consistency.sh` ;
+- le script lit les objets git et l'API, et n'écrit jamais dans l'arbre de travail ;
+- PR fusionnable : ouverte, pas en brouillon, `mergeable`, pas déjà fusionnée, base `dev` ;
+- rapport de revue retenu : le dernier commentaire `llm-review` publié par le compte `GITEA_USER`, sur le SHA de tête (ou sur son parent pour le commit de statut) et la base de la PR ; un `block` plus récent l'emporte ;
+- branche sans numéro de story : le verrou de suivi devient le contrôle global de `sprint-consistency.sh` ;
+- règle d'amorçage : le script lance lui-même le substitut de la CI ;
+- message du commit de fusion : titre de la PR suivi de « (#N) », sujets des commits de la branche et lignes `Co-Authored-By` sans doublon.
+
 **Critères d'acceptation :**
 
 **Étant donné** `scripts/verify-and-merge-pr.sh <PR>` sans option
 **Quand** il s'exécute
-**Alors** il audite et affiche l'état de chaque verrou, sans rien fusionner.
+**Alors** il affiche l'état de chaque verrou (`passe`, `absent` ou `bloque`) sans rien fusionner, et sort avec le code 0 si tous passent, 1 si au moins un bloque, 2 si l'audit est impossible.
+
+**Étant donné** les verrous d'une PR
+**Quand** le script les évalue
+**Alors** il vérifie, dans l'ordre :
+- **PR fusionnable** : ouverte, pas en brouillon, `mergeable`, pas déjà fusionnée ; base `dev` ; une base `main` est refusée avec un renvoi vers `release` ou `hotfix`, toute autre base est refusée ;
+- **revue LLM** : le dernier rapport `llm-review` de `GITEA_USER` (format d'AD-24) porte `sha=` égal au SHA de tête et `verdict=pass`, ou `sha=` égal à son parent et `verdict=pass` avec un commit de tête conforme à la règle du commit de statut ; `base=` égal à la base de la PR ;
+- **garde-fou** : `scripts/check-private.sh history base..tête`, avec la liste des motifs, sur les commits récupérés depuis la forge ;
+- **CI** : état combiné de la forge sur le SHA de tête ;
+- **suivi de sprint** : `scripts/sprint-consistency.sh --merge <n.m> --rev <SHA de tête>`, numéro de story tiré du nom de la branche ; contrôle global `--rev <SHA de tête>` pour une branche sans numéro.
 
 **Étant donné** `--merge`
-**Quand** un verrou ne passe pas
-**Alors** rien n'est fusionné. Verrous : PR exploitable ; commentaire `llm-review` dont la première ligne (format d'AD-24) porte `sha=` égal au **SHA de tête**, ou à son parent dans le cas du commit de statut ci-dessous, `base=` égal à la base de la PR (branche entière) et `verdict=pass` ; `scripts/check-private.sh` sur l'arbre de tête ; CI verte ; cohérence du suivi de sprint (story 0.6 : `scripts/sprint-consistency.sh --merge <n.m> --rev <SHA de tête>`, numéro de story tiré du nom de la branche).
+**Quand** un verrou bloque
+**Alors** rien n'est fusionné ; sinon, après avoir vérifié que la tête n'a pas bougé et que le message ne contient aucun motif privé, le script fusionne en squash sur le SHA de tête exact (`head_commit_id`), fait supprimer la branche, puis confirme la fusion.
 
 **Étant donné** une PR dont tous les fichiers sont sous `_bmad-output/`, `sprint-status.yaml` compris (D-2)
 **Quand** le script évalue la revue
-**Alors** seule la CI verte, ou son substitut d'amorçage, est exigée ; un seul fichier hors de `_bmad-output/` (dont `content/**`, `AGENTS.md`, `CLAUDE.md`, `docs/procedures/**`, `.claude/**`, `docs/format-cas.md`) rétablit la revue.
-
-**Étant donné** la base de la PR
-**Quand** elle est `dev`, puis `main`
-**Alors** la fusion se fait en squash, puis elle est refusée avec un renvoi vers `release` ou `hotfix`.
+**Alors** la revue LLM n'est pas exigée ; garde-fou, CI et suivi le restent ; un seul fichier hors de `_bmad-output/` (dont `content/**`, `AGENTS.md`, `CLAUDE.md`, `docs/procedures/**`, `.claude/**`, `docs/format-cas.md`) rétablit la revue.
 
 **Étant donné** `.gitea/workflows/checks.yaml` absent de la branche de base
-**Quand** le verrou « CI verte » est évalué
-**Alors** il est affiché comme **absent**, jamais comme passé, et admis selon la règle d'amorçage (D-1), avec le résultat du substitut local (`check-private.sh history`, puis `check.sh` dès la story 3.2) noté dans la PR ; dès que ce fichier existe sur la base, `absent` bloque (story 3.16).
+**Quand** la CI est absente sur la tête
+**Alors** le verrou s'affiche `absent`, jamais `passe`, et le script lance le substitut d'amorçage (D-1) : le garde-fou, puis `scripts/check.sh` sur la tête dès qu'il existe (story 3.2) ; un substitut en échec bloque ; dès que ce fichier existe sur la base, une CI absente bloque (story 3.16).
 
-**Étant donné** la PR qui ajoute `sprint-status.yaml`
+**Étant donné** une PR qui ajoute `sprint-status.yaml` à une base qui ne l'a pas
 **Quand** le verrou de suivi de sprint est évalué
 **Alors** c'est la seule PR admise sans ce verrou (règle d'amorçage).
 
 **Étant donné** un rapport `llm-review` à `verdict=pass` sur le parent du SHA de tête
-**Quand** le commit de tête ne modifie que `sprint-status.yaml` (la ligne de la story `review` → `done`, `last_updated` et, si la story clôt son epic, la ligne de l'epic → `done`) et l'en-tête `Status:` du fichier de story (`review` → `done`), et n'ajoute par ailleurs que des lignes au fichier de story et à `deferred-work.md`
-**Alors** le verrou de revue passe ; tout autre changement, ou plus d'un commit après le SHA relu, exige une nouvelle revue.
+**Quand** le commit de tête, seul après le SHA relu, ne modifie que `sprint-status.yaml` (la ligne de la story `review` → `done`, `last_updated` et, si la story clôt son epic, la ligne de l'epic → `done`) et l'en-tête `Status:` du fichier de story (`review` → `done`), et n'ajoute par ailleurs que des lignes au fichier de story et à `deferred-work.md`
+**Alors** le verrou de revue passe ; tout autre changement, contrôlé ligne par ligne dans `git diff`, ou plus d'un commit après le SHA relu, exige une nouvelle revue.
 
-- [ ] Aucune option `--force`.
+- [ ] Aucune option `--force` ; `force_merge` et `merge_when_checks_succeed` ne sont jamais envoyés.
 - [ ] Sans `jq` dans le `PATH`, le script échoue avant tout appel, avec un message qui indique l'installation (`sudo apt install jq`).
-- [ ] Le script charge `.env` sans afficher de valeur ; sans variable Gitea, il échoue en renvoyant à la story 0.1.
+- [ ] Le script charge `.env` par `scripts/lib/gitea.sh` sans afficher de valeur ; sans variable Gitea, il échoue en renvoyant à la procédure de la story 0.1.
+- [ ] Preuve : la PR de cette story est auditée puis fusionnée par le script lui-même, après l'autorisation d'Arnaud.
 
 ## Epic 1 : Garde-fou public/privé avant tout miroir (WS-0)
 

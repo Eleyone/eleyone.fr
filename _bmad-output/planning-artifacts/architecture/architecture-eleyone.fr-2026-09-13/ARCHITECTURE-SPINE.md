@@ -535,7 +535,7 @@ flowchart TD
   - **Verrous de la PR de publication `dev` → `main`** (décidé le 13/09/2026, D-13) : le verrou 1 est tenu si chaque commit de `main..dev` est le squash d'une PR fusionnée par `verify-and-merge-pr`, repérée par le numéro de PR dans le message de commit, sans nouvelle revue de tout l'écart ; les verrous 2, 3 et 4 s'appliquent tels quels ; `release` ne fusionne qu'avec `--merge` explicite, lancé par Arnaud.
   - **Règle d'amorçage** (décidé le 13/09/2026, D-1), pour les premières PR, avant que la CI et les skills de l'Epic 0 existent :
     1. `absent` n'est admis au verrou 3 que tant que `.gitea/workflows/checks.yaml` n'existe pas sur la branche de base, ce que le script détecte lui-même, sans interrupteur manuel. Dès que le fichier existe, `absent` bloque ;
-    2. tant que la CI est absente, son substitut est `scripts/check-private.sh history` (C1), puis aussi `scripts/check.sh` dès qu'il existe (story 3.2), lancés en local sur le SHA de tête, avec le résultat noté dans la PR. Pour une PR documentaire, ce substitut est alors le seul verrou ;
+    2. tant que la CI est absente, son substitut est `scripts/check-private.sh history` (C1), puis aussi `scripts/check.sh` dès qu'il existe (story 3.2), lancés sur le SHA de tête par `verify-and-merge-pr`, qui affiche le verrou CI « absent » avec leur résultat (décidé le 15/09/2026, story 0.7). Pour une PR documentaire, seule la revue LLM n'est pas exigée : garde-fou, CI et suivi le restent ;
     3. la planification de sprint est faite avant la story 0.1 ; la PR qui ajoute `sprint-status.yaml` est la seule fusionnée sans le verrou 4 ;
     4. tant que les skills de l'Epic 0 n'existent pas, la revue se fait par `agy --mode plan`, lancé à la main dans un worktree temporaire hors du dépôt, avec le rapport collé en commentaire de PR au format ci-dessus ; Arnaud fusionne à la main.
   - **Prérequis du poste de développement** (constats du 13/09/2026 ; décidés le 13/09/2026, D-15), listés dans chaque procédure concernée :
@@ -954,6 +954,10 @@ Décisions de la story 0.5, prises par Arnaud le 14/09/2026 :
 Décisions de la story 0.6, prises par Arnaud le 14/09/2026 :
 
 67. `sprint-consistency` : contrôle global sans option, `--merge <n.m>` et `--rev <commit>` ; statuts d'epic dérivés de leurs stories ; fichier de story toléré pour une story en `backlog` s'il porte `Status: backlog` ; seule la première ligne `Status:` compte ; lien PR → story laissé à `verify-and-merge-pr` (AD-24).
+
+Décisions de la story 0.7, prises par Arnaud le 15/09/2026 :
+
+68. `verify-and-merge-pr` : PR fusionnable = ouverte, pas en brouillon, `mergeable`, pas fusionnée, base `dev` ; rapport retenu = dernier commentaire `llm-review` de `GITEA_USER` sur la tête (ou son parent, avec la règle du commit de statut vérifiée ligne par ligne) ; branche sans numéro de story = contrôle global du suivi ; substitut d'amorçage de la CI lancé par le script ; message de fusion = titre et « (#N) », sujets des commits, lignes `Co-Authored-By` ; codes 0, 1, 2 ; aucune écriture dans l'arbre de travail (AD-24).
 
 ## Recommandations à valider par Arnaud
 
