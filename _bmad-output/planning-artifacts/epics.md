@@ -695,10 +695,10 @@ afin qu'aucun secret ne soit trouvable par le relecteur externe et qu'aucun verr
 
 ### Story 0.9 : Shared sprint reading and script tests
 
-**Ajoutée après la revue de spec de la story 0.8** (décision d'Arnaud, 15/09/2026), qui a coupé la story de durcissement en deux. Elle reprend les constats D4, D7 et P1 de `_bmad-output/implementation-artifacts/epic-0-retro-2026-09-15.md`, section « Constats ».
+**Ajoutée après la revue de spec de la story 0.8** (décision d'Arnaud, 15/09/2026), qui a coupé la story de durcissement en deux, **puis réécrite après sa propre revue de spec**. Elle reprend les constats D4, D7 et P1 de `_bmad-output/implementation-artifacts/epic-0-retro-2026-09-15.md`, section « Constats ».
 
 En tant qu'Arnaud, mainteneur,
-je veux une seule lecture du suivi de sprint et des tests bash rejouables hors ligne pour les scripts de l'epic 0,
+je veux une seule lecture du suivi de sprint et des tests bash rejouables hors ligne pour les scripts de l'epic 0, sur le poste et en CI,
 afin que les pièges déjà rencontrés ne reviennent pas d'une story à l'autre et que les copies d'une même logique ne divergent plus.
 
 **Couvre :** FR-28, NFR-7 · AD-24
@@ -707,28 +707,48 @@ afin que les pièges déjà rencontrés ne reviennent pas d'une story à l'autre
 **Prérequis de contenu :** —
 **Opération manuelle (Arnaud) :** non
 
+**Décisions (Arnaud, 15/09/2026, après la revue de spec) :**
+- les tests tournent sur le poste de développement et en CI : ils ne dépendent que de `bash`, `git`, `jq`, `grep` GNU et des outils de base, disponibles dans `CHECK_IMAGE` ; leur lancement par le job de contrôle partagé est ajouté à la story 3.12 ;
+- deux fichiers de bibliothèque, pour la lisibilité et les tests : `scripts/lib/sprint.sh` (lecture du suivi, sans `jq`) et `scripts/lib/merge-gates.sh` (décisions de `verify-and-merge-pr`) ;
+- les fonctions de lecture du suivi répondent par leur code de retour, comme beaucoup de commandes : `0` trouvée, `1` absente, `2` illisible ou ambiguë, et rien sur la sortie standard en cas d'erreur ;
+- le repère de taille de l'action 10 de la rétrospective ne compte que le code de production (`scripts/*.sh`, `scripts/lib/`) : les tests et leurs fixtures sont indissociables de ce qu'ils testent et ne comptent pas.
+
 **Critères d'acceptation :**
 
-**Étant donné** la lecture d'une clé ou d'un statut de story dans `sprint-status.yaml` par `llm-review.sh`, `verify-and-merge-pr.sh` ou `sprint-consistency.sh`
-**Quand** le script en a besoin
-**Alors** il passe par une fonction commune de `scripts/lib/`, sans dépendance à `jq`, limitée à la section `development_status`, qui garde les tolérances actuelles de `sprint-consistency.sh` (indentation, guillemets, commentaire en fin de ligne) et traite comme illisible toute valeur qui n'est pas un statut simple sur la ligne de la clé (D4).
+**Étant donné** `scripts/lib/sprint.sh`
+**Quand** `llm-review.sh`, `verify-and-merge-pr.sh` ou `sprint-consistency.sh` lit une clé ou un statut de story dans le texte de `sprint-status.yaml`, pris dans l'arbre de travail ou dans un commit
+**Alors** il passe par les fonctions de ce fichier, sans `jq`, limitées à la section `development_status`, en gardant les tolérances actuelles de `sprint-consistency.sh` (indentation, guillemets, commentaire en fin de ligne) ; une fonction écrit la valeur trouvée et sort en `0`, sort en `1` sans rien écrire si la story est absente, et en `2` sans rien écrire si plusieurs clés correspondent ou si la valeur n'est pas un statut simple sur la ligne de la clé (par exemple un bloc sur plusieurs lignes) ; chaque script traduit ces codes en écart ou en refus (D4).
 
-**Étant donné** la logique de décision des scripts (rapport `llm-review` retenu, règle du commit de statut, verrou CI, titre de fusion, lecture du fichier de motifs)
-**Quand** elle est testée
-**Alors** elle vit dans des fonctions de `scripts/lib/` qui prennent des fichiers en entrée (réponses JSON de la forge, diff, suivi) et que les scripts appellent ; aucune variable d'environnement ne remplace l'appel à la forge ; les autres duplications relevées en D7 ne sont mises en commun que si ces tests sollicitent le code concerné (D7).
+**Étant donné** `scripts/lib/merge-gates.sh`
+**Quand** `verify-and-merge-pr.sh` décide d'un verrou
+**Alors** la décision passe par des fonctions qui lisent des fichiers ou des commits, sans appeler la forge : lecture des rapports dans une page de timeline, rapport `llm-review` retenu pour un SHA et une base, règle du commit de statut, verrou CI, titre du commit de fusion ; les appels à la forge restent dans le script ; la lecture paginée de la timeline reçoit le nom de la fonction qui écrit une page dans un fichier, que le script fait appeler la forge et que les tests font lire des fixtures ; aucune variable d'environnement ne remplace l'appel à la forge.
+
+**Étant donné** les logiques recopiées relevées en D7
+**Quand** la story est terminée
+**Alors** deux sont mises en commun, et deux seulement : le numéro de story tiré du nom de branche (`llm-review.sh`, `verify-and-merge-pr.sh`) et la lecture de la clé et du statut d'une story (D4) ; les autres copies restent en place (D7).
 
 **Étant donné** `scripts/tests/run.sh`
-**Quand** on le lance
-**Alors** des tests en bash, sans framework ni dépendance au-delà de celles des scripts, rejouent hors ligne et sans `.env`, à partir de fichiers de fixtures : D2, D3, D5 (antislash, guillemet, `$`, accent grave), S5 et l'état `failure`, la lecture du suivi (D4, dont une valeur sur plusieurs lignes), la règle du commit de statut, le rapport retenu (dont un `block` plus récent qu'un `pass`) et la pagination de la timeline ; le script s'arrête en code non nul au premier échec et nomme le cas (P1).
+**Quand** on le lance depuis la racine du dépôt, sur le poste ou dans un conteneur `CHECK_IMAGE`
+**Alors** des tests en bash, sans framework, sans réseau, sans `.env` ni `docs/private/`, à partir de fixtures versionnées sous `scripts/tests/` et de dépôts git de test créés dans un dossier temporaire, rejouent :
+- D2 : fichier de motifs sans motif, avec lignes blanches, illisible ; D3 : audit depuis un sous-dossier ;
+- D4 : clé présente, absente, en double, valeur entre guillemets ou suivie d'un commentaire, valeur sur plusieurs lignes ;
+- D5 : titre avec antislash, guillemet, `$` et accent grave ;
+- le verrou CI (S5) : vert, en cours, échec, erreur, absent avec et sans `checks.yaml` sur la base ;
+- la règle du commit de statut : commit admis, ligne supprimée, autre fichier modifié, deux commits après le SHA relu ;
+- le rapport retenu : `block` plus récent qu'un `pass`, autre base, autre SHA, ligne mal formée ;
+- la pagination de la timeline : pages pleines, page incomplète, page `null` finale, plafond de pages ;
+
+et il s'arrête en code non nul au premier échec en nommant le cas (P1).
 
 **Étant donné** `docs/procedures/shell-scripts.md`
-**Quand** un agent ou Arnaud écrit ou modifie un script du poste
-**Alors** sa section « Pièges connus » liste les pièges déjà rencontrés, chacun avec la story qui l'a trouvé : substitution de processus `< <(…)` qui masque un échec, bloc `{ … } || die` qui suspend `set -e`, apostrophe dans `"${…:+…}"`, regex construite depuis une variable, `jq @tsv` qui double l'antislash, pagination supposée de l'API de la forge ; et elle renvoie à `scripts/tests/run.sh` (P1).
+**Quand** un agent ou Arnaud écrit ou modifie un script du poste ou de la CI
+**Alors** sa section « Pièges connus » liste les pièges déjà rencontrés, chacun avec la story qui l'a trouvé : substitution de processus `< <(…)` qui masque un échec, bloc `{ … } || die` qui suspend `set -e`, apostrophe dans `"${…:+…}"`, regex construite depuis une variable, `jq @tsv` qui double l'antislash, pagination supposée de l'API de la forge et réponse `null` au-delà de la dernière page ; elle demande de lancer `scripts/tests/run.sh` avant toute PR qui touche `scripts/` et d'ajouter un cas pour tout nouveau piège (P1).
 
-- [ ] L'entrée « aucun test automatisé des scripts shell » de `deferred-work.md` reçoit, par ajout seulement, un renvoi à cette story.
-- [ ] `scripts/tests/run.sh` passe sur la tête de la PR ; tant que la CI n'existe pas, son résultat est noté dans la PR.
+- [ ] L'entrée « aucun test automatisé des scripts shell » de `deferred-work.md` est close par une ligne ajoutée qui renvoie à cette story ; aucune entrée existante n'est modifiée.
+- [ ] `scripts/tests/run.sh` passe sur la tête de la PR, sur le poste et dans un conteneur `alpine:3.24` avec `bash`, `grep` GNU, `git` et `jq` ; tant que la CI n'existe pas, le résultat est noté dans la PR.
+- [ ] Le fichier de story consigne, pour D4, D7 et P1, le commit qui les ferme.
 
-**Hors périmètre :** D6 (codes de sortie hétérogènes).
+**Hors périmètre :** D6 (codes de sortie hétérogènes) ; ShellCheck (absent du poste, aucun nouvel outil).
 
 ## Epic 1 : Garde-fou public/privé avant tout miroir (WS-0)
 
@@ -1442,7 +1462,7 @@ je veux un seul script qui lance les contrôles dans le conteneur de contrôle, 
 afin que Gitea et GitHub exécutent la même chose.
 
 **Couvre :** FR-23, FR-28, NFR-7 · AD-1, AD-10, AD-11, AD-12 · C1
-**Dépendances :** 3.11
+**Dépendances :** 0.9, 3.11
 **Bloquée par :** —
 **Prérequis de contenu :** —
 **Opération manuelle (Arnaud) :** non
@@ -1451,7 +1471,7 @@ afin que Gitea et GitHub exécutent la même chose.
 
 **Étant donné** le poste de travail avec Docker
 **Quand** on lance `scripts/ci/checks-job.sh`
-**Alors** il lance `docker run --rm` sur `CHECK_IMAGE` avec le dépôt monté, puis `install-tools.sh`, le chargement de `ci/legal-placeholder.env` (dans le seul processus du conteneur), `check-private.sh history`, puis `scripts/check.sh`
+**Alors** il lance `docker run --rm` sur `CHECK_IMAGE` avec le dépôt monté, puis `install-tools.sh`, le chargement de `ci/legal-placeholder.env` (dans le seul processus du conteneur), `check-private.sh history`, `scripts/tests/run.sh` (tests des scripts, story 0.9), puis `scripts/check.sh`
 **Et** tout échec rend un code non nul.
 
 **Étant donné** un clone jetable où un commit fait sans hook ajoute un fichier sous `docs/private/`
@@ -1459,6 +1479,7 @@ afin que Gitea et GitHub exécutent la même chose.
 **Alors** C1 échoue en nommant le commit et le chemin.
 
 - [ ] Le job ne lit aucun secret et ne construit aucune image.
+- [ ] `CHECK_IMAGE` fournit `git` et `jq`, dont dépendent `check-private.sh` et `scripts/tests/run.sh` (ajouté après la revue de spec de la story 0.9).
 
 ### Story 3.13 : Checks workflow on main forge
 

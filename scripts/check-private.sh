@@ -36,7 +36,9 @@ if [[ -f $patterns_file ]]; then
   grep -nvE '^[[:space:]]*(#|$)' "$patterns_file" > "$patterns" 2>/dev/null || rc=$?
   ((rc <= 1)) || { echo "check-private: fichier de motifs illisible ($patterns_file)" >&2; exit 2; }
   # les motifs seuls, pour un premier passage avec tous les motifs à la fois
-  grep -vE '^[[:space:]]*(#|$)' "$patterns_file" > "$patterns_text" || true
+  rc=0
+  grep -vE '^[[:space:]]*(#|$)' "$patterns_file" > "$patterns_text" 2>/dev/null || rc=$?
+  ((rc <= 1)) || { echo "check-private: fichier de motifs illisible ($patterns_file)" >&2; exit 2; }
   if [[ ! -s $patterns ]]; then
     patterns=""
     echo "check-private: aucun motif dans le fichier de motifs ($patterns_file), chemins seulement" >&2
@@ -47,13 +49,18 @@ fi
 
 check_tree() { # $1 = libellé, reste = arguments git (commit ou --cached)
   local label=$1; shift
-  local listing paths entry hits="" err rc=0
+  local listing paths entry hits="" err rc=0 prc=0
   if [[ $1 == --cached ]]; then
     listing=$(git ls-files) || { fail "lecture impossible de $label"; return 0; }
   else
     listing=$(git ls-tree -r --name-only "$1") || { fail "lecture impossible de $label"; return 0; }
   fi
-  paths=$(printf '%s\n' "$listing" | grep -E "$forbidden_paths" || true)
+  # grep rend 1 quand il ne trouve rien et 2 sur une erreur : une erreur ne vaut jamais « aucun chemin privé »
+  paths=$(printf '%s\n' "$listing" | grep -E "$forbidden_paths") || prc=$?
+  if ((prc > 1)); then
+    fail "recherche des chemins impossible dans $label"
+    return 0
+  fi
   [[ -z $paths ]] || fail "chemin privé dans $label :\n$paths"
   [[ -n $patterns ]] || return 0
   # un seul passage avec tous les motifs ; le détail motif par motif seulement s'il trouve.

@@ -35,7 +35,7 @@ project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 development_status:
-  epic-0: in-progress
+  epic-0: done
   0-1-gitea-token-in-env-and-env-example: done
   0-2-main-branch-protections-and-merge-styles: done
   0-3-check-private-skill: done
@@ -44,7 +44,7 @@ development_status:
   0-6-sprint-consistency-skill: done
   0-7-verify-and-merge-pr-skill: done
   0-8-dev-tooling-hardening: done
-  0-9-shared-sprint-reading-and-script-tests: backlog
+  0-9-shared-sprint-reading-and-script-tests: done
   epic-0-retrospective: done
 
   epic-1: backlog
