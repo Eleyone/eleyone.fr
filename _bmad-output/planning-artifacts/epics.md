@@ -893,6 +893,703 @@ afin de lire le cadrage et le code.
 **Dépendances :** 0.2, 1.2, 1.3
 **Bloquée par :** —
 **Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** **oui**, dans cet ordre (procédure `docs/procedures/github-mirror.md`) :
+
+1. créer le dépôt public sur GitHub, vide ;
+2. créer le compte machine, l'inviter comme collaborateur en écriture, accepter l'invitation ;
+3. créer sur ce compte machine un jeton d'écriture et noter son expiration (un jeton à grain fin ne convient pas : voir la décision ci-dessous) ;
+4. poser les deux rulesets d'AD-12 ;
+5. configurer le miroir push dans Gitea, avec le compte machine et son jeton, et la synchronisation à chaque push ;
+6. lancer les essais de la story avec l'agent.
+
+**Décisions (Arnaud, 16/09/2026, après la revue de spec) :**
+- le miroir push de Gitea ne sait pas pousser en SSH (documentation Gitea) : la clé de déploiement d'AD-12 est écartée, l'identité du miroir est un **compte machine** dont le jeton n'est stocké que dans Gitea. Le jeton personnel d'Arnaud sert à ses autres miroirs, jamais à celui-ci ;
+- **jeton classique, pas à grain fin** (constat de l'installation, 16/09/2026) : un jeton à grain fin ne cible que les dépôts possédés par le compte qui l'émet, et le compte machine n'est que collaborateur d'un dépôt appartenant à Arnaud ; le miroir utilise donc un jeton classique portant les seules portées `public_repo` et `workflow`, dont la portée réelle et la rotation sont écrites dans `docs/procedures/github-mirror.md` ;
+- contournement des rulesets : le **compte machine désigné nommément** ; le push direct depuis le compte personnel d'Arnaud doit être refusé. *(Corrigé le 16/09/2026 : le contournement par rôle **Write** d'abord posé couvrait aussi Arnaud, propriétaire du dépôt, dont le push est passé.)* ;
+- le miroir pousse par `git push --mirror`, donc toutes les références : on configure le miroir tel quel, on observe la première synchronisation et on note ce qui est réellement poussé. Si GitHub refuse les `refs/pull/*` (références cachées) au point de faire échouer la synchronisation, la suite est tranchée par Arnaud à ce moment-là ;
+- toutes les branches de la forge sont mirrorées, `design/dossier-architecture`, `design/suisse` et `experiment/d2-bilingue` comprises, que le README-cas cite.
+
+**Critères d'acceptation :**
+
+**Étant donné** un clone miroir frais de la forge, hors du dépôt de travail
+**Quand** l'agent relance l'audit complet de la story 1.3 (`PRIVATE_PATTERNS_FILE=<liste> <dépôt de travail>/scripts/check-private.sh history`), juste avant d'activer le miroir
+**Alors** il sort avec le code 0, sans signalement ni mention « chemins seulement », et son résultat est noté dans le fichier de story.
+
+*Note : un audit plus ancien que le dernier commit poussé ne vaut pas (ajouté après la revue du code de la story 1.3).*
+
+**Étant donné** le miroir push configuré avec le compte machine et la synchronisation à chaque push
+**Quand** la première synchronisation a lieu
+**Alors** les branches de la forge existent sur GitHub avec les mêmes SHA, `main` en branche par défaut et `dev` en branche de travail
+**Et** le brief, son addendum, le PRD, l'architecture, `DESIGN.md`, `EXPERIENCE.md`, ainsi que le présent document, y figurent (FR-31)
+**Et** la liste des références effectivement poussées est notée, ainsi que le sort des `refs/pull/*` et l'état de la synchronisation affiché par Gitea.
+
+**Étant donné** un clone miroir frais du dépôt GitHub
+**Quand** l'agent lance `PRIVATE_PATTERNS_FILE=<liste> <dépôt de travail>/scripts/check-private.sh history` depuis ce clone
+**Alors** il sort avec le code 0, sans signalement ni mention « chemins seulement ».
+
+**Étant donné** les deux rulesets d'AD-12 (toutes les branches et tous les tags : création, mise à jour et suppression restreintes, contournement par le compte machine désigné nommément ; `main` en « Block force pushes », sans contournement)
+**Quand** Arnaud pousse directement depuis son compte personnel
+**Alors** GitHub refuse le push, et le miroir continue de synchroniser (D-9).
+
+**Étant donné** une branche jetable réécrite sur la forge (force-push), puis synchronisée
+**Quand** le miroir la pousse
+**Alors** GitHub accepte la mise à jour non fast-forward et la synchronisation n'échoue pas
+**Et** la branche jetable est ensuite supprimée sur la forge, et sa suppression se propage sur GitHub.
+
+- [ ] Le jeton du compte machine n'est stocké que dans Gitea ; les remotes du poste pointent vers la forge seulement (`git remote -v`).
+- [ ] L'expiration du jeton et la façon de le remplacer sont écrites dans `docs/procedures/github-mirror.md`.
+- [ ] Aucun des artefacts publiés cités au critère 2 ne reprend un cas brut *(relecture)*.
+- [ ] L'URL du dépôt public est notée pour la story 9.5 (`params.source_url`), sans toucher à la configuration Hugo ici.
+
+## Epic 2 : Site bilingue et cas pilote sous son poste (WS-1, WS-2)
+Un lecteur passe du français à l'anglais, voit en rendu de travail le poste Chiliz avec le cas 02, et ouvre la section du cas sur la page Chiliz.
+**FR :** FR-1, FR-2, FR-5 à FR-9, FR-12, FR-15, FR-18, FR-20, FR-21, FR-25, FR-26, FR-33. **NFR :** NFR-1, NFR-7, NFR-8. **AD :** AD-1 à AD-6, AD-9, AD-18, AD-19, AD-24.
+
+### Epic 3 : Contrôles bloquants, CI des deux forges et README-cas (WS-3, WS-4)
+Arnaud reçoit un refus explicite pour tout écart ; les mêmes contrôles tournent en local, sur Gitea et publiquement sur GitHub ; le README accueille Sam.
+**FR :** FR-5 à FR-9, FR-12, FR-14, FR-15, FR-20, FR-23, FR-26, FR-28, FR-30, FR-35. **NFR :** NFR-3, NFR-4, NFR-5, NFR-7, NFR-12. **AD :** AD-10, AD-11, AD-12, AD-17, AD-20, AD-24. **C :** C1, C3 à C8, C10 à C14, C16, C18, C19. Comprend aussi le verrou « CI verte » et le skill `publish-case`.
+
+### Epic 4 : Image du site servie par nginx (WS-5)
+Le build de production est servi par un conteneur nginx avec ses en-têtes, son cache, ses 404 par langue et des journaux sans IP.
+**FR :** FR-19, FR-21. **NFR :** NFR-1, NFR-2, NFR-3, NFR-5, NFR-12. **AD :** AD-13, AD-15.
+
+### Epic 5 : Design validé et accueil CV
+Claire lit sur son téléphone, en clair ou en sombre, un accueil qui est un CV : identité, photo, parcours avec les cas par poste, « En parallèle », formation.
+**FR :** FR-1, FR-2, FR-4, FR-33, FR-34, FR-36, FR-37. **NFR :** NFR-4, NFR-5, NFR-6, NFR-9, NFR-13. **AD :** AD-8, AD-17, AD-18, AD-19. **C :** C13, C20.
+
+### Epic 6 : Pages de cas mises en forme et typographie française
+Claire lit un cas mis en page, avec sommaire, rubriques numérotées et retour au parcours ; les pages françaises suivent la typographie française.
+**FR :** FR-5 à FR-9, FR-15, FR-20. **NFR :** NFR-4, NFR-10. **AD :** AD-3, AD-4, AD-23. **C :** C24.
+
+### Epic 7 : CV PDF, ensemble ou rien
+Claire peut garder un CV en PDF, et aucun PDF contenant un téléphone ou une ville de résidence n'entre dans l'historique.
+**FR :** FR-28, FR-38. **NFR :** NFR-9. **AD :** AD-12, AD-21. **C :** C21.
+
+### Epic 8 : Schémas D2 à double thème, régénérés et vérifiés
+Un schéma bilingue suit le mode du lecteur (ou son repli validé), et la CI refuse tout SVG désynchronisé.
+**FR :** FR-13, FR-23, FR-27. **NFR :** NFR-8. **AD :** AD-7. **C :** C9.
+
+### Epic 9 : Pages légales, pages simples et données structurées
+Un lecteur trouve mentions légales, confidentialité, Contact, « À propos » et le lien vers le dépôt ; les moteurs lisent l'identité d'Arnaud.
+**FR :** FR-3, FR-16 à FR-19, FR-29, FR-33 à FR-35, FR-38. **NFR :** NFR-9, NFR-12. **AD :** AD-3, AD-9, AD-15, AD-20. **C :** C10, C23.
+
+### Epic 10 : Contenu du socle
+Le pitch, le parcours, la formation, la page Chiliz et les cas 01, 02 et 05 passent les contrôles et quittent l'état de brouillon.
+**FR :** FR-1, FR-2, FR-4, FR-9 à FR-11, FR-22, FR-25, FR-36. **NFR :** NFR-10.
+
+### Epic 11 : Mise en ligne, répétition générale et socle
+La chaîne de mise en ligne et les skills `release`, `rehearse-release` et `hotfix` sont construits ; la chaîne est répétée sur le serveur de production, le test des trente secondes est passé, puis le socle est mis en ligne derrière un proxy sans journal d'IP. Les stories 11.1 à 11.9 se placent avant l'Epic 10, les stories 11.10 à 11.13 après lui (D-5).
+**FR :** FR-18, FR-19, FR-26, FR-32, FR-37, FR-39. **NFR :** NFR-2, NFR-3, NFR-5, NFR-9. **AD :** AD-9, AD-11, AD-14, AD-15, AD-17, AD-22, AD-24. **C :** C15, C22.
+
+### Epic 12 : Agent de parité consultatif
+Sur une PR de contenu, Arnaud reçoit un commentaire qui signale un écart FR/EN, sans blocage.
+**FR :** FR-24. **NFR :** NFR-11. **AD :** AD-16. **C :** C17.
+
+### Epic 13 : Après le socle : cas 03, 04 et 06, matériel vivant prêt
+Les cas 03, 04 et 06 sont mis en ligne un par un sous leur poste ; le matériel vivant retenu pour la v1 passe à « prêt ».
+**FR :** FR-10, FR-12 à FR-14, FR-22, FR-32. **NFR :** NFR-3, NFR-10. **AD :** AD-6, AD-7.
+
+## Epic 0 : Outillage de développement
+
+Arnaud et ses agents travaillent sur un flux de branches linéaire, sans merge commit : chaque PR est relue par un LLM d'un autre fournisseur, vérifiée par des verrous, et aucun contenu privé ne sort du dépôt, ni vers GitHub, ni vers le reviewer. Décidé par Arnaud le 13/09/2026.
+
+**Principe des skills.** Chaque skill tient en trois niveaux : `.claude/skills/<nom>/SKILL.md` (quelques lignes : quand l'utiliser, renvoi à la procédure), `docs/procedures/<nom>.md` (la procédure, lisible par tout agent ou humain), `scripts/<nom>.sh` (l'exécution, en shell simple). Documents publics, en français ; identifiants en anglais. Chaque skill est disponible quel que soit l'outil : `.agents/skills/<nom>` et `.agent/skills/<nom>` sont des liens symboliques relatifs vers `.claude/skills/<nom>/` (story 0.3).
+
+**Identifiants.** Tous les jetons et identifiants se définissent dans le fichier `.env` à la racine, jamais commité (déjà ignoré par git et refusé par le garde-fou). Un skill qui appelle l'API de Gitea charge `.env` sans jamais afficher de valeur ; sans variable, il échoue avec un message qui renvoie à la procédure de la story 0.1, et ne demande jamais le jeton.
+
+**Modèle de branches.** Branches de travail `feat/*`, `fix/*`, `chore/*` ou `docs/*` issues de `dev`, PR vers `dev` en **squash**. Publication de `dev` vers `main` en **fast-forward seulement** : `main` reste toujours un ancêtre de `dev`, et la publication échoue si `main` a divergé. Tags de répétition `vX.Y.Z-rc.N` sur `dev`, tags de mise en ligne `vX.Y.Z` sur `main`. Correctif en production par le skill `hotfix`, sur une branche `hotfix/*` issue de `main` (préfixe réservé à ces branches, D-14). Aucun merge commit, aucun cherry-pick. `dev` et `main` sont protégées ; le dépôt n'autorise que le squash et le fast-forward, et les scripts choisissent le style selon la base (story 0.2). Sur le miroir GitHub, la branche par défaut est `main`, `dev` est la branche de travail.
+
+**Règle de revue.** Revue LLM obligatoire avant tout merge. **Exception documentaire** : une PR dont tous les fichiers sont sous `_bmad-output/` (artefacts de cadrage et suivi de sprint, `sprint-status.yaml` compris) n'exige qu'une CI verte, ou son substitut d'amorçage (D-2). L'exception ne couvre jamais `content/**`, `AGENTS.md`, `CLAUDE.md`, `docs/procedures/**`, `.claude/**` ni `docs/format-cas.md` ; un seul fichier hors exception rétablit la revue pour toute la PR.
+
+**Règle d'amorçage** (AD-24, D-1). Les stories 0.1 à 0.7 se fusionnent avant que leurs propres skills et la CI existent : elles suivent la règle 11 des stories.
+
+**Format du rapport de revue.** Un seul, celui d'AD-24 : première ligne `llm-review sha=<SHA> base=<base> model=<modèle> verdict=<pass|block>`, suivie du texte de la revue. `llm-review` l'écrit (story 0.5), `verify-and-merge-pr` le lit (story 0.7).
+
+**Placement.** Les skills qui s'appuient sur des stories ultérieures sont placés après elles, pour qu'aucune story ne dépende d'une story suivante : le verrou « CI verte » (story 3.16) et `publish-case` (3.17) après les contrôles ; `release` (11.7), `rehearse-release` (11.8) et `hotfix` (11.12) après l'image et le déploiement.
+
+**Stories ajoutées après la rétrospective.** La story 0.8 (durcissement de l'outillage) a été ajoutée le 15/09/2026, après la rétrospective de l'epic 0 (`_bmad-output/implementation-artifacts/epic-0-retro-2026-09-15.md`), puis coupée en deux après sa revue de spec : la story 0.9 prend la lecture commune du suivi et les tests. Les deux se font avant l'Epic 1.
+
+### Story 0.1 : Gitea token in env and env example
+
+En tant qu'Arnaud, mainteneur,
+je veux un jeton Gitea aux portées minimales, rangé dans `.env`, et un `.env.example` qui liste les variables sans valeur,
+afin que les skills appellent l'API de la forge sans qu'aucun identifiant n'entre dans le dépôt.
+
+**Couvre :** NFR-9, NFR-11, FR-18 · AD-9, AD-12, AD-24
+**Dépendances :** planification de sprint faite (`sprint-status.yaml`, règle d'amorçage)
+**Bloquée par :** —
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** **oui**, première opération de l'epic : créer dans l'interface Gitea un jeton d'accès aux portées minimales (PR, fusion, commentaires) et avec une expiration ; renseigner `GITEA_URL`, `GITEA_USER` et `GITEA_TOKEN` dans `.env` à la racine, depuis son propre terminal.
+
+**Critères d'acceptation :**
+
+**Étant donné** `.env.example`, commité
+**Quand** on le lit
+**Alors** il liste, sans aucune valeur, `GITEA_URL`, `GITEA_USER`, `GITEA_TOKEN` et les sept variables `HUGO_LEGAL_*` d'AD-9.
+
+**Étant donné** `.env` renseigné par Arnaud
+**Quand** on lance `git status` puis `scripts/check-private.sh staged` après un `git add -f .env` dans un clone jetable
+**Alors** `.env` n'apparaît pas comme fichier à suivre, puis le garde-fou refuse le chemin.
+
+**Étant donné** `docs/procedures/gitea-token.md`
+**Quand** on la suit
+**Alors** elle décrit la création du jeton (portées, expiration, renouvellement), les trois variables de `.env`, et la règle : aucun script n'affiche ni ne demande le jeton.
+
+- [ ] Aucune valeur de jeton, d'URL de forge ou de nom de compte n'est commitée.
+
+**Questions à poser avant de commencer :**
+- Nom de la procédure (`docs/procedures/gitea-token.md` est une proposition, aucun document ne le fixe) ?
+
+### Story 0.2 : Main branch protections and merge styles
+
+En tant qu'Arnaud, mainteneur,
+je veux créer `main`, protéger `dev` et `main` et imposer les styles de fusion du flux linéaire,
+afin qu'aucun merge commit ni push direct n'entre sur les branches publiées.
+
+**Couvre :** FR-28, FR-30 (flux documenté par le README-cas), NFR-7 · AD-24
+**Dépendances :** aucune
+**Bloquée par :** —
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** **oui**, administration Gitea : création de `main` depuis `dev` ; protection de `dev` et `main` ; `main` sans aucun push ni force-push, pour aucun compte ; `dev` avec le compte d'Arnaud dans la liste de push (Gitea exige le droit de push pour autoriser un force-push) et seul dans la liste de force-push (exception tracée, utilisée par `hotfix` après son approbation explicite) ; styles de fusion du dépôt limités au squash et au fast-forward seulement, squash par défaut, mise à jour des PR par rebase seulement ; aucun style « merge commit » (D-10). Gitea fixe les styles par dépôt et non par branche : le squash vers `dev` et le fast-forward vers `main` sont imposés par les scripts (AD-24).
+
+**Critères d'acceptation :**
+
+**Étant donné** la configuration appliquée
+**Quand** Arnaud tente un push direct, puis un force-push, sur `main`
+**Alors** les deux sont refusés.
+
+**Étant donné** un compte autre que celui d'Arnaud, s'il en existe un
+**Quand** il tente un push direct sur `dev`
+**Alors** il est refusé ; pour le compte d'Arnaud, le push direct sur `dev` reste techniquement possible et n'est interdit que par la procédure (D-10).
+
+**Étant donné** une PR de test
+**Quand** elle est fusionnée par l'API avec le style `merge`, `rebase` ou `rebase-merge`
+**Alors** la fusion est refusée : seuls `squash` et `fast-forward-only` sont autorisés dans le dépôt.
+
+**Étant donné** la PR de cette story vers `dev`
+**Quand** elle est fusionnée
+**Alors** elle l'est en squash, et l'historique de `dev` reste linéaire.
+
+**Étant donné** une PR de test vers une base protégée comme `main` (branches temporaires)
+**Quand** la base est un ancêtre de la tête, puis quand la base a divergé
+**Alors** la fusion se fait en fast-forward, puis elle est impossible.
+
+**Étant donné** un compte autre que celui d'Arnaud, s'il en existe un
+**Quand** il tente un force-push sur `dev`
+**Alors** il est refusé.
+
+- [ ] Les réglages sont notés dans `docs/procedures/gitea-branches.md`, sans nom d'hôte, avec la limite du push direct d'Arnaud sur `dev`.
+
+**Questions à poser avant de commencer :**
+- La version de Gitea en service propose-t-elle le style de fusion « fast-forward only » pour les PR ? À constater avant la configuration.
+
+### Story 0.3 : Check-private skill
+
+En tant qu'Arnaud ou agent de développement,
+je veux une procédure unique pour lancer le garde-fou et l'audit complet de l'historique,
+afin de ne jamais pousser, activer le miroir ou envoyer un diff à un reviewer sans audit.
+
+**Couvre :** FR-28, NFR-9, SM-5 · AD-12, AD-24 · C1
+**Dépendances :** aucune
+**Bloquée par :** —
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** non
+
+**Critères d'acceptation :**
+
+**Étant donné** `.claude/skills/check-private/SKILL.md`
+**Quand** un agent le lit
+**Alors** il y trouve en quelques lignes quand l'utiliser (avant tout push, avant l'activation du miroir, avant l'envoi à un reviewer) et le renvoi à `docs/procedures/check-private.md`.
+
+**Étant donné** `docs/procedures/check-private.md`
+**Quand** on la suit
+**Alors** elle décrit les modes `staged`, `history` et `pre-receive` de `scripts/check-private.sh` (script existant, non dupliqué), l'activation du hook local (`git config core.hooksPath .githooks`) et l'audit complet avec la liste des motifs, sans jamais en recopier le contenu.
+
+- [ ] Le skill n'ajoute pas de second script.
+- [ ] Une alerte n'affiche que l'emplacement (commit, fichier, ligne) et le numéro de ligne du motif, jamais le contenu ni le motif ; vérifié sur les trois modes avec des motifs factices, y compris des noms de fichier contenant deux-points, tabulation ou saut de ligne.
+- [ ] Chaque arbre vérifié est cherché en un seul passage avec tous les motifs ; le détail motif par motif n'a lieu qu'en cas de résultat, et une erreur de recherche fait échouer le garde-fou.
+- [ ] La procédure impose `PRIVATE_PATTERNS_FILE` pour auditer une copie sans `docs/private/`.
+- [ ] `.agents/skills/check-private` et `.agent/skills/check-private` sont des liens symboliques relatifs vers `.claude/skills/check-private/`.
+
+### Story 0.4 : Create-pull-request skill
+
+En tant qu'agent de développement,
+je veux ouvrir une PR sur la forge par l'API REST de Gitea, sans exposer de secret ni abîmer le corps de la PR,
+afin que chaque story arrive en revue de la même façon.
+
+**Couvre :** NFR-7, NFR-11 · AD-24
+**Dépendances :** 0.1, 0.2
+**Bloquée par :** —
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** **oui**, constater que `jq` est installé sur le poste de développement (`command -v jq` ; présent, constat du 13/09/2026) ; l'architecture ne retient pas python3 pour ces scripts (AD-24).
+
+**Critères d'acceptation :**
+
+**Étant donné** `scripts/create-pull-request.sh`
+**Quand** il s'exécute
+**Alors** il charge `GITEA_URL`, `GITEA_USER` et `GITEA_TOKEN` depuis `.env`, sans jamais en afficher la valeur.
+
+**Étant donné** l'absence de `.env` ou d'une des trois variables
+**Quand** il s'exécute
+**Alors** il échoue avec un message qui renvoie à la procédure de la story 0.1, sans demander le jeton.
+
+**Étant donné** un corps de PR contenant guillemets, retours à la ligne et accents
+**Quand** la PR est créée
+**Alors** le corps est toujours écrit dans un fichier, passé par `jq --rawfile` puis envoyé par `curl --data @`, et arrive intact.
+
+**Étant donné** un dépôt dont le nom ne correspond pas au nom canonique
+**Quand** le script s'exécute
+**Alors** il échoue avant tout appel d'écriture.
+
+- [ ] Une PR vers `main` n'est pas créée par ce skill, et une branche `hotfix/*` est refusée : il renvoie vers `release` ou `hotfix`.
+- [ ] La base se déduit du préfixe : `feat/*`, `fix/*`, `chore/*` et `docs/*` → `dev` ; tout autre préfixe est refusé.
+- [ ] Le nom canonique `Eleyone/eleyone.fr` est une constante du script, comparée au dépôt distant `origin`.
+- [ ] Le titre est obligatoire ; le corps est lu par défaut dans `.pr-body.md` à la racine (ignoré par git, réutilisé d'une PR à l'autre), ou dans `--body-file`.
+- [ ] Refus avant tout appel d'écriture : modifications en attente, branche non poussée au même commit, alerte de `check-private.sh history` sur la branche (fichier de motifs exigé), motif privé dans le titre ou le corps, jeton d'un autre compte que `GITEA_USER`, PR déjà ouverte pour la branche (dont le numéro est affiché).
+- [ ] La sortie donne le numéro de la PR, jamais son adresse ; le corps publié est relu et comparé octet par octet au fichier.
+- [ ] La PR de cette story est ouverte par le script lui-même, avec un corps contenant guillemets, retours à la ligne et accents : preuve de fonctionnement.
+- [ ] Sans `jq` dans le `PATH`, le script échoue avant tout appel, avec un message qui indique l'installation (`sudo apt install jq`).
+
+**Questions à poser avant de commencer :**
+- Où est déclaré le nom canonique du dépôt (constante du script, variable de `.env`) ? Réponse d'Arnaud (14/09/2026) : constante du script.
+
+### Story 0.5 : LLM-review skill with cross-vendor review
+
+En tant qu'Arnaud, mainteneur,
+je veux qu'un LLM d'un autre fournisseur que l'auteur relise la spec de chaque story avant son implémentation, puis le diff de chaque PR avec un verdict explicite publié sur la PR,
+afin qu'aucune spec ni aucun merge ne repose sur la seule relecture du modèle qui a écrit le code.
+
+**Couvre :** NFR-7, NFR-9, NFR-11 · AD-12, AD-24
+**Dépendances :** 0.3, 0.4
+**Bloquée par :** —
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** **oui**, `agy` authentifié sur le poste : `agy models` répond (prérequis du poste d'AD-24).
+
+**Décisions (Arnaud, 14/09/2026, après la revue de spec) :**
+- deux usages du même script : `scripts/llm-review.sh --story <n.m>` (revue de spec) et `scripts/llm-review.sh <numéro de PR>` (revue du code) ;
+- relecteurs en constantes du script, sans option pour en changer : auteur Claude (défaut) → `gemini-3.1-pro-high` ; `AUTHOR_LLM=gemini` → `claude-opus-4-6-thinking` ;
+- c'est le relecteur qui applique le skill de revue BMAD `bmad-review`, lu comme fichier dans la copie isolée ; l'auteur ne le lance jamais à sa place ; `bmad-code-review`, qui attend des réponses, est écarté ;
+- angles : revue de spec, adverse, structure et prose ; revue du code, edge-case-hunter et verification-gap, plus la couche propre au projet (critères d'acceptation, données privées et secrets, cohérence entre skill, procédure et script, `AGENTS.md` et AD) ; une PR sans code garde la couche propre au projet et prend les angles structure et prose ;
+- consignes versionnées : `scripts/llm-review-prompt.md` (code) et `scripts/llm-review-spec-prompt.md` (spec) ; `--context <fichier>` y ajoute des précisions ;
+- classement : est bloquant ce qui casse un critère d'acceptation, fait fuiter une donnée privée ou un secret, ou laisse passer une erreur en silence ; le reste est non bloquant ;
+- lecture de `.env` et accès à l'API Gitea mis en commun dans `scripts/lib/gitea.sh`, utilisé aussi par `create-pull-request.sh` ; `.env` n'est lu que juste avant le premier appel à l'API, et jamais par la revue de spec ;
+- trace de chaque revue dans le fichier de story `_bmad-output/implementation-artifacts/<clé>.md` ; constats reportés dans `deferred-work.md`.
+
+**Critères d'acceptation :**
+
+**Étant donné** `scripts/llm-review.sh`
+**Quand** il démarre
+**Alors** il coupe la trace du shell avant toute lecture de `.env`, échoue sans `jq` en indiquant `sudo apt install jq` et refuse une valeur d'`AUTHOR_LLM` autre que `claude` ou `gemini`
+**Et** il refuse tout appel qui ne donne pas exactement un des deux usages : `--story <n.m>` ou un numéro de PR.
+
+**Étant donné** un numéro de PR
+**Quand** le script prépare la revue du code
+**Alors** il charge `.env` par `scripts/lib/gitea.sh` sans afficher de valeur (renvoi à la procédure de la story 0.1 si une variable manque), lit par l'API la base, la branche et le SHA de tête, refuse une PR fermée, récupère ce SHA depuis la forge et crée la copie relue à ce SHA, jamais depuis l'arbre local
+**Et** le diff relu est `git diff <base>...<SHA>` : la branche entière.
+
+**Étant donné** `--story <n.m>`
+**Quand** le script prépare la revue de spec
+**Alors** il extrait le texte de la story d'`epics.md` à la tête de `dev` lue sur la forge ; une story introuvable le fait échouer.
+
+**Étant donné** le contenu à relire
+**Quand** le script crée la copie isolée
+**Alors** c'est un worktree git temporaire **hors du dépôt**, qui ne contient que les fichiers suivis : ni `.env`, ni `docs/private/`, ni `.pr-body.md`
+**Et** `scripts/check-private.sh history` passe sur la plage relue avec la liste des motifs **avant** tout envoi ; sans fichier de motifs ou en cas d'alerte, rien n'est envoyé
+**Et** le script écrit en tête du fichier relu un jeton de lecture aléatoire.
+
+**Étant donné** l'appel au relecteur
+**Quand** la revue s'exécute
+**Alors** le script lance `agy --mode plan` avec le modèle en constante, la consigne versionnée complétée du chemin absolu de la copie, et la copie passée par `--add-dir` (sans cela, le relecteur n'a trouvé aucun fichier : constat de la story 0.2)
+**Et** la consigne demande d'appliquer `bmad-review` avec les angles de l'usage, de recopier le jeton, de classer chaque constat, et de terminer par la ligne `VERDICT:` (revue du code) ou par une section « À trancher » (revue de spec)
+**Et** un délai dépassé ou un échec d'`agy` fait échouer le script sans rien publier.
+
+**Étant donné** la réponse du relecteur
+**Quand** le script la contrôle
+**Alors** le rapport doit citer le jeton de lecture : sinon ce n'est pas une revue, et le script échoue sans rien publier
+**Et** en revue du code, la dernière ligne non vide du rapport doit être `VERDICT: NON BLOQUANT — …` (`pass`) ou `VERDICT: BLOQUANT — …` (`block`) ; toute autre forme fait échouer le script sans rien publier, et un verdict `block` se publie normalement
+**Et** le script ne retient le rapport qu'à partir de la ligne du jeton, et écarte ce qu'`agy` écrit avant
+**Et** il liste, dans sa sortie et dans ce qu'il écrit, tout fichier que le relecteur a créé ou modifié dans la copie : `agy --mode plan` n'est pas en lecture seule (constat de la story 0.3).
+
+**Étant donné** une revue du code contrôlée
+**Quand** le script la publie
+**Alors** il poste en commentaire de la PR le rapport, précédé d'une première ligne `llm-review sha=<SHA de tête> base=<base> model=<modèle> verdict=<pass|block>` (format d'AD-24) ; une réponse autre que HTTP 201 le fait échouer
+**Et** il ajoute à la fin de la section « Revue du code » du fichier de story le SHA, le modèle, le verdict et les constats, sans modifier ni supprimer de ligne existante ; l'auteur ajoute ensuite, sous le rapport, sa décision pour chaque constat ; le script ne commite rien.
+
+**Étant donné** une revue de spec contrôlée
+**Quand** le script termine
+**Alors** il affiche le rapport et l'ajoute à la section « Revue de spec » du fichier de story, qu'il crée s'il n'existe pas, avec l'en-tête `Status:` du suivi de sprint ; rien n'est publié sur la forge
+**Et** l'auteur trie chaque constat (corrigé dans la story, question tranchée par Arnaud, écarté avec sa raison) avant de reformuler la story et de poser ses questions.
+
+**Étant donné** la fin du script, en succès, en échec ou sur interruption
+**Quand** il se termine
+**Alors** la copie isolée et les fichiers temporaires sont supprimés.
+
+- [ ] L'identifiant exact de chaque modèle relecteur (sortie de `agy models`) est consigné dans `docs/procedures/llm-review.md`.
+- [ ] Les refus de lecture de `.env` configurés pour les agents (`.claude/settings.json`, réglage d'Antigravity sur le poste, `.antigravityignore`) ne sont qu'une défense en profondeur : ils ne remplacent pas la copie isolée.
+- [ ] Preuve : la PR de cette story est relue par le script lui-même, puis une seconde fois avec `AUTHOR_LLM=gemini` ; la revue de spec de la story 0.6 est la première faite par `--story`.
+- [ ] Les stories 0.1 à 0.4 ont un fichier de story d'historique, où leur revue de spec est notée « non faite, l'outil n'existait pas encore ».
+
+### Story 0.6 : Sprint-consistency skill
+
+En tant qu'Arnaud, mainteneur,
+je veux vérifier que le suivi de sprint et les fichiers de story disent la même chose,
+afin qu'aucune PR ne soit fusionnée sur une story mal suivie.
+
+**Couvre :** NFR-7 · AD-24
+**Dépendances :** 0.2, 0.5 (fichiers de story)
+**Bloquée par :** —
+**Prérequis de contenu :** `sprint-status.yaml` et fichiers de story dans `_bmad-output/implementation-artifacts/` (stories 0.1 à 0.5).
+**Opération manuelle (Arnaud) :** non
+
+**Décisions (Arnaud, 14/09/2026, après la revue de spec) :**
+- trois niveaux, visibles dans tous les outils : `.claude/skills/sprint-consistency/SKILL.md` et ses liens, `docs/procedures/sprint-consistency.md`, `scripts/sprint-consistency.sh`, en bash seul, sans Python ni outil YAML ;
+- interface : sans option, contrôle global de l'arbre de travail ; `--merge <n.m>` exige en plus la story à `done` dans le suivi et dans son fichier ; `--rev <commit>` lit le suivi et les fichiers de story dans ce commit ; le lien entre une PR et sa story (numéro tiré du nom de la branche) relève de `verify-and-merge-pr` (story 0.7) ;
+- statuts d'epic vérifiés d'après leurs stories : `backlog` si aucune n'a commencé (`backlog` ou `ready-for-dev`), `done` si toutes sont à `done`, `in-progress` sinon ; les rétrospectives ne sont pas vérifiées ;
+- tolérances : une story en `backlog` peut avoir un fichier de story s'il porte `Status: backlog` ; seule la première ligne `Status:` du fichier compte ; une ligne absente, mal écrite ou hors vocabulaire est un écart ;
+- statuts seulement en v1, pas les branches (D-17).
+
+**Critères d'acceptation :**
+
+**Étant donné** `scripts/sprint-consistency.sh` sans option
+**Quand** il s'exécute
+**Alors** il lit la section `development_status` de `_bmad-output/implementation-artifacts/sprint-status.yaml` et les fichiers de story du même dossier (`<clé>.md`)
+**Et** il signale comme écart : une story hors `backlog` sans fichier de story ; un fichier de story sans entrée dans le suivi ; un fichier dont la première ligne `Status:` manque, est mal écrite, porte une valeur hors vocabulaire ou diffère du suivi ; un statut de story ou d'epic hors vocabulaire ; un epic dont le statut ne correspond pas à ses stories, ou sans aucune story ; des stories dont l'epic n'a pas de ligne dans le suivi ; une clé non reconnue
+**Et** il liste tous les écarts et sort avec le code 1 s'il y en a au moins un ; sinon il annonce la cohérence et sort avec le code 0
+**Et** une story `in-progress` ou `review` n'est jamais un écart en soi : le contrôle passe pendant tout le développement.
+
+**Étant donné** l'absence de `sprint-status.yaml`, ou une section `development_status` vide
+**Quand** le script s'exécute
+**Alors** il le dit explicitement et sort en échec (code 2), sans conclure à la cohérence ; de même si la liste des fichiers de story ne peut pas être lue.
+
+**Étant donné** `--merge <n.m>`
+**Quand** le script s'exécute
+**Alors** en plus du contrôle global, la story `n.m` doit exister dans le suivi sous une seule clé, y être à `done` et avoir son fichier de story à `done` ; sinon c'est un écart, et la fusion est refusée.
+
+**Étant donné** `--rev <commit>`
+**Quand** le script s'exécute
+**Alors** il lit le suivi et les fichiers de story dans ce commit, pas dans l'arbre de travail ; un commit introuvable le fait échouer (code 2).
+
+- [ ] Testé sur le dépôt réel (cohérent) et sur une copie jetable présentant chaque écart et chaque tolérance.
+
+### Story 0.7 : Verify-and-merge-pr skill
+
+En tant qu'Arnaud, mainteneur,
+je veux auditer une PR par défaut et ne la fusionner qu'avec `--merge`, seulement si tous les verrous passent,
+afin qu'aucun merge ne contourne la revue, le garde-fou ou le flux linéaire.
+
+**Couvre :** FR-28, NFR-9, NFR-11 · AD-12, AD-24
+**Dépendances :** 0.5, 0.6
+**Bloquée par :** —
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** non (prérequis : `jq`, constaté à la story 0.4)
+
+**Décisions (Arnaud, 15/09/2026, après la revue de spec) :**
+- trois niveaux, visibles dans tous les outils : `.claude/skills/verify-and-merge-pr/SKILL.md` et ses liens, `docs/procedures/verify-and-merge-pr.md`, `scripts/verify-and-merge-pr.sh`, qui s'appuie sur `scripts/lib/gitea.sh`, `check-private.sh` et `sprint-consistency.sh` ;
+- le script lit les objets git et l'API, et n'écrit jamais dans l'arbre de travail ;
+- PR fusionnable : ouverte, pas en brouillon, `mergeable`, pas déjà fusionnée, base `dev` ;
+- rapport de revue retenu : le dernier commentaire `llm-review` publié par le compte `GITEA_USER`, sur le SHA de tête (ou sur son parent pour le commit de statut) et la base de la PR ; un `block` plus récent l'emporte ;
+- branche sans numéro de story : le verrou de suivi devient le contrôle global de `sprint-consistency.sh` ;
+- règle d'amorçage : le script lance lui-même le substitut de la CI ;
+- message du commit de fusion : titre de la PR suivi de « (#N) », sujets des commits de la branche et lignes `Co-Authored-By` sans doublon.
+
+**Critères d'acceptation :**
+
+**Étant donné** `scripts/verify-and-merge-pr.sh <PR>` sans option
+**Quand** il s'exécute
+**Alors** il affiche l'état de chaque verrou (`passe`, `absent` ou `bloque`) sans rien fusionner, et sort avec le code 0 si tous passent, 1 si au moins un bloque, 2 si l'audit est impossible.
+
+**Étant donné** les verrous d'une PR
+**Quand** le script les évalue
+**Alors** il vérifie, dans l'ordre :
+- **PR fusionnable** : ouverte, pas en brouillon, `mergeable`, pas déjà fusionnée ; base `dev` ; une base `main` est refusée avec un renvoi vers `release` ou `hotfix`, toute autre base est refusée ;
+- **revue LLM** : le dernier rapport `llm-review` de `GITEA_USER` (format d'AD-24) porte `sha=` égal au SHA de tête et `verdict=pass`, ou `sha=` égal à son parent et `verdict=pass` avec un commit de tête conforme à la règle du commit de statut ; `base=` égal à la base de la PR ;
+- **garde-fou** : `scripts/check-private.sh history base..tête`, avec la liste des motifs, sur les commits récupérés depuis la forge ;
+- **CI** : état combiné de la forge sur le SHA de tête ;
+- **suivi de sprint** : `scripts/sprint-consistency.sh --merge <n.m> --rev <SHA de tête>`, numéro de story tiré du nom de la branche ; contrôle global `--rev <SHA de tête>` pour une branche sans numéro.
+
+**Étant donné** `--merge`
+**Quand** un verrou bloque
+**Alors** rien n'est fusionné ; sinon, après avoir vérifié que la tête n'a pas bougé et que le message ne contient aucun motif privé, le script fusionne en squash sur le SHA de tête exact (`head_commit_id`), fait supprimer la branche, puis confirme la fusion.
+
+**Étant donné** une PR dont tous les fichiers sont sous `_bmad-output/`, `sprint-status.yaml` compris (D-2)
+**Quand** le script évalue la revue
+**Alors** la revue LLM n'est pas exigée ; garde-fou, CI et suivi le restent ; un seul fichier hors de `_bmad-output/` (dont `content/**`, `AGENTS.md`, `CLAUDE.md`, `docs/procedures/**`, `.claude/**`, `docs/format-cas.md`) rétablit la revue.
+
+**Étant donné** `.gitea/workflows/checks.yaml` absent de la branche de base
+**Quand** la CI est absente sur la tête
+**Alors** le verrou s'affiche `absent`, jamais `passe`, et le script lance le substitut d'amorçage (D-1) : le garde-fou, puis `scripts/check.sh` sur la tête dès qu'il existe (story 3.2) ; un substitut en échec bloque ; dès que ce fichier existe sur la base, une CI absente bloque (story 3.16).
+
+**Étant donné** une PR qui ajoute `sprint-status.yaml` à une base qui ne l'a pas
+**Quand** le verrou de suivi de sprint est évalué
+**Alors** c'est la seule PR admise sans ce verrou (règle d'amorçage).
+
+**Étant donné** un rapport `llm-review` à `verdict=pass` sur le parent du SHA de tête
+**Quand** le commit de tête, seul après le SHA relu, ne modifie que `sprint-status.yaml` (la ligne de la story `review` → `done`, `last_updated` et, si la story clôt son epic, la ligne de l'epic → `done`) et l'en-tête `Status:` du fichier de story (`review` → `done`), et n'ajoute par ailleurs que des lignes au fichier de story et à `deferred-work.md`
+**Alors** le verrou de revue passe ; tout autre changement, contrôlé ligne par ligne dans `git diff`, ou plus d'un commit après le SHA relu, exige une nouvelle revue.
+
+- [ ] Aucune option `--force` ; `force_merge` et `merge_when_checks_succeed` ne sont jamais envoyés.
+- [ ] Sans `jq` dans le `PATH`, le script échoue avant tout appel, avec un message qui indique l'installation (`sudo apt install jq`).
+- [ ] Le script charge `.env` par `scripts/lib/gitea.sh` sans afficher de valeur ; sans variable Gitea, il échoue en renvoyant à la procédure de la story 0.1.
+- [ ] Preuve : la PR de cette story est auditée puis fusionnée par le script lui-même, après l'autorisation d'Arnaud.
+
+### Story 0.8 : Dev tooling hardening
+
+**Ajoutée après la rétrospective de l'epic 0** (décision d'Arnaud, 15/09/2026), **réécrite et coupée en deux après sa revue de spec** : elle reprend les correctifs de `_bmad-output/implementation-artifacts/epic-0-retro-2026-09-15.md`, section « Constats » ; la lecture commune du suivi et les tests forment la story 0.9. Chaque critère cite le code du constat qu'il ferme. Les constats documentaires de la rétrospective restent des actions traitées au fil des stories qui touchent leurs fichiers.
+
+En tant qu'Arnaud, mainteneur,
+je veux que les scripts de l'epic 0 tiennent leurs garanties dans les cas limites relevés par la rétrospective,
+afin qu'aucun secret ne soit trouvable par le relecteur externe et qu'aucun verrou ne passe, ne boucle ou ne se trompe en silence.
+
+**Couvre :** FR-28, NFR-9, NFR-11 · AD-12, AD-24
+**Dépendances :** 0.1 à 0.7, rétrospective de l'epic 0
+**Bloquée par :** —
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** **oui**, préparation seulement : poser, dans un dossier jetable hors du dépôt de travail, un faux `.env` qui ne contient qu'une valeur témoin, sans aucun secret réel (la règle `deny` du poste interdit à l'agent d'écrire un `.env`). L'agent lance l'essai et consigne son résultat.
+
+**Décisions (Arnaud, 15/09/2026, après la revue de spec) :**
+- la copie de revue devient un export du SHA relu, et non plus un worktree git : `AGENTS.md` (point 2) et AD-24 sont alignés dans cette story ;
+- les rapports `llm-review` sont lus par la timeline de la PR, qui pagine réellement, et non plus par la liste des commentaires, dont la forge ignore `limit` et `page` ;
+- une story ne peut pas être livrée en plusieurs PR (`verify-and-merge-pr --merge <n.m>` exige la story à `done`) : la lecture commune du suivi et les tests forment la story 0.9.
+
+**Critères d'acceptation :**
+
+**Étant donné** la copie relue par `scripts/llm-review.sh`
+**Quand** le relecteur est lancé
+**Alors** la copie est un export du SHA relu (`git archive`), sans fichier ni dossier `.git`, qui donnerait le chemin du dépôt de travail ; elle ne contient ni `.env`, ni `docs/private/`, ni `.pr-body.md` ; un manifeste `sha256sum` de tous ses fichiers, fichiers cachés compris, est pris avant la revue et comparé après, et le script nomme les fichiers ajoutés, modifiés ou supprimés par le relecteur (S11).
+
+**Étant donné** un dossier jetable où Arnaud a posé un faux `.env` à valeur témoin
+**Quand** l'agent y lance le relecteur comme le fait `llm-review.sh` (`agy --mode plan`, `--dangerously-skip-permissions`), une fois en lui demandant de lire ce `.env`, une fois en lui demandant d'y chercher la valeur par une commande absente de la liste `deny` du poste (par exemple `grep`)
+**Alors** le fichier de story consigne, pour chaque essai, si la valeur témoin apparaît dans la réponse ; si elle apparaît, Arnaud décide de la protection avant que la story passe à `done` (S11, `ARCHITECTURE-SPINE.md:508`).
+
+**Étant donné** la recherche du rapport `llm-review` d'une PR par `scripts/verify-and-merge-pr.sh`
+**Quand** le script lit les commentaires de la PR
+**Alors** il les lit par `GET /repos/{owner}/{repo}/issues/{index}/timeline`, par pages de la taille lue dans `GET /settings/api` (`max_response_items`), s'arrête sur la première page incomplète, échoue en code 2 sur une page illisible ou au-delà d'un nombre maximal de pages, et ne retient que les éléments de type `comment` ; la procédure consigne que la liste des commentaires ignore `limit` et `page` (D1, P3).
+
+**Étant donné** un fichier de motifs qui existe mais ne contient que des commentaires ou des lignes blanches (espaces, tabulations, retours chariot)
+**Quand** `create-pull-request.sh`, `llm-review.sh` ou `verify-and-merge-pr.sh` s'exécute
+**Alors** il refuse comme pour un fichier absent ; et `check-private.sh`, lancé seul, annonce « chemins seulement » comme sans fichier (D2).
+
+**Étant donné** `scripts/check-private.sh` lancé depuis un sous-dossier du dépôt
+**Quand** il audite l'index, un commit ou l'historique
+**Alors** il audite tout le dépôt depuis sa racine git (`git rev-parse --show-toplevel`), avec le même résultat que lancé depuis la racine (D3).
+
+**Étant donné** une PR dont le titre contient un antislash, un guillemet, un `$` ou un accent grave
+**Quand** `verify-and-merge-pr.sh --merge` construit le titre du commit de fusion
+**Alors** ce titre reprend celui de la PR octet pour octet, suivi de « (#N) », sans qu'aucun caractère soit interprété par le shell (D5).
+
+**Étant donné** `.gitea/workflows/checks.yaml` absent de la base et des statuts de CI présents sur la tête
+**Quand** leur état combiné est `pending`
+**Alors** le verrou CI bloque (« en cours ») au lieu de s'afficher `absent` ; un état `failure` bloque comme aujourd'hui ; sans aucun statut sur la tête, la règle d'amorçage s'applique inchangée (S5).
+
+**Étant donné** `docs/procedures/verify-and-merge-pr.md`, `docs/procedures/llm-review.md`, `AGENTS.md` et AD-24
+**Quand** on les lit
+**Alors** la procédure `verify-and-merge-pr` dit qu'une PR peut apparaître « non fusionnable » juste après un push, le temps que la forge recalcule, et qu'il suffit de relancer l'audit (P3) ; la procédure `llm-review` décrit la copie exportée, le manifeste, le résultat de l'essai du faux `.env` et le cheminement des rapports ajoutés au fichier de story jusqu'au commit `done`, y compris après un verdict `block` (P5) ; `AGENTS.md` et AD-24 décrivent la copie exportée au lieu du worktree ; les SKILL.md des scripts modifiés concordent.
+
+- [ ] Le fichier de story renvoie à la section « Constats » de la rétrospective et consigne, pour chaque code (S11, D1, D2, D3, D5, S5, P3, P5), le commit ou l'essai qui le ferme.
+- [ ] Si les ajouts sous `scripts/` dépassent ceux de la story 0.7 (312 lignes), la découpe est revue avec Arnaud avant la revue du code (action 10 de la rétrospective).
+
+**Hors périmètre :** D6 (codes de sortie hétérogènes), par décision d'Arnaud à la rétrospective ; lecture commune du suivi (D4, D7) et tests (P1), qui forment la story 0.9.
+
+### Story 0.9 : Shared sprint reading and script tests
+
+**Ajoutée après la revue de spec de la story 0.8** (décision d'Arnaud, 15/09/2026), qui a coupé la story de durcissement en deux, **puis réécrite après sa propre revue de spec**. Elle reprend les constats D4, D7 et P1 de `_bmad-output/implementation-artifacts/epic-0-retro-2026-09-15.md`, section « Constats ».
+
+En tant qu'Arnaud, mainteneur,
+je veux une seule lecture du suivi de sprint et des tests bash rejouables hors ligne pour les scripts de l'epic 0, sur le poste et en CI,
+afin que les pièges déjà rencontrés ne reviennent pas d'une story à l'autre et que les copies d'une même logique ne divergent plus.
+
+**Couvre :** FR-28, NFR-7 · AD-24
+**Dépendances :** 0.8
+**Bloquée par :** —
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** non
+
+**Décisions (Arnaud, 15/09/2026, après la revue de spec) :**
+- les tests tournent sur le poste de développement et en CI : ils ne dépendent que de `bash`, `git`, `jq`, `grep` GNU et des outils de base, disponibles dans `CHECK_IMAGE` ; leur lancement par le job de contrôle partagé est ajouté à la story 3.12 ;
+- deux fichiers de bibliothèque, pour la lisibilité et les tests : `scripts/lib/sprint.sh` (lecture du suivi, sans `jq`) et `scripts/lib/merge-gates.sh` (décisions de `verify-and-merge-pr`) ;
+- les fonctions de lecture du suivi répondent par leur code de retour, comme beaucoup de commandes : `0` trouvée, `1` absente, `2` illisible ou ambiguë, et rien sur la sortie standard en cas d'erreur ;
+- le repère de taille de l'action 10 de la rétrospective ne compte que le code de production (`scripts/*.sh`, `scripts/lib/`) : les tests et leurs fixtures sont indissociables de ce qu'ils testent et ne comptent pas.
+
+**Critères d'acceptation :**
+
+**Étant donné** `scripts/lib/sprint.sh`
+**Quand** `llm-review.sh`, `verify-and-merge-pr.sh` ou `sprint-consistency.sh` lit une clé ou un statut de story dans le texte de `sprint-status.yaml`, pris dans l'arbre de travail ou dans un commit
+**Alors** il passe par les fonctions de ce fichier, sans `jq`, limitées à la section `development_status`, en gardant les tolérances actuelles de `sprint-consistency.sh` (indentation, guillemets, commentaire en fin de ligne) ; une fonction écrit la valeur trouvée et sort en `0`, sort en `1` sans rien écrire si la story est absente, et en `2` sans rien écrire si plusieurs clés correspondent ou si la valeur n'est pas un statut simple sur la ligne de la clé (par exemple un bloc sur plusieurs lignes) ; chaque script traduit ces codes en écart ou en refus (D4).
+
+**Étant donné** `scripts/lib/merge-gates.sh`
+**Quand** `verify-and-merge-pr.sh` décide d'un verrou
+**Alors** la décision passe par des fonctions qui lisent des fichiers ou des commits, sans appeler la forge : lecture des rapports dans une page de timeline, rapport `llm-review` retenu pour un SHA et une base, règle du commit de statut, verrou CI, titre du commit de fusion ; les appels à la forge restent dans le script ; la lecture paginée de la timeline reçoit le nom de la fonction qui écrit une page dans un fichier, que le script fait appeler la forge et que les tests font lire des fixtures ; aucune variable d'environnement ne remplace l'appel à la forge.
+
+**Étant donné** les logiques recopiées relevées en D7
+**Quand** la story est terminée
+**Alors** deux sont mises en commun, et deux seulement : le numéro de story tiré du nom de branche (`llm-review.sh`, `verify-and-merge-pr.sh`) et la lecture de la clé et du statut d'une story (D4) ; les autres copies restent en place (D7).
+
+**Étant donné** `scripts/tests/run.sh`
+**Quand** on le lance depuis la racine du dépôt, sur le poste ou dans un conteneur `CHECK_IMAGE`
+**Alors** des tests en bash, sans framework, sans réseau, sans `.env` ni `docs/private/`, à partir de fixtures versionnées sous `scripts/tests/` et de dépôts git de test créés dans un dossier temporaire, rejouent :
+- D2 : fichier de motifs sans motif, avec lignes blanches, illisible ; D3 : audit depuis un sous-dossier ;
+- D4 : clé présente, absente, en double, valeur entre guillemets ou suivie d'un commentaire, valeur sur plusieurs lignes ;
+- D5 : titre avec antislash, guillemet, `$` et accent grave ;
+- le verrou CI (S5) : vert, en cours, échec, erreur, absent avec et sans `checks.yaml` sur la base ;
+- la règle du commit de statut : commit admis, ligne supprimée, autre fichier modifié, deux commits après le SHA relu ;
+- le rapport retenu : `block` plus récent qu'un `pass`, autre base, autre SHA, ligne mal formée ;
+- la pagination de la timeline : pages pleines, page incomplète, page `null` finale, plafond de pages ;
+
+et il s'arrête en code non nul au premier échec en nommant le cas (P1).
+
+**Étant donné** `docs/procedures/shell-scripts.md`
+**Quand** un agent ou Arnaud écrit ou modifie un script du poste ou de la CI
+**Alors** sa section « Pièges connus » liste les pièges déjà rencontrés, chacun avec la story qui l'a trouvé : substitution de processus `< <(…)` qui masque un échec, bloc `{ … } || die` qui suspend `set -e`, apostrophe dans `"${…:+…}"`, regex construite depuis une variable, `jq @tsv` qui double l'antislash, pagination supposée de l'API de la forge et réponse `null` au-delà de la dernière page ; elle demande de lancer `scripts/tests/run.sh` avant toute PR qui touche `scripts/` et d'ajouter un cas pour tout nouveau piège (P1).
+
+- [ ] L'entrée « aucun test automatisé des scripts shell » de `deferred-work.md` est close par une ligne ajoutée qui renvoie à cette story ; aucune entrée existante n'est modifiée.
+- [ ] `scripts/tests/run.sh` passe sur la tête de la PR, sur le poste et dans un conteneur `alpine:3.24` avec `bash`, `grep` GNU, `git` et `jq` ; tant que la CI n'existe pas, le résultat est noté dans la PR.
+- [ ] Le fichier de story consigne, pour D4, D7 et P1, le commit qui les ferme.
+
+**Hors périmètre :** D6 (codes de sortie hétérogènes) ; ShellCheck (absent du poste, aucun nouvel outil).
+
+## Epic 1 : Garde-fou public/privé avant tout miroir (WS-0)
+
+Arnaud peut publier le dépôt sur GitHub sans qu'aucun chemin ni motif privé y arrive. La forge principale refuse ces contenus côté serveur, l'historique complet est audité avec la liste des motifs, et le miroir n'est activé qu'ensuite (ordre imposé par AD-12).
+
+### Story 1.1 : Pre-receive guard fails without pattern list
+
+En tant qu'Arnaud, mainteneur,
+je veux que `scripts/check-private.sh pre-receive` refuse tout push quand la liste des motifs est absente ou vide,
+afin qu'un hook serveur mal installé ne laisse jamais passer un motif privé.
+
+**Couvre :** FR-28, NFR-9 · AD-12 · C2 (préparation)
+**Dépendances :** aucune
+**Bloquée par :** —
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** non
+
+**Décisions (Arnaud, 15/09/2026, après la revue de spec) :**
+- en mode `pre-receive`, une liste présente mais sans aucun motif (commentaires ou lignes blanches) est refusée comme une liste absente ; les modes `staged` et `history` gardent leur repli sur les chemins, avec l'avertissement ;
+- en mode `pre-receive`, `PRIVATE_PATTERNS_FILE` est obligatoire : un dépôt nu n'a pas de racine de travail, donc pas de chemin par défaut ; le hook installé par la story 1.2 la définit (procédure « hook pre-receive », étape 2) ;
+- les tests sont des cas de `scripts/tests/test-check-private.sh`, sur un dépôt nu jetable muni d'un vrai hook `pre-receive`, rejoués sur le poste, dans `CHECK_IMAGE` et en CI.
+
+**Critères d'acceptation :**
+
+**Étant donné** un dépôt nu jetable, hors du dépôt du site, dont le hook `pre-receive` appelle le script sans `PRIVATE_PATTERNS_FILE`, avec une liste absente, ou avec une liste qui ne contient que des commentaires ou des lignes blanches
+**Quand** un push quelconque y arrive
+**Alors** le script sort avec un code non nul et écrit sur la sortie d'erreur, que git retransmet à l'auteur du push, un message qui nomme la cause (variable absente, liste absente, liste sans motif), sans afficher de motif
+**Et** le push est refusé : la branche n'existe pas sur le dépôt nu.
+
+**Étant donné** le même dépôt nu, avec une liste de test contenant un motif factice
+**Quand** un push tente d'ajouter un fichier sous `docs/private/` ou `docs/context/`, un fichier `.env` à la racine ou dans un sous-dossier, un fichier `assets/cv/*.pdf`, un fichier texte qui contient le motif factice, ou de renommer un fichier existant vers `docs/private/`
+**Alors** chaque push est refusé, avec le commit et le chemin, sans afficher le motif ni le contenu.
+
+**Étant donné** le même dépôt nu et la même liste
+**Quand** un push ajoute un fichier qui nomme `docs/private/` dans son texte, ou dont le chemin ressemble à un chemin interdit sans l'être (par exemple `docs/private-notes.md`)
+**Alors** le push est admis (NFR-9).
+
+**Étant donné** l'exécution du script dans ses modes `staged` ou `history`
+**Quand** la liste des motifs est absente ou sans motif
+**Alors** leur comportement est inchangé : repli sur les chemins, avec l'avertissement (C1 en CI en dépend).
+
+- [ ] Les chemins interdits (`docs/private/`, `docs/context/`, `.env` à toute profondeur, `assets/cv/*.pdf`) figurent déjà dans le script : à constater, pas à réécrire.
+- [ ] Le mode `pre-receive` lit les commits reçus sans arbre de travail (`git ls-tree`, `git grep <commit>`), ce que les tests prouvent sur un dépôt nu.
+- [ ] Le script reste en `bash` avec `set -euo pipefail` ; `scripts/tests/run.sh` passe sur le poste et dans `alpine:3.24` ; le fonctionnement avec les outils de l'image de Gitea est vérifié par la story 1.2.
+- [ ] Aucun motif réel dans le dépôt, la PR ou les journaux.
+- [ ] Procédure `check-private.md` et AD-12 alignés.
+
+### Story 1.2 : Pre-receive hook installed on main forge
+
+En tant qu'Arnaud, mainteneur,
+je veux que la forge principale refuse côté serveur tout push qui contient un chemin ou un motif privé,
+afin que le garde-fou soit non contournable (UJ-4).
+
+**Couvre :** FR-28, NFR-9, UJ-4, SM-5 · AD-12, procédure « hook pre-receive » (étapes 1 à 6) · C2
+**Dépendances :** 1.1
+**Bloquée par :** —
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** **oui**, administration du serveur Gitea (image Docker normale, Gitea 1.27.3) : copie du script du garde-fou et de la liste des motifs dans le volume de données de Gitea, pose du hook dans le dépôt nu du site, ajout et retrait du motif factice, rendu de la liste inaccessible, recréation du conteneur, fusion de test depuis l'interface. Le développeur prépare le script du hook, ses tests et la procédure, et fait les pushs de test. Aucun chemin de la machine hôte ni nom d'hôte n'est commité.
+
+**Décisions (Arnaud, 15/09/2026, après la revue de spec) :**
+- le script du hook est versionné dans `scripts/gitea/pre-receive-check-private` et testé dans `scripts/tests/` ; il trouve le script du garde-fou et la liste des motifs sous `$GITEA_CUSTOM/eleyone-check-private/`, variable définie par les images officielles de Gitea, donc sans chemin du serveur dans le dépôt ; la procédure d'installation est `docs/procedures/gitea-pre-receive-hook.md` ;
+- les pushs de test sont faits par l'agent, depuis un clone jetable hors du dépôt de travail, avec le hook local désactivé dans ce seul clone, du contenu factice et des branches jetables supprimées ensuite ; Arnaud fait les opérations sur le serveur et la fusion depuis l'interface ;
+- la fusion depuis l'interface est prouvée par un motif factice présent dans une branche déjà poussée, ajouté ensuite à la liste : la fusion doit être refusée ;
+- les résultats sont notés dans le fichier de story (date, version de Gitea, variante de l'image, refusé ou admis), sans nom d'hôte ni chemin de la machine hôte.
+
+**Critères d'acceptation :**
+
+**Étant donné** `scripts/gitea/pre-receive-check-private`, posé dans `hooks/pre-receive.d/check-private` d'un dépôt nu
+**Quand** un push arrive
+**Alors** il lance `check-private.sh pre-receive` avec `PRIVATE_PATTERNS_FILE`, sans reprendre sa logique ; il refuse le push, avec un message qui nomme la cause, si `GITEA_CUSTOM` n'est pas définie, si le script du garde-fou ou la liste des motifs est absent ou illisible ; les cas de `scripts/tests/` le vérifient sur un dépôt nu jetable.
+
+**Étant donné** `DISABLE_GIT_HOOKS` laissé à `true` et le hook installé selon la procédure, script et liste appartenant à l'utilisateur `git` du conteneur, liste en `0600`
+**Quand** Arnaud ouvre l'édition des hooks du dépôt dans l'interface web
+**Alors** elle n'est toujours pas proposée, et le hook posé à la main s'exécute malgré ce réglage (constaté par les pushs suivants).
+
+**Étant donné** le hook installé
+**Quand** l'agent pousse sur des branches jetables un commit qui ajoute un fichier sous `docs/private/`, sous `docs/context/`, un `.env`, un PDF sous `assets/cv/`, puis un commit qui contient un motif factice ajouté temporairement à la liste par Arnaud
+**Alors** chaque push est refusé, avec le commit et le chemin, sans afficher le motif
+**Et** un push sans contenu privé est admis
+**Et** le motif factice est retiré ensuite.
+
+**Étant donné** la liste rendue temporairement absente ou illisible par Arnaud
+**Quand** l'agent pousse un commit sans contenu privé
+**Alors** le push est refusé, par sécurité ; une fois la liste rétablie, le même push est admis.
+
+**Étant donné** une branche de test déjà poussée, qui contient un motif factice, et une PR ouverte depuis cette branche
+**Quand** Arnaud ajoute ce motif à la liste puis fusionne la PR depuis l'interface
+**Alors** la fusion est refusée, ce qui prouve le passage par le hook ; sinon, la story s'arrête et Arnaud décide
+**Et** le motif est retiré, la PR fermée et la branche supprimée.
+
+**Étant donné** le conteneur Gitea recréé
+**Quand** l'agent pousse un commit qui ajoute un fichier sous `docs/private/`
+**Alors** le push est encore refusé : script, liste et hook sont dans le volume de données de Gitea.
+
+- [ ] Le hook n'est posé que dans le dépôt nu du site : le dépôt privé n'en a pas et n'est pas mirroré.
+- [ ] Le garde-fou fonctionne avec les outils de l'image de Gitea, dont le `grep` de BusyBox : les tests de `scripts/tests/test-check-private.sh` réussissent dans l'image `gitea/gitea:1.27.3`, et les pushs de test le constatent sur la forge.
+- [ ] Les résultats des essais sur la forge sont notés dans le fichier de story, sans information sur le serveur.
+- [ ] Procédure `check-private.md`, AD-12 et procédure « hook pre-receive » d'AD-24 alignées avec `gitea-pre-receive-hook.md`.
+
+### Story 1.3 : Full history audit with pattern list
+
+En tant qu'Arnaud, mainteneur,
+je veux un audit propre de tout ce que la forge expose, branches, tags et références de PR comprises,
+afin d'activer le miroir sans qu'un commit privé reste accessible sur GitHub par son SHA.
+
+**Couvre :** FR-28, NFR-9, SM-5 · AD-12 · C1 (avec motifs)
+**Dépendances :** 1.2
+**Bloquée par :** —
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** non pour l'audit, lancé par l'agent sur le poste, où vit la liste des motifs. Toute réécriture d'historique reste une décision et une exécution d'Arnaud.
+
+**Décisions (Arnaud, 16/09/2026, après la revue de spec) :**
+- périmètre : toutes les références de la forge, `refs/pull/*` comprises, qu'un `git clone --mirror` récupère, et non les seules branches ;
+- l'audit est lancé par l'agent dans un clone miroir jetable hors du dépôt de travail, avec `PRIVATE_PATTERNS_FILE` ;
+- en cas de signalement, l'agent s'arrête et n'exécute ni réécriture d'historique ni push forcé : Arnaud décide et exécute, ou autorise chaque commande au moment voulu.
+
+**Contraintes :** aucun signalement, motif ou contenu trouvé n'est recopié dans un fichier suivi, une PR, un commentaire ou une conversation ; seuls l'emplacement masqué et les chiffres sont notés.
+
+**Critères d'acceptation :**
+
+**Étant donné** un clone miroir récent du dépôt de la forge, qui contient toutes ses références
+**Quand** l'agent lance `PRIVATE_PATTERNS_FILE=<liste> <dépôt de travail>/scripts/check-private.sh history` depuis ce clone
+**Alors** le script sort avec le code 0, sans aucun signalement ni la mention « chemins seulement »
+**Et** le nombre de références et de commits audités, le commit de tête de chaque branche et la date sont notés dans le fichier de story.
+
+**Étant donné** un signalement
+**Quand** il apparaît
+**Alors** l'agent s'arrête et montre les emplacements masqués, sans jamais citer le contenu trouvé ; aucune réécriture n'est lancée sans décision d'Arnaud ; après une réécriture éventuelle, les essais 1 et 3 du hook (story 1.2) sont rejoués, puis l'audit recommencé.
+
+- [ ] Le clone miroir jetable est supprimé après l'audit.
+- [ ] Rien n'est poussé vers la forge pendant l'audit.
+
+**Renvoyé à la story 1.4 :** le miroir push de Gitea envoie-t-il les références `refs/pull/*`, que GitHub refuse comme références cachées ? À constater lors de l'activation du miroir.
+
+### Story 1.4 : Push mirror to public GitHub repository
+
+En tant que Sam, tech lead (UJ-3),
+je veux trouver sur GitHub le dépôt et ses artefacts de cadrage, tenus à jour depuis la forge,
+afin de lire le cadrage et le code.
+
+**Couvre :** FR-28, FR-31, UJ-3 · AD-11, AD-12
+**Dépendances :** 0.2, 1.2, 1.3
+**Bloquée par :** —
+**Prérequis de contenu :** —
 **Opération manuelle (Arnaud) :** **oui**, dépôt public GitHub, identité du miroir (clé de déploiement si le miroir push de Gitea sait pousser en SSH, sinon compte machine avec un jeton à grain fin limité au dépôt), rulesets d'AD-12, configuration du miroir push dans Gitea.
 
 **Critères d'acceptation :**
