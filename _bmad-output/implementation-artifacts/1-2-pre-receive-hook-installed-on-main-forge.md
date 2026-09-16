@@ -110,6 +110,26 @@ Essais, pushs faits par l'agent de développement depuis un clone jetable hors d
 
 Nettoyage : PR n° 16 fermée, toutes les branches `essai/garde-fou-*` supprimées de la forge, clone jetable supprimé.
 
+### Redéploiement après la story 1.5 (16/09/2026)
+
+Le hook exécute sa propre copie du script : la story 1.5 l'a étendu, la copie du serveur a donc été remplacée par l'agent du homelab, selon « Entretenir ». Gitea 1.27.3, image Docker normale.
+
+- Copie du serveur remplacée au commit `d0fd28b` de `dev` : **sha256 identique** à celui du dépôt, `-rw-------`, propriétaire `git` ; hook `pre-receive.d/check-private` toujours en place et exécutable ; ancienne copie conservée le temps des essais.
+- Liste des motifs **intacte et jamais ouverte** : même taille et même horodatage qu'avant l'opération.
+
+| Essai | Opération | Résultat |
+|---|---|---|
+| 1 | push d'un fichier sous `docs/private/` | refusé, commit et chemin nommés |
+| 1 | push d'un `.env.production` (variante ajoutée par la story 1.5) | refusé, commit et chemin nommés |
+| 3 bis | motif dans le **message** d'un commit | refusé : « message de commit privé dans `<commit>` (message masqué) », puis un numéro de ligne de motif ; ni le motif ni le message affichés |
+| 3 | push anodin | admis ; branche jetable supprimée ensuite |
+
+**Trois écarts relevés par l'agent du homelab dans les consignes que je lui avais données, tous retenus** et écrits dans la procédure (`docs/procedures/gitea-pre-receive-hook.md`, section « Essayer ») :
+
+1. les essais enchaînés sur une même branche laissent les commits interdits précédents dans la plage poussée : chaque essai repart de `dev` ;
+2. `git add -A` ne fabrique pas le commit interdit, `.gitignore` couvrant déjà `docs/private/` et `.env` : il faut `git add -f` ;
+3. **mes consignes demandaient un motif réel dans le message de commit**, alors que la procédure impose une ligne factice, jamais un motif réel. C'était une erreur de ma part : le miroir publie à chaque push, donc un hook qui aurait manqué son refus aurait rendu le motif public et accessible par son SHA. L'agent a limité le risque (vérification locale hors forge d'abord, essais 1 et 1 bis passés avant, clone et branche détruits ensuite) et le motif n'a jamais été accepté. La procédure décrit désormais l'essai de message avec une ligne factice, comme l'essai 2.
+
 ## Revue du code
 
 ### 16/09/2026 — `3d72ac0` — `gemini-3.1-pro-high` — verdict `pass`

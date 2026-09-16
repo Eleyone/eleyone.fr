@@ -82,11 +82,19 @@ Variables : `C=<conteneur>`, `R=/data/git/repositories/eleyone/eleyone.fr.git`, 
 
 Chaque essai note son résultat (refusé ou admis) dans le fichier de la story 1.2, avec la date, la version de Gitea et la variante de l'image, sans nom d'hôte ni chemin de la machine hôte.
 
-L'agent pousse depuis un **clone jetable hors du dépôt de travail**, dont le hook local est désactivé dans ce seul clone (`git config core.hooksPath /dev/null`) : le garde-fou local refuserait sinon les commits interdits avant qu'ils atteignent la forge. Le contenu est factice, chaque essai part du même commit de `dev`, et les branches admises sont supprimées ensuite.
+L'agent pousse depuis un **clone jetable hors du dépôt de travail**, dont le hook local est désactivé dans ce seul clone (`git config core.hooksPath /dev/null`) : le garde-fou local refuserait sinon les commits interdits avant qu'ils atteignent la forge. Le contenu est factice, et les branches admises sont supprimées ensuite.
+
+Trois règles qu'un essai rate sans elles (constatées le 16/09/2026, au redéploiement de la story 1.5) :
+
+- **chaque essai repart du même commit de `dev`** (`git reset --hard origin/dev`). Enchaînés sur une même branche, les commits interdits des essais précédents restent dans la plage poussée : le push « propre » est alors refusé pour le fichier d'un essai antérieur, ce qui ne prouve rien ;
+- **`git add -f`** pour fabriquer un commit interdit : `.gitignore` couvre déjà `docs/private/` et `.env`, donc un `git add -A` les ignore et l'essai passe à côté du hook sans rien démontrer ;
+- **jamais un motif réel**, y compris dans un message de commit. Le miroir publie à chaque push : si le hook manquait son refus, le motif serait public en quelques secondes et resterait accessible par son SHA. Tous les essais de motif passent par une ligne factice ajoutée à la liste du serveur, puis retirée.
 
 1. **Chemins interdits** : un push par fichier ajouté sous `docs/private/`, sous `docs/context/`, un `.env`, un PDF sous `assets/cv/`. Attendu : chaque push refusé, le message nomme le commit et le chemin.
 2. **Motif factice** : Arnaud ajoute à la liste du serveur une ligne factice qu'il communique à l'agent (jamais un motif réel) ; l'agent pousse un fichier qui la contient. Attendu : refusé, sans le motif dans le message. Arnaud retire la ligne.
 3. **Push propre** : un fichier sans contenu privé. Attendu : admis ; l'agent supprime la branche.
+3 bis. **Motif factice dans un message de commit** (surface ajoutée par la story 1.5) : avec la même ligne factice qu'à l'essai 2, l'agent pousse **deux** commits anodins dont le **premier** porte la ligne factice dans son message — le message de la tête reste anodin, pour prouver que toute la plage poussée est lue. Attendu : refusé, message « message de commit privé dans `<commit>` (message masqué) » suivi d'un numéro de ligne de motif, sans le motif ni le message. Arnaud retire la ligne.
+3 ter. **Chemin qui reprend un motif factice** (story 1.5) : un fichier au contenu anodin, placé dans un dossier nommé d'après la ligne factice. Attendu : refusé, **sans le chemin fautif** dans le message — l'afficher reviendrait à afficher le motif.
 4. **Liste inaccessible** : Arnaud renomme temporairement la liste (`docker exec -u git <conteneur> mv $D/forbidden-patterns.txt $D/forbidden-patterns.txt.essai`) ; l'agent refait un push propre. Attendu : refusé. Arnaud rétablit la liste ; le même push est alors admis.
 5. **Fusion depuis l'interface** : l'agent pousse une branche propre qui contient une ligne factice, et ouvre une PR vers `dev`. Arnaud ajoute cette ligne à la liste, puis tente la fusion depuis l'interface. Attendu : fusion refusée, preuve que la fusion passe par le hook. Arnaud retire la ligne ; l'agent ferme la PR et supprime la branche.
 6. **Recréation du conteneur** : Arnaud recrée le conteneur Gitea (par exemple `docker compose up -d --force-recreate` dans son dossier de composition) ; l'agent refait l'essai 1 pour `docs/private/`. Attendu : refusé.
@@ -95,7 +103,7 @@ L'agent pousse depuis un **clone jetable hors du dépôt de travail**, dont le h
 
 ## Entretenir
 
-- **À chaque modification de `scripts/check-private.sh` ou de `scripts/gitea/pre-receive-check-private`** fusionnée dans `dev` : réextraire le fichier au nouveau commit (étapes 2 ou 3 et 4 d'« Installer », avec vérification d'empreinte), puis refaire les essais 1 et 3.
+- **À chaque modification de `scripts/check-private.sh` ou de `scripts/gitea/pre-receive-check-private`** fusionnée dans `dev` : réextraire le fichier au nouveau commit (étapes 2 ou 3 et 4 d'« Installer », avec vérification d'empreinte : le sha256 de la copie du serveur doit être celui du fichier dans `dev`), puis refaire les essais 1 et 3, plus l'essai de chaque surface que la modification touche (3 bis pour les messages de commit, 3 ter pour les chemins). Garder l'ancienne copie du script le temps des essais : elle permet de revenir en arrière sans attendre un correctif.
 - **À chaque modification de la liste des motifs**, poussée sur `main` du dépôt privé : réextraire la liste (étape 2, deuxième commande), puis refaire l'essai 3. Tant que ce n'est pas fait, le serveur applique l'ancienne liste.
 - **À chaque mise à jour de Gitea ou régénération des hooks** : vérifier que `check-private` est toujours dans `hooks/pre-receive.d/`, puis refaire les essais 1 et 3. La régénération réécrit `pre-receive` et `pre-receive.d/gitea` sans supprimer les autres fichiers du dossier.
 
