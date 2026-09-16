@@ -32,8 +32,19 @@ export PATH
 require_tool_version hugo hugo "$HUGO_VERSION" || exit 1
 
 cd "$root"
+# --cleanDestinationDir ne supprime pas les fichiers d'un build précédent (constaté avec Hugo 0.166 :
+# une page déposée à la main dans public/ survit au build suivant). Le dossier est donc vidé ici, sans
+# quoi une page retirée du site resterait servie et le contrôle des pages publiées passerait sur une
+# sortie sale. Le drapeau est gardé : il reste celui d'AD-5, et il ne coûte rien.
+# BUILD_DESTINATION_ROOT ne sert qu'aux tests, comme TOOLS_ENV_FILE et TOOLS_LOCAL_DIR ; la CI et le
+# poste écrivent toujours dans le dépôt.
+destination_root=${BUILD_DESTINATION_ROOT:-$root}
+relative=$( [[ $environment == production ]] && echo public || echo build/work )
+destination="${destination_root:?}/$relative"
+rm -rf "$destination" || { echo "$script_name: nettoyage impossible de $relative." >&2; exit 2; }
+
 if [[ $environment == production ]]; then
-  hugo --environment production --minify --cleanDestinationDir --panicOnWarning --destination public
+  hugo --environment production --minify --cleanDestinationDir --panicOnWarning --destination "$destination"
 else
-  hugo --environment work --buildDrafts --cleanDestinationDir --panicOnWarning --destination build/work
+  hugo --environment work --buildDrafts --cleanDestinationDir --panicOnWarning --destination "$destination"
 fi

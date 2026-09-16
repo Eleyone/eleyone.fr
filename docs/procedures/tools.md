@@ -56,6 +56,8 @@ require_tool_version hugo .tools/hugo "$HUGO_VERSION"
 
 ## Pièges déjà rencontrés
 
+- **`--cleanDestinationDir` ne nettoie pas** (Hugo 0.166) : une page d'un build précédent survit dans `public/`. `scripts/build.sh` vide donc lui-même sa destination avant d'appeler Hugo. Une page retirée du site resterait servie sans cela, et le contrôle des pages publiées passerait sur une sortie sale.
+
 - **`alpine:3.24` n'a pas `bash`** : d'où l'amorçage en sh POSIX. Appeler `install-tools.sh` directement dans l'image donne `env: can't execute 'bash'`.
 - **`sha256sum` de BusyBox** ne connaît ni `--status` ni le format long de GNU : l'empreinte est donc calculée puis comparée par le script lui-même, ce qui marche des deux côtés. Une empreinte n'est pas un secret, elle peut être affichée.
 - **`curl` est absent d'`alpine:3.24`** : les paquets s'installent avant tout téléchargement, jamais après.

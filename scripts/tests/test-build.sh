@@ -28,8 +28,10 @@ stub_hugo() { # $1 version annoncée ; consigne ses arguments dans $work/hugo.lo
   : > "$work/hugo.log"
 }
 
-build() { # lance build.sh avec le hugo bouchonné et le tools.env d'essai
-  run env PATH="$work/bin:$PATH" TOOLS_ENV_FILE="$work/tools.env" TOOLS_LOCAL_DIR="$work/bin" "$root/scripts/build.sh" "$@"
+build() { # lance build.sh avec le hugo bouchonné, le tools.env d'essai et une destination jetable :
+          # aucun cas de test n'écrit ni n'efface dans le dépôt
+  run env PATH="$work/bin:$PATH" TOOLS_ENV_FILE="$work/tools.env" TOOLS_LOCAL_DIR="$work/bin" \
+    BUILD_DESTINATION_ROOT="$work/sortie" "$root/scripts/build.sh" "$@"
 }
 
 case_build_production() {
@@ -37,7 +39,7 @@ case_build_production() {
   stub_hugo 1.2.3
   build production
   assert_eq 0 "$rc" "build de production (messages : $err)"
-  assert_contains "--environment production --minify --cleanDestinationDir --panicOnWarning --destination public" "$(cat "$work/hugo.log")" "commande d AD-5, sans --buildDrafts"
+  assert_contains "--environment production --minify --cleanDestinationDir --panicOnWarning --destination $work/sortie/public" "$(cat "$work/hugo.log")" "commande d AD-5, sans --buildDrafts"
   [[ $(cat "$work/hugo.log") != *--buildDrafts* ]] || { echo "la production a construit les brouillons" >&2; exit 1; }
 }
 
@@ -46,7 +48,7 @@ case_build_travail() {
   stub_hugo 1.2.3
   build work
   assert_eq 0 "$rc" "rendu de travail (messages : $err)"
-  assert_contains "--environment work --buildDrafts --cleanDestinationDir --panicOnWarning --destination build/work" "$(cat "$work/hugo.log")" "commande d AD-5, brouillons compris"
+  assert_contains "--environment work --buildDrafts --cleanDestinationDir --panicOnWarning --destination $work/sortie/build/work" "$(cat "$work/hugo.log")" "commande d AD-5, brouillons compris"
 }
 
 case_build_sans_argument() {
@@ -113,6 +115,19 @@ case_build_argument_surnumeraire() {
   assert_eq 2 "$rc" "code 2 : usage"
   assert_contains "un seul argument attendu" "$err" "nombre d arguments nommé"
   assert_eq "" "$(cat "$work/hugo.log")" "hugo n est pas lancé"
+}
+
+case_build_vide_sa_destination() {
+  essai_env 1.2.3
+  stub_hugo 1.2.3
+  # le hugo bouchonné n'écrit rien : seule compte la disparition de la page périmée
+  mkdir -p "$work/sortie/public/cas/perimee"
+  printf '<html>page périmée</html>\n' > "$work/sortie/public/cas/perimee/index.html"
+  run env PATH="$work/bin:$PATH" TOOLS_ENV_FILE="$work/tools.env" TOOLS_LOCAL_DIR="$work/bin" \
+    BUILD_DESTINATION_ROOT="$work/sortie" "$root/scripts/build.sh" production
+  assert_eq 0 "$rc" "build lancé (messages : $err)"
+  [[ ! -e $work/sortie/public/cas/perimee/index.html ]] || { echo "la page périmée a survécu au build" >&2; exit 1; }
+  assert_contains "--destination $work/sortie/public" "$(cat "$work/hugo.log")" "hugo écrit dans la destination demandée"
 }
 
 run_case "$@"
