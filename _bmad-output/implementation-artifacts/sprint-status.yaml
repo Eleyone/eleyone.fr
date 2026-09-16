@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '2026-09-16'
+last_updated: '09-16-2026 11:45'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -47,12 +47,13 @@ development_status:
   0-9-shared-sprint-reading-and-script-tests: done
   epic-0-retrospective: done
 
-  epic-1: done
+  epic-1: in-progress
   1-1-pre-receive-guard-fails-without-pattern-list: done
   1-2-pre-receive-hook-installed-on-main-forge: done
   1-3-full-history-audit-with-pattern-list: done
   1-4-push-mirror-to-public-github-repository: done
-  epic-1-retrospective: optional
+  1-5-guard-covers-env-variants-commit-messages-and-file-names: backlog
+  epic-1-retrospective: done
 
   epic-2: backlog
   2-1-pinned-tools-installed-and-verified: backlog
@@ -305,3 +306,48 @@ content_prerequisites:
     EN"
   13-5-ready-snippets-and-thematic-boxes: "Fichiers de matériel vivant"
   13-6-ready-video-as-plain-link: "URL YouTube non répertoriée"
+action_items:
+  - id: "epic-1-retro-item-1-story-1-5-couverture-du-garde-fou-g1-env"
+    epic: 1
+    action: "Story 1.5, couverture du garde-fou (G1 .env dérivés, G2 messages de commit,
+      G4 noms de fichiers, D1 mode lu deux fois, S1 AGENTS.md au présent), avec un
+      cas de test par surface"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-09-16.md"
+  - id: "epic-1-retro-item-2-trancher-g3-les-métadonnées-d-images-c20"
+    epic: 1
+    action: "Trancher G3 : les métadonnées d images (C20) doivent-elles bloquer avant
+      publication, puisque le miroir part à chaque push ?"
+    owner: "Arnaud"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-09-16.md"
+  - id: "epic-1-retro-item-3-reformuler-le-repère-de-taille-des-pr-li"
+    epic: 1
+    action: "Reformuler le repère de taille des PR : lignes ajoutées hors _bmad-output/
+      et hors tests"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-09-16.md"
+  - id: "epic-1-retro-item-4-étendre-l-action-8-de-l-epic-0-à-agents"
+    epic: 1
+    action: "Étendre l action 8 de l epic 0 à AGENTS.md : une story qui rend vraie
+      une phrase au futur la met au présent dans sa propre PR"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-09-16.md"
+  - id: "epic-1-retro-item-5-reprendre-les-actions-3-5-et-6-de-la-rét"
+    epic: 1
+    action: "Reprendre les actions 3, 5 et 6 de la rétrospective de l epic 0 à leurs
+      échéances"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-09-16.md"
+  - id: "epic-1-retro-item-6-écrire-dans-docs-procedures-shell-script"
+    epic: 1
+    action: "Écrire dans docs/procedures/shell-scripts.md le piège d ancre qui a dupliqué
+      epics.md : ancre unique ET non contenue dans un titre plus long, puis recompter
+      les titres après écriture"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-09-16.md"
