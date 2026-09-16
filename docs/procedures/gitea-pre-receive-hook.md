@@ -99,6 +99,10 @@ L'agent pousse depuis un **clone jetable hors du dépôt de travail**, dont le h
 - **À chaque modification de la liste des motifs**, poussée sur `main` du dépôt privé : réextraire la liste (étape 2, deuxième commande), puis refaire l'essai 3. Tant que ce n'est pas fait, le serveur applique l'ancienne liste.
 - **À chaque mise à jour de Gitea ou régénération des hooks** : vérifier que `check-private` est toujours dans `hooks/pre-receive.d/`, puis refaire les essais 1 et 3. La régénération réécrit `pre-receive` et `pre-receive.d/gitea` sans supprimer les autres fichiers du dossier.
 
+## Ce que le hook refuse
+
+Quatre surfaces, depuis la story 1.5 : le contenu des fichiers, leur chemin, le chemin confronté aux motifs, et le **message des commits** (tous les commits nouveaux de la plage poussée, pas seulement la tête). Deux interdictions de chemin sont temporaires et tombent quand leur contrôle entrera dans le hook : `assets/cv/*.pdf` (C21) et les extensions d'images (C20, story 5.4), avec deux exceptions nommées, `.env.example` et `design/<branche>/screenshots/`. Aucune alerte n'affiche le motif, le contenu trouvé, le chemin fautif d'un motif ni le message de commit.
+
 ## En cas d'échec
 
 - **Un push propre est refusé avec « GITEA_CUSTOM non définie »** : Gitea ne transmet pas cette variable au hook dans cette installation. S'arrêter et décider avec Arnaud d'un autre moyen de trouver le dossier ; ne jamais écrire de chemin du serveur dans le dépôt.

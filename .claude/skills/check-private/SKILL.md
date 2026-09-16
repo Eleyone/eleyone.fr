@@ -18,5 +18,6 @@ La procédure fait foi : `docs/procedures/check-private.md`. L'exécution est `s
 
 - dans une copie sans `docs/private/` (worktree hors du dépôt, clone), définis `PRIVATE_PATTERNS_FILE` : un passage « chemins seulement » ne vaut pas audit ;
 - le mode `pre-receive` (hook serveur) exige `PRIVATE_PATTERNS_FILE` et une liste avec au moins un motif : sinon, il refuse tout push ;
+- quatre surfaces sont regardées : le contenu des fichiers, leur chemin, le chemin confronté aux motifs, et le message des commits (sauf en `staged`, où il n'existe pas encore) ;
 - n'affiche, ne copie ni ne cite jamais le fichier de motifs, ni le contenu qu'une alerte désigne ;
 - une alerte bloque : suis la section « En cas d'alerte » de la procédure.

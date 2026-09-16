@@ -47,12 +47,12 @@ development_status:
   0-9-shared-sprint-reading-and-script-tests: done
   epic-0-retrospective: done
 
-  epic-1: in-progress
+  epic-1: done
   1-1-pre-receive-guard-fails-without-pattern-list: done
   1-2-pre-receive-hook-installed-on-main-forge: done
   1-3-full-history-audit-with-pattern-list: done
   1-4-push-mirror-to-public-github-repository: done
-  1-5-guard-covers-env-variants-commit-messages-and-file-names: backlog
+  1-5-guard-covers-env-variants-commit-messages-and-file-names: done
   epic-1-retrospective: done
 
   epic-2: backlog

@@ -957,31 +957,43 @@ afin qu'aucun motif privé ne parte sur le dépôt public par une surface qu'il 
 
 **Pourquoi maintenant :** le miroir synchronise à chaque push depuis la story 1.4. Une fois un commit accepté par la forge, il est public en quelques secondes et reste accessible par son SHA. Toute surface que le garde-fou ne lit pas devient une fuite irréversible, et tout contrôle qui ne vit qu'en CI arrive après la publication.
 
-**Décisions (Arnaud, 16/09/2026, après la rétrospective de l'epic 1) :**
-- les métadonnées d'images (C20) doivent bloquer **avant publication**, donc dans le hook `pre-receive`, comme les PDF (C21). Le contrôle lui-même reste construit par la story 5.4 ; cette story-ci écrit la règle et l'exigence qui pèse sur la 5.4.
+**Décisions (Arnaud, 16/09/2026, après la revue de spec) :**
+- **variantes de `.env`** : est refusé le fichier dont le nom de base est exactement `.env` ou commence par `.env.` (`.env.production`, `.env.local`, `config/.env.staging`) ; restent admis `.environment.md`, `env.example` et `docs/env.md` (NFR-9) ;
+- **mode `staged`** : le pre-commit refuse les mêmes chemins et les mêmes noms que le hook. Seul le message de commit lui échappe, puisqu'il n'existe pas encore au moment du contrôle ;
+- **messages de commit en local** : rien de plus dans cette story. Le hook serveur les refuse au push, quitte à faire réécrire le commit ; un hook `commit-msg` local serait une story à part ;
+- **seuil de performance** : le surcoût de la lecture des messages reste sous **1 seconde** sur l'historique complet, mesuré sur le poste et consigné dans le fichier de story (repère : l'audit complet met 1,5 s sur 33 commits avant cette story) ;
+- **images d'ici la story 5.4** : le hook refuse **temporairement** les extensions d'images, puisque C20 n'existe pas encore et que la CI arriverait après la publication. Cette interdiction est levée par la story 5.4, quand C20 vit dans le hook — comme `assets/cv/*.pdf` sera levé quand C21 y sera ;
+- **deux exceptions nommées**, constatées en lançant l'audit sur l'historique réel : `.env.example`, commité par conception et sans aucune valeur (AGENTS.md), et `design/<branche>/screenshots/`, les 35 captures des branches de design, déjà publiées, produites par un navigateur et hors du périmètre de C20 (`assets/images/` et `public/`). Sans elles, l'audit complet resterait rouge pour toujours ;
+- **noms de fichiers** : les motifs sont cherchés dans le **chemin complet**, un dossier nommé d'après un client fuyant autant qu'un fichier ;
+- **métadonnées d'images (C20)** : elles doivent bloquer **avant publication**, donc dans le hook `pre-receive`, comme les PDF (C21). Le contrôle lui-même reste construit par la story 5.4 ; cette story-ci écrit la règle et l'exigence qui pèse sur la 5.4.
 
 **Critères d'acceptation :**
 
 **Étant donné** le dépôt nu jetable des tests de la story 1.1, muni du vrai hook et d'une liste contenant un motif factice
-**Quand** un push ajoute `.env.production` à la racine, `config/.env.local`, ou tout autre fichier dont le nom commence par `.env`
+**Quand** un push ajoute un fichier dont le nom de base est `.env` ou commence par `.env.` (`.env.production` à la racine, `config/.env.local`), ou un fichier dont l'extension est une extension d'image
 **Alors** le push est refusé, avec le commit et le chemin
-**Et** un fichier nommé `.environment.md`, `env.example` ou `docs/env.md` reste admis (NFR-9).
+**Et** `.environment.md`, `env.example` et `docs/env.md` restent admis (NFR-9).
 
 **Étant donné** le même dépôt nu et la même liste
-**Quand** un push apporte un commit dont le **message** contient le motif factice
-**Alors** le push est refusé, en nommant le commit, sans afficher le motif ni le message.
+**Quand** un push apporte plusieurs commits nouveaux et que le **message** de l'un d'eux, tête ou non, contient le motif factice
+**Alors** le push est refusé en nommant ce commit, sans afficher le motif ni le message
+**Et** tous les commits nouveaux de la plage poussée sont examinés, pas seulement la tête.
 
 **Étant donné** le même dépôt nu et la même liste
-**Quand** un push ajoute un fichier dont le **nom** contient le motif factice, au contenu anodin
-**Alors** le push est refusé, avec le commit et le chemin, sans afficher le motif.
+**Quand** un push ajoute un fichier dont le **chemin** (dossier ou nom) contient le motif factice, au contenu anodin
+**Alors** le push est refusé en nommant le commit et le numéro de ligne du motif, **sans afficher le chemin fautif** : l'afficher reviendrait à afficher le motif.
 
-**Étant donné** `scripts/check-private.sh history` sur un historique qui porte l'une de ces trois surfaces
+**Étant donné** `scripts/check-private.sh history` sur un historique qui porte l'une de ces surfaces
 **Quand** l'audit tourne avec la liste des motifs
 **Alors** il sort en échec et désigne le commit, comme le hook.
 
+**Étant donné** `scripts/check-private.sh staged` avec, dans l'index, une variante de `.env`, une image, ou un chemin qui reprend le motif factice
+**Quand** le pre-commit tourne
+**Alors** il refuse, avec les mêmes messages que le hook ; le message de commit, lui, n'est pas contrôlé à ce stade.
+
 **Étant donné** `scripts/check-private.sh` appelé avec un mode
 **Quand** le script lit ce mode
-**Alors** il le lit **une seule fois** (`case "$mode"`), pour qu'un drapeau placé un jour devant le mode ne puisse pas faire diverger le verrou `pre-receive` de l'aiguillage.
+**Alors** il ne le lit qu'**une seule fois**, pour qu'un drapeau placé un jour devant le mode ne puisse pas faire diverger le verrou `pre-receive` de l'aiguillage (par exemple en aiguillant sur la variable déjà lue).
 
 **Étant donné** `AGENTS.md`
 **Quand** on le lit après cette story
@@ -989,19 +1001,15 @@ afin qu'aucun motif privé ne parte sur le dépôt public par une surface qu'il 
 
 **Étant donné** AD-12, AD-19 et `docs/procedures/gitea-pre-receive-hook.md`
 **Quand** on cherche quels contrôles bloquent avant publication
-**Alors** ils disent que C21 (PDF) et C20 (métadonnées d'images) vivent dans le hook, que la CI seule ne suffit plus depuis l'activation du miroir
-**Et** la story 5.4 porte le critère correspondant.
+**Alors** ils disent que C21 (PDF) et C20 (métadonnées d'images) vivent dans le hook, que la CI seule ne suffit plus depuis l'activation du miroir, et que les extensions d'images sont refusées d'ici la story 5.4
+**Et** la story 5.4 porte le critère correspondant, avec la levée de cette interdiction.
 
-- [ ] Un cas de test par surface dans `scripts/tests/test-check-private.sh` : contenu, chemin, nom de fichier, message de commit ; `scripts/tests/run.sh` passe.
-- [ ] Aucun message n'affiche le motif, le contenu trouvé ni le message de commit fautif : seulement l'emplacement (commit, fichier, ligne) et le numéro de ligne du motif.
+- [ ] Un cas de test par surface dans `scripts/tests/test-check-private.sh` : contenu, chemin, chemin qui reprend un motif, message de commit, variante de `.env`, image ; `scripts/tests/run.sh` passe.
+- [ ] Aucun message n'affiche le motif, le contenu trouvé, le chemin fautif d'un motif, ni le message de commit fautif : seulement le commit, le numéro de ligne du motif, et le chemin quand il vient d'une règle de chemin (qui ne révèle aucun motif).
 - [ ] La liste des motifs n'est ni lue, ni copiée, ni citée ailleurs.
-- [ ] Le coût de la lecture des messages de commit est mesuré sur l'historique complet : l'audit doit rester utilisable.
+- [ ] Le surcoût de la lecture des messages est mesuré sur l'historique complet et consigné : moins d'une seconde.
 - [ ] `epics.md` ne contient qu'une seule copie de chaque epic après la PR (constat S5 : vérification par comptage des titres).
-
-**Questions à poser avant de commencer :**
-- Faut-il aussi lire les messages de commit en mode `staged` ? Le message n'existe pas encore au pre-commit : il faudrait un hook `commit-msg` local, donc une story à part.
-- Tant que C20 n'existe pas (story 5.4), faut-il interdire au hook les chemins d'images (`*.jpg`, `*.png`, `*.webp`…), ou s'en tenir à la discipline (aucune image n'est commitée d'ici là) ?
-- Le nom de fichier est-il confronté aux motifs sur le chemin complet ou sur le seul nom de base ?
+- [ ] Le piège d'ancre qui a produit S5 est écrit dans `docs/procedures/shell-scripts.md` (action 6 de la rétrospective de l'epic 1).
 
 ## Epic 2 : Site bilingue et cas pilote sous son poste (WS-1, WS-2)
 
@@ -1936,6 +1944,11 @@ afin que ni l'original ni ses données de prise de vue n'arrivent sur le dépôt
 **Étant donné** `scripts/checks/images.sh`
 **Quand** une image de `assets/images/` ou de `public/` contient `Exif`, XMP, `GPS` ou un bloc `VP8X`, qu'une variante sort des dimensions d'AD-19 ou dépasse 40 Ko, que la copie n'est pas en 640 × 800 ou dépasse 150 Ko, ou qu'une photo publiée n'a pas d'`alt`
 **Alors** C20 échoue ; il tourne sur les deux forges.
+
+**Étant donné** le hook `pre-receive` de la forge, qui refuse les extensions d'images depuis la story 1.5, et C20 désormais écrit
+**Quand** C20 est appelé par le hook sur les images d'un push, comme C21 l'est pour les PDF
+**Alors** une image porteuse de métadonnées est refusée **avant publication**, et l'interdiction temporaire des extensions d'images est levée (AD-12, AD-19 ; procédure du hook, étape 7)
+**Et** l'outil de lecture des métadonnées nécessaire est présent dans l'environnement où tourne Gitea, comme `poppler-utils` pour les PDF.
 
 - [ ] Aucun autre outil d'image n'est ajouté ; l'image de test n'est pas commitée.
 

@@ -234,4 +234,125 @@ case_staged_et_history_sans_liste_inchanges() {
   assert_contains "chemins seulement" "$err" "avertissement"
 }
 
+# --- surfaces ajoutées par la story 1.5 : variantes de .env, images, noms de chemin, messages ----------------
+
+case_pre_receive_env_derives() {
+  base_pushed
+  local path
+  for path in .env.production config/.env.local; do
+    from_base
+    mkdir -p "$(dirname "$work/depot/$path")"
+    printf 'SECRET=x\n' > "$work/depot/$path"
+    commit_all "ajout de $path" > /dev/null
+    push_branch
+    [[ $rc != 0 ]] || { echo "$path : push admis" >&2; exit 1; }
+    assert_contains "$path" "$err" "variante de .env refusée, chemin nommé"
+  done
+}
+
+case_pre_receive_noms_env_proches_admis() {
+  base_pushed
+  from_base
+  mkdir -p "$work/depot/docs"
+  printf 'notes\n' > "$work/depot/.environment.md"
+  printf 'CLE=\n' > "$work/depot/env.example"
+  printf 'notes\n' > "$work/depot/docs/env.md"
+  commit_all "noms proches de .env" > /dev/null
+  push_branch
+  assert_eq 0 "$rc" "push admis (NFR-9) (messages : $err)"
+}
+
+case_pre_receive_image_refusee_svg_admis() {
+  base_pushed
+  from_base
+  printf 'faux binaire\n' > "$work/depot/photo.PNG"
+  commit_all "image" > /dev/null
+  push_branch
+  [[ $rc != 0 ]] || { echo "image : push admis" >&2; exit 1; }
+  assert_contains "photo.PNG" "$err" "extension d image refusée, casse ignorée"
+  from_base
+  printf '<svg></svg>\n' > "$work/depot/schema.svg"
+  commit_all "schema d2" > /dev/null
+  push_branch
+  assert_eq 0 "$rc" "SVG admis, les schémas D2 sont commités (messages : $err)"
+}
+
+case_pre_receive_message_de_commit() {
+  base_pushed
+  from_base
+  # le motif est dans le message du premier commit, pas dans celui de la tête
+  printf 'rien\n' > "$work/depot/publique/b.txt"
+  commit_all "message avec motif-interdit-essai" > /dev/null
+  printf 'rien\n' > "$work/depot/publique/c.txt"
+  commit_all "message anodin" > /dev/null
+  push_branch
+  [[ $rc != 0 ]] || { echo "message de commit : push admis" >&2; exit 1; }
+  assert_contains "message de commit privé" "$err" "message fautif signalé"
+  assert_contains "motif ligne 2" "$err" "numéro de ligne du motif"
+  [[ $err != *motif-interdit-essai* ]] || { echo "le motif apparaît dans les messages" >&2; exit 1; }
+}
+
+case_pre_receive_chemin_reprend_un_motif() {
+  base_pushed
+  from_base
+  mkdir -p "$work/depot/motif-interdit-essai"
+  printf 'contenu anodin\n' > "$work/depot/motif-interdit-essai/notes.md"
+  commit_all "dossier nommé d apres un motif" > /dev/null
+  push_branch
+  [[ $rc != 0 ]] || { echo "chemin qui reprend un motif : push admis" >&2; exit 1; }
+  assert_contains "chemin qui reprend un motif" "$err" "refus signalé"
+  assert_contains "motif ligne 2" "$err" "numéro de ligne du motif"
+  [[ $err != *motif-interdit-essai* ]] || { echo "le chemin fautif, donc le motif, apparaît dans les messages" >&2; exit 1; }
+}
+
+case_staged_memes_refus_que_le_hook() {
+  motifs
+  new_repo
+  cd "$work/depot"
+  printf 'SECRET=x\n' > "$work/depot/.env.local"
+  git -C "$work/depot" add -A
+  run env PRIVATE_PATTERNS_FILE="$work/motifs.txt" "$root/scripts/check-private.sh" staged
+  assert_eq 1 "$rc" "variante de .env refusée dans l index"
+  git -C "$work/depot" rm -q --cached .env.local
+  rm "$work/depot/.env.local"
+  mkdir -p "$work/depot/motif-interdit-essai"
+  printf 'anodin\n' > "$work/depot/motif-interdit-essai/a.txt"
+  printf 'faux binaire\n' > "$work/depot/vue.jpg"
+  git -C "$work/depot" add -A
+  run env PRIVATE_PATTERNS_FILE="$work/motifs.txt" "$root/scripts/check-private.sh" staged
+  assert_eq 1 "$rc" "chemin qui reprend un motif et image refusés dans l index"
+  assert_contains "vue.jpg" "$err" "image nommée"
+  assert_contains "chemin qui reprend un motif" "$err" "chemin masqué mais signalé"
+}
+
+case_history_message_et_chemin() {
+  motifs
+  new_repo
+  printf 'anodin\n' > "$work/depot/a.txt"
+  commit_all "message avec motif-interdit-essai" > /dev/null
+  cd "$work/depot"
+  run env PRIVATE_PATTERNS_FILE="$work/motifs.txt" "$root/scripts/check-private.sh" history
+  assert_eq 1 "$rc" "message fautif trouvé par l audit"
+  assert_contains "message de commit privé" "$err" "surface nommée"
+  [[ $err != *motif-interdit-essai* ]] || { echo "le motif apparaît dans les messages" >&2; exit 1; }
+}
+
+case_pre_receive_exceptions_nommees() {
+  base_pushed
+  from_base
+  mkdir -p "$work/depot/design/suisse/screenshots"
+  printf 'CLE=\n' > "$work/depot/.env.example"
+  printf 'faux binaire\n' > "$work/depot/design/suisse/screenshots/accueil.png"
+  commit_all "exceptions nommées" > /dev/null
+  push_branch
+  assert_eq 0 "$rc" ".env.example et captures de design admis (messages : $err)"
+  from_base
+  mkdir -p "$work/depot/assets/images"
+  printf 'faux binaire\n' > "$work/depot/assets/images/portrait.webp"
+  commit_all "image hors des captures de design" > /dev/null
+  push_branch
+  [[ $rc != 0 ]] || { echo "image du site : push admis" >&2; exit 1; }
+  assert_contains "assets/images/portrait.webp" "$err" "image du site refusée d ici C20"
+}
+
 run_case "$@"

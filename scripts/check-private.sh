@@ -11,10 +11,22 @@
 # En pre-receive, PRIVATE_PATTERNS_FILE est obligatoire, et une liste absente ou sans motif refuse le push.
 # Une alerte n'affiche jamais le contenu trouvé ni le motif : seulement l'emplacement
 # (commit, fichier, ligne) et le numéro de ligne du motif dans le fichier de motifs.
+# Un chemin qui reprend un motif n'est pas affiché non plus : l'afficher reviendrait à afficher le motif.
+#
+# Quatre surfaces sont regardées (story 1.5) : le contenu des fichiers, leur chemin, le chemin confronté
+# aux motifs, et le message des commits (en history et pre-receive ; en staged le message n'existe pas encore).
 set -euo pipefail
 
-# assets/cv/*.pdf reste interdit tant que le pre-receive Gitea ne sait pas lire les PDF (AD-21)
-forbidden_paths='^docs/(private|context)/|(^|/)\.env$|^assets/cv/.*\.pdf$'
+# Les chemins sont comparés sans tenir compte de la casse : « Docs/Private/ » est aussi refusé.
+# Deux interdictions sont temporaires, le temps que le hook sache lire ces binaires :
+#   assets/cv/*.pdf tant que C21 n'est pas dans le hook (AD-21, story 7.x)
+#   les extensions d'images tant que C20 n'est pas dans le hook (AD-19, story 5.4)
+# .env est refusé seul ou suffixé (.env.production, .env.local) ; .environment.md est admis.
+# Deux exceptions nommées : .env.example, commité par conception (AGENTS.md) et sans aucune valeur ;
+# et les captures des branches de design (design/<branche>/screenshots/), déjà publiées, produites par un
+# navigateur et hors du périmètre de C20 (assets/images/ et public/).
+forbidden_paths='^docs/(private|context)/|(^|/)\.env($|\.)|^assets/cv/.*\.pdf$|\.(jpe?g|png|gif|webp|avif|tiff?|bmp|heic|heif|ico)$'
+allowed_paths='(^|/)\.env\.example$|^design/[^/]+/screenshots/'
 patterns_file="${PRIVATE_PATTERNS_FILE:-$(git rev-parse --show-toplevel 2>/dev/null || true)/docs/private/forbidden-patterns.txt}"
 [[ $patterns_file == /* ]] || patterns_file="$PWD/$patterns_file"
 # depuis un sous-dossier, git ls-files, git ls-tree et git grep ne verraient que ce sous-dossier :
@@ -71,13 +83,35 @@ check_tree() { # $1 = libellé, reste = arguments git (commit ou --cached)
     listing=$(git ls-tree -r --name-only "$1") || { fail "lecture impossible de $label"; return 0; }
   fi
   # grep rend 1 quand il ne trouve rien et 2 sur une erreur : une erreur ne vaut jamais « aucun chemin privé »
-  paths=$(printf '%s\n' "$listing" | grep -E "$forbidden_paths") || prc=$?
+  paths=$(printf '%s\n' "$listing" | grep -E -i "$forbidden_paths") || prc=$?
   if ((prc > 1)); then
     fail "recherche des chemins impossible dans $label"
     return 0
   fi
+  if [[ -n $paths ]]; then # l'exception nommée, retirée après coup : une erreur de grep ne l'élargit jamais
+    prc=0
+    paths=$(printf '%s\n' "$paths" | grep -E -i -v "$allowed_paths") || prc=$?
+    ((prc <= 1)) || { fail "exception de chemin illisible dans $label"; return 0; }
+  fi
   [[ -z $paths ]] || fail "chemin privé dans $label :\n$paths"
   [[ -n $patterns ]] || return 0
+  # les chemins eux-mêmes, confrontés aux motifs : un dossier ou un fichier nommé d'après un client fuit
+  # autant que son contenu. Le chemin fautif n'est jamais affiché, il contient le motif.
+  prc=0
+  printf '%s\n' "$listing" | grep -q -i -F -f "$patterns_text" || prc=$?
+  if ((prc > 1)); then
+    fail "recherche des motifs dans les chemins impossible dans $label"
+    return 0
+  fi
+  if ((prc == 0)); then
+    local names=""
+    while IFS= read -r entry; do
+      if printf '%s\n' "$listing" | grep -q -i -F -e "${entry#*:}"; then
+        names+="  motif ligne ${entry%%:*}"$'\n'
+      fi
+    done < "$patterns"
+    fail "chemin qui reprend un motif dans $label (chemin masqué) :\n${names%$'\n'}"
+  fi
   # un seul passage avec tous les motifs ; le détail motif par motif seulement s'il trouve.
   # Un objet illisible donne une erreur mais le code 1 (« rien trouvé ») : toute erreur fait échouer.
   err=$(git grep -q -I -i -F -f "$patterns_text" "$@" -- . 2>&1 >/dev/null) || rc=$?
@@ -96,20 +130,38 @@ check_tree() { # $1 = libellé, reste = arguments git (commit ou --cached)
   fail "contenu privé dans $label (contenu masqué) :\n$hits"
 }
 
-case "${1:-}" in
+check_message() { # $1 = commit ; le message n'est jamais affiché
+  local c=$1 label=${1:0:7} msg entry lines="" rc=0
+  [[ -n $patterns ]] || return 0
+  msg=$(git log -1 --format=%B "$c") || { fail "lecture impossible du message de $label"; return 0; }
+  printf '%s\n' "$msg" | grep -q -i -F -f "$patterns_text" || rc=$?
+  if ((rc > 1)); then
+    fail "recherche impossible dans le message de $label"
+    return 0
+  fi
+  ((rc == 0)) || return 0
+  while IFS= read -r entry; do
+    if printf '%s\n' "$msg" | grep -q -i -F -e "${entry#*:}"; then
+      lines+="  motif ligne ${entry%%:*}"$'\n'
+    fi
+  done < "$patterns"
+  fail "message de commit privé dans $label (message masqué) :\n${lines%$'\n'}"
+}
+
+case "$mode" in
   staged)
     check_tree "l'index" --cached
     ;;
   history)
     shift
     if (($#)); then revs=$(git rev-list "$@"); else revs=$(git rev-list --all); fi
-    for c in $revs; do check_tree "${c:0:7}" "$c"; done
+    for c in $revs; do check_tree "${c:0:7}" "$c"; check_message "$c"; done
     ;;
   pre-receive)
     zero=0000000000000000000000000000000000000000
     while read -r _old new _ref; do
       [[ $new == "$zero" ]] && continue
-      for c in $(git rev-list "$new" --not --all); do check_tree "${c:0:7}" "$c"; done
+      for c in $(git rev-list "$new" --not --all); do check_tree "${c:0:7}" "$c"; check_message "$c"; done
     done
     ;;
   *)
