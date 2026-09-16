@@ -851,30 +851,37 @@ afin que le garde-fou soit non contournable (UJ-4).
 ### Story 1.3 : Full history audit with pattern list
 
 En tant qu'Arnaud, mainteneur,
-je veux un audit propre de tout l'historique de la forge, toutes branches et tous tags compris,
+je veux un audit propre de tout ce que la forge expose, branches, tags et références de PR comprises,
 afin d'activer le miroir sans qu'un commit privé reste accessible sur GitHub par son SHA.
 
 **Couvre :** FR-28, NFR-9, SM-5 · AD-12 · C1 (avec motifs)
 **Dépendances :** 1.2
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, sur le poste d'Arnaud, où se trouve la liste des motifs.
+**Opération manuelle (Arnaud) :** non pour l'audit, lancé par l'agent sur le poste, où vit la liste des motifs. Toute réécriture d'historique reste une décision et une exécution d'Arnaud.
+
+**Décisions (Arnaud, 16/09/2026, après la revue de spec) :**
+- périmètre : toutes les références de la forge, `refs/pull/*` comprises, qu'un `git clone --mirror` récupère, et non les seules branches ;
+- l'audit est lancé par l'agent dans un clone miroir jetable hors du dépôt de travail, avec `PRIVATE_PATTERNS_FILE` ;
+- en cas de signalement, l'agent s'arrête et n'exécute ni réécriture d'historique ni push forcé : Arnaud décide et exécute, ou autorise chaque commande au moment voulu.
+
+**Contraintes :** aucun signalement, motif ou contenu trouvé n'est recopié dans un fichier suivi, une PR, un commentaire ou une conversation ; seuls l'emplacement masqué et les chiffres sont notés.
 
 **Critères d'acceptation :**
 
-**Étant donné** un clone miroir récent du dépôt de la forge (branches `main`, `dev`, `design/dossier-architecture`, `design/suisse`, `experiment/d2-bilingue` et toutes les autres références)
-**Quand** Arnaud lance `scripts/check-private.sh history` avec la liste des motifs
-**Alors** le script sort avec le code 0, sans signalement.
+**Étant donné** un clone miroir récent du dépôt de la forge, qui contient toutes ses références
+**Quand** l'agent lance `PRIVATE_PATTERNS_FILE=<liste> <dépôt de travail>/scripts/check-private.sh history` depuis ce clone
+**Alors** le script sort avec le code 0, sans aucun signalement ni la mention « chemins seulement »
+**Et** le nombre de références et de commits audités, le commit de tête de chaque branche et la date sont notés dans le fichier de story.
 
 **Étant donné** un signalement
 **Quand** il apparaît
-**Alors** la story s'arrête ; la réécriture éventuelle est décidée par Arnaud, puis les tests de 1.2 sont rejoués avant un nouvel audit.
+**Alors** l'agent s'arrête et montre les emplacements masqués, sans jamais citer le contenu trouvé ; aucune réécriture n'est lancée sans décision d'Arnaud ; après une réécriture éventuelle, les essais 1 et 3 du hook (story 1.2) sont rejoués, puis l'audit recommencé.
 
-- [ ] Aucun signalement ni motif n'est recopié dans un fichier suivi, une PR ou un commentaire.
-- [ ] Le commit de tête de chaque branche auditée et la date sont notés.
+- [ ] Le clone miroir jetable est supprimé après l'audit.
+- [ ] Rien n'est poussé vers la forge pendant l'audit.
 
-**Questions à poser avant de commencer :**
-- Les références internes de PR de Gitea sont-elles poussées par le miroir, et faut-il les auditer ?
+**Renvoyé à la story 1.4 :** le miroir push de Gitea envoie-t-il les références `refs/pull/*`, que GitHub refuse comme références cachées ? À constater lors de l'activation du miroir.
 
 ### Story 1.4 : Push mirror to public GitHub repository
 
@@ -889,6 +896,10 @@ afin de lire le cadrage et le code.
 **Opération manuelle (Arnaud) :** **oui**, dépôt public GitHub, identité du miroir (clé de déploiement si le miroir push de Gitea sait pousser en SSH, sinon compte machine avec un jeton à grain fin limité au dépôt), rulesets d'AD-12, configuration du miroir push dans Gitea.
 
 **Critères d'acceptation :**
+
+**Étant donné** les stories 1.2 et 1.3 terminées
+**Quand** l'audit complet de la story 1.3 est relancé, juste avant d'activer le miroir, sur un clone miroir frais de la forge
+**Alors** il sort avec le code 0, sans signalement ni mention « chemins seulement », et son résultat est noté dans le fichier de story : un audit plus ancien que le dernier commit poussé ne vaut pas (ajouté après la revue du code de la story 1.3).
 
 **Étant donné** les stories 1.2 et 1.3 terminées
 **Quand** le miroir push est configuré et synchronisé
