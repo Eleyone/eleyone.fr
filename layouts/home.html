@@ -1,0 +1,9 @@
+{{ define "main" }}
+  {{/* AD-3 : aucun texte de contenu ici ; tout vient du front-matter de content/_index.<lang>.md. */}}
+  <header>
+    {{ with .Params.identity }}<p>{{ . }}</p>{{ end }}
+    <h1>{{ .Title }}</h1>
+    {{ with .Params.based_in }}<p>{{ . }}</p>{{ end }}
+  </header>
+  {{ with .Content }}<main>{{ . }}</main>{{ end }}
+{{ end }}

@@ -15,3 +15,9 @@ docs/private/
 
 # Outils épinglés installés en local par scripts/ci/install-tools.sh --local (AD-1, D-15)
 .tools/
+
+# Sorties de Hugo
+public/
+build/
+resources/_gen/
+.hugo_build.lock

@@ -1,0 +1,47 @@
+# Configuration commune (AD-2, AD-5). Les versions des outils vivent dans tools.env, jamais ici.
+baseURL: https://eleyone.fr/
+title: eleyone.fr
+
+# Français à la racine, anglais sous /en/ : aucun dossier public/fr/, aucune redirection implicite.
+defaultContentLanguage: fr
+defaultContentLanguageInSubdir: false
+disableDefaultSiteRedirect: true
+
+# Ni taxonomies, ni flux : le site est un portfolio, pas un blog (AD-2).
+disableKinds:
+  - taxonomy
+  - term
+  - rss
+
+enableRobotsTXT: true
+enableEmoji: false
+# Une erreur de rendu doit arrêter le build, pas produire une page muette.
+ignoreErrors: []
+
+languages:
+  fr:
+    label: Français
+    locale: fr
+    weight: 1
+    permalinks:
+      page:
+        cases: /cas/:slug/
+      section:
+        cases: /cas/:sections[1:]/
+  en:
+    label: English
+    locale: en
+    weight: 2
+    permalinks:
+      page:
+        cases: /cases/:slug/
+      section:
+        cases: /cases/:sections[1:]/
+
+markup:
+  goldmark:
+    renderer:
+      # Le contenu vient de fichiers du dépôt, relus : le HTML en ligne reste possible pour les cas.
+      unsafe: false
+  highlight:
+    noClasses: false

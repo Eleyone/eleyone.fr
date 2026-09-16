@@ -1085,20 +1085,28 @@ afin que brouillons et éléments prévus n'arrivent jamais en production.
 **Prérequis de contenu :** —
 **Opération manuelle (Arnaud) :** non
 
+**Décisions (Arnaud, 16/09/2026, après la revue de spec) :**
+- **titre du site** (FR-1), provisoire et à ajuster plus tard : FR « Arnaud Grousset · Développeur backend senior », EN « Arnaud Grousset · Senior Backend Developer », avec le séparateur « · » précédé d'une espace insécable (`DESIGN.md`) ;
+- **pitch** : l'accueil l'**omet** tant que la story 10.1 ne l'a pas écrit. Un `[TODO: …]` publié ferait échouer le contrôle C5, et un accueil passé en brouillon disparaîtrait de la production — exactement ce que cette story cherche à empêcher ;
+- **`dev.sh`** garde la commande d'AD-5, **sans `--panicOnWarning`** : un serveur de travail qui meurt au premier avertissement à chaque sauvegarde est inutilisable. Les avertissements restent bloquants là où ils comptent, `build.sh` et les deux CI. À ajuster si la pratique montre le contraire ;
+- **frontière AD-3** : `identity`, `based_in`, `job_title` et le titre sont des **clés de front-matter** de `content/_index.{fr,en}.md` (AD-19) ; les gabarits les lisent sans écrire un seul mot de contenu.
+
 **Critères d'acceptation :**
 
 **Étant donné** `config/_default/hugo.yaml`
 **Quand** Hugo le lit
-**Alors** il porte les réglages d'AD-2 : `defaultContentLanguage: fr`, `defaultContentLanguageInSubdir: false`, `disableDefaultSiteRedirect: true`, clés `label`, `locale`, `weight`, `disableKinds: [taxonomy, term, rss]`, permaliens et slugs par langue.
+**Alors** il porte les réglages d'AD-2 : `baseURL`, `defaultContentLanguage: fr`, `defaultContentLanguageInSubdir: false`, `disableDefaultSiteRedirect: true`, clés `label`, `locale`, `weight`, `disableKinds: [taxonomy, term, rss]`, permaliens et slugs par langue.
 
 **Étant donné** `scripts/build.sh`
-**Quand** il est appelé avec `production`, `work`, puis un autre argument
-**Alors** il lance exactement les commandes d'AD-5 vers `public/` puis `build/work/`, puis échoue avec un message d'usage, après vérification de la version de Hugo.
+**Quand** il est appelé avec `production`, avec `work`, **sans argument**, puis avec un argument inconnu
+**Alors** les deux premiers lancent exactement les commandes d'AD-5 vers `public/` puis `build/work/`, et les deux suivants échouent avec un message d'usage
+**Et** dans tous les cas la version de Hugo est vérifiée avant l'appel (`scripts/lib/tools.sh`), `scripts/dev.sh` faisant de même.
 
-**Étant donné** `content/_index.{fr,en}.md` avec `identity`, `based_in` et le titre du site de FR-1
+**Étant donné** `content/_index.{fr,en}.md` portant les clés de front-matter `identity`, `based_in`, `job_title`, `title` (titre du site de FR-1) et `translationKey: home`
 **Quand** on lance le build de production
-**Alors** `/` (français) et `/en/` affichent la ligne d'identité, « Basé en France » / *Based in France* et le titre du site, sans dossier `public/fr/`
-**Et** chaque `<title>` est construit par `baseof.html` seul et contient la ligne d'identité (AD-2).
+**Alors** `/` (français) et `/en/` affichent la ligne d'identité, « Basé en France » / *Based in France* et le titre du site, **sans aucune page ni redirection sous `public/fr/`** (décidé le 16/09/2026 : Hugo place toujours le sitemap d'une langue dans son dossier dès qu'il y a plusieurs langues, et `sitemap.filename` le renomme sans le déplacer ; `public/fr/sitemap.xml` est donc normal, et l'espace d'URL français reste la racine)
+**Et** chaque `<title>` est construit par `baseof.html` seul : le titre de la page suivi de la ligne d'identité, **sauf sur l'accueil**, dont le titre est le titre du site et porte déjà le nom (AD-2, précisé le 16/09/2026)
+**Et** aucun gabarit ne contient de texte de contenu (AD-3).
 
 **Étant donné** les deux environnements
 **Quand** on compare leurs pages
@@ -1109,10 +1117,7 @@ afin que brouillons et éléments prévus n'arrivent jamais en production.
 - [ ] `scripts/build.sh` et `scripts/dev.sh` placent `.tools/` en tête du `PATH` quand il existe (D-15).
 - [ ] `ci/release-pages.txt` est créé avec `home`, première entrée de la liste cumulative des pages publiées attendues (D-5).
 - [ ] Aucun texte de contenu dans les gabarits ; ceux-ci ne testent que `hugo.IsProduction`.
-
-**Questions à poser avant de commencer :**
-- Le pitch n'est pas encore fourni (story 10.1). L'accueil minimal l'omet-il, plutôt que de porter un `[TODO: …]` qui ferait passer l'accueil en brouillon (C5) et le retirerait de la production ?
-- Arnaud confirme-t-il le libellé du titre du site de FR-1 à commiter ?
+- [ ] Les cas de test des scripts sont **hors ligne** : `hugo` bouchonné pour vérifier les commandes exactes, aucun appel réseau.
 
 ### Story 2.3 : Language switcher, hreflang and 404 pages
 
@@ -1193,6 +1198,12 @@ afin de juger le cas et d'en lire la preuve.
 Périmètre : `content/cases/_index.{fr,en}.md` (jamais rendu), `content/cases/chiliz/_index.{fr,en}.md` (`translationKey: group-chiliz`, titre « Chiliz » en FR et en EN sans introduction, `draft: true` tant que le cas 02 n'est pas publié, cascade ciblée ; AD-4, D-3 et D-4), `layouts/cases/section.html`, `_partials/case.html`, `_shortcodes/live-material.html` (éléments « prévus »), libellés d'`i18n/`. Le shortcode est dans cette story parce que le pilote l'utilise.
 
 **Critères d'acceptation :**
+
+**Étant donné** `layouts/_shortcodes/live-material.html`, posé en version minimale par la story 2.2 parce qu'aucun build ne pouvait tourner sans lui (le cas pilote l'appelle six fois)
+**Quand** cette story le reprend
+**Alors** elle le **complète sans le réécrire** : la moitié « planned » (id absent de `live_material` → `errorf`, rien en production, encart fixe en rendu de travail) reste telle quelle, et la résolution d'un élément `ready` par type (`diagram`, `video`, `snippet`, `callout`, AD-6) s'y ajoute, avec le schéma large
+**Et** le garde-fou temporaire qui fait échouer le build sur un élément `ready` disparaît.
+
 
 **Étant donné** le rendu de travail
 **Quand** Claire ouvre `/cas/chiliz/` puis `/en/cases/chiliz/`

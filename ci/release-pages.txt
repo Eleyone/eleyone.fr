@@ -1,0 +1,3 @@
+# translationKey des pages publiées attendues, liste cumulative (D-5).
+# Une story qui publie une page ajoute sa clé ici ; le contrôle C15 compare cette liste au site produit.
+home

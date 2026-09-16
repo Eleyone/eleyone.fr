@@ -17,3 +17,7 @@ Constats de revue reportés à plus tard, au format de `bmad-build`. Chaque entr
 - source_spec: `_bmad-output/implementation-artifacts/2-1-pinned-tools-installed-and-verified.md`
   summary: `scripts/ci/install-tools.sh` écrit l'archive téléchargée sous le nom donné par `tools.env` sans le réduire à son nom de base (`basename`), et ne teste pas son arrêt quand `curl`, `tar` ou `sha256sum` manque.
   evidence: Deux constats non bloquants de la revue du code de la PR n° 24 (`212885b`), reportés d'un commun accord pour fermer la PR. À reprendre à la prochaine story qui touche ce script.
+
+- source_spec: `_bmad-output/implementation-artifacts/2-2-bilingual-hugo-build-with-minimal-home.md`
+  summary: `layouts/baseof.html` construit le `hreflang="x-default"` par `index . 0` (échec brut si une page n'a pas de version française), et le passage d'arguments à `hugo server` dans `scripts/dev.sh` n'a pas de cas de test.
+  evidence: Deux constats non bloquants de la revue du code de la PR n° 25 (`540b654`), reportés à la story 2.3, qui possède le sélecteur de langue et les `hreflang`.

@@ -1,0 +1,40 @@
+{{/*
+  Matériel vivant (AD-6). Version minimale posée par la story 2.2 : sans elle, aucun build ne peut
+  tourner, le cas pilote appelant déjà ce shortcode. Elle tient la moitié « planned » de la règle ;
+  la résolution d'un élément « ready » par type (diagram, video, snippet, callout) appartient à la
+  story 2.5, qui complète ce fichier sans le réécrire.
+
+  Règles d'AD-6 tenues ici :
+  - un id absent de live_material fait échouer le build (errorf) ;
+  - en production, un élément planned ne produit rien : ni figure, ni paragraphe vide, ni commentaire ;
+  - en rendu de travail, un élément planned s'affiche en encart fixe, avec son type et sa description,
+    et n'est jamais résolu.
+
+  errorf signale l'erreur mais n'interrompt pas le gabarit : chaque cas d'erreur est donc suivi d'un
+  « else », sans quoi la suite s'exécute sur une variable vide et ajoute une seconde erreur illisible
+  (constaté story 2.2).
+*/}}
+{{- $id := .Get "id" -}}
+{{- if not $id -}}
+  {{- errorf "live-material : attribut id manquant dans %s" .Page.File.Filename -}}
+{{- else -}}
+  {{- $item := "" -}}
+  {{- range .Page.Params.live_material -}}
+    {{- if eq .id $id -}}{{- $item = . -}}{{- end -}}
+  {{- end -}}
+  {{- if not $item -}}
+    {{- errorf "live-material : id %q absent de live_material dans %s" $id .Page.File.Filename -}}
+  {{- else -}}
+    {{- $status := $item.status | default "planned" -}}
+    {{- if not (in (slice "planned" "ready") $status) -}}
+      {{- errorf "live-material : status %q inconnu pour %q dans %s ; attendu planned ou ready" $status $id .Page.File.Filename -}}
+    {{- else if eq $status "ready" -}}
+      {{- errorf "live-material : élément %q en status ready, dont la résolution par type arrive avec la story 2.5 (%s)" $id .Page.File.Filename -}}
+    {{- else if not hugo.IsProduction -}}
+      <aside class="live-material-slot" data-type="{{ $item.type }}">
+        <p>{{ $item.type }} · {{ $item.status }}</p>
+        {{ with $item.description }}<p>{{ . }}</p>{{ end }}
+      </aside>
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
