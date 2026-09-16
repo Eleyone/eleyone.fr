@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-16-2026 11:45'
+last_updated: '09-16-2026 13:05'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -313,7 +313,7 @@ action_items:
       G4 noms de fichiers, D1 mode lu deux fois, S1 AGENTS.md au présent), avec un
       cas de test par surface"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-09-16.md"
   - id: "epic-1-retro-item-2-trancher-g3-les-métadonnées-d-images-c20"
     epic: 1
@@ -349,5 +349,5 @@ action_items:
       epics.md : ancre unique ET non contenue dans un titre plus long, puis recompter
       les titres après écriture"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-09-16.md"
