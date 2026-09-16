@@ -13,3 +13,7 @@ Constats de revue reportés à plus tard, au format de `bmad-build`. Chaque entr
 - source_spec: `_bmad-output/implementation-artifacts/0-9-shared-sprint-reading-and-script-tests.md`
   summary: Clôture de l'entrée « aucun test automatisé des scripts shell » (story 0.4) : `scripts/tests/run.sh` rejoue hors ligne les tests des scripts, sur le poste et en CI (story 3.12).
   evidence: Story 0.9 (15/09/2026), après la rétrospective de l'epic 0 (constat P1).
+
+- source_spec: `_bmad-output/implementation-artifacts/2-1-pinned-tools-installed-and-verified.md`
+  summary: `scripts/ci/install-tools.sh` écrit l'archive téléchargée sous le nom donné par `tools.env` sans le réduire à son nom de base (`basename`), et ne teste pas son arrêt quand `curl`, `tar` ou `sha256sum` manque.
+  evidence: Deux constats non bloquants de la revue du code de la PR n° 24 (`212885b`), reportés d'un commun accord pour fermer la PR. À reprendre à la prochaine story qui touche ce script.

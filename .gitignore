@@ -12,3 +12,6 @@ docs/private/
 
 # Corps de PR de scripts/create-pull-request.sh, réécrit à chaque PR
 .pr-body.md
+
+# Outils épinglés installés en local par scripts/ci/install-tools.sh --local (AD-1, D-15)
+.tools/

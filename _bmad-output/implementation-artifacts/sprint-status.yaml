@@ -55,8 +55,8 @@ development_status:
   1-5-guard-covers-env-variants-commit-messages-and-file-names: done
   epic-1-retrospective: done
 
-  epic-2: backlog
-  2-1-pinned-tools-installed-and-verified: backlog
+  epic-2: in-progress
+  2-1-pinned-tools-installed-and-verified: done
   2-2-bilingual-hugo-build-with-minimal-home: backlog
   2-3-language-switcher-hreflang-and-404-pages: backlog
   2-4-single-env-loader-and-dummy-legal-values: backlog

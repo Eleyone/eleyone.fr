@@ -1025,29 +1025,53 @@ afin qu'un rendu ou un contrôle ne diffère jamais d'un environnement à l'autr
 **Dépendances :** Epic 1 (ordre du squelette)
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, rendre Docker disponible dans le shell WSL du poste (prérequis du poste d'AD-24, D-15).
+**Opération manuelle (Arnaud) :** **déjà faite** — Docker est disponible dans le shell WSL du poste depuis la story 0.8 (les tests de l'epic 1 ont tourné dans `alpine:3.24` et dans `gitea/gitea:1.27.3`).
+
+**Décisions (Arnaud, 16/09/2026, après la revue de spec) :**
+- la **vérification de version commune** vit dans `scripts/lib/tools.sh`, à côté de `gitea.sh`, `sprint.sh` et `merge-gates.sh`, avec ses cas dans `scripts/tests/` ;
+- un binaire déjà présent dans `.tools/` dont l'empreinte ne correspond plus à `tools.env` est **réinstallé sans rien demander** : `.tools/` est un cache ignoré par git, et une montée de version doit se faire en modifiant `tools.env` seul, sans geste manuel ;
+- `tools.env` absent, illisible ou privé d'une variable attendue **arrête immédiatement** le script, en **code 2** (anomalie, convention 0/1/2 du projet), avec un message qui nomme le fichier et la variable ;
+- les empreintes sont calculées depuis les archives officielles et **recoupées avec les fichiers de sommes publiés** par les deux projets ; leur origine et leur date sont notées dans le fichier de story ;
+- avec `--local`, le script n'installe **que** Hugo et D2 (AD-1) : aucun `apk`, puisque le poste n'en a pas.
 
 **Critères d'acceptation :**
 
 **Étant donné** `tools.env`
 **Quand** on cherche dans le dépôt une version ou une empreinte de Hugo, de D2 ou de l'image de contrôle
-**Alors** elles ne sont déclarées que là : Hugo v0.166.0 et D2 v0.9.0 (linux-amd64) avec leur sha256, `CHECK_IMAGE` épinglée par digest.
+**Alors** elles ne sont déclarées que là, et nulle part ailleurs : Hugo v0.166.0 et D2 v0.9.0 (linux-amd64) avec leur sha256, et `CHECK_IMAGE` = `alpine:3.24` épinglée par digest
+**Et** monter une version consiste à modifier ce seul fichier.
 
 **Étant donné** un conteneur lancé depuis `CHECK_IMAGE`
 **Quand** `scripts/ci/install-tools.sh` s'exécute
 **Alors** Hugo et D2 sont téléchargés et vérifiés par sha256
-**Et** `bash`, `git`, `grep` GNU, `jq`, `libxml2-utils` et `poppler-utils` sont installés par `apk`.
-
-**Étant donné** une empreinte attendue modifiée localement, puis un binaire `hugo` ou `d2` d'une autre version dans le `PATH`
-**Quand** le script, puis la vérification commune de version, s'exécutent
-**Alors** chacun échoue en nommant l'outil et les versions.
+**Et** `bash`, `git`, `grep` GNU, `jq`, `libxml2-utils` et `poppler-utils` sont installés par `apk`
+**Et** les deux binaires répondent avec la version attendue.
 
 **Étant donné** le poste de développement, sans Hugo ni D2 dans le `PATH`
 **Quand** on lance `scripts/ci/install-tools.sh --local`
-**Alors** Hugo et D2 sont téléchargés, vérifiés par sha256 d'après `tools.env`, et installés dans `.tools/`, que `.gitignore` exclut (D-15).
+**Alors** Hugo et D2 sont téléchargés, vérifiés par sha256 d'après `tools.env`, et installés dans `.tools/`, que `.gitignore` exclut (D-15)
+**Et** aucun paquet système n'est installé.
 
-**Questions à poser avant de commencer :**
-- Où vit la fonction commune de vérification de version, que l'architecture impose sans emplacement ?
+**Étant donné** une empreinte attendue qui ne correspond pas à l'archive téléchargée
+**Quand** `scripts/ci/install-tools.sh` s'exécute
+**Alors** il échoue en nommant l'outil, sans installer le binaire, et sans afficher l'archive.
+
+**Étant donné** un binaire déjà installé dans `.tools/` dont l'empreinte ne correspond plus à `tools.env`
+**Quand** on relance `scripts/ci/install-tools.sh --local`
+**Alors** il le remplace sans demander d'intervention, et la version installée est celle de `tools.env`.
+
+**Étant donné** la vérification de version commune de `scripts/lib/tools.sh`
+**Quand** le binaire trouvé annonce une version différente de celle de `tools.env`
+**Alors** elle échoue avec un message nommant l'outil, la version attendue et la version trouvée.
+
+**Étant donné** `tools.env` absent, illisible, ou privé d'une des variables attendues
+**Quand** un script le charge
+**Alors** il s'arrête en **code 2** avec un message nommant le fichier et la variable manquante, sans continuer avec une valeur vide.
+
+- [ ] `scripts/tests/run.sh` passe, cas de `tools.sh` compris ; les cas d'installation sont **hors ligne** (archives factices servies depuis un dossier local, aucune requête réseau).
+- [ ] `.tools/` est ignoré par git et n'entre pas dans l'historique.
+- [ ] L'origine des empreintes (archives officielles, fichiers de sommes des projets, date) est notée dans le fichier de story.
+- [ ] Aucune version ni empreinte n'est écrite ailleurs que dans `tools.env` *(vérification par recherche dans le dépôt)*.
 
 ### Story 2.2 : Bilingual Hugo build with minimal home
 
