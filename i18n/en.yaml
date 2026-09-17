@@ -21,3 +21,10 @@ setup_ton_pote_le_geek: Ton Pote le Geek
 # Matériel vivant (AD-6, story 2.5)
 diagram_full_size: Open full size
 video_suffix: (video on YouTube)
+
+# Sommaire et rubriques (AD-4, story 2.6)
+toc_label: Contents
+toc:
+  one: "Contents · {{ .Count }} section"
+  other: "Contents · {{ .Count }} sections"
+toc_case: "Case {{ .Number }} — {{ .Title }}"

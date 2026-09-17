@@ -40,6 +40,10 @@ languages:
 
 markup:
   goldmark:
+    parser:
+      # Identifiants de titre en ASCII : un lien copié reste lisible (« #case-02-le-probleme »), décidé
+      # par Arnaud le 17/09/2026 (story 2.6, AD-4).
+      autoHeadingIDType: github-ascii
     renderer:
       # Le contenu vient de fichiers du dépôt, relus : le HTML en ligne reste possible pour les cas.
       unsafe: false

@@ -1,0 +1,20 @@
+{{/*
+  Rubriques d'un cas (AD-4) : ses titres de niveau 2, dans l'ordre du texte. Seule source du rang d'une
+  rubrique, pour le hook de titres comme pour le sommaire : le numéro « 02.3 » et l'entrée de sommaire
+  ne peuvent pas diverger.
+
+  Hugo range les titres en arbre : une racine de niveau 0 porte les titres de niveau 2, qui portent
+  les « ### ». Le parcours regarde les deux premiers étages, ce qui suffit pour un cas sans titre de
+  niveau 1 (docs/format-cas.md).
+
+  Paramètre : la page du cas. Retour : une liste de dict « ID » (identifiant Hugo, sans préfixe) et
+  « Title » (HTML du titre).
+*/}}
+{{- $rubrics := slice -}}
+{{- range .Fragments.Headings -}}
+  {{- if eq .Level 2 }}{{ $rubrics = $rubrics | append (dict "ID" .ID "Title" .Title) }}{{ end -}}
+  {{- range .Headings -}}
+    {{- if eq .Level 2 }}{{ $rubrics = $rubrics | append (dict "ID" .ID "Title" .Title) }}{{ end -}}
+  {{- end -}}
+{{- end -}}
+{{- return $rubrics -}}

@@ -1,0 +1,41 @@
+{{/*
+  Sommaire d'une page de groupe (AD-4, EXPERIENCE.md « toc »). Une nav étiquetée, un <details> natif,
+  aucun JavaScript. Un niveau par cas publié, dans l'ordre reçu, puis ses rubriques. « Contexte
+  mission », « En bref » et les titres libres n'y figurent pas : seules les rubriques ont un numéro.
+
+  Le résumé compte les rubriques de tous les cas listés (décidé par Arnaud le 17/09/2026). Les
+  brouillons sont déjà absents de la liste en production. La page d'un cas sans groupe viendra avec
+  la story 6.2.
+
+  Paramètre : « pages », les cas de la page, triés.
+*/}}
+{{- $cases := slice -}}
+{{- $count := 0 -}}
+{{- range .pages -}}
+  {{- $rubrics := partial "case-rubrics.html" . -}}
+  {{- $cases = $cases | append (dict "page" . "rubrics" $rubrics) -}}
+  {{- $count = add $count (len $rubrics) -}}
+{{- end -}}
+{{- with $cases }}
+  <nav class="toc" aria-label="{{ i18n "toc_label" }}">
+    <details>
+      <summary>{{ i18n "toc" $count }}</summary>
+      <ol>
+        {{- range . }}
+          {{- $page := .page }}
+          {{- $key := $page.Params.translationKey }}
+          <li>
+            <a href="#{{ $key }}">{{ i18n "toc_case" (dict "Number" $page.Params.number "Title" $page.Title) }}</a>
+            {{- with .rubrics }}
+              <ol>
+                {{- range $i, $rubric := . }}
+                  <li><a href="#{{ $key }}-{{ $rubric.ID }}"><span class="rubric-number" aria-hidden="true">{{ $page.Params.number }}.{{ add $i 1 }}</span> {{ $rubric.Title | safeHTML }}</a></li>
+                {{- end }}
+              </ol>
+            {{- end }}
+          </li>
+        {{- end }}
+      </ol>
+    </details>
+  </nav>
+{{- end }}

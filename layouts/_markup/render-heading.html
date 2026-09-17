@@ -1,0 +1,31 @@
+{{/*
+  Hook de titres (AD-4). Hors d'un cas, un titre est rendu tel que Hugo le rendrait.
+
+  Dans un cas :
+  - l'identifiant est préfixé par le translationKey (« case-02-contexte »), en ASCII par la
+    configuration (autoHeadingIDType) ;
+  - un cas groupé descend chaque titre d'un niveau, puisque la page de groupe donne le h2 au titre
+    du cas ; un cas sans groupe garde ses niveaux (vérifié par la story 6.2) ;
+  - une rubrique (titre de niveau 2) reçoit la classe rubric-heading et son numéro « NN.r » : numéro
+    du cas, point, rang dans le cas. Il ne dépend pas de la page qui affiche le cas, donc ne change
+    pas quand un autre cas du groupe est publié. Le numéro est masqué aux lecteurs d'écran.
+
+  .PageInner plutôt que .Page : le titre appartient au cas même quand son contenu est inclus ailleurs.
+*/}}
+{{- $page := .PageInner -}}
+{{- $key := $page.Params.translationKey -}}
+{{- if and (eq $page.Section "cases") $key -}}
+  {{- $level := cond (isset $page.Params "group") (add .Level 1) .Level -}}
+  {{- $rank := 0 -}}
+  {{- if eq .Level 2 -}}
+    {{- range $i, $rubric := partial "case-rubrics.html" $page -}}
+      {{- if eq $rubric.ID $.Anchor }}{{ $rank = add $i 1 }}{{ end -}}
+    {{- end -}}
+  {{- end -}}
+  <h{{ $level }} id="{{ $key }}-{{ .Anchor }}"{{ if $rank }} class="rubric-heading"{{ end }}>
+    {{- if $rank }}<span class="rubric-number" aria-hidden="true">{{ $page.Params.number }}.{{ $rank }}</span> {{ end -}}
+    {{- .Text -}}
+  </h{{ $level }}>
+{{- else -}}
+  <h{{ .Level }} id="{{ .Anchor }}">{{ .Text }}</h{{ .Level }}>
+{{- end -}}

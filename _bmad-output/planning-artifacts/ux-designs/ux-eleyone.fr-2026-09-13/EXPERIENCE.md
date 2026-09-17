@@ -82,7 +82,7 @@ Microcopie de l'interface (libellés i18n, AD-3). La voix du contenu est celle d
 | Champs de l'encart | Société · Cadre · Rôle · Période · Stack | Company · Engagement · Role · Period · Stack | décidé (AD-3) |
 | Cadres | Salarié · Freelance · ESN · Ton Pote le Geek | Employee · Freelance · IT consultancy · Ton Pote le Geek | décidé (AD-3) |
 | `based_in` (clé de front matter de `content/_index`, pas un libellé i18n) | Basé en France | Based in France | décidé (AD-19) : contenu, pas interface (AD-3) |
-| `toc` | Sommaire · 6 rubriques | Contents · 6 sections | à valider par Arnaud |
+| `toc` | Sommaire · 6 rubriques (« 1 rubrique » au singulier) ; `nav` « Sommaire » | Contents · 6 sections (« 1 section » au singulier) ; `nav` « Contents » | décidé (17/09/2026, story 2.6) : sur une page de groupe, le nombre est le total des rubriques des cas publiés |
 | `back_to_career` | Retour au parcours | Back to experience | décidé (13/09/2026, FR-15) |
 | `skip_to_content` | Aller au contenu | Skip to content | à valider par Arnaud |
 | `language_switch` | English | Français | décidé (13/09/2026) |

@@ -1286,8 +1286,14 @@ afin d'aller directement à « Ce que j'ai décidé ».
 
 **Étant donné** le hook `layouts/_markup/render-heading.html`
 **Quand** le cas pilote est rendu dans la page Chiliz
-**Alors** chaque `##` est rendu en `<h3>`, avec un identifiant préfixé par `case-02-`, la classe `rubric-heading` et `<span class="rubric-number" aria-hidden="true">02.r</span>`, de 02.1 à 02.6
-**Et** les numéros sont identiques en FR et en EN.
+**Alors** chaque rubrique (`##`) est rendue en `<h3>` pour ce cas groupé, avec un identifiant préfixé par le `translationKey` (`case-02-` sur le pilote), la classe `rubric-heading` et `<span class="rubric-number" aria-hidden="true">NN.r</span>`, où `NN` vient de `number` et `r` est le rang de la rubrique dans le cas : 02.1 à 02.6 sur le pilote
+**Et** les numéros sont identiques en FR et en EN
+**Et** les identifiants sont en ASCII (`markup.goldmark.parser.autoHeadingIDType: github-ascii`) : `case-02-le-probleme`, jamais `case-02-le-problème` (décidé par Arnaud le 17/09/2026).
+
+**Étant donné** une copie locale d'un cas du groupe dont le corps porte un titre `###`
+**Quand** on lance le rendu de travail
+**Alors** ce titre est rendu en `<h4>`, avec l'identifiant préfixé, sans numéro, sans classe `rubric-heading` et sans entrée de sommaire
+**Et** le hook ne descend les titres que pour un cas groupé : un cas sans groupe garde ses rubriques en `<h2>`, ce que vérifie la story 6.2 avec son gabarit.
 
 **Étant donné** une copie locale d'un cas 03 publié dans le groupe
 **Quand** on rend la page
@@ -1295,11 +1301,13 @@ afin d'aller directement à « Ce que j'ai décidé ».
 
 **Étant donné** `_partials/toc.html`
 **Quand** la page Chiliz est rendue
-**Alors** un `<details>` natif liste les sections publiées et leurs rubriques, avec le nombre de rubriques calculé par le gabarit, sans JavaScript
+**Alors** un `<nav>` au nom accessible « Sommaire » / « Contents » contient un `<details>` natif, sans JavaScript, qui liste les cas publiés du groupe dans l'ordre `order` (« Cas 02 — titre », lien vers `#case-02`), et sous chacun ses rubriques, avec leur numéro et un lien vers leur identifiant
+**Et** le résumé du `<details>` est « Sommaire · N rubriques » / « Contents · N sections » (« 1 rubrique » / « 1 section » au singulier), où `N` est calculé par le gabarit : le total des rubriques des cas publiés de la page, soit 6 sur le pilote (décidé par Arnaud le 17/09/2026)
 **Et** « Contexte mission » et « En bref » n'ont ni numéro ni entrée de sommaire.
 
-**Questions à poser avant de commencer :**
-- Libellé du résumé du sommaire (« Sommaire · N rubriques », « à valider » dans `EXPERIENCE.md`) ?
+- [ ] Aucun CSS dans cette story : `:target` et `scroll-margin-top` relèvent de la story 6.1 (UX-DR12).
+- [ ] Aucun texte de contenu dans les gabarits : les libellés du sommaire viennent d'`i18n/` (AD-3).
+- [ ] Les copies locales des essais sont défaites, et `git status` est propre à la fin.
 
 ### Story 2.7 : Draft Chiliz position and back to career link
 

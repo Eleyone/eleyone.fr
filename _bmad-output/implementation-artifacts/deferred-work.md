@@ -21,3 +21,7 @@ Constats de revue reportés à plus tard, au format de `bmad-build`. Chaque entr
 - source_spec: `_bmad-output/implementation-artifacts/2-2-bilingual-hugo-build-with-minimal-home.md`
   summary: `layouts/baseof.html` construit le `hreflang="x-default"` par `index . 0` (échec brut si une page n'a pas de version française), et le passage d'arguments à `hugo server` dans `scripts/dev.sh` n'a pas de cas de test.
   evidence: Deux constats non bloquants de la revue du code de la PR n° 25 (`540b654`), reportés à la story 2.3, qui possède le sélecteur de langue et les `hreflang`.
+
+- source_spec: `_bmad-output/implementation-artifacts/2-6-case-section-numbers-and-table-of-contents.md`
+  summary: `layouts/_markup/render-heading.html` descend chaque titre d'un cas groupé d'un niveau sans borne : un `######` y serait rendu en `<h7>`, balise qui n'existe pas en HTML.
+  evidence: Constat non bloquant de la revue du code de la PR n° 31 (`99fe2e9`). Aucun cas n'a de titre au-delà du niveau 3. À traiter par la story 3.4 : C4 refuse un titre de niveau 6 dans un cas groupé, plutôt que le hook ne le masque.

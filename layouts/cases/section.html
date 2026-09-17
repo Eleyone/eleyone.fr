@@ -6,7 +6,9 @@
   */}}
   <main>
     <h1>{{ .Title }}</h1>
-    {{ range sort .RegularPages "Params.order" }}
+    {{ $cases := sort .RegularPages "Params.order" }}
+    {{ partial "toc.html" (dict "pages" $cases) }}
+    {{ range $cases }}
       <section id="{{ .Params.translationKey }}">
         {{ partial "case.html" (dict "page" . "level" 2) }}
       </section>
