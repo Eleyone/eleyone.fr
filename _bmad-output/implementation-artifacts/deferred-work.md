@@ -25,3 +25,11 @@ Constats de revue reportés à plus tard, au format de `bmad-build`. Chaque entr
 - source_spec: `_bmad-output/implementation-artifacts/2-6-case-section-numbers-and-table-of-contents.md`
   summary: `layouts/_markup/render-heading.html` descend chaque titre d'un cas groupé d'un niveau sans borne : un `######` y serait rendu en `<h7>`, balise qui n'existe pas en HTML.
   evidence: Constat non bloquant de la revue du code de la PR n° 31 (`99fe2e9`). Aucun cas n'a de titre au-delà du niveau 3. À traiter par la story 3.4 : C4 refuse un titre de niveau 6 dans un cas groupé, plutôt que le hook ne le masque.
+
+- source_spec: `_bmad-output/implementation-artifacts/epic-2-retro-2026-09-17.md`
+  summary: Deux libellés construits deux fois entre stories : le cadre `setup_…` dans `layouts/_partials/case.html:17` (story 2.5) et `layouts/_partials/position.html:13` (story 2.7) ; « Cas NN » dans les clés i18n `toc_case` (story 2.6) et `case_number` (story 2.7).
+  evidence: Constats D1 et D2 de la rétrospective de l'epic 2. À traiter par la story 5.2, qui reprend `position.html` : un partial `setup-label.html`, et `toc_case` construit sur `case_number`.
+
+- source_spec: `_bmad-output/implementation-artifacts/epic-2-retro-2026-09-17.md`
+  summary: `layouts/_shortcodes/live-material.html:51` ne lit qu'un `viewBox` à coordonnées positives séparées par des espaces : un SVG dont le `viewBox` extérieur a une origine négative ou des virgules fait échouer le build (message explicite, jamais en silence).
+  evidence: Constat R3 de la revue du diff de l'epic 2, non reproduit avec D2 0.9.0 (le `viewBox` extérieur vaut `0 0 …` sur un rendu ELK et sur les quatre SVG de `experiment/d2-bilingue`). À revoir par la première story qui publie un schéma « prêt ».

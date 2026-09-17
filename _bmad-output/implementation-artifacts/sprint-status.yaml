@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-17-2026 12:41'
+last_updated: '09-17-2026 12:54'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -63,7 +63,7 @@ development_status:
   2-5-chiliz-page-case-partial-and-planned-material: done
   2-6-case-section-numbers-and-table-of-contents: done
   2-7-draft-chiliz-position-and-back-to-career-link: done
-  epic-2-retrospective: optional
+  epic-2-retrospective: done
 
   epic-3: backlog
   3-1-checks-json-manifest-emitted-by-hugo: backlog
@@ -351,3 +351,40 @@ action_items:
     owner: "agent de développement"
     status: done
     ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-09-16.md"
+  - id: "epic-2-retro-item-7-pr-fix-de-rétrospective-test-build-sh-10"
+    epic: 2
+    action: "PR fix de rétrospective : test-build.sh:106 avec destination jetable
+      et run.sh qui vérifie public/ et build/ intacts (F1), lang retiré du lien de
+      la 404 (F2), commentaires faux (D4)"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-2-retro-2026-09-17.md"
+  - id: "epic-2-retro-item-8-mettre-agents-md-5-au-présent-le-site-hu"
+    epic: 2
+    action: "Mettre AGENTS.md:5 au présent : le site Hugo se construit depuis l epic
+      2 (S1)"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-2-retro-2026-09-17.md"
+  - id: "epic-2-retro-item-9-pièges-connus-de-docs-procedures-shell-s"
+    epic: 2
+    action: "Pièges connus de docs/procedures/shell-scripts.md : git checkout et fichiers
+      non suivis, commande | tail qui masque le code, test qui lance un script destructeur
+      sans racine jetable (P3, F1)"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-2-retro-2026-09-17.md"
+  - id: "epic-2-retro-item-10-une-anticipation-posée-pour-débloquer-un"
+    epic: 2
+    action: "Une anticipation posée pour débloquer un build écrit sa story propriétaire
+      et sa portée exacte, dans le fichier de story et en commentaire (P1)"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-2-retro-2026-09-17.md"
+  - id: "epic-2-retro-item-11-ajouter-à-poste-de-developpement-md-une"
+    epic: 2
+    action: "Ajouter à poste-de-developpement.md une vérification du jeton de la forge
+      sans PR ouverte (P4)"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-2-retro-2026-09-17.md"
