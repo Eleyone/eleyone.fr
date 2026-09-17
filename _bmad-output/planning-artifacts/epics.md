@@ -1325,28 +1325,40 @@ Périmètre : `content/career/_index.{fr,en}.md` (jamais rendu), `content/career
 
 **Critères d'acceptation :**
 
-**Étant donné** le rendu de travail
-**Quand** Claire ouvre l'accueil
-**Alors** le poste Chiliz (`id="position-chiliz"`) liste le cas 02 par numéro et titre, sans « En bref », avec un lien vers `/cas/chiliz/#case-02` (`/en/cases/chiliz/#case-02` en anglais), construit par `case-url.html`
+**Étant donné** `content/career/_index.{fr,en}.md` avec `build: {render: never, list: never}` et `cascade: [{build: {render: never, list: always}, target: {kind: page}}]` (AD-18)
+**Quand** on lance le rendu de travail puis le build de production
+**Alors** aucune page n'est construite sous `/career/` ni pour un poste, et les postes restent lisibles par l'accueil.
+
+**Étant donné** `content/career/position-chiliz.{fr,en}.md` en brouillon : `company: "Chiliz"`, `role` « Développeur backend sénior » / « Senior backend developer » (donné par Arnaud le 17/09/2026), `period: "[TODO: période]"`, `setup: employee`, `track: main`, `order: 1`, sans `location` ni corps
+**Quand** Claire ouvre l'accueil en rendu de travail
+**Alors** le bloc « Parcours » (i18n `block_career`) montre le poste Chiliz (`id="position-chiliz"`) avec sa période, sa société en `h3`, son rôle et le libellé de son cadre
+**Et** le poste liste le cas 02 par numéro (i18n `case_number`) et titre, sans « En bref », dans une liste au nom accessible i18n `cases_of_position` (« Cas qui prouvent ce poste » / « Cases behind this role », décidé par Arnaud le 17/09/2026), avec un lien vers `/cas/chiliz/#case-02` (`/en/cases/chiliz/#case-02` en anglais) construit par `case-url.html`
 **Et** le cas est retrouvé par sa clé `position`, sans liste de cas dans le poste.
 
-**Étant donné** la section du cas 02
-**Quand** Claire suit « Retour au parcours » (i18n `back_to_career`)
-**Alors** elle arrive sur `/#position-chiliz` (`/en/#position-chiliz`), lien construit par `career-url.html`.
+**Étant donné** une copie locale du poste Chiliz avec un corps Markdown
+**Quand** on lance le rendu de travail
+**Alors** le corps n'est pas affiché, puisque le poste a un cas (AD-18).
+
+**Étant donné** la page Chiliz
+**Quand** Claire suit « Retour au parcours » (i18n `back_to_career`), placé **une fois, en haut de page**, avant le `h1` (`EXPERIENCE.md`, premier écran ; décidé par Arnaud le 17/09/2026)
+**Alors** elle arrive sur `/#position-chiliz` (`/en/#position-chiliz`), lien construit par `career-url.html` à partir de la clé `position` des cas de la page.
 
 **Étant donné** le rendu de travail
-**Quand** on affiche le cas 02 (brouillon)
-**Alors** un marqueur « Brouillon » (i18n `draft_marker`, classe `draft-marker`) précède son titre sur la page Chiliz et sous le poste.
+**Quand** on affiche le cas 02 et le poste Chiliz, tous deux en brouillon
+**Alors** un marqueur « Brouillon » (i18n `draft_marker`, classe `draft-marker`) précède le titre du cas sur la page Chiliz et sous le poste, et précède aussi la société du poste (AD-5 étendu, décidé par Arnaud le 17/09/2026).
 
 **Étant donné** le build de production avec pilote et poste en brouillon
 **Quand** on inspecte l'accueil
 **Alors** aucun poste ni aucun cas n'y figure, aucune page Chiliz n'est construite, et aucun `draft-marker` n'existe dans `public/`.
 
-**Étant donné** une copie locale d'un poste publié sans cas
+**Étant donné** une copie locale d'un poste publié sans cas, avec un corps
 **Quand** on lance le build de production
-**Alors** il affiche ses champs puis son corps éventuel, sans zone de cas ni mention d'absence.
+**Alors** il affiche ses champs puis son corps, sans zone de cas ni mention d'absence.
 
 - [ ] Démonstration de WS-2 : accueil de travail avec le poste Chiliz et le cas 02, section et trois éléments « prévus ».
+- [ ] L'accueil complet (ordre des blocs, « En parallèle », barre de révision, premier écran) reste à la story 5.2 ; aucun CSS ici.
+- [ ] Aucun texte de contenu dans les gabarits : les libellés viennent d'`i18n/` (AD-3).
+- [ ] Les copies locales des essais sont défaites, et `git status` est propre à la fin.
 
 ## Epic 3 : Contrôles bloquants, CI des deux forges et README-cas (WS-3, WS-4)
 

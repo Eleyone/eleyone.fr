@@ -28,3 +28,10 @@ toc:
   one: "Contents · {{ .Count }} section"
   other: "Contents · {{ .Count }} sections"
 toc_case: "Case {{ .Number }} — {{ .Title }}"
+
+# Parcours et brouillons (AD-5, AD-18, story 2.7)
+block_career: Experience
+case_number: "Case {{ . }}"
+cases_of_position: Cases behind this role
+back_to_career: Back to experience
+draft_marker: Draft

@@ -29,3 +29,10 @@ toc:
   one: "Sommaire · {{ .Count }} rubrique"
   other: "Sommaire · {{ .Count }} rubriques"
 toc_case: "Cas {{ .Number }} — {{ .Title }}"
+
+# Parcours et brouillons (AD-5, AD-18, story 2.7)
+block_career: Parcours
+case_number: "Cas {{ . }}"
+cases_of_position: Cas qui prouvent ce poste
+back_to_career: Retour au parcours
+draft_marker: Brouillon

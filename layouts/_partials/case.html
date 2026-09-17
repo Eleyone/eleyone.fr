@@ -8,7 +8,7 @@
 {{- $page := .page -}}
 {{- $level := .level | default 2 -}}
 {{- $context := $page.Params.context -}}
-<h{{ $level }}>{{ $page.Title }}</h{{ $level }}>
+<h{{ $level }}>{{ partial "draft-marker.html" $page }}{{ $page.Title }}</h{{ $level }}>
 {{- with $context }}
   <aside class="engagement-context">
     <h{{ add $level 1 }}>{{ i18n "engagement_context" }}</h{{ add $level 1 }}>

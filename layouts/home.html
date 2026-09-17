@@ -1,9 +1,19 @@
 {{ define "main" }}
   {{/* AD-3 : aucun texte de contenu ici ; tout vient du front-matter de content/_index.<lang>.md. */}}
-  <header>
-    {{ with .Params.identity }}<p>{{ . }}</p>{{ end }}
-    <h1>{{ .Title }}</h1>
-    {{ with .Params.based_in }}<p>{{ . }}</p>{{ end }}
-  </header>
-  {{ with .Content }}<main>{{ . }}</main>{{ end }}
+  <main>
+    <header>
+      {{ with .Params.identity }}<p>{{ . }}</p>{{ end }}
+      <h1>{{ .Title }}</h1>
+      {{ with .Params.based_in }}<p>{{ . }}</p>{{ end }}
+    </header>
+    {{ .Content }}
+    {{/* AD-18 : bloc « Parcours », postes « main » par « order ». Sans poste publié, aucun bloc. L'accueil
+         complet (« En parallèle », formation, contact) vient de la story 5.2. */}}
+    {{ with sort (where (where site.RegularPages "Section" "career") "Params.track" "main") "Params.order" }}
+      <section aria-labelledby="block-career">
+        <h2 id="block-career">{{ i18n "block_career" }}</h2>
+        {{ range . }}{{ partial "position.html" . }}{{ end }}
+      </section>
+    {{ end }}
+  </main>
 {{ end }}

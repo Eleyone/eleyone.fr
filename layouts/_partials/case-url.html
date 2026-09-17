@@ -1,0 +1,11 @@
+{{/*
+  Seule construction d'un lien vers un cas (AD-4) : la section de sa page de groupe pour un cas groupé,
+  jamais rendu à sa propre URL ; sa page sinon.
+
+  Paramètre : la page du cas. Retour : l'URL relative.
+*/}}
+{{- $url := .RelPermalink -}}
+{{- if isset .Params "group" -}}
+  {{- $url = printf "%s#%s" .Parent.RelPermalink .Params.translationKey -}}
+{{- end -}}
+{{- return $url -}}

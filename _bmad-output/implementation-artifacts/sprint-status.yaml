@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-17-2026 12:05'
+last_updated: '09-17-2026 12:41'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -55,14 +55,14 @@ development_status:
   1-5-guard-covers-env-variants-commit-messages-and-file-names: done
   epic-1-retrospective: done
 
-  epic-2: in-progress
+  epic-2: done
   2-1-pinned-tools-installed-and-verified: done
   2-2-bilingual-hugo-build-with-minimal-home: done
   2-3-language-switcher-hreflang-and-404-pages: done
   2-4-single-env-loader-and-dummy-legal-values: done
   2-5-chiliz-page-case-partial-and-planned-material: done
   2-6-case-section-numbers-and-table-of-contents: done
-  2-7-draft-chiliz-position-and-back-to-career-link: backlog
+  2-7-draft-chiliz-position-and-back-to-career-link: done
   epic-2-retrospective: optional
 
   epic-3: backlog

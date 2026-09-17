@@ -1,0 +1,7 @@
+{{/*
+  Seule construction du lien « Retour au parcours » (AD-18) : l'accueil de la langue du cas, suivi de
+  l'ancre de son poste.
+
+  Paramètre : la page du cas. Retour : l'URL relative.
+*/}}
+{{- return printf "%s#%s" .Site.Home.RelPermalink .Params.position -}}

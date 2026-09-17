@@ -1,0 +1,9 @@
+{{/*
+  Marqueur « Brouillon » (AD-5) devant le titre d'un cas ou la société d'un poste en brouillon. Jamais
+  émis en production, où Hugo exclut de toute façon les brouillons ; C15 vérifie son absence de public/.
+
+  Paramètre : la page du cas ou du poste.
+*/}}
+{{- if and (not hugo.IsProduction) .Draft -}}
+  <span class="draft-marker">{{ i18n "draft_marker" }}</span>{{ " " }}
+{{- end -}}

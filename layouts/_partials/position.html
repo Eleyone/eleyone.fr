@@ -1,0 +1,27 @@
+{{/*
+  Un poste du parcours (AD-18, DESIGN.md « cv-position » et « attached-case »). Le poste ne liste pas
+  ses cas : ils sont retrouvés par leur clé « position » et triés par numéro ; Hugo exclut les
+  brouillons en production. Le corps du poste n'est rendu que s'il n'a aucun cas, et rien ne signale
+  l'absence de cas. La mise en forme relève de la story 5.2.
+
+  Paramètre : la page du poste.
+*/}}
+{{- $key := .Params.translationKey -}}
+{{- $cases := sort (where site.RegularPages "Params.position" $key) "Params.number" -}}
+{{- $details := slice -}}
+{{- with .Params.location }}{{ $details = $details | append . }}{{ end -}}
+{{- with .Params.setup }}{{ $details = $details | append (i18n (printf "setup_%s" (replace . "-" "_"))) }}{{ end -}}
+<div class="cv-position" id="{{ $key }}">
+  {{ with .Params.period }}<p>{{ . }}</p>{{ end }}
+  <h3>{{ partial "draft-marker.html" . }}{{ .Params.company }}</h3>
+  <p>{{ .Params.role }}{{ range $details }} · {{ . }}{{ end }}</p>
+  {{- with $cases }}
+    <ol class="attached-case" aria-label="{{ i18n "cases_of_position" }}">
+      {{- range . }}
+        <li>{{ i18n "case_number" .Params.number }} {{ partial "draft-marker.html" . }}<a href="{{ partial "case-url.html" . }}">{{ .Title }}</a></li>
+      {{- end }}
+    </ol>
+  {{- else }}
+    {{ .Content }}
+  {{- end }}
+</div>

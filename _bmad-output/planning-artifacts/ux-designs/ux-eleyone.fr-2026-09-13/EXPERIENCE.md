@@ -76,7 +76,7 @@ Microcopie de l'interface (libellés i18n, AD-3). La voix du contenu est celle d
 | `block_contact` | Contact | Contact | à valider par Arnaud |
 | `contact_cta` | Me contacter | Get in touch | à valider par Arnaud |
 | `case_number` | Cas 02 | Case 02 | décidé (13/09/2026) |
-| `cases_of_position` (nom accessible de la liste) | Cas qui prouvent ce poste | Cases behind this role | à valider par Arnaud |
+| `cases_of_position` (nom accessible de la liste) | Cas qui prouvent ce poste | Cases behind this role | décidé (17/09/2026, story 2.7) |
 | `context_box` | Contexte mission | Engagement context | décidé (AD-3) |
 | `summary_box` | En bref | At a glance | décidé (AD-3) |
 | Champs de l'encart | Société · Cadre · Rôle · Période · Stack | Company · Engagement · Role · Period · Stack | décidé (AD-3) |
@@ -135,6 +135,7 @@ Comportement. L'aspect visuel est dans `DESIGN.md.Components`, sous les mêmes n
 | Poste dont tous les cas sont en brouillon | accueil, production | Comme un poste sans cas. |
 | Cas en brouillon | production | Absent partout : aucune page, aucun lien, aucune entrée de sommaire, aucune section (FR-26). |
 | Cas en brouillon | rendu de travail | Affiché, lié depuis son poste ; un marqueur `label` « Brouillon » précède le titre du cas. |
+| Poste en brouillon | rendu de travail | Affiché ; le même marqueur « Brouillon » précède la société (décidé le 17/09/2026, story 2.7). |
 | Page Chiliz avec la seule section 02 | page Chiliz | Page complète : titre, sommaire du seul cas 02, section 02. Aucun emplacement, aucune mention des cas 03 et 04 (FR-9). |
 | Cas 03 ou 04 publié plus tard | page Chiliz, accueil | La section s'insère à sa place (`order`), le sommaire gagne une entrée, le poste Chiliz gagne un lien. Les numéros « 02.x » ne changent pas. |
 | Page de groupe sans cas publié | production | N'existe pas : son `_index` reste en brouillon tant qu'aucun cas du groupe n'est publié, donc la page n'est pas construite (AD-4) ; le contrôle de mise en ligne C15 bloque en dernier recours. |

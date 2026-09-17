@@ -5,8 +5,10 @@
     identique en FR et en EN, pour qu'une ancre traverse les langues.
   */}}
   <main>
-    <h1>{{ .Title }}</h1>
     {{ $cases := sort .RegularPages "Params.order" }}
+    {{/* AD-18 : un seul « Retour au parcours », en haut de page ; les cas d'un groupe prouvent le même poste. */}}
+    {{ with index $cases 0 }}<p><a href="{{ partial "career-url.html" . }}">{{ i18n "back_to_career" }}</a></p>{{ end }}
+    <h1>{{ .Title }}</h1>
     {{ partial "toc.html" (dict "pages" $cases) }}
     {{ range $cases }}
       <section id="{{ .Params.translationKey }}">
