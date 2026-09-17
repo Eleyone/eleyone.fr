@@ -43,8 +43,9 @@ relative=$( [[ $environment == production ]] && echo public || echo build/work )
 destination="${destination_root:?}/$relative"
 rm -rf "$destination" || { echo "$script_name: nettoyage impossible de $relative." >&2; exit 2; }
 
+# AD-9 : tout appel à hugo passe par le chargeur, seul à décider de ce que voit le processus.
 if [[ $environment == production ]]; then
-  hugo --environment production --minify --cleanDestinationDir --panicOnWarning --destination "$destination"
+  exec "$root/scripts/env.sh" hugo --environment production --minify --cleanDestinationDir --panicOnWarning --destination "$destination"
 else
-  hugo --environment work --buildDrafts --cleanDestinationDir --panicOnWarning --destination "$destination"
+  exec "$root/scripts/env.sh" hugo --environment work --buildDrafts --cleanDestinationDir --panicOnWarning --destination "$destination"
 fi

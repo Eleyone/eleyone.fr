@@ -22,4 +22,5 @@ export PATH
 require_tool_version hugo hugo "$HUGO_VERSION" || exit 1
 
 cd "$root"
-hugo server --environment work --buildDrafts "$@"
+# AD-9 : le serveur de travail passe par le même chargeur que build.sh.
+exec "$root/scripts/env.sh" hugo server --environment work --buildDrafts "$@"

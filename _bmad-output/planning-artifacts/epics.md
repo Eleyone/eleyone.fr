@@ -1173,26 +1173,40 @@ afin qu'aucune coordonnée réelle ne soit commitée et qu'une mise en ligne n'u
 **Prérequis de contenu :** —
 **Opération manuelle (Arnaud) :** non
 
+**Décisions (Arnaud, 17/09/2026, après la revue de spec) :**
+- **un seul lecteur de dotenv** dans le dépôt : la lecture ligne à ligne de `load_gitea_env` est factorisée dans `scripts/lib/dotenv.sh`, employée par `scripts/lib/gitea.sh` et par le chargeur. Elle retire les guillemets et le commentaire de fin, et ne lit jamais par `source` (constat D7 de la rétrospective de l'epic 0, « logique recopiée ») ;
+- **`scripts/env.sh` est une enveloppe** : `scripts/env.sh <commande…>` lance la commande avec l'environnement préparé. La garantie devient vérifiable de l'extérieur, sans lire le code ;
+- **repli variable par variable** : un `.env` incomplet est complété par le fichier factice pour les variables absentes, au lieu de faire échouer le build ;
+- **`LEGAL_ENV_FILE` refusé sur deux critères** en mise en ligne : chemin canonique égal à `.env` ou au fichier factice du dépôt, **et** nom de base `.env`, pour qu'aucun `./.env` ni `../ailleurs/.env` ne passe.
+
 **Critères d'acceptation :**
 
 **Étant donné** `.env.example` (story 0.1) et `ci/legal-placeholder.env`
 **Quand** on les lit
 **Alors** le premier liste exactement, sans valeur, les sept variables d'AD-9 et les trois `GITEA_*` d'AD-24 (C18), et le second exactement les sept noms légaux avec des valeurs `VALEUR-FACTICE-…`.
 
-**Étant donné** `scripts/env.sh` hors mise en ligne
-**Quand** une variable est déjà définie, puis seulement dans `.env`, puis dans aucun des deux
-**Alors** la valeur retenue est, dans l'ordre, celle déjà définie, celle de `.env`, celle du fichier factice.
+**Étant donné** `scripts/env.sh` hors mise en ligne, et une variable donnée
+**Quand** elle est déjà définie dans l'environnement, puis seulement dans `.env`, puis dans aucun des deux
+**Alors** la valeur retenue suit cet ordre de priorité décroissant : la variable déjà définie, sinon celle de `.env`, sinon celle du fichier factice
+**Et** le repli se fait **variable par variable** : un `.env` qui n'en porte que trois sur sept ne fait pas échouer le build.
+
+**Étant donné** une valeur entre guillemets ou contenant des espaces (`HUGO_LEGAL_PUBLISHER_NAME="Arnaud Grousset"`)
+**Quand** le chargeur lit `.env`
+**Alors** la valeur arrive entière et sans ses guillemets, comme le fait déjà `load_gitea_env`, sans `source` ni `set -a`.
 
 **Étant donné** `ENV_MODE=release`
-**Quand** `LEGAL_ENV_FILE` manque, désigne `.env` ou le fichier factice, ou qu'une variable manque
+**Quand** `LEGAL_ENV_FILE` manque, désigne `.env` ou le fichier factice — **y compris par un chemin détourné** (`./.env`, `../ailleurs/.env`) —, ou qu'une variable manque
 **Alors** le chargeur échoue en nommant la cause, sans afficher aucune valeur.
 
 **Étant donné** un `.env` qui contient une variable `GITEA_TOKEN` factice
 **Quand** `scripts/build.sh` lance `hugo`
-**Alors** le processus `hugo` ne voit pas `GITEA_TOKEN` dans son environnement : le chargeur ne lit que les lignes `^HUGO_LEGAL_` de `.env`, sans `source` complet ni `set -a` (AD-9).
+**Alors** le processus `hugo` ne voit pas `GITEA_TOKEN` dans son environnement : le chargeur ne lit que les lignes `^HUGO_LEGAL_` de `.env`
+**Et** la garantie se vérifie de l'extérieur : `scripts/env.sh env` ne montre aucune variable `GITEA_*` venue de `.env`.
 
 - [ ] `scripts/build.sh` et `scripts/dev.sh` passent par `scripts/env.sh`.
 - [ ] Aucun `set -x`.
+- [ ] Aucun message du chargeur n'affiche une valeur, factice ou non ; les cas de test le vérifient.
+- [ ] `scripts/lib/gitea.sh` emploie le lecteur factorisé, et ses cas de test passent inchangés.
 
 ### Story 2.5 : Chiliz page, case partial and planned material
 
