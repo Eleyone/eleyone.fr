@@ -1222,13 +1222,21 @@ afin de juger le cas et d'en lire la preuve.
 
 Périmètre : `content/cases/_index.{fr,en}.md` (jamais rendu), `content/cases/chiliz/_index.{fr,en}.md` (`translationKey: group-chiliz`, titre « Chiliz » en FR et en EN sans introduction, `draft: true` tant que le cas 02 n'est pas publié, cascade ciblée ; AD-4, D-3 et D-4), `layouts/cases/section.html`, `_partials/case.html`, `_shortcodes/live-material.html` (éléments « prévus »), libellés d'`i18n/`. Le shortcode est dans cette story parce que le pilote l'utilise.
 
+**Décisions (Arnaud, 17/09/2026, après la revue de spec) :**
+- **le type d'un élément vient du champ `type`**, pas du préfixe de son identifiant : le préfixe est une règle de nommage (AD-6), et en faire la source du type créerait une seconde vérité, qui casserait au premier identifiant mal nommé ;
+- **repli d'AD-4** : si la cascade casse avec un `_index` en brouillon, cette story **constate et consigne** ; l'exigence passe à la story 3.9, qui crée C12 et la porte déjà en toutes lettres. Rien à modifier ici, faute de contrôle existant.
+
 **Critères d'acceptation :**
 
-**Étant donné** `layouts/_shortcodes/live-material.html`, posé en version minimale par la story 2.2 parce qu'aucun build ne pouvait tourner sans lui (le cas pilote l'appelle six fois)
+**Étant donné** `layouts/_shortcodes/live-material.html`, posé en version minimale par la story 2.2 parce qu'aucun build ne pouvait tourner sans lui (le pilote l'appelle trois fois par langue, six fois en tout)
 **Quand** cette story le reprend
-**Alors** elle le **complète sans le réécrire** : la moitié « planned » (id absent de `live_material` → `errorf`, rien en production, encart fixe en rendu de travail) reste telle quelle, et la résolution d'un élément `ready` par type (`diagram`, `video`, `snippet`, `callout`, AD-6) s'y ajoute, avec le schéma large
-**Et** le garde-fou temporaire qui fait échouer le build sur un élément `ready` disparaît.
-
+**Alors** elle le **complète sans le réécrire**, et il tient les règles d'AD-6, distinctes l'une de l'autre :
+- un `id` absent de `live_material` **fait échouer le build** en le nommant ;
+- un élément **déclaré** en `planned` ne produit **rien** en production, et s'affiche en rendu de travail en encart fixe portant son type et sa `description`, sans que sa source soit cherchée ;
+- un élément `ready` est **résolu par son champ `type`** : `diagram` → `<figure><img>` depuis `assets/diagrams/<id>.<lang>.svg`, `alt` venant de la `description`, dimensions lues dans le SVG ; `video` → lien `<a href>` vers YouTube, **jamais d'`iframe`** ; `snippet` et `callout` → Markdown d'`assets/live-material/<id>.<lang>.md` dans `<figure>` ou `<aside>` ;
+- un élément `ready` dont la source manque **fait échouer le build** ;
+- un schéma dépassant le seuil de largeur de `DESIGN.md` est enveloppé dans un conteneur **focalisable** (`tabindex="0"`) doté d'un nom accessible ;
+- le garde-fou temporaire qui faisait échouer le build sur un élément `ready` disparaît.
 
 **Étant donné** le rendu de travail
 **Quand** Claire ouvre `/cas/chiliz/` puis `/en/cases/chiliz/`
@@ -1236,16 +1244,18 @@ Périmètre : `content/cases/_index.{fr,en}.md` (jamais rendu), `content/cases/c
 **Et** en anglais, les libellés sont ceux d'AD-3 (*Engagement context*, *At a glance*, *Company*, *Engagement*, *Role*, *Period*, *Stack*, *Employee*).
 
 **Étant donné** le rendu de travail
-**Quand** on regarde les trois emplacements du pilote
+**Quand** on regarde les **trois** emplacements du pilote, dans chacune des deux langues
 **Alors** chacun s'affiche en encart avec son type et sa description, sans que sa source soit cherchée.
 
 **Étant donné** une copie locale non commitée du pilote et du `_index` Chiliz en `draft: false`
 **Quand** on lance le build de production
-**Alors** la section 02 est présente, et les éléments « prévus » ne laissent aucune trace dans `public/`.
+**Alors** la section 02 est présente, et les éléments « prévus » ne laissent aucune trace dans `public/`
+**Et** la copie locale est défaite ensuite : le dépôt ne garde aucun de ces changements.
 
 **Étant donné** le pilote et le `_index` Chiliz en brouillon, tels que commités
 **Quand** on lance le build de production, puis le rendu de travail
-**Alors** `public/` ne contient aucune page `/cas/chiliz/` ni `/en/cases/chiliz/`, puis le rendu de travail affiche la page Chiliz avec la section 02 : le `_index` en brouillon ne casse ni la cascade ni `case-url.html` (constat ; s'il échoue, repli d'AD-4 : C12 exclut les pages de groupe sans section).
+**Alors** `public/` ne contient aucune page `/cas/chiliz/` ni `/en/cases/chiliz/`, puis le rendu de travail affiche la page Chiliz avec la section 02 : le `_index` en brouillon ne casse ni la cascade ni `case-url.html`
+**Et** si ce constat échoue, il est **consigné tel quel** dans le fichier de story, et l'exigence passe à la story 3.9 (repli d'AD-4 : C12 exclut les pages de groupe sans section) ; rien n'est modifié ici, faute de contrôle existant.
 
 **Étant donné** un identifiant placé mais non déclaré (copie locale)
 **Quand** on lance un build
@@ -1257,6 +1267,8 @@ Périmètre : `content/cases/_index.{fr,en}.md` (jamais rendu), `content/cases/c
 
 - [ ] Aucune page séparée pour le cas 02 ; aucun `/cas/index.html`.
 - [ ] Le sélecteur de la page Chiliz mène à la page Chiliz de l'autre langue.
+- [ ] Aucun texte de contenu dans les gabarits : les libellés d'encart viennent d'`i18n/` (AD-3).
+- [ ] Les copies locales des essais sont défaites, et `git status` est propre à la fin.
 
 ### Story 2.6 : Case section numbers and table of contents
 

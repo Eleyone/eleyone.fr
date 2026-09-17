@@ -4,3 +4,20 @@ home_link: Home
 not_found_title: Page not found
 not_found_message: This page doesn't exist, or it has moved.
 home_link_other_language: Home in French
+
+# Case boxes (AD-3, story 2.5)
+engagement_context: Engagement context
+at_a_glance: At a glance
+company: Company
+engagement: Engagement
+role: Role
+period: Period
+stack: Stack
+setup_employee: Employee
+setup_freelance: Freelance
+setup_agency: IT consultancy
+setup_ton_pote_le_geek: Ton Pote le Geek
+
+# Matériel vivant (AD-6, story 2.5)
+diagram_full_size: Open full size
+video_suffix: (video on YouTube)

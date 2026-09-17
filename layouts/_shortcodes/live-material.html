@@ -1,20 +1,22 @@
 {{/*
-  Matériel vivant (AD-6). Version minimale posée par la story 2.2 : sans elle, aucun build ne peut
-  tourner, le cas pilote appelant déjà ce shortcode. Elle tient la moitié « planned » de la règle ;
-  la résolution d'un élément « ready » par type (diagram, video, snippet, callout) appartient à la
-  story 2.5, qui complète ce fichier sans le réécrire.
+  Matériel vivant (AD-6, EXPERIENCE.md I-4). Un seul point d'insertion pour tout élément d'un cas.
+  La moitié « planned » vient de la story 2.2 ; la résolution d'un élément « ready » est ajoutée ici.
 
-  Règles d'AD-6 tenues ici :
-  - un id absent de live_material fait échouer le build (errorf) ;
-  - en production, un élément planned ne produit rien : ni figure, ni paragraphe vide, ni commentaire ;
-  - en rendu de travail, un élément planned s'affiche en encart fixe, avec son type et sa description,
-    et n'est jamais résolu.
+  Règles tenues, chacune distincte :
+  - un id absent de live_material fait échouer le build ;
+  - un élément déclaré « planned » ne produit rien en production, et s'affiche en rendu de travail en
+    encart fixe portant son type et sa description, sans que sa source soit cherchée ;
+  - un élément « ready » est résolu par son champ « type », jamais par le préfixe de son identifiant,
+    qui n'est qu'une règle de nommage (décidé story 2.5) ;
+  - un élément « ready » dont la source manque fait échouer le build ;
+  - un schéma de plus de 480 px de large est réduit à 75 % et enveloppé d'un conteneur focalisable
+    étiqueté, avec un lien vers le SVG ; aucun style en ligne (CSP).
 
-  errorf signale l'erreur mais n'interrompt pas le gabarit : chaque cas d'erreur est donc suivi d'un
-  « else », sans quoi la suite s'exécute sur une variable vide et ajoute une seconde erreur illisible
-  (constaté story 2.2).
+  errorf signale l'erreur sans interrompre le gabarit : chaque cas d'erreur est suivi d'un « else »,
+  sans quoi la suite s'exécute sur une variable vide et ajoute une erreur illisible (constat 2.2).
 */}}
 {{- $id := .Get "id" -}}
+{{- $lang := .Page.Site.Language.Lang -}}
 {{- if not $id -}}
   {{- errorf "live-material : attribut id manquant dans %s" .Page.File.Filename -}}
 {{- else -}}
@@ -26,15 +28,78 @@
     {{- errorf "live-material : id %q absent de live_material dans %s" $id .Page.File.Filename -}}
   {{- else -}}
     {{- $status := $item.status | default "planned" -}}
+    {{- $type := $item.type | default "" -}}
     {{- if not (in (slice "planned" "ready") $status) -}}
       {{- errorf "live-material : status %q inconnu pour %q dans %s ; attendu planned ou ready" $status $id .Page.File.Filename -}}
-    {{- else if eq $status "ready" -}}
-      {{- errorf "live-material : élément %q en status ready, dont la résolution par type arrive avec la story 2.5 (%s)" $id .Page.File.Filename -}}
-    {{- else if not hugo.IsProduction -}}
-      <aside class="live-material-slot" data-type="{{ $item.type }}">
-        <p>{{ $item.type }} · {{ $item.status }}</p>
-        {{ with $item.description }}<p>{{ . }}</p>{{ end }}
-      </aside>
+    {{- else if eq $status "planned" -}}
+      {{- if not hugo.IsProduction -}}
+        <aside class="live-material-slot" data-type="{{ $type }}">
+          <p>{{ $type }} · {{ $status }}</p>
+          {{ with $item.description }}<p>{{ . }}</p>{{ end }}
+        </aside>
+      {{- end -}}
+    {{- else if eq $type "diagram" -}}
+      {{- $path := printf "diagrams/%s.%s.svg" $id $lang -}}
+      {{- $svg := resources.Get $path -}}
+      {{- if not $svg -}}
+        {{- errorf "live-material : schéma %q introuvable (assets/%s), appelé dans %s" $id $path .Page.File.Filename -}}
+      {{- else -}}
+        {{- $fingerprinted := $svg | fingerprint -}}
+        {{- $content := $svg.Content -}}
+        {{- $width := 0 -}}
+        {{- $height := 0 -}}
+        {{- with findRE `viewBox="[0-9.]+ [0-9.]+ ([0-9.]+) ([0-9.]+)"` $content 1 -}}
+          {{- $numbers := findRE `[0-9.]+` (index . 0) -}}
+          {{- if ge (len $numbers) 4 -}}
+            {{- $width = int (float (index $numbers 2)) -}}
+            {{- $height = int (float (index $numbers 3)) -}}
+          {{- end -}}
+        {{- end -}}
+        {{- if eq $width 0 -}}
+          {{- errorf "live-material : dimensions illisibles dans le SVG de %q (viewBox absent), %s" $id $path -}}
+        {{- else -}}
+          {{- $large := gt $width 480 -}}
+          {{- $shown := cond $large (int (math.Round (mul (float $width) 0.75))) $width -}}
+          {{- $shownHeight := cond $large (int (math.Round (mul (float $height) 0.75))) $height -}}
+          <figure class="live-material-diagram{{ if $large }} live-material-diagram-wide{{ end }}">
+            {{- if $large -}}
+              <div class="live-material-diagram-scroll" tabindex="0" role="group" aria-label="{{ $item.description }}">
+            {{- end -}}
+            <img src="{{ $fingerprinted.RelPermalink }}" alt="{{ $item.description }}" width="{{ $shown }}" height="{{ $shownHeight }}">
+            {{- if $large -}}
+              </div>
+            {{- end -}}
+            <figcaption>
+              <a href="{{ $fingerprinted.RelPermalink }}">{{ i18n "diagram_full_size" }}</a>
+            </figcaption>
+          </figure>
+        {{- end -}}
+      {{- end -}}
+    {{- else if eq $type "video" -}}
+      {{- $url := $item.url | default "" -}}
+      {{- if not $url -}}
+        {{- errorf "live-material : vidéo %q sans url dans %s" $id .Page.File.Filename -}}
+      {{- else -}}
+        {{/* jamais d'iframe (AD-6, NFR-12) : un lien, et le tiers est nommé */}}
+        <p class="live-material-video">
+          <a href="{{ $url }}" rel="noopener">{{ $item.description }} {{ i18n "video_suffix" }}</a>
+        </p>
+      {{- end -}}
+    {{- else if in (slice "snippet" "callout") $type -}}
+      {{- $path := printf "live-material/%s.%s.md" $id $lang -}}
+      {{- $source := resources.Get $path -}}
+      {{- if not $source -}}
+        {{- errorf "live-material : %s %q introuvable (assets/%s), appelé dans %s" $type $id $path .Page.File.Filename -}}
+      {{- else -}}
+        {{- $rendered := $source.Content | .Page.RenderString (dict "display" "block") -}}
+        {{- if eq $type "snippet" -}}
+          <figure class="live-material-snippet">{{ $rendered }}</figure>
+        {{- else -}}
+          <aside class="live-material-callout">{{ $rendered }}</aside>
+        {{- end -}}
+      {{- end -}}
+    {{- else -}}
+      {{- errorf "live-material : type %q inconnu pour %q dans %s ; attendu diagram, video, snippet ou callout" $type $id .Page.File.Filename -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}

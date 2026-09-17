@@ -1,0 +1,15 @@
+{{ define "main" }}
+  {{/*
+    Page de groupe (AD-4) : elle n'est jamais à modifier quand un cas s'ajoute. Les cas sont triés par
+    leur clé « order » et rendus chacun dans sa section, dont l'identifiant est le translationKey —
+    identique en FR et en EN, pour qu'une ancre traverse les langues.
+  */}}
+  <main>
+    <h1>{{ .Title }}</h1>
+    {{ range sort .RegularPages "Params.order" }}
+      <section id="{{ .Params.translationKey }}">
+        {{ partial "case.html" (dict "page" . "level" 2) }}
+      </section>
+    {{ end }}
+  </main>
+{{ end }}

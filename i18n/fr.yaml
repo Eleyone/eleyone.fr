@@ -5,3 +5,20 @@ home_link: Accueil
 not_found_title: Page introuvable
 not_found_message: Cette page n'existe pas, ou elle a changé d'adresse.
 home_link_other_language: Accueil en anglais
+
+# Encarts de cas (AD-3, story 2.5)
+engagement_context: Contexte mission
+at_a_glance: En bref
+company: Société
+engagement: Cadre
+role: Rôle
+period: Période
+stack: Stack
+setup_employee: Salarié
+setup_freelance: Freelance
+setup_agency: ESN
+setup_ton_pote_le_geek: Ton Pote le Geek
+
+# Matériel vivant (AD-6, story 2.5)
+diagram_full_size: Ouvrir en taille réelle
+video_suffix: (vidéo sur YouTube)
