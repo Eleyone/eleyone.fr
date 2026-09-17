@@ -1,0 +1,6 @@
+# Interface labels, snake_case English keys (AD-3). None of these strings is written in a template.
+language_switch: Français
+home_link: Home
+not_found_title: Page not found
+not_found_message: This page doesn't exist, or it has moved.
+home_link_other_language: Home in French

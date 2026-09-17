@@ -1,0 +1,8 @@
+{{/*
+  En-tête (DESIGN.md). Ne porte que ce qui existe : la marque, puis le sélecteur de langue.
+  « À propos » et « Contact » arriveront avec leurs pages (epic 9).
+*/}}
+<header>
+  <a href="{{ .Site.Home.RelPermalink }}">{{ .Site.Home.Params.identity }}</a>
+  {{ partial "language-switch.html" . }}
+</header>

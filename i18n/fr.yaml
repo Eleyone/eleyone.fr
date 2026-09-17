@@ -1,0 +1,7 @@
+# Libellés d'interface, en clés snake_case anglaises (AD-3). Aucun de ces textes n'est écrit
+# dans un gabarit. Les textes de contenu, eux, vivent dans content/.
+language_switch: English
+home_link: Accueil
+not_found_title: Page introuvable
+not_found_message: Cette page n'existe pas, ou elle a changé d'adresse.
+home_link_other_language: Accueil en anglais

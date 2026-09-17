@@ -1,0 +1,18 @@
+{{ define "main" }}
+  {{/* AD-3 : aucun texte ici ; titre, phrase et libellés viennent d'i18n/. */}}
+  <main>
+    <h1>{{ i18n "not_found_title" }}</h1>
+    <p>{{ i18n "not_found_message" }}</p>
+    <p>
+      <a href="{{ .Site.Home.RelPermalink }}">{{ i18n "home_link" }}</a>
+      {{ range .Site.Home.AllTranslations }}
+        {{ if ne .Site.Language.Lang $.Site.Language.Lang }}
+          {{/* Libellé distinct de celui du sélecteur, qui vit dans l'en-tête de cette même page :
+               deux liens de même nom menant ailleurs seraient ambigus (WCAG 2.4.4) et, sur une page
+               d'erreur, « English » promettrait la même page en anglais, qui n'existe pas. */}}
+          <a href="{{ .RelPermalink }}" hreflang="{{ .Site.Language.Lang }}" lang="{{ .Site.Language.Lang }}">{{ i18n "home_link_other_language" }}</a>
+        {{ end }}
+      {{ end }}
+    </p>
+  </main>
+{{ end }}

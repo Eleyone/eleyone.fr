@@ -13,13 +13,17 @@
     {{ range .AllTranslations }}
       <link rel="alternate" hreflang="{{ .Site.Language.Lang }}" href="{{ .Permalink }}">
     {{ end }}
-    {{ with where .AllTranslations "Site.Language.Lang" "fr" }}
-      {{ with index . 0 }}<link rel="alternate" hreflang="x-default" href="{{ .Permalink }}">{{ end }}
+    {{/* x-default vers le français. Un « range » plutôt qu'un « index … 0 » : sur une page sans
+         version française — impossible en production (FR-20), possible en rendu de travail — un index
+         hors bornes ferait échouer le build sur un message inutile (constat reporté par la story 2.2). */}}
+    {{ range where .AllTranslations "Site.Language.Lang" "fr" }}
+      <link rel="alternate" hreflang="x-default" href="{{ .Permalink }}">
     {{ end }}
     {{/* AD-5 : le rendu de travail n'est jamais indexable. */}}
     {{ if not hugo.IsProduction }}<meta name="robots" content="noindex">{{ end }}
   </head>
   <body>
+    {{ partial "site-header.html" . }}
     {{ block "main" . }}{{ end }}
   </body>
 </html>

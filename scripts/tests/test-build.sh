@@ -130,4 +130,13 @@ case_build_vide_sa_destination() {
   assert_contains "--destination $work/sortie/public" "$(cat "$work/hugo.log")" "hugo écrit dans la destination demandée"
 }
 
+case_dev_transmet_ses_arguments() {
+  essai_env 1.2.3
+  stub_hugo 1.2.3
+  run env PATH="$work/bin:$PATH" TOOLS_ENV_FILE="$work/tools.env" TOOLS_LOCAL_DIR="$work/bin" \
+    "$root/scripts/dev.sh" --port 4242 --bind 0.0.0.0
+  assert_eq 0 "$rc" "serveur lancé avec des arguments (messages : $err)"
+  assert_contains "server --environment work --buildDrafts --port 4242 --bind 0.0.0.0" "$(cat "$work/hugo.log")" "arguments transmis après ceux d AD-5"
+}
+
 run_case "$@"

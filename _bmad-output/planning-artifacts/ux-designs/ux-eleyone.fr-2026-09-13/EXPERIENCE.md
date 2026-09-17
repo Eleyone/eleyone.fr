@@ -90,7 +90,10 @@ Microcopie de l'interface (libellés i18n, AD-3). La voix du contenu est celle d
 | `diagram_full_size` | Ouvrir en taille réelle | Open full size | à valider par Arnaud |
 | `video_suffix` | (vidéo sur YouTube) | (video on YouTube) | à valider par Arnaud |
 | `footer_legal` · `footer_privacy` · `footer_source` | Mentions légales · Confidentialité · Code source du site | Legal notice · Privacy · Site source code | à valider par Arnaud |
-| `not_found_title` | Page introuvable | Page not found | à valider par Arnaud |
+| `not_found_title` | Page introuvable | Page not found | décidé (17/09/2026, story 2.3) |
+| `not_found_message` | Cette page n'existe pas, ou elle a changé d'adresse. | This page doesn't exist, or it has moved. | décidé (17/09/2026, story 2.3) |
+| `home_link` | Accueil | Home | décidé (17/09/2026, story 2.3) |
+| `home_link_other_language` | Accueil en anglais | Home in French | décidé (17/09/2026, story 2.3) ; distinct du sélecteur, que l'en-tête porte déjà |
 
 | À faire | À éviter |
 |---|---|

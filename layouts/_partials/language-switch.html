@@ -1,0 +1,17 @@
+{{/*
+  Sélecteur de langue (AD-2, DESIGN.md « language-switch ») : un seul lien vers la page équivalente,
+  libellé par le nom de la langue cible dans cette langue. Sans JavaScript, sans ancre transmise.
+  Sans traduction — impossible en production (FR-20), possible en rendu de travail — il mène à
+  l'accueil de l'autre langue.
+*/}}
+{{- $target := "" -}}
+{{- with .Translations -}}
+  {{- $target = index . 0 -}}
+{{- else -}}
+  {{- range .Site.Home.AllTranslations -}}
+    {{- if ne .Site.Language.Lang $.Site.Language.Lang -}}{{- $target = . -}}{{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- with $target -}}
+  <a href="{{ .RelPermalink }}" hreflang="{{ .Site.Language.Lang }}" lang="{{ .Site.Language.Lang }}">{{ i18n "language_switch" }}</a>
+{{- end -}}

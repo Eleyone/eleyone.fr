@@ -1131,24 +1131,35 @@ afin de lire le site dans ma langue.
 **Prérequis de contenu :** —
 **Opération manuelle (Arnaud) :** non
 
+**Décisions (Arnaud, 17/09/2026, après la revue de spec) :**
+- **textes des 404**, validés : titre `not_found_title` « Page introuvable » / *Page not found* ; phrase « Cette page n'existe pas, ou elle a changé d'adresse. » / *This page doesn't exist, or it has moved.* ; premier lien « Accueil » / *Home* ; second lien vers l'accueil de l'autre langue, **avec un libellé distinct de celui du sélecteur** — « Accueil en anglais » / *Home in French* (corrigé le 17/09/2026 en constatant le rendu : l'en-tête de la 404 porte déjà le sélecteur, et deux liens nommés « English » menant ailleurs seraient ambigus, WCAG 2.4.4) ;
+- **aucun lien « Contact » sur la 404** : `EXPERIENCE.md` en prévoit deux, la page Contact n'existe pas avant l'epic 9, et le projet n'écrit rien pour ce qui n'existe pas ;
+- **pas d'attribut `dir`** sur `<html>` tant qu'aucune langue du site ne s'écrit de droite à gauche : ni AD-2 ni `DESIGN.md` ne l'imposent, et ce serait du bruit.
+
 **Critères d'acceptation :**
 
 **Étant donné** le build de production
 **Quand** on inspecte chaque page
-**Alors** `<html lang>` vaut `fr` ou `en`, avec un `<link rel="alternate" hreflang>` par traduction et `hreflang="x-default"` vers le français.
+**Alors** `<html lang>` vaut `fr` ou `en`, avec une balise `<link rel="alternate" hreflang>` par traduction et une balise distincte `hreflang="x-default"` vers le français, toutes en **URL absolues**
+**Et** aucune page ne porte de `meta refresh` : la racine ne redirige pas (AD-2, NFR-12).
 
-**Étant donné** l'accueil français
+**Étant donné** une page profonde en français, avec une ancre dans l'URL
 **Quand** Daniel suit le sélecteur
-**Alors** il arrive sur `/en/` ; le lien s'intitule « English » sur une page FR et « Français » sur une page EN, avec `hreflang` et `lang`, sans JavaScript ni ancre.
+**Alors** il arrive sur la page équivalente en anglais, **sans l'ancre** ; le lien s'intitule « English » sur une page FR et « Français » sur une page EN, il porte les attributs `hreflang` et `lang`, sans JavaScript
+**Et** son texte suffit à le nommer : aucun autre libellé accessible n'est ajouté (`DESIGN.md`, `language-switch`).
+
+**Étant donné** une page sans traduction, en rendu de travail (impossible en production, FR-20)
+**Quand** on suit le sélecteur
+**Alors** il mène à l'accueil de l'autre langue, et le build ne casse pas (AD-2).
 
 **Étant donné** le build de production
 **Quand** on cherche les pages d'erreur
-**Alors** `public/404.html` est en français et `public/en/404.html` en anglais, chacune avec un lien vers l'accueil de sa langue et un vers l'autre accueil (`EXPERIENCE.md`, « State Patterns »).
+**Alors** `public/404.html` est en français et `public/en/404.html` en anglais — **leur génération effective est prouvée**, Hugo ne produisant pas forcément la 404 de chaque langue
+**Et** chacune porte le titre, la phrase, un lien vers l'accueil de sa langue et un lien vers l'accueil de l'autre langue, avec le même en-tête et le même pied de page que les autres pages, dans **sa** langue (`DESIGN.md`, `EXPERIENCE.md`).
 
-- [ ] `i18n/fr.yaml` et `i18n/en.yaml` existent, en clés `snake_case` anglaises.
-
-**Questions à poser avant de commencer :**
-- Texte de la 404 : libellé i18n `not_found_title` (« à valider » dans `EXPERIENCE.md`) et phrase dans `i18n/` ou dans un fichier de contenu ?
+- [ ] `i18n/fr.yaml` et `i18n/en.yaml` portent les clés de cette story en `snake_case` anglais : `language_switch`, `not_found_title`, la phrase de la 404 et le libellé du lien d'accueil ; aucun de ces textes n'est écrit dans un gabarit (AD-3).
+- [ ] L'en-tête ne porte que ce qui existe : la marque et le sélecteur. « À propos » et « Contact » viennent avec leurs pages (epic 9).
+- [ ] Les deux constats reportés par la story 2.2 sont traités : le `hreflang="x-default"` ne casse plus le build sur une page sans version française, et le passage d'arguments à `hugo server` par `scripts/dev.sh` a son cas de test.
 
 ### Story 2.4 : Single env loader and dummy legal values
 
