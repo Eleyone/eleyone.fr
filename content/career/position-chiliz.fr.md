@@ -1,7 +1,7 @@
 ---
 translationKey: position-chiliz
 company: "Chiliz"
-role: "Développeur backend sénior"
+role: "Développeur backend senior"
 period: "[TODO: période]"
 setup: "employee"
 track: "main"

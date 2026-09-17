@@ -1329,7 +1329,7 @@ Périmètre : `content/career/_index.{fr,en}.md` (jamais rendu), `content/career
 **Quand** on lance le rendu de travail puis le build de production
 **Alors** aucune page n'est construite sous `/career/` ni pour un poste, et les postes restent lisibles par l'accueil.
 
-**Étant donné** `content/career/position-chiliz.{fr,en}.md` en brouillon : `company: "Chiliz"`, `role` « Développeur backend sénior » / « Senior backend developer » (donné par Arnaud le 17/09/2026), `period: "[TODO: période]"`, `setup: employee`, `track: main`, `order: 1`, sans `location` ni corps
+**Étant donné** `content/career/position-chiliz.{fr,en}.md` en brouillon : `company: "Chiliz"`, `role` « Développeur backend senior » / « Senior backend developer » (donné par Arnaud le 17/09/2026), `period: "[TODO: période]"`, `setup: employee`, `track: main`, `order: 1`, sans `location` ni corps
 **Quand** Claire ouvre l'accueil en rendu de travail
 **Alors** le bloc « Parcours » (i18n `block_career`) montre le poste Chiliz (`id="position-chiliz"`) avec sa période, sa société en `h3`, son rôle et le libellé de son cadre
 **Et** le poste liste le cas 02 par numéro (i18n `case_number`) et titre, sans « En bref », dans une liste au nom accessible i18n `cases_of_position` (« Cas qui prouvent ce poste » / « Cases behind this role », décidé par Arnaud le 17/09/2026), avec un lien vers `/cas/chiliz/#case-02` (`/en/cases/chiliz/#case-02` en anglais) construit par `case-url.html`

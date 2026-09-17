@@ -9,8 +9,10 @@
         {{ if ne .Site.Language.Lang $.Site.Language.Lang }}
           {{/* Libellé distinct de celui du sélecteur, qui vit dans l'en-tête de cette même page :
                deux liens de même nom menant ailleurs seraient ambigus (WCAG 2.4.4) et, sur une page
-               d'erreur, « English » promettrait la même page en anglais, qui n'existe pas. */}}
-          <a href="{{ .RelPermalink }}" hreflang="{{ .Site.Language.Lang }}" lang="{{ .Site.Language.Lang }}">{{ i18n "home_link_other_language" }}</a>
+               d'erreur, « English » promettrait la même page en anglais, qui n'existe pas.
+               Pas de lang : le libellé est écrit dans la langue de la page, seule la cible change
+               (WCAG 3.1.2 ; le sélecteur, lui, écrit son libellé dans la langue cible). */}}
+          <a href="{{ .RelPermalink }}" hreflang="{{ .Site.Language.Lang }}">{{ i18n "home_link_other_language" }}</a>
         {{ end }}
       {{ end }}
     </p>

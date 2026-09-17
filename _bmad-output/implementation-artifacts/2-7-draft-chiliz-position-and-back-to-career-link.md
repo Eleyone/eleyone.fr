@@ -107,6 +107,8 @@ Le corps d'essai a été retiré du poste Chiliz depuis une copie faite avant l'
 
 Remarque pour Arnaud : le titre de l'accueil écrit « Développeur backend senior », sans accent, alors que le rôle du poste, donné le 17/09/2026, écrit « sénior ». Laissé tel quel : l'harmonisation est à trancher par lui.
 
+Tranché par Arnaud le 17/09/2026 : **senior**, sans accent, comme le titre de l'accueil. Le rôle du poste est corrigé par la PR de rétrospective de l'epic 2.
+
 ## Revue du code
 
 ### 17/09/2026 — `78627ec` — `gemini-3.1-pro-high` — verdict `pass`

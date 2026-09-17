@@ -103,7 +103,8 @@ case_build_prefere_les_outils_epingles() {
   mkdir -p "$work/systeme"
   printf '#!/bin/sh\nif [ "$1" = version ]; then echo "hugo v9.9.9 linux/amd64"; exit 0; fi\necho "SYSTEME $@" >> "%s/hugo.log"\n' "$work" > "$work/systeme/hugo"
   chmod +x "$work/systeme/hugo"
-  run env PATH="$work/systeme:$PATH" TOOLS_ENV_FILE="$work/tools.env" TOOLS_LOCAL_DIR="$work/bin" "$root/scripts/build.sh" production
+  run env PATH="$work/systeme:$PATH" TOOLS_ENV_FILE="$work/tools.env" TOOLS_LOCAL_DIR="$work/bin" \
+    BUILD_DESTINATION_ROOT="$work/sortie" "$root/scripts/build.sh" production
   assert_eq 0 "$rc" "le hugo épinglé est choisi (messages : $err)"
   [[ $(cat "$work/hugo.log") != *SYSTEME* ]] || { echo "le hugo du système a été lancé" >&2; exit 1; }
 }
