@@ -42,3 +42,7 @@ Constats de revue reportés à plus tard, au format de `bmad-build`. Chaque entr
   summary: Clôture de l'entrée de la story 0.7 (« le substitut d'amorçage lance `scripts/check.sh` dans une copie sans `.tools/` ni `.env` ») : `verify-and-merge-pr.sh` passe désormais `TOOLS_LOCAL_DIR` à la copie de la tête, et les valeurs légales viennent du fichier factice commité.
   evidence: Story 3.2, qui crée `scripts/check.sh` ; reproduit puis vérifié sur une copie de la tête avant et après le correctif.
 
+- source_spec: `_bmad-output/implementation-artifacts/3-4-headings-todo-markers-and-stack-vocabulary.md`
+  summary: Clôture de l'entrée de la story 2.6 (« un `######` dans un cas groupé serait rendu en `<h7>` ») : C4 refuse tout titre plus profond que `###` dans un cas, et `docs/format-cas.md` l'écrit.
+  evidence: Story 3.4 (18/09/2026), règle décidée par Arnaud ; cas de test `case_content_c4_titre_trop_profond` et essai sur le pilote.
+

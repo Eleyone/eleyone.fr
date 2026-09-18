@@ -43,7 +43,8 @@ case_manifeste_decrit_le_site_fixture() {
 
   local cas
   cas=$(jq -c '.files[] | select(.file|test("case-09"))' "$fr")
-  assert_eq '["## Contexte","## Résultat"]' "$(jq -c .h2 <<< "$cas")" "les titres H2 sortent du Markdown brut"
+  assert_eq '[{"level":2,"text":"Contexte"},{"level":2,"text":"Résultat"}]' "$(jq -c .headings <<< "$cas")" \
+    "les titres sortent du Markdown brut, avec leur niveau"
   assert_eq '["diagram-fixture"]' "$(jq -c .placed <<< "$cas")" "l'identifiant placé est extrait"
   assert_eq "true" "$(jq -r .todo <<< "$cas")" "un [TODO du front matter est vu"
   assert_eq "true" "$(jq -r .draft <<< "$cas")" "le brouillon est rapporté"

@@ -80,7 +80,7 @@ Titres de niveau 2 pris dans **`data/rubrics.yaml`**, dans l'ordre de ce fichier
 - La section « Contexte » raconte la situation ; elle ne répète pas les faits de l'encart (société, rôle, période, stack).
 - **Une section absente de la source est omise**, pas reconstituée. Elle ne s'écrit qu'avec des éléments confirmés par l'auteur.
 - Pas de titre de niveau 1 : le titre vient de `title`.
-- Les titres de niveau 3 sont libres.
+- Les titres de niveau 3 sont libres. **Rien de plus profond** : un cas groupé descend chaque titre d'un niveau, et un titre de niveau 4 finirait en `<h5>`, un niveau 6 en `<h7>`, balise qui n'existe pas. C4 refuse tout titre au-delà de `###`.
 - Le matériel vivant se place dans le texte avec `{{< live-material id="diagram-reconciliation" >}}`, où il doit apparaître. Chaque `id` utilisé existe dans `live_material`, et inversement.
 
 ## Sections des sources qui ne sont pas publiées

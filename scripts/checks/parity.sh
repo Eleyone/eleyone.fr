@@ -41,6 +41,8 @@ def entries($manifest):
 
 def show: if . == null then "absente" else tojson end;
 
+def titles($entry): [($entry.headings // [])[] | select(.level == 2) | .text];
+
 . as [$fr, $en]
 | ($fr.rubrics // []) as $rubrics
 | (entries($fr)) as $frf
@@ -88,14 +90,14 @@ def show: if . == null then "absente" else tojson end;
           # Titres : les deux langues en ont autant. Hors d'un cas, la parité s'arrête là — les titres
           # d'une page simple sont libres, et data/rubrics.yaml ne porte que les rubriques d'un cas
           # (portée de C4 ; constat de la revue de la PR n° 37).
-          (select(($f.h2 // []) | length != (($e.h2 // []) | length))
+          (select((titles($f) | length) != (titles($e) | length))
            | [$e.file, (if $f.role == "case" then "rubrique(s)" else "titre(s) de niveau 2" end) as $mot
-              | "\((($e.h2 // []) | length)) \($mot) en anglais, \((($f.h2 // []) | length)) en français"])
+              | "\((titles($e) | length)) \($mot) en anglais, \((titles($f) | length)) en français"])
           ,
-          (select($f.role == "case" and (($f.h2 // []) | length == (($e.h2 // []) | length)))
-           | range(0; ($f.h2 // []) | length) as $i
-           | (($f.h2[$i] | ltrimstr("## ")) as $frt
-              | ($e.h2[$i] | ltrimstr("## ")) as $ent
+          (select($f.role == "case" and ((titles($f) | length) == (titles($e) | length)))
+           | range(0; titles($f) | length) as $i
+           | ((titles($f)[$i]) as $frt
+              | (titles($e)[$i]) as $ent
               | ($rubrics | map(select(.fr == $frt)) | first) as $expected
               | if $expected == null then
                   [$f.file, "rubrique « \($frt) » absente de data/rubrics.yaml"]

@@ -36,6 +36,7 @@ manifests=$(checks_manifests build/work)
 
 | Contrôle | Script | Ce qu'il refuse |
 | --- | --- | --- |
+| C4, C5, C6 | `scripts/checks/content.sh` | une rubrique de cas hors de `data/rubrics.yaml`, écrite deux fois ou hors de l'ordre de la liste ; un titre de cas plus profond que `###` ; un `[TODO` dans un fichier publié ; une technologie de `stack` absente de `data/stack.yaml` (une valeur `[TODO…` est tolérée dans un brouillon) |
 | C3 | `scripts/checks/parity.sh` | un fichier de `content/` sans jumeau dans l'autre langue, un `translationKey` absent ou en double, un rôle ou une clé non traduite qui diffère (cas, poste, formation, accueil, contact), un `live_material` déclaré autrement, un nombre de titres de niveau 2 différent, et — pour un cas seulement — une rubrique hors de `data/rubrics.yaml` ou deux rubriques de même rang qui n'en sont pas les deux écritures |
 
 ## Tester un contrôle

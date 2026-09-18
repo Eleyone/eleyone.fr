@@ -22,7 +22,7 @@ case_parity_paire_complete_passe() {
 }
 
 case_parity_rubrique_manquante() {
-  rendu . '.files[2].h2 = ["## Context"]'
+  rendu . '.files[2].headings = [{"level": 2, "text": "Context"}]'
   parite
   assert_eq 1 "$rc" "une rubrique en moins fait échouer"
   assert_contains "cases/groupe/case-09-essai.en.md: 1 rubrique(s) en anglais, 2 en français" "$err" \
@@ -30,7 +30,7 @@ case_parity_rubrique_manquante() {
 }
 
 case_parity_rubrique_qui_ne_correspond_pas() {
-  rendu . '.files[2].h2 = ["## Context", "## The problem"]'
+  rendu . '.files[2].headings = [{"level": 2, "text": "Context"}, {"level": 2, "text": "The problem"}]'
   parite
   assert_eq 1 "$rc" "une rubrique qui ne fait pas la paire fait échouer"
   assert_contains 'rubrique 2 : « The problem » en anglais, « Outcome » attendu en face de « Résultat »' "$err" \
@@ -38,7 +38,7 @@ case_parity_rubrique_qui_ne_correspond_pas() {
 }
 
 case_parity_rubrique_hors_liste() {
-  rendu '.files[2].h2 = ["## Contexte", "## Inventée"]' '.files[2].h2 = ["## Context", "## Invented"]'
+  rendu '.files[2].headings = [{"level": 2, "text": "Contexte"}, {"level": 2, "text": "Inventée"}]' '.files[2].headings = [{"level": 2, "text": "Context"}, {"level": 2, "text": "Invented"}]'
   parite
   assert_eq 1 "$rc" "une rubrique hors liste fait échouer"
   assert_contains 'rubrique « Inventée » absente de data/rubrics.yaml' "$err" "le signalement nomme la rubrique"
@@ -47,10 +47,10 @@ case_parity_rubrique_hors_liste() {
 case_parity_titres_libres_hors_dun_cas() {
   # La liste des rubriques ne vaut que pour un cas : une page simple ou un poste a des titres libres,
   # seulement comptés (constat de la revue de la PR n° 37).
-  rendu '.files[1].h2 = ["## Missions"]' '.files[1].h2 = ["## Assignments"]'
+  rendu '.files[1].headings = [{"level": 2, "text": "Missions"}]' '.files[1].headings = [{"level": 2, "text": "Assignments"}]'
   parite
   assert_eq 0 "$rc" "des titres libres hors d'un cas passent (messages : $err)"
-  rendu '.files[1].h2 = ["## Missions", "## Équipe"]' '.files[1].h2 = ["## Assignments"]'
+  rendu '.files[1].headings = [{"level": 2, "text": "Missions"}, {"level": 2, "text": "Équipe"}]' '.files[1].headings = [{"level": 2, "text": "Assignments"}]'
   parite
   assert_eq 1 "$rc" "mais leur nombre doit rester le même"
   assert_contains "1 titre(s) de niveau 2 en anglais, 2 en français" "$err" "le mot n'est pas « rubrique » hors d'un cas"

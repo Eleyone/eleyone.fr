@@ -52,12 +52,16 @@
       {{- end -}}
       {{- $placed := slice -}}
       {{- range findRESubmatch `\{\{<\s*live-material\s+id="([^"]+)"\s*>\}\}` .RawContent }}{{ $placed = $placed | append (index . 1) }}{{ end -}}
+      {{- $headings := slice -}}
+      {{- range findRESubmatch `(?m)^(#{1,6})[ \t]+(.+?)[ \t]*$` .RawContent -}}
+        {{- $headings = $headings | append (dict "level" (len (index . 1)) "text" (index . 2)) -}}
+      {{- end -}}
       {{- $entry = merge $entry (dict
             "kind" .Kind
             "role" $role
             "translationKey" .Params.translationKey
             "draft" .Draft
-            "h2" (findRE `(?m)^## .+$` .RawContent)
+            "headings" $headings
             "placed" $placed) -}}
     {{- else -}}
       {{- $entry = merge $entry (dict "error" "page introuvable pour ce fichier") -}}

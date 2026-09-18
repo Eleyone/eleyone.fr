@@ -36,7 +36,8 @@
 #         "translationKey": "case-02",
 #         "draft":          true,
 #         "front_matter":   { … },          le front matter tel qu'écrit dans le fichier
-#         "h2":             ["## Contexte", …],   titres de niveau 2 du Markdown brut, dans l'ordre
+#         "headings":       [{"level": 2, "text": "Contexte"}, …],   titres du Markdown brut, dans
+#                                            l'ordre, avec leur niveau et leur texte sans les dièses
 #         "placed":         ["diagram-ncs-cs-flow", …],  identifiants des appels live-material
 #         "todo":           false           « [TODO » apparaît dans le fichier, front matter compris
 #       }

@@ -30,9 +30,9 @@
         "translationKey": "home",
         "identity": "Prénom Nom · Pseudo"
       },
-      "h2": [],
       "placed": [],
-      "todo": false
+      "todo": false,
+      "headings": []
     },
     {
       "file": "career/position-essai.en.md",
@@ -49,9 +49,9 @@
         "order": 1,
         "draft": true
       },
-      "h2": [],
       "placed": [],
-      "todo": false
+      "todo": false,
+      "headings": []
     },
     {
       "file": "cases/groupe/case-09-essai.en.md",
@@ -83,14 +83,20 @@
           }
         ]
       },
-      "h2": [
-        "## Context",
-        "## Outcome"
-      ],
       "placed": [
         "diagram-essai"
       ],
-      "todo": false
+      "todo": false,
+      "headings": [
+        {
+          "level": 2,
+          "text": "Context"
+        },
+        {
+          "level": 2,
+          "text": "Outcome"
+        }
+      ]
     }
   ]
 }

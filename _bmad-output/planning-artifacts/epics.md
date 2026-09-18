@@ -1499,17 +1499,30 @@ afin que le format soit tenu sans relecture mécanique.
 
 **Critères d'acceptation :**
 
-**Étant donné** un cas dont un titre H2 est hors liste ou hors ordre
+**Étant donné** un cas dont un titre de niveau 2 est hors de `data/rubrics.yaml`, écrit deux fois, ou placé hors de l'ordre de cette liste
 **Quand** on lance les contrôles
-**Alors** C4 signale le fichier et le titre.
+**Alors** C4 échoue en nommant le fichier, la rubrique et, pour un désordre, l'ordre attendu
+**Et** C4 s'applique **aussi aux brouillons** (AD-10) et ne porte que sur les cas : ailleurs, les titres sont libres.
 
-**Étant donné** un fichier de `content/` qui contient `[TODO` et porte `draft: false`
+**Étant donné** un cas dont un titre est plus profond que `###`
 **Quand** on lance les contrôles
-**Alors** C5 le signale.
+**Alors** C4 échoue en nommant le niveau et le titre (décidé par Arnaud le 18/09/2026) : un cas groupé descend chaque titre d'un niveau, et un `######` produirait un `<h7>`, qui n'existe pas. Cela ferme l'entrée reportée de la story 2.6.
 
-**Étant donné** un cas publié dont la `stack` contient une technologie absente de `data/stack.yaml`
+**Étant donné** un fichier de `content/` qui contient `[TODO` **où que ce soit**, front matter et blocs de code compris, et qui n'est pas un brouillon (l'état vient de Hugo, qui publie un fichier sans clé `draft`)
 **Quand** on lance les contrôles
-**Alors** C6 la signale ; une valeur `[TODO…]` dans un brouillon est acceptée.
+**Alors** C5 échoue en nommant le fichier.
+
+**Étant donné** un cas dont la `stack` cite une technologie absente de `data/stack.yaml`
+**Quand** on lance les contrôles
+**Alors** C6 échoue en nommant le fichier et la technologie ; une valeur qui commence par `[TODO` est acceptée dans un brouillon (`checks_tolerated`), refusée dans un cas publié.
+
+**Étant donné** le manifeste
+**Quand** un contrôle lit les titres
+**Alors** il les prend dans `headings`, qui donne le niveau et le texte de **chaque** titre du Markdown brut (la clé `h2` de la story 3.1 est remplacée), et la parité (C3) n'en retient que les niveaux 2.
+
+- [ ] Les trois contrôles vivent dans `scripts/checks/content.sh`, lancé par `check.sh`.
+- [ ] Un fichier que le manifeste porte en `error` relève de la parité, pas de ces contrôles.
+- [ ] La logique se teste sur des manifestes écrits à la main ; les essais sur le pilote sont consignés.
 
 ### Story 3.5 : Live material and group checks
 

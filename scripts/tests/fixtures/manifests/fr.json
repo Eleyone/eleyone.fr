@@ -1,10 +1,21 @@
 {
   "lang": "fr",
-  "stack": ["PHP"],
+  "stack": [
+    "PHP"
+  ],
   "rubrics": [
-    { "fr": "Contexte", "en": "Context" },
-    { "fr": "Le problème", "en": "The problem" },
-    { "fr": "Résultat", "en": "Outcome" }
+    {
+      "fr": "Contexte",
+      "en": "Context"
+    },
+    {
+      "fr": "Le problème",
+      "en": "The problem"
+    },
+    {
+      "fr": "Résultat",
+      "en": "Outcome"
+    }
   ],
   "files": [
     {
@@ -14,10 +25,14 @@
       "role": "home",
       "translationKey": "home",
       "draft": false,
-      "front_matter": { "title": "Accueil", "translationKey": "home", "identity": "Prénom Nom · Pseudo" },
-      "h2": [],
+      "front_matter": {
+        "title": "Accueil",
+        "translationKey": "home",
+        "identity": "Prénom Nom · Pseudo"
+      },
       "placed": [],
-      "todo": false
+      "todo": false,
+      "headings": []
     },
     {
       "file": "career/position-essai.fr.md",
@@ -26,10 +41,17 @@
       "role": "position",
       "translationKey": "position-essai",
       "draft": true,
-      "front_matter": { "translationKey": "position-essai", "company": "Société", "setup": "employee", "track": "main", "order": 1, "draft": true },
-      "h2": [],
+      "front_matter": {
+        "translationKey": "position-essai",
+        "company": "Société",
+        "setup": "employee",
+        "track": "main",
+        "order": 1,
+        "draft": true
+      },
       "placed": [],
-      "todo": false
+      "todo": false,
+      "headings": []
     },
     {
       "file": "cases/groupe/case-09-essai.fr.md",
@@ -45,14 +67,36 @@
         "order": 1,
         "draft": true,
         "position": "position-essai",
-        "context": { "setup": "employee", "stack": ["PHP"] },
+        "context": {
+          "setup": "employee",
+          "stack": [
+            "PHP"
+          ]
+        },
         "live_material": [
-          { "id": "diagram-essai", "type": "diagram", "status": "planned", "description": "Schéma", "url": "" }
+          {
+            "id": "diagram-essai",
+            "type": "diagram",
+            "status": "planned",
+            "description": "Schéma",
+            "url": ""
+          }
         ]
       },
-      "h2": ["## Contexte", "## Résultat"],
-      "placed": ["diagram-essai"],
-      "todo": false
+      "placed": [
+        "diagram-essai"
+      ],
+      "todo": false,
+      "headings": [
+        {
+          "level": 2,
+          "text": "Contexte"
+        },
+        {
+          "level": 2,
+          "text": "Résultat"
+        }
+      ]
     }
   ]
 }
