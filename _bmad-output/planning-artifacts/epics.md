@@ -1422,22 +1422,32 @@ afin qu'un contrôle local ne diffère jamais de la CI et qu'un brouillon légit
 
 **Étant donné** le dépôt, avec ou sans dossier `.git`
 **Quand** on lance `scripts/check.sh`
-**Alors** il construit le rendu de travail et le build de production par `scripts/build.sh`, lance les scripts de contrôle présents, et sort avec 0 ou 1.
+**Alors** il construit le rendu de travail puis le build de production par `scripts/build.sh`, lance tous les scripts de `scripts/checks/` (découverte dynamique, triés, `lib.sh` exclu : une story qui ajoute un contrôle ne modifie pas `check.sh`), et sort avec **0** si tout passe, **1** si un écart est constaté, **2** sur une anomalie (outil ou fichier manquant)
+**Et** aucun script de `scripts/checks/` n'appelle `git`.
+
+**Étant donné** un contrôle en échec
+**Quand** `check.sh` s'exécute
+**Alors** il lance quand même les contrôles suivants et affiche tous les écarts, puis un résumé nommant les contrôles en échec (décidé par Arnaud le 18/09/2026) : une seule passe suffit à tout voir.
 
 **Étant donné** une copie locale qui introduit un avertissement de Hugo
 **Quand** on lance les contrôles
-**Alors** C14 échoue.
+**Alors** le build échoue (`--panicOnWarning`, C14), `check.sh` s'arrête **avant** les contrôles — aucun ne lit un manifeste périmé — et rend 1
+**Et** la sortie de Hugo est gardée telle quelle, précédée d'une ligne de `check.sh` nommant le build en échec ; le format `<fichier>: <écart>` reste la règle des scripts de `scripts/checks/`.
 
 **Étant donné** `scripts/checks/lib.sh`
 **Quand** un script de contrôle évalue une règle de forme sur un fichier en `draft: true`
-**Alors** une valeur qui commence par `[TODO` est acceptée ; seules la parité, la liste des rubriques et le garde-fou s'appliquent aux brouillons (AD-10).
+**Alors** il appelle les outils de `lib.sh` (`checks_is_todo`, `checks_tolerated`), qui acceptent une valeur commençant par `[TODO` ; `lib.sh` ne filtre rien de lui-même, puisque la parité, la liste des rubriques et le garde-fou s'appliquent aussi aux brouillons (AD-10).
 
-- [ ] Signalements `<fichier>: <écart>` sur la sortie d'erreur ; aucun script de `scripts/checks/` n'appelle `git`.
-- [ ] L'option `--release` est reconnue et réservée aux contrôles de mise en ligne (Epic 11).
+**Étant donné** `scripts/check.sh --release`
+**Quand** on le lance
+**Alors** le niveau passe de `standard` à `release` et est transmis aux contrôles (`CHECK_LEVEL`, argument du Dockerfile en AD-13) ; aucun contrôle de mise en ligne n'existant avant l'epic 11, le niveau est posé, pas employé.
 
-**Questions à poser avant de commencer :**
-- `check.sh` cumule-t-il les signalements de tous les scripts, ou s'arrête-t-il au premier en échec ?
-- Forme des cas de test des contrôles sous `tests/fixtures/` (mini-site Hugo, manifestes écrits à la main, copies locales) ? La réponse vaut pour les stories 3.3 à 3.11.
+**Étant donné** les cas de test des contrôles
+**Quand** on les écrit, ici et dans les stories 3.3 à 3.11
+**Alors** la logique d'un contrôle se teste sur des manifestes écrits à la main sous `scripts/tests/fixtures/`, et **un** site fixture construit avec le Hugo épinglé prouve que le manifeste réel a bien cette forme (décidé par Arnaud le 18/09/2026), ce qui ferme le report de la story 3.1.
+
+- [ ] Signalements `<fichier>: <écart>` sur la sortie d'erreur.
+- [ ] `check.sh` fonctionne dans une copie sans `.git` (essai consigné).
 
 ### Story 3.3 : FR EN parity script
 

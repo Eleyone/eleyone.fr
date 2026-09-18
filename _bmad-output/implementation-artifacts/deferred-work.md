@@ -38,3 +38,7 @@ Constats de revue reportés à plus tard, au format de `bmad-build`. Chaque entr
   summary: Aucun test n'exerce `layouts/home.checks.json` : les cas hors ligne ne couvrent que la découverte des manifestes (`checks_manifests`), pas les champs qu'ils contiennent.
   evidence: Angle verification-gap de la revue du code de la PR n° 35 (`82c225e`). À traiter par la story 3.2, premier consommateur du manifeste : un site fixture construit avec le Hugo épinglé, puis les champs vérifiés à `jq`.
 
+- source_spec: `_bmad-output/implementation-artifacts/3-2-check-script-entry-point-and-draft-rule.md`
+  summary: Clôture de l'entrée de la story 0.7 (« le substitut d'amorçage lance `scripts/check.sh` dans une copie sans `.tools/` ni `.env` ») : `verify-and-merge-pr.sh` passe désormais `TOOLS_LOCAL_DIR` à la copie de la tête, et les valeurs légales viennent du fichier factice commité.
+  evidence: Story 3.2, qui crée `scripts/check.sh` ; reproduit puis vérifié sur une copie de la tête avant et après le correctif.
+

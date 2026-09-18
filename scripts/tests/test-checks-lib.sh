@@ -31,4 +31,29 @@ case_checks_manifests_rendu_sans_manifeste() {
   assert_contains "aucun manifeste" "$err" "le message nomme la cause"
 }
 
+case_checks_is_todo() {
+  run bash -c '. "$1/scripts/checks/lib.sh"; checks_is_todo "[TODO: période]"' _ "$root"
+  assert_eq 0 "$rc" "une valeur [TODO est reconnue"
+  run bash -c '. "$1/scripts/checks/lib.sh"; checks_is_todo "septembre 2025"' _ "$root"
+  assert_eq 1 "$rc" "une vraie valeur ne l'est pas"
+  run bash -c '. "$1/scripts/checks/lib.sh"; checks_is_todo ""' _ "$root"
+  assert_eq 1 "$rc" "une valeur vide ne l'est pas"
+}
+
+case_checks_tolerated_seulement_sur_un_brouillon() {
+  run bash -c '. "$1/scripts/checks/lib.sh"; checks_tolerated true "[TODO: période]"' _ "$root"
+  assert_eq 0 "$rc" "un [TODO dans un brouillon est toléré (AD-10)"
+  run bash -c '. "$1/scripts/checks/lib.sh"; checks_tolerated false "[TODO: période]"' _ "$root"
+  assert_eq 1 "$rc" "le même [TODO dans un fichier publié ne l'est pas"
+  run bash -c '. "$1/scripts/checks/lib.sh"; checks_tolerated true "septembre 2025"' _ "$root"
+  assert_eq 1 "$rc" "une vraie valeur n'a rien à tolérer"
+}
+
+case_checks_report_ecrit_le_format_commun() {
+  run bash -c '. "$1/scripts/checks/lib.sh"; checks_report "content/cases/x.fr.md" "rubrique hors liste"' _ "$root"
+  assert_eq 0 "$rc" "le signalement n'échoue pas de lui-même"
+  assert_eq "content/cases/x.fr.md: rubrique hors liste" "$err" "le format est <fichier>: <écart>, sur la sortie d'erreur"
+  assert_eq "" "$out" "rien sur la sortie standard"
+}
+
 run_case "$@"

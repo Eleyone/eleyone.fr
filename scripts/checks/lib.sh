@@ -3,6 +3,16 @@
 #   checks_manifests <racine>   affiche les manifestes de la racine du rendu de travail, triés ;
 #                               code 2 si la racine ou les manifestes manquent
 #   checks_die <message>        message sur la sortie d'erreur, code 2 (anomalie)
+#   checks_report <fichier> <écart>   un signalement « <fichier>: <écart> » sur la sortie d'erreur
+#   checks_is_todo <valeur>     la valeur commence par « [TODO »
+#   checks_tolerated <brouillon> <valeur>
+#                               la valeur est tolérée : fichier en brouillon **et** valeur « [TODO »
+#
+# Règle des brouillons (AD-10) : sur un fichier en « draft: true », une valeur qui commence par
+# « [TODO » passe toutes les règles de **forme** (valeurs autorisées, longueur, comptage, vocabulaire,
+# rattachement à un poste). La parité (C3), la liste des rubriques (C4) et le garde-fou s'appliquent
+# aux brouillons comme au reste : cette bibliothèque n'écarte donc rien d'elle-même, elle donne
+# l'outil, et chaque contrôle décide règle par règle.
 #
 # Convention de code de sortie du projet : 0 conforme, 1 refus, 2 anomalie.
 #
@@ -48,4 +58,16 @@ checks_manifests() { # $1 = racine du rendu de travail (par défaut build/work)
     || checks_die "lecture de $root impossible."
   [[ -n $found ]] || checks_die "aucun manifeste dans $root : le format checks n'a pas été émis."
   printf '%s\n' "$found"
+}
+
+checks_report() { # $1 = fichier, $2 = écart ; format commun à tous les contrôles
+  printf '%s: %s\n' "$1" "$2" >&2
+}
+
+checks_is_todo() { # $1 = valeur
+  [[ ${1-} == '[TODO'* ]]
+}
+
+checks_tolerated() { # $1 = « true » si le fichier est un brouillon, $2 = valeur
+  [[ ${1-} == true ]] && checks_is_todo "${2-}"
 }
