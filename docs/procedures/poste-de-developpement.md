@@ -9,7 +9,7 @@ Tout le travail vit dans le dépôt. Ce qui manque sur une machine neuve, c'est 
 | `.env` | jamais commité, refusé par le garde-fou | recréé à la main, d'après `.env.example` (dix variables, sans valeur) |
 | `docs/private/` | dépôt git imbriqué, poussé sur un dépôt privé séparé de la forge | cloné dans `docs/private/` |
 | `.tools/` | binaires épinglés, ignorés par git | `scripts/ci/install-tools.sh --local` |
-| Outils du poste | hors dépôt | `jq`, Docker, `agy` authentifié, `uv` |
+| Outils du poste | hors dépôt | `jq`, `xmllint` (paquet `libxml2-utils`, contrôles HTML d'AD-10), Docker, `agy` authentifié, `uv` |
 
 ## Monter le poste
 
@@ -20,7 +20,7 @@ Tout le travail vit dans le dépôt. Ce qui manque sur une machine neuve, c'est 
    ```
 3. **Cloner le dépôt privé** dans `docs/private/`. Il porte les cas bruts, la mémoire de party mode et `forbidden-patterns.txt`, dont le garde-fou a besoin pour auditer autre chose que des chemins. Sans lui, `check-private.sh` se replie sur les chemins seulement, et **un passage « chemins seulement » ne vaut pas audit**.
 4. **Recréer `.env`** à la racine, avec les dix variables de `.env.example` : les sept `HUGO_LEGAL_*` (AD-9) et les trois `GITEA_*` (AD-24). Les valeurs viennent de l'ancien poste ou d'un gestionnaire de mots de passe — jamais d'un canal qui les écrirait quelque part. Le fichier est déjà ignoré par git et refusé par le garde-fou.
-5. **Installer les outils du poste** : `jq`, Docker utilisable dans le shell, `agy` authentifié (`agy models` répond), `uv` pour les scripts Python de BMAD.
+5. **Installer les outils du poste** : `jq`, `xmllint` (`sudo apt install libxml2-utils` ; sans lui, les contrôles HTML s'arrêtent en anomalie et le verrou de fusion bloque), Docker utilisable dans le shell, `agy` authentifié (`agy models` répond), `uv` pour les scripts Python de BMAD.
 6. **Installer les outils épinglés** :
    ```bash
    scripts/ci/install-tools.sh --local

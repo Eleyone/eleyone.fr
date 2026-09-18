@@ -1651,18 +1651,27 @@ afin de lire sans cookie ni traçage.
 **Critères d'acceptation :**
 
 **Étant donné** le build de production de contrôle
-**Quand** `scripts/checks/html.sh` s'exécute
-**Alors** il signale toute balise `<script>` dont le `type` n'est pas exactement `application/ld+json` ou qui porte `src`, tout attribut `on*=`, toute `<iframe>`, tout `<form>`, toute ressource d'une autre origine, et toute occurrence de `[TODO`.
+**Quand** `scripts/checks/html.sh` s'exécute, seul ou par `scripts/check.sh` qui le découvre (AD-10)
+**Alors** il signale, en nommant la page :
 
-**Étant donné** une fixture d'accueil
-**Quand** elle contient deux blocs JSON-LD, un bloc JSON invalide, un `@type` autre que `Person`, une clé hors FR-35, ou un bloc sur une autre page que l'accueil
-**Alors** C10 échoue ; un bloc conforme passe, et l'absence de bloc passe aussi : la règle est « au plus un bloc, conforme, et seulement sur l'accueil » jusqu'à la story 9.6, qui la passe à « exactement un ».
+- toute balise `<script>` dont le `type` n'est pas exactement `application/ld+json`, y compris sans `type`, et toute balise `<script src>` ;
+- tout attribut `on…` ;
+- toute `<iframe>` et tout `<form>` ;
+- toute ressource **chargée** depuis un autre hôte que celui du `baseURL` : attributs `src`, `srcset`, `poster`, `data`, et `<link>` dont la relation charge (`stylesheet`, `preload`, `icon`, `manifest`…) ;
+- tout appel CSS vers un autre hôte (`url(…)`, `@import`), que XPath ne voit pas ;
+- toute occurrence de `[TODO` dans les fichiers de texte publiés (`.html`, `.xml`, `.css`, `.txt`, `.json`).
 
-**Étant donné** un lien `<a href>` vers un site tiers
+**Étant donné** les `hreflang` absolus vers le site lui-même (AD-2) et un lien `<a href>` vers un site tiers
 **Quand** le contrôle s'exécute
-**Alors** il n'est pas signalé.
+**Alors** ni l'un ni l'autre n'est signalé : une déclaration ne charge rien, un lien non plus. Le premier a été constaté en faux positif sur la production réelle avant correction.
 
-- [ ] Attributs vérifiés par XPath avec `xmllint --html`, validés sur une page minifiée réelle ; `grep` pour les chaînes seulement.
+**Étant donné** le bloc JSON-LD
+**Quand** le contrôle s'exécute
+**Alors** il échoue s'il y en a plus d'un, s'il apparaît ailleurs que sur `index.html` d'une langue, si son contenu n'est pas un JSON valide (`jq`), si son `@type` n'est pas `Person`, ou s'il porte une clé hors de FR-35 (`@context`, `@type`, `name`, `alternateName`, `jobTitle`, `address`, `url`, `sameAs`)
+**Et** l'absence de bloc passe : la règle est « au plus un » jusqu'à la story 9.6, qui la passera à « exactement un » ; le script porte un commentaire à l'endroit exact où elle changera.
+
+- [ ] Les attributs se lisent par XPath (`xmllint --html`), la sortie d'erreur de libxml2 étant écartée (AD-10) ; `grep` ne sert qu'aux chaînes.
+- [ ] `xmllint` absent est une **anomalie** (code 2), jamais un contrôle muet ; il rejoint les prérequis du poste.
 
 ### Story 3.9 : Automated accessibility checks
 
