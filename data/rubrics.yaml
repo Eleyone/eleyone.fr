@@ -1,0 +1,24 @@
+# Rubriques d'un cas : la liste fait foi, dans cet ordre (FR-8, C3, C4).
+#
+# - Un cas prend ses titres de niveau 2 dans cette liste, dans cet ordre ; un titre peut être omis
+#   si la section est sans objet, mais FR et EN ont exactement les mêmes.
+# - Les deux écritures d'une même rubrique se correspondent : c'est par elles que la parité rapproche
+#   une rubrique française de son équivalente anglaise, les titres étant traduits.
+# - `docs/format-cas.md` décrit le format des cas et renvoie ici ; ce fichier est la seule source.
+# - Ajouter une rubrique, la renommer ou changer l'ordre se fait ici, avant d'écrire un cas.
+
+rubrics:
+  - fr: "Contexte"
+    en: "Context"
+  - fr: "Le problème"
+    en: "The problem"
+  - fr: "La solution facile, et pourquoi je ne l'ai pas prise"
+    en: "The easy way, and why I didn't take it"
+  - fr: "Ce que j'ai décidé"
+    en: "What I decided"
+  - fr: "Ce qui a résisté"
+    en: "What pushed back"
+  - fr: "Résultat"
+    en: "Outcome"
+  - fr: "Ce que ça montre"
+    en: "What it shows"

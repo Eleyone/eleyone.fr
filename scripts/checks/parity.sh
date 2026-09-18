@@ -1,0 +1,122 @@
+#!/usr/bin/env bash
+# C3 — parité FR/EN (AD-10, FR-20, FR-23). Tout fichier de content/ a son jumeau dans l'autre langue,
+# leurs clés non traduites sont égales, et leurs rubriques se correspondent une à une.
+#
+# Les titres des rubriques sont traduits : le rapprochement passe par data/rubrics.yaml, que le
+# manifeste expose sous « rubrics » (décidé le 18/09/2026). Deux rubriques de même rang doivent être
+# les deux écritures de la même entrée de cette liste.
+#
+# La parité s'applique **aussi aux brouillons** (AD-10) : un `[TODO` n'excuse pas un écart entre les
+# deux langues, puisque les deux fichiers doivent porter le même marqueur.
+# Codes de sortie : 0 conforme, 1 écart constaté, 2 anomalie.
+set -euo pipefail
+
+script_name=parity
+. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+
+manifests=$(checks_manifests "${CHECK_WORK_ROOT:-build/work}")
+mapfile -t manifest_files <<< "$manifests"
+((${#manifest_files[@]} == 2)) \
+  || checks_die "parité : ${#manifest_files[@]} manifeste(s) trouvé(s), deux attendus (une langue chacun)."
+
+# Le programme jq compare les deux manifestes et affiche une ligne « fichier<TAB>écart » par écart.
+# Il ne sort jamais en erreur : le décompte des lignes décide du code de sortie.
+read -r -d '' program <<'JQ' || true
+def untranslated($role):
+  {
+    case:      ["number", "group", "order", "draft", "position"],
+    position:  ["company", "via", "setup", "track", "order", "draft"],
+    education: ["kind", "order", "draft"],
+    home:      ["identity"],
+    page:      ["email", "linkedin", "github"]
+  }[$role] // [];
+
+def context_keys($role): if $role == "case" then ["setup", "stack"] else [] end;
+
+def material($entry):
+  [($entry.front_matter.live_material // [])[] | {id: .id, type: .type, status: .status}];
+
+def entries($manifest):
+  [$manifest.files[] | select(.lang != "")];
+
+def show: if . == null then "absente" else tojson end;
+
+. as [$fr, $en]
+| ($fr.rubrics // []) as $rubrics
+| (entries($fr)) as $frf
+| (entries($en)) as $enf
+| (
+    # 1. ce qui empêche tout rapprochement : erreur du manifeste, translationKey absent ou en double
+    ([$frf[], $enf[]] | map(select(.error != null)) | .[] | [.file, .error])
+    ,
+    ([$frf[], $enf[]] | map(select(.error == null and (.translationKey // "") == ""))
+       | .[] | [.file, "translationKey absent : aucun rapprochement FR/EN possible"])
+    ,
+    ([$frf, $enf] | .[] | group_by(.translationKey) | .[] | select(length > 1)
+       | .[] | [.file, "translationKey « \(.translationKey) » porté par plusieurs fichiers de la même langue"])
+    ,
+    # 2. fichiers sans jumeau
+    ( ($enf | map(select(.error == null) | .translationKey)) as $enkeys
+      | $frf[] | select(.error == null and (.translationKey // "") != "")
+      | select(.translationKey as $k | $enkeys | index($k) | not)
+      | [.file, "aucun fichier anglais ne porte le translationKey « \(.translationKey) »"])
+    ,
+    ( ($frf | map(select(.error == null) | .translationKey)) as $frkeys
+      | $enf[] | select(.error == null and (.translationKey // "") != "")
+      | select(.translationKey as $k | $frkeys | index($k) | not)
+      | [.file, "aucun fichier français ne porte le translationKey « \(.translationKey) »"])
+    ,
+    # 3. paires : rôle, clés non traduites, matériel vivant, rubriques
+    ( $frf[] | select(.error == null and (.translationKey // "") != "") as $f
+      | ($enf[] | select(.translationKey == $f.translationKey and .error == null)) as $e
+      | (
+          (if $f.role != $e.role then
+             [$e.file, "rôle « \($e.role) » côté anglais, « \($f.role) » côté français"]
+           else empty end)
+          ,
+          (untranslated($f.role)[] as $key
+           | select(($f.front_matter[$key] // null) != ($e.front_matter[$key] // null))
+           | [$e.file, "clé non traduite « \($key) » : \($f.front_matter[$key] | show) en français, \($e.front_matter[$key] | show) en anglais"])
+          ,
+          (context_keys($f.role)[] as $key
+           | select((($f.front_matter.context // {})[$key] // null) != (($e.front_matter.context // {})[$key] // null))
+           | [$e.file, "clé non traduite « context.\($key) » : \((($f.front_matter.context // {})[$key]) | show) en français, \((($e.front_matter.context // {})[$key]) | show) en anglais"])
+          ,
+          (select($f.role == "case" and material($f) != material($e))
+           | [$e.file, "live_material : \(material($f) | tojson) en français, \(material($e) | tojson) en anglais (identifiants, types et statuts, dans le même ordre)"])
+          ,
+          # Titres : les deux langues en ont autant. Hors d'un cas, la parité s'arrête là — les titres
+          # d'une page simple sont libres, et data/rubrics.yaml ne porte que les rubriques d'un cas
+          # (portée de C4 ; constat de la revue de la PR n° 37).
+          (select(($f.h2 // []) | length != (($e.h2 // []) | length))
+           | [$e.file, (if $f.role == "case" then "rubrique(s)" else "titre(s) de niveau 2" end) as $mot
+              | "\((($e.h2 // []) | length)) \($mot) en anglais, \((($f.h2 // []) | length)) en français"])
+          ,
+          (select($f.role == "case" and (($f.h2 // []) | length == (($e.h2 // []) | length)))
+           | range(0; ($f.h2 // []) | length) as $i
+           | (($f.h2[$i] | ltrimstr("## ")) as $frt
+              | ($e.h2[$i] | ltrimstr("## ")) as $ent
+              | ($rubrics | map(select(.fr == $frt)) | first) as $expected
+              | if $expected == null then
+                  [$f.file, "rubrique « \($frt) » absente de data/rubrics.yaml"]
+                elif $expected.en != $ent then
+                  [$e.file, "rubrique \($i + 1) : « \($ent) » en anglais, « \($expected.en) » attendu en face de « \($frt) »"]
+                else empty end))
+        ))
+  )
+| @tsv
+JQ
+
+report=$(jq -r -s "$program" "${manifest_files[0]}" "${manifest_files[1]}") \
+  || checks_die "parité : lecture des manifestes impossible."
+
+if [[ -z $report ]]; then
+  printf '%s: parité FR/EN vérifiée.\n' "$script_name"
+  exit 0
+fi
+
+while IFS=$'\t' read -r file gap; do
+  [[ -n $file ]] || continue
+  checks_report "content/$file" "$gap"
+done <<< "$report"
+exit 1

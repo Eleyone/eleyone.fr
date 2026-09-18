@@ -25,6 +25,8 @@
 #   {
 #     "lang":  "fr",                        langue du manifeste
 #     "stack": ["PHP", …],                  vocabulaire de data/stack.yaml, une seule fois (C6)
+#     "rubrics": [{"fr": "Contexte", "en": "Context"}, …],   rubriques de data/rubrics.yaml,
+#                                           dans l'ordre, avec leurs deux écritures (C3, C4)
 #     "files": [                            tous les fichiers Markdown de content/ pour cette langue
 #       {
 #         "file":           "cases/chiliz/case-02-chiliz.fr.md",   chemin relatif à content/

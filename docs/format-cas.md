@@ -75,17 +75,7 @@ Seules les technologies **citées dans le cas** figurent dans sa stack. Une tech
 
 ## Corps du texte
 
-Titres de niveau 2 pris dans cette liste, dans cet ordre. Un titre peut être omis si la section est sans objet, mais **FR et EN ont exactement les mêmes sections**.
-
-| Français | English |
-|---|---|
-| `## Contexte` | `## Context` |
-| `## Le problème` | `## The problem` |
-| `## La solution facile, et pourquoi je ne l'ai pas prise` | `## The easy way, and why I didn't take it` |
-| `## Ce que j'ai décidé` | `## What I decided` |
-| `## Ce qui a résisté` | `## What pushed back` |
-| `## Résultat` | `## Outcome` |
-| `## Ce que ça montre` | `## What it shows` |
+Titres de niveau 2 pris dans **`data/rubrics.yaml`**, dans l'ordre de ce fichier, qui fait foi et porte les deux écritures de chaque rubrique. Un titre peut être omis si la section est sans objet, mais **FR et EN ont exactement les mêmes sections**. Les contrôles C3 (parité) et C4 (liste des rubriques) lisent cette liste ; ajouter ou renommer une rubrique se fait là-bas, avant d'écrire un cas.
 
 - La section « Contexte » raconte la situation ; elle ne répète pas les faits de l'encart (société, rôle, période, stack).
 - **Une section absente de la source est omise**, pas reconstituée. Elle ne s'écrit qu'avec des éléments confirmés par l'auteur.

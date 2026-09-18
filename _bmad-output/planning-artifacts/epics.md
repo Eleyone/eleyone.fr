@@ -1465,20 +1465,25 @@ afin qu'aucune page ne soit publiée avec une métadonnée ou une rubrique d'un 
 
 **Étant donné** une copie locale où une rubrique est retirée de la version anglaise du pilote
 **Quand** on lance `scripts/check.sh`
-**Alors** il échoue en nommant `content/cases/chiliz/case-02-chiliz.en.md` et la rubrique (démonstration de WS-3).
+**Alors** le contrôle échoue en nommant `content/cases/chiliz/case-02-chiliz.en.md` et l'écart de rubriques (démonstration de WS-3).
 
-**Étant donné** un fichier de `content/` sans son équivalent (même `translationKey`)
+**Étant donné** un fichier de `content/` sans son équivalent (même `translationKey`), ou sans `translationKey`, ou dont le `translationKey` est porté par un autre fichier de la même langue
 **Quand** on lance les contrôles
-**Alors** il est signalé.
+**Alors** le contrôle échoue en nommant le fichier et l'écart ; une entrée que le manifeste porte déjà en `error` (front matter absent, suffixe de langue absent) est reprise telle quelle.
 
 **Étant donné** une différence entre FR et EN sur une clé non traduite
 **Quand** on lance les contrôles
-**Alors** elle est signalée : cas (`number`, `group`, `order`, `draft`, `setup`, `stack`, `position`, `live_material` id, type, statut) ; poste (`company`, `via`, `setup`, `track`, `order`, `draft`) ; entrée de formation (`kind`, `order`, `draft`) ; accueil (`identity`) ; contact (`email`, `linkedin`).
+**Alors** le contrôle échoue en nommant le fichier, la clé et les deux valeurs : cas (`number`, `group`, `order`, `draft`, `position`, `context.setup`, `context.stack`, et `live_material` id, type, statut **dans le même ordre**, décidé par Arnaud le 18/09/2026) ; poste (`company`, `via`, `setup`, `track`, `order`, `draft`) ; entrée de formation (`kind`, `order`, `draft`) ; accueil (`identity`) ; contact (`email`, `linkedin`, `github`)
+**Et** un rôle différent entre les deux langues est signalé de la même façon.
+
+**Étant donné** `data/rubrics.yaml`, qui porte les rubriques dans l'ordre avec leur écriture française et anglaise (décidé par Arnaud le 18/09/2026 : la liste passe de `docs/format-cas.md` aux données, et le manifeste l'expose)
+**Quand** le contrôle rapproche les rubriques d'une paire de fichiers
+**Alors** il échoue si les deux langues n'ont pas le même nombre de rubriques, si une rubrique est absente de la liste, ou si la rubrique anglaise de rang *n* n'est pas l'écriture anglaise de la rubrique française de même rang
+**Et** ce rapprochement ne vaut que pour un **cas** : ailleurs (poste, page simple), les titres sont libres et seul leur nombre est comparé, la liste ne portant que les rubriques d'un cas (portée de C4 ; constat de la revue du code de la PR n° 37).
 
 - [ ] Le pilote, en brouillon avec ses valeurs actuelles, passe.
-
-**Questions à poser avant de commencer :**
-- « Mêmes rubriques à la même position » : correspondance FR↔EN par la table de `docs/format-cas.md` ?
+- [ ] La parité s'applique aussi aux brouillons : un `[TODO` n'excuse aucun écart (AD-10).
+- [ ] La logique se teste sur des manifestes écrits à la main ; aucun cas de test ne lance Hugo (story 3.2).
 
 ### Story 3.4 : Headings, TODO markers and stack vocabulary
 

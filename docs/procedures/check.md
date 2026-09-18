@@ -30,6 +30,13 @@ manifests=$(checks_manifests build/work)
 - **Brouillons** (AD-10) : sur un fichier en `draft: true`, une valeur qui commence par `[TODO` passe toutes les règles de **forme**. `checks_is_todo <valeur>` et `checks_tolerated <brouillon> <valeur>` donnent l'outil ; la bibliothèque n'écarte rien d'elle-même, parce que la parité (C3), la liste des rubriques (C4) et le garde-fou s'appliquent aussi aux brouillons.
 - **Forme du manifeste** : documentée en tête de `scripts/checks/lib.sh`, définie une seule fois dans `layouts/home.checks.json`. Une entrée peut porter `error` (front matter absent, suffixe de langue absent, page introuvable) : un contrôle lit `error` avant tout le reste.
 - **Niveau** : `CHECK_LEVEL` vaut `standard`, ou `release` avec `--release`. Aucun contrôle de mise en ligne n'existe avant l'epic 11.
+- **Racine du rendu** : un contrôle lit `${CHECK_WORK_ROOT:-build/work}`, pour qu'un cas de test le lance sur des manifestes écrits à la main sans toucher au rendu du dépôt.
+
+## Contrôles livrés
+
+| Contrôle | Script | Ce qu'il refuse |
+| --- | --- | --- |
+| C3 | `scripts/checks/parity.sh` | un fichier de `content/` sans jumeau dans l'autre langue, un `translationKey` absent ou en double, un rôle ou une clé non traduite qui diffère (cas, poste, formation, accueil, contact), un `live_material` déclaré autrement, un nombre de titres de niveau 2 différent, et — pour un cas seulement — une rubrique hors de `data/rubrics.yaml` ou deux rubriques de même rang qui n'en sont pas les deux écritures |
 
 ## Tester un contrôle
 

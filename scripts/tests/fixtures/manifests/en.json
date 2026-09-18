@@ -1,0 +1,96 @@
+{
+  "lang": "en",
+  "stack": [
+    "PHP"
+  ],
+  "rubrics": [
+    {
+      "fr": "Contexte",
+      "en": "Context"
+    },
+    {
+      "fr": "Le problème",
+      "en": "The problem"
+    },
+    {
+      "fr": "Résultat",
+      "en": "Outcome"
+    }
+  ],
+  "files": [
+    {
+      "file": "_index.en.md",
+      "lang": "en",
+      "kind": "home",
+      "role": "home",
+      "translationKey": "home",
+      "draft": false,
+      "front_matter": {
+        "title": "Home",
+        "translationKey": "home",
+        "identity": "Prénom Nom · Pseudo"
+      },
+      "h2": [],
+      "placed": [],
+      "todo": false
+    },
+    {
+      "file": "career/position-essai.en.md",
+      "lang": "en",
+      "kind": "page",
+      "role": "position",
+      "translationKey": "position-essai",
+      "draft": true,
+      "front_matter": {
+        "translationKey": "position-essai",
+        "company": "Société",
+        "setup": "employee",
+        "track": "main",
+        "order": 1,
+        "draft": true
+      },
+      "h2": [],
+      "placed": [],
+      "todo": false
+    },
+    {
+      "file": "cases/groupe/case-09-essai.en.md",
+      "lang": "en",
+      "kind": "page",
+      "role": "case",
+      "translationKey": "case-09",
+      "draft": true,
+      "front_matter": {
+        "translationKey": "case-09",
+        "number": "09",
+        "group": "groupe",
+        "order": 1,
+        "draft": true,
+        "position": "position-essai",
+        "context": {
+          "setup": "employee",
+          "stack": [
+            "PHP"
+          ]
+        },
+        "live_material": [
+          {
+            "id": "diagram-essai",
+            "type": "diagram",
+            "status": "planned",
+            "description": "Schéma",
+            "url": ""
+          }
+        ]
+      },
+      "h2": [
+        "## Context",
+        "## Outcome"
+      ],
+      "placed": [
+        "diagram-essai"
+      ],
+      "todo": false
+    }
+  ]
+}

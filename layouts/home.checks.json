@@ -2,7 +2,8 @@
   Manifeste des contrôles (AD-10), une fois par langue, en rendu de travail seulement. Seule
   définition de la forme du manifeste ; scripts/checks/lib.sh la documente pour ceux qui la lisent.
 
-  Racine : « lang », « stack » (vocabulaire de data/stack.yaml, une seule fois) et « files ».
+  Racine : « lang », « stack » (vocabulaire de data/stack.yaml), « rubrics » (les rubriques de
+  data/rubrics.yaml, dans l'ordre, avec leurs deux écritures) et « files ».
   Une entrée par fichier Markdown de content/ pour cette langue, plus les fichiers sans suffixe de
   langue, qui sortent dans les deux manifestes avec « error » : aucun fichier n'échappe aux contrôles.
 
@@ -64,4 +65,4 @@
     {{- $out = $out | append $entry -}}
   {{- end -}}
 {{- end -}}
-{{- dict "lang" $lang "stack" hugo.Data.stack.technologies "files" $out | jsonify (dict "indent" "  ") -}}
+{{- dict "lang" $lang "stack" hugo.Data.stack.technologies "rubrics" hugo.Data.rubrics.rubrics "files" $out | jsonify (dict "indent" "  ") -}}
