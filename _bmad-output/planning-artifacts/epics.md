@@ -1572,17 +1572,23 @@ afin de saisir l'enjeu et le résultat d'un coup d'œil.
 
 **Critères d'acceptation :**
 
-**Étant donné** une valeur de `summary` d'un cas publié
-**Quand** elle dépasse 400 points de code ou 3 phrases (définition de C16)
-**Alors** C16 signale le fichier, les caractères et les phrases ; le pilote passe (FR 354, EN 346, 3 phrases chacun).
+**Étant donné** le `summary` d'un cas
+**Quand** il dépasse 400 points de code ou 3 phrases — une phrase étant un segment terminé par `.`, `!`, `?` ou `…` suivi d'une espace ou de la fin, sans exception pour les abréviations
+**Alors** C16 échoue en donnant les deux mesures ; une valeur commençant par `[TODO` passe dans un brouillon, et le pilote passe (FR 354 points de code, EN 346, 3 phrases chacun, mesuré).
 
-**Étant donné** un `title` de plus de 70 caractères, un `setup`, `type` ou `status` hors valeurs, ou un numéro de fichier différent de `number` ou du suffixe du `translationKey`
+**Étant donné** un cas dont le `title` dépasse 70 caractères, dont `context.setup` sort de `employee`, `freelance`, `agency`, `ton-pote-le-geek`, dont un élément a un `status` hors de `planned`, `ready` (les listes sont écrites dans le contrôle, avec un renvoi à AD-6 et à `docs/format-cas.md` — décidé par Arnaud le 18/09/2026), ou dont le numéro du nom de fichier diffère de `number` **ou** du suffixe du `translationKey`
 **Quand** on lance les contrôles
-**Alors** C18 le signale, sauf valeur `[TODO…]` dans un brouillon.
+**Alors** C18 échoue en nommant le fichier et l'écart, sauf valeur `[TODO` dans un brouillon.
 
-**Étant donné** `ci/legal-placeholder.env` qui ne liste pas exactement les sept variables d'AD-9, ou `.env.example` qui ne liste pas exactement les sept `HUGO_LEGAL_*` d'AD-9 et les trois `GITEA_*` d'AD-24
+**Étant donné** un cas publié dont l'encart n'a pas `context.company`, `context.role`, `context.period` non vides ni `context.stack` non vide (FR-6 ; ajout décidé par Arnaud le 18/09/2026, la ligne C18 de l'architecture est complétée)
 **Quand** on lance les contrôles
-**Alors** C18 le signale.
+**Alors** C18 échoue en nommant la clé ; un brouillon peut les porter en `[TODO`.
+
+**Étant donné** `ci/legal-placeholder.env` qui ne liste pas exactement les sept variables d'AD-9, ou `.env.example` qui ne liste pas exactement ces sept `HUGO_LEGAL_*` et les trois `GITEA_*` d'AD-24
+**Quand** on lance les contrôles
+**Alors** C18 échoue en affichant les **noms** trouvés et attendus ; aucune valeur n'est lue ni affichée.
+
+- [ ] Le pilote et les deux fichiers d'environnement passent tels qu'ils sont commités.
 
 ### Story 3.7 : Career path check
 

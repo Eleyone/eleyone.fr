@@ -6,6 +6,10 @@
 #       titre d'un niveau, et un ###### y produirait un <h7>, balise qui n'existe pas
 #   C5  aucun fichier publié ne contient « [TODO », où que ce soit dans le fichier
 #   C6  la stack d'un cas ne cite que des technologies de data/stack.yaml
+#   C16 « En bref » : au plus 3 phrases et 400 points de code par langue
+#   C18 règles du format : title ≤ 70, valeurs de setup, type et status, concordance du numéro
+#       de fichier avec number et le translationKey, encart complet (FR-6, décidé le 18/09/2026),
+#       et les noms de variables de .env.example et de ci/legal-placeholder.env (jamais leurs valeurs)
 #
 # Portée (AD-10) : C4 s'applique **aussi aux brouillons**, C5 ne vise que les fichiers publiés, et C6
 # tolère une valeur « [TODO… » dans un brouillon. C4 et C6 ne portent que sur les cas.
@@ -113,6 +117,61 @@ def titles($entry): [($entry.headings // [])[] | select(.level == 2) | .text];
         | select($vocabulary | index($t) | not)
         | select(($f.draft == true and ($t | startswith("[TODO"))) | not)
         | [$f.file, "C6 : technologie « \($t) » absente de data/stack.yaml"]))
+    ,
+    # C16 — « En bref » : au plus 3 phrases et 400 points de code (définition de la liste des contrôles)
+    (select($f.role == "case")
+     | ($f.front_matter.summary // "") as $summary
+     | select($summary != "" and (($f.draft == true and ($summary | startswith("[TODO"))) | not))
+     | (($summary | explode | length)) as $length
+     | ([$summary | scan("[.!?…](?:\\s|$)")] | length) as $sentences
+     | select($length > 400 or $sentences > 3)
+     | [$f.file, "C16 : « En bref » de \($length) points de code et \($sentences) phrase(s) ; au plus 400 et 3"])
+    ,
+    # C18 — règles du format d'un cas
+    (select($f.role == "case")
+     | (
+         (($f.front_matter.title // "") as $title
+          | select($title != "" and (($f.draft == true and ($title | startswith("[TODO"))) | not))
+          | select(($title | explode | length) > 70)
+          | [$f.file, "C18 : title de \($title | explode | length) caractères ; 70 au plus"])
+         ,
+         (($f.front_matter.context.setup // "") as $setup
+          | select($setup != "" and (($f.draft == true and ($setup | startswith("[TODO"))) | not))
+          | select(["employee", "freelance", "agency", "ton-pote-le-geek"] | index($setup) | not)
+          | [$f.file, "C18 : setup « \($setup) » ; attendu employee, freelance, agency ou ton-pote-le-geek"])
+         ,
+         (($f.material // [])[] as $m
+          | select(["planned", "ready"] | index($m.status) | not)
+          | [$f.file, "C18 : status « \($m.status) » de l'élément « \($m.id) » ; attendu planned ou ready"])
+         ,
+         # numéro du nom de fichier, clé number et suffixe du translationKey : les trois concordent.
+         # « capture » ne produit rien quand le nom ne suit pas le format (vérifié : jq ne s'arrête
+         # pas) ; le nom hors format est donc signalé pour lui-même, sinon il passerait en silence
+         # (constat de la revue de la PR n° 41).
+         (($f.file | [match("case-(?<n>[0-9]+)-"; "g")] | if length == 0 then "" else .[0].captures[0].string end) as $from_name
+          | select($from_name == "")
+          | [$f.file, "C18 : nom de fichier hors format ; attendu case-NN-<nom-court>.<langue>.md"])
+         ,
+         (($f.file | [match("case-(?<n>[0-9]+)-"; "g")] | if length == 0 then "" else .[0].captures[0].string end) as $from_name
+          | select($from_name != "")
+          | (
+              (select($from_name != ($f.front_matter.number // ""))
+               | [$f.file, "C18 : numéro « \($from_name) » dans le nom de fichier, number « \($f.front_matter.number // "absent") »"])
+              ,
+              (select($from_name != (($f.translationKey // "") | ltrimstr("case-")))
+               | [$f.file, "C18 : numéro « \($from_name) » dans le nom de fichier, translationKey « \($f.translationKey // "absent") »"])
+            ))
+         ,
+         # encart « Contexte mission » complet sur un cas publié (FR-6, décidé le 18/09/2026)
+         (["company", "role", "period"][] as $key
+          | (($f.front_matter.context // {})[$key] // "") as $value
+          | select(($value | tostring | length) == 0 or (($f.draft != true) and ($value | tostring | startswith("[TODO"))))
+          | [$f.file, "C18 : context.\($key) \(if ($value | tostring | length) == 0 then "absent ou vide" else "encore en [TODO dans un cas publié" end) (FR-6)"])
+         ,
+         ((($f.front_matter.context // {}).stack // []) as $stack
+          | select(($stack | length) == 0)
+          | [$f.file, "C18 : context.stack absente ou vide (FR-6)"])
+       ))
   ))
 )
 | @tsv
@@ -125,8 +184,25 @@ while IFS= read -r manifest; do
   [[ -z $lines ]] || report+="$lines"$'\n'
 done <<< "$manifests"
 
-if [[ -z ${report//[$'\n']/} ]]; then
-  printf '%s: rubriques, marqueurs [TODO, vocabulaire, matériel vivant et groupes vérifiés.\n' "$script_name"
+# C18 — les deux fichiers d'environnement portent exactement les noms attendus (AD-9, AD-24). Seuls
+# les noms sont lus et affichés : une valeur ne sort jamais d'ici.
+legal_names="HUGO_LEGAL_HOST_ADDRESS HUGO_LEGAL_HOST_CONTACT HUGO_LEGAL_HOST_NAME HUGO_LEGAL_PUBLISHER_ADDRESS HUGO_LEGAL_PUBLISHER_CONTACT HUGO_LEGAL_PUBLISHER_NAME HUGO_LEGAL_PUBLISHER_REGISTRATION"
+env_names() { # $1 = fichier ; les noms de variables, triés
+  grep -oE '^[A-Z][A-Z0-9_]*=' "$1" | tr -d '=' | LC_ALL=C sort | tr '\n' ' ' | sed 's/ *$//'
+}
+check_env_file() { # $1 = fichier, $2 = noms attendus
+  local found
+  [[ -f $1 ]] || { checks_report "$1" "C18 : fichier absent"; return 1; }
+  found=$(env_names "$1") || { checks_report "$1" "C18 : lecture impossible"; return 1; }
+  [[ $found == "$2" ]] || { checks_report "$1" "C18 : variables « $found » ; attendu « $2 »"; return 1; }
+  return 0
+}
+env_rc=0
+check_env_file ci/legal-placeholder.env "$legal_names" || env_rc=1
+check_env_file .env.example "$(printf '%s GITEA_TOKEN GITEA_URL GITEA_USER' "$legal_names" | tr ' ' '\n' | LC_ALL=C sort | tr '\n' ' ' | sed 's/ *$//')" || env_rc=1
+
+if [[ -z ${report//[$'\n']/} ]] && ((env_rc == 0)); then
+  printf '%s: rubriques, marqueurs [TODO, vocabulaire, matériel vivant, groupes, encarts et format vérifiés.\n' "$script_name"
   exit 0
 fi
 

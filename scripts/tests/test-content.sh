@@ -188,6 +188,143 @@ case_content_c8_order_absent() {
   assert_eq "" "$(grep -c "déjà pris" <<< "$err" | tr -d '0')" "aucun message de doublon sur une clé absente"
 }
 
+case_content_c16_resume_trop_long() {
+  rendu '.files[2].front_matter.summary = ("x" * 401)'
+  contenu
+  assert_eq 1 "$rc" "un « En bref » de plus de 400 points de code fait échouer"
+  assert_contains "C16 : « En bref » de 401 points de code" "$err" "le signalement donne la mesure"
+}
+
+case_content_c16_quatre_phrases() {
+  rendu '.files[2].front_matter.summary = "Une. Deux. Trois. Quatre."'
+  contenu
+  assert_eq 1 "$rc" "quatre phrases font échouer"
+  assert_contains "4 phrase(s) ; au plus 400 et 3" "$err" "le compte des phrases suit la définition de C16"
+}
+
+case_content_c16_trois_phrases_passent() {
+  # « … » termine une phrase, comme « . », « ! » et « ? » (définition de C16) : la chaîne ci-dessous
+  # en compte donc exactement trois.
+  rendu '.files[2].front_matter.summary = "Une première phrase ! Une deuxième ? Une troisième…"'
+  contenu
+  assert_eq 0 "$rc" "trois phrases terminées par !, ? et … passent (messages : $err)"
+}
+
+case_content_c16_todo_dans_un_brouillon() {
+  rendu '.files[2].front_matter.summary = ("[TODO: résumé " + ("x" * 500))'
+  contenu
+  assert_eq 0 "$rc" "un résumé en [TODO passe dans un brouillon (messages : $err)"
+}
+
+case_content_c18_title_trop_long() {
+  rendu '.files[2].front_matter.title = ("T" * 71)'
+  contenu
+  assert_eq 1 "$rc" "un title de plus de 70 caractères fait échouer"
+  assert_contains "C18 : title de 71 caractères ; 70 au plus" "$err" "le signalement donne la longueur"
+}
+
+case_content_c18_setup_hors_valeurs() {
+  rendu '.files[2].front_matter.context.setup = "stagiaire"'
+  contenu
+  assert_eq 1 "$rc" "un setup hors valeurs fait échouer"
+  assert_contains "attendu employee, freelance, agency ou ton-pote-le-geek" "$err" "le signalement liste les valeurs"
+}
+
+case_content_c18_status_hors_valeurs() {
+  rendu '.files[2].material[0].status = "brouillon"'
+  contenu
+  assert_eq 1 "$rc" "un status hors valeurs fait échouer"
+  assert_contains "attendu planned ou ready" "$err" "le signalement liste les valeurs"
+}
+
+case_content_c18_numero_incoherent() {
+  rendu '.files[2].front_matter.number = "07"'
+  contenu
+  assert_eq 1 "$rc" "un number qui ne suit pas le nom de fichier fait échouer"
+  assert_contains 'numéro « 09 » dans le nom de fichier, number « 07 »' "$err" "le signalement donne les deux"
+  rendu '.files[2].translationKey = "case-07"' '.files[2].translationKey = "case-07"'
+  contenu
+  assert_eq 1 "$rc" "un translationKey qui ne suit pas le nom de fichier fait échouer aussi"
+  assert_contains 'translationKey « case-07 »' "$err" "le signalement le dit"
+}
+
+case_content_c18_encart_incomplet() {
+  rendu '.files[2].draft = false | .files[2].todo = false | del(.files[2].front_matter.context.role)' \
+        '.files[2].draft = false | .files[2].todo = false'
+  contenu
+  assert_eq 1 "$rc" "un cas publié sans rôle dans son encart fait échouer (FR-6)"
+  assert_contains "C18 : context.role absent ou vide (FR-6)" "$err" "le signalement nomme la clé"
+  rendu '.files[2].front_matter.context.role = "[TODO: rôle]"'
+  contenu
+  assert_eq 0 "$rc" "la même clé en [TODO passe dans un brouillon (messages : $err)"
+}
+
+case_content_c18_encart_todo_publie() {
+  rendu '.files[2].draft = false | .files[2].todo = false | .files[2].front_matter.context.period = "[TODO: période]"' \
+        '.files[2].draft = false | .files[2].todo = false'
+  contenu
+  assert_eq 1 "$rc" "un [TODO d'encart dans un cas publié fait échouer"
+  assert_contains "encore en [TODO dans un cas publié" "$err" "le signalement le dit"
+}
+
+case_content_c18_nom_de_fichier_hors_format() {
+  # « capture » ne produit rien sur un nom hors format : sans règle propre, le cas passait en silence
+  # (constat de la revue de la PR n° 41).
+  rendu '.files[2].file = "cases/groupe/essai.fr.md"' '.files[2].file = "cases/groupe/essai.en.md"'
+  contenu
+  assert_eq 1 "$rc" "un nom de fichier hors format fait échouer"
+  assert_contains "C18 : nom de fichier hors format ; attendu case-NN-<nom-court>.<langue>.md" "$err" \
+    "le signalement donne le format attendu"
+}
+
+# Les deux fichiers d'environnement sont lus dans le dépôt, pas dans le manifeste : ces cas travaillent
+# donc sur une copie du dépôt, avec le contrôle lancé depuis cette copie.
+copie_depot() {
+  mkdir -p "$work/depot/scripts/checks" "$work/depot/ci"
+  cp "$root/scripts/checks/content.sh" "$root/scripts/checks/lib.sh" "$work/depot/scripts/checks/"
+  cp "$root/.env.example" "$work/depot/"
+  cp "$root/ci/legal-placeholder.env" "$work/depot/ci/"
+  mkdir -p "$work/depot/rendu/en"
+  jq . "$fixtures/manifests/fr.json" > "$work/depot/rendu/checks.json"
+  jq . "$fixtures/manifests/en.json" > "$work/depot/rendu/en/checks.json"
+}
+
+contenu_depot() {
+  run env CHECK_WORK_ROOT="$work/depot/rendu" bash -c 'cd "$1" && bash scripts/checks/content.sh' _ "$work/depot"
+}
+
+case_content_c18_fichiers_env_conformes() {
+  copie_depot
+  contenu_depot
+  assert_eq 0 "$rc" "les deux fichiers du dépôt passent (messages : $err)"
+}
+
+case_content_c18_env_example_incomplet() {
+  copie_depot
+  grep -v '^GITEA_USER=' "$root/.env.example" > "$work/depot/.env.example"
+  contenu_depot
+  assert_eq 1 "$rc" "une variable manquante dans .env.example fait échouer"
+  assert_contains ".env.example: C18 : variables" "$err" "le signalement nomme le fichier"
+  assert_contains "GITEA_USER" "$err" "les noms attendus sont affichés"
+  [[ $err != *"="* ]] || { echo "une valeur a pu être affichée" >&2; exit 1; }
+}
+
+case_content_c18_legal_placeholder_en_trop() {
+  copie_depot
+  printf 'HUGO_LEGAL_EXTRA=VALEUR-FACTICE-extra\n' >> "$work/depot/ci/legal-placeholder.env"
+  contenu_depot
+  assert_eq 1 "$rc" "une variable en trop dans le fichier factice fait échouer"
+  assert_contains "ci/legal-placeholder.env: C18 : variables" "$err" "le signalement nomme le fichier"
+}
+
+case_content_c18_fichier_env_absent() {
+  copie_depot
+  rm "$work/depot/.env.example"
+  contenu_depot
+  assert_eq 1 "$rc" "un fichier d'environnement absent fait échouer"
+  assert_contains ".env.example: C18 : fichier absent" "$err" "le signalement le dit"
+}
+
 case_content_entree_en_erreur_ignoree() {
   rendu '.files[2].error = "front matter absent"'
   contenu

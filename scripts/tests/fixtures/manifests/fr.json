@@ -68,6 +68,9 @@
         "draft": true,
         "position": "position-essai",
         "context": {
+          "company": "Société",
+          "role": "Développeur backend",
+          "period": "2025 – 2026",
           "setup": "employee",
           "stack": [
             "PHP"
@@ -81,7 +84,9 @@
             "description": "Schéma",
             "url": ""
           }
-        ]
+        ],
+        "title": "Cas fixture",
+        "summary": "Une phrase. Une deuxième phrase. Une troisième phrase."
       },
       "placed": [
         "diagram-essai"

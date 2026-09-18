@@ -46,3 +46,7 @@ Constats de revue reportés à plus tard, au format de `bmad-build`. Chaque entr
   summary: Clôture de l'entrée de la story 2.6 (« un `######` dans un cas groupé serait rendu en `<h7>` ») : C4 refuse tout titre plus profond que `###` dans un cas, et `docs/format-cas.md` l'écrit.
   evidence: Story 3.4 (18/09/2026), règle décidée par Arnaud ; cas de test `case_content_c4_titre_trop_profond` et essai sur le pilote.
 
+- source_spec: `_bmad-output/implementation-artifacts/3-6-at-a-glance-box-and-format-rules.md`
+  summary: C18 accepte une valeur d'encart faite uniquement d'espaces : la règle teste la longueur, pas le contenu utile (`context.company`, `role`, `period`).
+  evidence: Constat non bloquant de la deuxième revue de la PR n° 41 (`c12e2d5`). À reprendre par la story 3.7, qui rouvre `content.sh` pour C19 et vérifie des clés voisines.
+
