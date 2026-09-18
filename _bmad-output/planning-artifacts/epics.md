@@ -1688,12 +1688,28 @@ afin de parcourir le site sans obstacle.
 **Critères d'acceptation :**
 
 **Étant donné** le build de production de contrôle
-**Quand** C11 s'exécute sur chaque page, 404 comprises
-**Alors** il signale : `<html lang>` absent ; `<title>` vide ou sans la ligne d'identité ; zéro ou plusieurs `<h1>` ; saut de niveau ; identifiant en double ; `<img>` sans `alt` non vide, `width` ou `height` ; lien sans nom accessible ; `hreflang` absent ; `tabindex` positif.
+**Quand** C11 s'exécute dans `scripts/checks/html.sh` sur chaque page, 404 comprises
+**Alors** il signale, en nommant la page :
 
-**Étant donné** une copie locale qui introduit chaque défaut à tour de rôle
-**Quand** on lance les contrôles
-**Alors** chaque défaut est signalé avec la page.
+- `<html lang>` absent (3.1.1) ;
+- `<title>` vide (2.4.2), ou sans la ligne d'identité — **sauf l'accueil**, qui en est exempté depuis AD-2 (story 2.2) parce que son titre porte déjà le nom ;
+- aucun `<h1>`, ou plus d'un (1.3.1) ;
+- un saut de niveau de titre, `h2` suivi de `h4` (1.3.1) ;
+- un identifiant en double (4.1.1) ;
+- une `<img>` sans `alt` non vide (1.1.1), ou sans `width` ni `height` (CLS, AD-17) ;
+- un lien sans nom accessible, c'est-à-dire sans texte, sans `aria-label`, sans `title` et sans image au `alt` non vide (2.4.4) ;
+- aucun `link rel="alternate" hreflang"` (AD-2) ;
+- un `tabindex` positif (2.4.3) ; `tabindex="0"` reste permis, il rend un conteneur focalisable.
+
+**Étant donné** la ligne d'identité
+**Quand** le contrôle en a besoin
+**Alors** il la lit dans le manifeste du rendu de travail (`front_matter.identity` de l'accueil, AD-19), jamais écrite en dur ; son absence est une anomalie (code 2), pas un contrôle muet.
+
+**Étant donné** des fixtures HTML qui introduisent chaque défaut à tour de rôle
+**Quand** on lance `scripts/tests/run.sh`
+**Alors** chaque défaut est signalé, et son pendant conforme accepté ; aucun essai ne touche `content/`.
+
+- [ ] Les 404 portent leurs `hreflang` (constaté) : aucune exemption n'est nécessaire.
 
 ### Story 3.10 : Internal links, anchors and orphan pages
 

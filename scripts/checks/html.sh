@@ -5,6 +5,9 @@
 #        aucun formulaire, aucune ressource chargée depuis une autre origine (HTML et CSS) ;
 #        le bloc JSON-LD, s'il existe, est un JSON valide de @type Person aux seules clés de FR-35
 #   C5   aucune occurrence de « [TODO » dans les fichiers de texte publiés
+#   C11  accessibilité automatisable (AD-17) : langue de la page, titre, plan des titres,
+#        identifiants uniques, images décrites et dimensionnées, liens nommés, hreflang,
+#        aucun tabindex positif
 #
 # Les attributs se lisent par XPath avec « xmllint --html » (AD-10) : sur du HTML minifié, un grep
 # sur des attributs serait faux dès qu'une valeur contient le motif cherché. Le parseur de libxml2
@@ -51,6 +54,15 @@ readonly jsonld_keys='["@context","@type","name","alternateName","jobTitle","add
 
 fail=0
 signaler() { checks_report "$1" "$2"; fail=1; }
+
+# Ligne d'identité, lue dans le manifeste du rendu de travail plutôt qu'écrite en dur : elle vient du
+# front matter de l'accueil (AD-19). Le rendu de travail précède les contrôles dans check.sh.
+identity=""
+if manifest=$(checks_manifests "${CHECK_WORK_ROOT:-build/work}" 2> /dev/null | head -1) && [[ -n $manifest ]]; then
+  identity=$(jq -r 'first(.files[] | select(.role == "home") | .front_matter.identity // "") // ""' "$manifest") \
+    || checks_die "lecture de la ligne d'identité impossible dans $manifest."
+fi
+[[ -n $identity ]] || checks_die "ligne d'identité introuvable dans le manifeste : lancer scripts/build.sh work."
 
 # Résultat d'une requête XPath sur un fichier HTML, sans la sortie d'erreur (AD-10 : le parseur de
 # libxml2 signale les balises HTML5 comme invalides).
@@ -129,10 +141,10 @@ while IFS= read -r page; do
       break
     done
   done < <(xpath "$page" "//link[@rel][@href]" \
-            | grep -oE '<link[^>]*>' \
+            | { grep -oE '<link[^>]*>' || true; } \
             | while IFS= read -r balise; do
-                r=$(grep -oE 'rel="[^"]*"' <<< "$balise" | head -1); r=${r#rel=\"}; r=${r%\"}
-                h=$(grep -oE 'href="[^"]*"' <<< "$balise" | head -1); h=${h#href=\"}; h=${h%\"}
+                r=$({ grep -oE 'rel="[^"]*"' <<< "$balise" || true; } | head -1); r=${r#rel=\"}; r=${r%\"}
+                h=$({ grep -oE 'href="[^"]*"' <<< "$balise" || true; } | head -1); h=${h#href=\"}; h=${h%\"}
                 printf '%s\t%s\n' "$r" "$h"
               done)
 
@@ -169,6 +181,67 @@ while IFS= read -r page; do
       fi
     fi
   fi
+  # --- C11 : accessibilité automatisable (AD-17) ------------------------------------------------
+  lang=$(xpath_attributs "$page" '/html/@lang' lang | head -1)
+  [[ -n $lang ]] || signaler "$relative" "C11 : <html lang> absent : la langue de la page n'est pas déclarée (3.1.1)"
+
+  titre=$(xpath "$page" 'string(//title)')
+  if [[ -z ${titre// /} ]]; then
+    signaler "$relative" "C11 : <title> vide (2.4.2)"
+  elif ! est_accueil "$relative" && [[ $titre != *"$identity"* ]]; then
+    # L'accueil fait exception : son titre porte déjà le nom (AD-2, story 2.2).
+    signaler "$relative" "C11 : <title> « $titre » sans la ligne d'identité « $identity » (AD-2)"
+  fi
+
+  h1=$(xpath "$page" 'count(//h1)'); h1=${h1:-0}; h1=${h1%%.*}
+  ((h1 == 1)) || signaler "$relative" "C11 : $h1 balise(s) <h1> ; exactement une est attendue (1.3.1)"
+
+  # Plan des titres : aucun saut de niveau vers le bas (h2 puis h4).
+  precedent=0
+  while IFS= read -r niveau; do
+    [[ -n $niveau ]] || continue
+    if ((precedent > 0 && niveau > precedent + 1)); then
+      signaler "$relative" "C11 : saut de niveau de titre, h$precedent suivi de h$niveau (1.3.1)"
+    fi
+    precedent=$niveau
+  # « || true » : sans titre, grep rend 1, et l'échec passerait en silence dans la substitution
+  # de processus (constat de la deuxième revue de la PR n° 45 ; pièges connus de shell-scripts.md).
+  done < <(xpath "$page" '//h1|//h2|//h3|//h4|//h5|//h6' | { grep -oE '<h[1-6]' || true; } | tr -d '<h')
+
+  while IFS= read -r identifiant; do
+    [[ -n $identifiant ]] || continue
+    signaler "$relative" "C11 : identifiant « $identifiant » en double (4.1.1)"
+  done < <(xpath_attributs "$page" '//*[@id]/@id' id | LC_ALL=C sort | uniq -d)
+
+  images=$(xpath "$page" 'count(//img)'); images=${images:-0}; images=${images%%.*}
+  if ((images > 0)); then
+    sans_alt=$(xpath "$page" 'count(//img[not(@alt) or normalize-space(@alt) = ""])'); sans_alt=${sans_alt%%.*}
+    ((${sans_alt:-0} == 0)) || signaler "$relative" "C11 : ${sans_alt} image(s) sans alternative textuelle (1.1.1)"
+    sans_dimensions=$(xpath "$page" 'count(//img[not(@width) or not(@height)])'); sans_dimensions=${sans_dimensions%%.*}
+    ((${sans_dimensions:-0} == 0)) \
+      || signaler "$relative" "C11 : ${sans_dimensions} image(s) sans width ni height : la page se décale au chargement (CLS, AD-17)"
+  fi
+
+  # Nom accessible d'un lien : du texte, un aria-label, un title, ou une image au alt non vide.
+  # Un aria-label ou un title **vide** ne nomme rien : l'attribut doit porter du texte
+  # (constat de la revue de la PR n° 45).
+  liens_muets=$(xpath "$page" "count(//a[@href][normalize-space(string(.)) = ''][not(@aria-label) or normalize-space(@aria-label) = ''][not(@title) or normalize-space(@title) = ''][not(.//img[@alt][normalize-space(@alt) != ''])])")
+  liens_muets=${liens_muets%%.*}
+  ((${liens_muets:-0} == 0)) || signaler "$relative" "C11 : ${liens_muets} lien(s) sans nom accessible (2.4.4)"
+
+  hreflangs=$(xpath "$page" "count(//link[@rel='alternate'][@hreflang])"); hreflangs=${hreflangs%%.*}
+  ((${hreflangs:-0} > 0)) || signaler "$relative" "C11 : aucun lien hreflang : la page ne déclare pas ses traductions (AD-2)"
+
+  # « +1 », « 01 » et «  1  » sont des tabindex positifs valides en HTML5 : la valeur est normalisée
+  # avant comparaison (constat de la revue de la PR n° 45).
+  while IFS= read -r valeur; do
+    [[ -n $valeur ]] || continue
+    normalisee=${valeur//[[:space:]]/}
+    normalisee=${normalisee#+}
+    normalisee=$(sed -E 's/^0+([0-9])/\1/' <<< "$normalisee")
+    [[ $normalisee =~ ^[1-9][0-9]*$ ]] || continue
+    signaler "$relative" "C11 : tabindex positif « $valeur » : l'ordre de tabulation suit l'ordre du DOM (2.4.3)"
+  done < <(xpath_attributs "$page" '//*[@tabindex]/@tabindex' tabindex)
 done < <(find "$public" -type f -name '*.html' | LC_ALL=C sort)
 
 # --- ressources tierces appelées depuis le CSS, que XPath ne voit pas -----------------------------
@@ -196,4 +269,4 @@ while IFS= read -r fichier; do
 done < <(find "$public" -type f \( -name '*.html' -o -name '*.xml' -o -name '*.css' -o -name '*.txt' -o -name '*.json' \) | LC_ALL=C sort)
 
 ((fail == 0)) || exit 1
-printf '%s: zéro script, aucune ressource tierce, aucun marqueur dans la production.\n' "$script_name"
+printf '%s: zéro script, aucune ressource tierce, aucun marqueur, structure accessible.\n' "$script_name"
