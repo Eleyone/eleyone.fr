@@ -27,7 +27,18 @@ def titles($entry): [($entry.headings // [])[] | select(.level == 2) | .text];
 | (.rubrics // []) as $rubrics
 | (rubric_names($rubrics; $lang)) as $known
 | (.stack // []) as $vocabulary
-| .files[]
+| [.files[] | select(.error == null and .lang != "" and .role == "case")] as $cases
+| (
+  # C8 — deux cas d'un même groupe ne partagent pas un « order » (un manifeste, une langue)
+  ( $cases | map(select(.front_matter.order == null))
+    | .[] | [.file, "C8 : clé order absente ; elle donne la place du cas dans son groupe"] )
+  ,
+  ( $cases | map(select(.front_matter.order != null))
+    | group_by([.front_matter.group // "", .front_matter.order]) | .[] | select(length > 1)
+    | . as $doublon | .[]
+    | [.file, "C8 : order \(.front_matter.order) déjà pris dans le groupe « \(.front_matter.group // "sans groupe") » par \($doublon | map(.file) | join(", "))"] )
+  ,
+  ( .files[]
 | select(.error == null and .lang != "")
 | . as $f
 | (
@@ -46,9 +57,55 @@ def titles($entry): [($entry.headings // [])[] | select(.level == 2) | .text];
        (($f.headings // [])[] | select(.level > 3)
         | [$f.file, "C4 : titre de niveau \(.level) « \(.text) » : un cas n'a que des rubriques ## et des sous-titres ###, sans quoi un cas groupé produirait un <h7>"]))
     ,
+    # C7 — matériel vivant : déclaré ⇔ placé, sans doublon, préfixé par son type, source présente
+    #      pour un élément « ready » (la source vient du manifeste, Hugo étant seul à voir assets/)
+    (select($f.role == "case")
+     | (($f.material // [])[] as $m
+        | select(($f.placed // []) | index($m.id) | not)
+        | [$f.file, "C7 : élément « \($m.id) » déclaré mais jamais placé dans le texte"])
+       ,
+       (($f.placed // [])[] as $id
+        | select((($f.material // []) | map(.id)) | index($id) | not)
+        | [$f.file, "C7 : identifiant « \($id) » placé dans le texte mais absent de live_material"])
+       ,
+       (($f.placed // []) | group_by(.) | .[] | select(length > 1) | .[0] as $id
+        | [$f.file, "C7 : identifiant « \($id) » placé deux fois dans le même cas"])
+       ,
+       (($f.material // []) | group_by(.id) | .[] | select(length > 1) | .[0].id as $id
+        | [$f.file, "C7 : identifiant « \($id) » déclaré deux fois"])
+       ,
+       (($f.material // [])[] as $m
+        | select($m.type != "" and (($m.id | startswith($m.type + "-")) | not))
+        | [$f.file, "C7 : identifiant « \($m.id) » non préfixé par son type : « \($m.type)- » attendu (AD-6)"])
+       ,
+       (($f.material // [])[] as $m
+        | select(["diagram", "video", "snippet", "callout"] | index($m.type) | not)
+        | [$f.file, "C7 : élément « \($m.id) » de type « \($m.type) » ; attendu diagram, video, snippet ou callout (AD-6)"])
+       ,
+       (($f.material // [])[] as $m
+        | select($m.status == "ready" and $m.source_found == false)
+        | [$f.file, (if $m.type == "video" then "C7 : vidéo « \($m.id) » en status ready sans url" else "C7 : élément « \($m.id) » en status ready sans source : \($m.source) est absent" end)])
+    )
+    ,
     # C5 — aucun « [TODO » dans un fichier publié
     (select($f.todo == true and $f.draft != true)
      | [$f.file, "C5 : le fichier est publié et contient « [TODO » ; le marqueur impose draft: true"])
+    ,
+    # C8 — groupe : la clé « group » est le dossier parent direct, et deux cas du groupe n'ont pas le
+    #      même « order » dans une langue (chaque manifeste ne porte qu'une langue)
+    (select($f.role == "case")
+     | ($f.file | split("/")) as $parts
+     | (if ($parts | length) == 3 then $parts[1] else null end) as $folder
+     | (
+         (select($folder != null and (($f.front_matter.group // "") != $folder))
+          | [$f.file, "C8 : clé group « \($f.front_matter.group // "absente") » alors que le dossier est « \($folder) »"])
+         ,
+         (select($folder == null and (($f.front_matter.group // "") != ""))
+          | [$f.file, "C8 : cas hors d'un dossier de groupe mais porteur d'une clé group « \($f.front_matter.group) »"])
+         ,
+         (select(($parts | length) > 3)
+          | [$f.file, "C8 : cas rangé trop profond ; un cas groupé vit dans cases/<groupe>/ (AD-4)"])
+       ))
     ,
     # C6 — vocabulaire de la stack, avec la tolérance des brouillons
     (select($f.role == "case")
@@ -56,7 +113,8 @@ def titles($entry): [($entry.headings // [])[] | select(.level == 2) | .text];
         | select($vocabulary | index($t) | not)
         | select(($f.draft == true and ($t | startswith("[TODO"))) | not)
         | [$f.file, "C6 : technologie « \($t) » absente de data/stack.yaml"]))
-  )
+  ))
+)
 | @tsv
 JQ
 
@@ -68,7 +126,7 @@ while IFS= read -r manifest; do
 done <<< "$manifests"
 
 if [[ -z ${report//[$'\n']/} ]]; then
-  printf '%s: rubriques, marqueurs [TODO et vocabulaire de la stack vérifiés.\n' "$script_name"
+  printf '%s: rubriques, marqueurs [TODO, vocabulaire, matériel vivant et groupes vérifiés.\n' "$script_name"
   exit 0
 fi
 

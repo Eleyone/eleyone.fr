@@ -1538,17 +1538,25 @@ afin qu'aucun emplacement ni aucune section ne disparaisse par erreur.
 
 **Critères d'acceptation :**
 
-**Étant donné** un élément déclaré non placé ou placé non déclaré, un identifiant utilisé par deux cas, ou un préfixe qui ne correspond pas au type
+**Étant donné** un cas dont un élément (`planned` ou `ready`) est déclaré sans être placé, un identifiant placé sans être déclaré, un identifiant placé ou déclaré deux fois, ou un identifiant qui n'est pas préfixé par son type (AD-6)
 **Quand** on lance les contrôles
-**Alors** C7 signale le fichier et l'identifiant.
+**Alors** C7 échoue en nommant le fichier, l'identifiant et l'écart.
 
-**Étant donné** un élément `ready` sans source (SVG, fichier de `assets/live-material/`, ou `url` pour une vidéo)
+**Étant donné** un élément `ready` dont la source manque **dans la langue du fichier** — `assets/diagrams/<id>.<lang>.svg`, `assets/live-material/<id>.<lang>.md`, ou une `url` vide pour une vidéo
 **Quand** on lance les contrôles
-**Alors** C7 le signale.
+**Alors** C7 échoue en donnant le chemin attendu, ou en disant qu'une vidéo n'a pas d'`url`
+**Et** la source est résolue **par Hugo dans le manifeste** (clé `material` : `id`, `type`, `status`, `source`, `source_found`), seul à voir `assets/` ; la règle de nommage d'AD-6 n'est donc écrite qu'une fois (décidé par Arnaud le 18/09/2026).
 
-**Étant donné** un cas dont `group` diffère du dossier, ou deux cas d'un groupe avec le même `order`
+**Étant donné** un cas dont la clé `group` diffère du dossier parent direct, un cas hors d'un dossier de groupe qui porte une clé `group`, ou un cas rangé plus profond que `cases/<groupe>/`
 **Quand** on lance les contrôles
-**Alors** C8 le signale.
+**Alors** C8 échoue en nommant le fichier et l'écart, et les autres règles du même fichier sont **quand même** évaluées (décidé par Arnaud le 18/09/2026) : une seule passe montre tout.
+
+**Étant donné** deux cas d'un même groupe qui portent le même `order`
+**Quand** on lance les contrôles
+**Alors** C8 échoue en nommant les deux fichiers ; la comparaison est par langue, chaque manifeste n'en portant qu'une.
+
+- [ ] Un trou dans les `order` d'un groupe n'est pas un écart : un cas non publié en laisse forcément un.
+- [ ] Le pilote, avec ses trois éléments « prévus », passe.
 
 ### Story 3.6 : At a glance box and format rules
 

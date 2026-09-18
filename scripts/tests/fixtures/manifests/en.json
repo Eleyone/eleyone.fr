@@ -96,6 +96,15 @@
           "level": 2,
           "text": "Outcome"
         }
+      ],
+      "material": [
+        {
+          "id": "diagram-essai",
+          "type": "diagram",
+          "status": "planned",
+          "source": "assets/diagrams/diagram-essai.en.svg",
+          "source_found": false
+        }
       ]
     }
   ]

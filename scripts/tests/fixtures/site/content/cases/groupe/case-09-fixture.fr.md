@@ -18,11 +18,32 @@ live_material:
     status: "planned"
     description: "Schéma"
     url: ""
+  - id: "snippet-fixture"
+    type: "snippet"
+    status: "planned"
+    description: "Extrait"
+    url: ""
+  - id: "callout-fixture"
+    type: "callout"
+    status: "planned"
+    description: "Encart"
+    url: ""
+  - id: "video-fixture"
+    type: "video"
+    status: "planned"
+    description: "Vidéo"
+    url: "https://exemple.invalide/video"
 ---
 
 ## Contexte
 
 Texte. {{< live-material id="diagram-fixture" >}}
+
+Texte. {{< live-material id="snippet-fixture" >}}
+
+Texte. {{< live-material id="callout-fixture" >}}
+
+Texte. {{< live-material id="video-fixture" >}}
 
 ## Résultat
 

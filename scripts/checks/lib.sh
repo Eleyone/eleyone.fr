@@ -39,6 +39,9 @@
 #         "headings":       [{"level": 2, "text": "Contexte"}, …],   titres du Markdown brut, dans
 #                                            l'ordre, avec leur niveau et leur texte sans les dièses
 #         "placed":         ["diagram-ncs-cs-flow", …],  identifiants des appels live-material
+#         "material":       [{"id": …, "type": …, "status": …, "source": …, "source_found": …}],
+#                                            matériel vivant déclaré, avec la source qu'AD-6 lui
+#                                            donne dans la langue du fichier et son existence (C7)
 #         "todo":           false           « [TODO » apparaît dans le fichier, front matter compris
 #       }
 #     ]

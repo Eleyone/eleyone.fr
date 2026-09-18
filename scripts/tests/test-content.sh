@@ -97,6 +97,97 @@ case_content_c6_todo_tolere_dans_un_brouillon() {
   assert_eq 1 "$rc" "le même [TODO ne passe pas dans un cas publié"
 }
 
+case_content_c7_declare_non_place() {
+  rendu '.files[2].placed = []'
+  contenu
+  assert_eq 1 "$rc" "un élément déclaré mais non placé fait échouer"
+  assert_contains 'C7 : élément « diagram-essai » déclaré mais jamais placé' "$err" "le signalement nomme l'élément"
+}
+
+case_content_c7_place_non_declare() {
+  rendu '.files[2].placed += ["callout-fantome"]'
+  contenu
+  assert_eq 1 "$rc" "un identifiant placé mais non déclaré fait échouer"
+  assert_contains 'C7 : identifiant « callout-fantome » placé dans le texte mais absent de live_material' "$err" \
+    "le signalement nomme l'identifiant"
+}
+
+case_content_c7_place_deux_fois() {
+  rendu '.files[2].placed = ["diagram-essai", "diagram-essai"]'
+  contenu
+  assert_eq 1 "$rc" "le même identifiant placé deux fois fait échouer"
+  assert_contains "placé deux fois dans le même cas" "$err" "le signalement le dit"
+}
+
+case_content_c7_prefixe_du_type() {
+  rendu '.files[2].material[0].id = "schema-essai" | .files[2].placed = ["schema-essai"]'
+  contenu
+  assert_eq 1 "$rc" "un identifiant non préfixé par son type fait échouer"
+  assert_contains '« diagram- » attendu (AD-6)' "$err" "le signalement donne le préfixe attendu"
+}
+
+case_content_c7_ready_sans_source() {
+  rendu '.files[2].material[0].status = "ready"'
+  contenu
+  assert_eq 1 "$rc" "un élément ready sans source fait échouer"
+  assert_contains "en status ready sans source : assets/diagrams/diagram-essai.fr.svg est absent" "$err" \
+    "le signalement donne le chemin attendu, dans la langue du fichier"
+  rendu '.files[2].material[0].status = "ready" | .files[2].material[0].source_found = true'
+  contenu
+  assert_eq 0 "$rc" "avec sa source, l'élément passe (messages : $err)"
+}
+
+case_content_c7_video_sans_url() {
+  rendu '.files[2].material[0] = {"id": "video-essai", "type": "video", "status": "ready", "source": "", "source_found": false} | .files[2].placed = ["video-essai"]'
+  contenu
+  assert_eq 1 "$rc" "une vidéo ready sans url fait échouer"
+  assert_contains "C7 : vidéo « video-essai » en status ready sans url" "$err" "le message est propre à la vidéo"
+}
+
+case_content_c8_group_different_du_dossier() {
+  rendu '.files[2].front_matter.group = "autre"'
+  contenu
+  assert_eq 1 "$rc" "une clé group qui ne suit pas le dossier fait échouer"
+  assert_contains 'C8 : clé group « autre » alors que le dossier est « groupe »' "$err" "le signalement donne les deux"
+}
+
+case_content_c8_cas_autonome_avec_group() {
+  rendu '.files[2].file = "cases/case-05-essai.fr.md"' '.files[2].file = "cases/case-05-essai.en.md"'
+  contenu
+  assert_eq 1 "$rc" "un cas hors dossier de groupe ne porte pas de clé group"
+  assert_contains "cas hors d'un dossier de groupe mais porteur d'une clé group" "$err" "le signalement le dit"
+}
+
+case_content_c8_cas_trop_profond() {
+  rendu '.files[2].file = "cases/groupe/sous/case-09-essai.fr.md"' '.files[2].file = "cases/groupe/sous/case-09-essai.en.md"'
+  contenu
+  assert_eq 1 "$rc" "un cas rangé trop profond fait échouer"
+  assert_contains "C8 : cas rangé trop profond" "$err" "le signalement renvoie à AD-4"
+}
+
+case_content_c8_order_en_double() {
+  rendu '.files += [(.files[2] | .file = "cases/groupe/case-10-essai.fr.md" | .translationKey = "case-10")]' \
+        '.files += [(.files[2] | .file = "cases/groupe/case-10-essai.en.md" | .translationKey = "case-10")]'
+  contenu
+  assert_eq 1 "$rc" "deux cas du même groupe avec le même order font échouer"
+  assert_contains "C8 : order 1 déjà pris dans le groupe « groupe »" "$err" "le signalement nomme les deux fichiers"
+}
+
+case_content_c7_type_inconnu() {
+  rendu '.files[2].material[0] = {"id": "image-essai", "type": "image", "status": "planned", "source": "", "source_found": false} | .files[2].placed = ["image-essai"]'
+  contenu
+  assert_eq 1 "$rc" "un type hors d'AD-6 fait échouer (constat de la revue de la PR n° 40)"
+  assert_contains 'de type « image » ; attendu diagram, video, snippet ou callout' "$err" "le signalement liste les types"
+}
+
+case_content_c8_order_absent() {
+  rendu 'del(.files[2].front_matter.order)' 'del(.files[2].front_matter.order)'
+  contenu
+  assert_eq 1 "$rc" "un cas sans order fait échouer"
+  assert_contains "C8 : clé order absente" "$err" "le signalement le dit, plutôt qu'une collision sur null"
+  assert_eq "" "$(grep -c "déjà pris" <<< "$err" | tr -d '0')" "aucun message de doublon sur une clé absente"
+}
+
 case_content_entree_en_erreur_ignoree() {
   rendu '.files[2].error = "front matter absent"'
   contenu

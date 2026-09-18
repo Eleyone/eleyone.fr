@@ -56,9 +56,29 @@
       {{- range findRESubmatch `(?m)^(#{1,6})[ \t]+(.+?)[ \t]*$` .RawContent -}}
         {{- $headings = $headings | append (dict "level" (len (index . 1)) "text" (index . 2)) -}}
       {{- end -}}
+      {{/* Matériel vivant déclaré, avec la source qu'AD-6 lui donne dans la langue du fichier et le
+           constat de son existence : les contrôles lisent le manifeste, pas le disque, et Hugo est le
+           seul à voir assets/ (story 3.5, décidé le 18/09/2026). */}}
+      {{- $material := slice -}}
+      {{- range .Params.live_material -}}
+        {{- $source := "" -}}
+        {{- $found := false -}}
+        {{- if eq .type "diagram" -}}
+          {{- $source = printf "assets/diagrams/%s.%s.svg" .id $lang -}}
+          {{- $found = ne (resources.Get (printf "diagrams/%s.%s.svg" .id $lang)) nil -}}
+        {{- else if or (eq .type "snippet") (eq .type "callout") -}}
+          {{- $source = printf "assets/live-material/%s.%s.md" .id $lang -}}
+          {{- $found = ne (resources.Get (printf "live-material/%s.%s.md" .id $lang)) nil -}}
+        {{- else if eq .type "video" -}}
+          {{- $source = .url | default "" -}}
+          {{- $found = ne ($source | strings.TrimSpace) "" -}}
+        {{- end -}}
+        {{- $material = $material | append (dict "id" (.id | default "") "type" (.type | default "") "status" (.status | default "") "source" $source "source_found" $found) -}}
+      {{- end -}}
       {{- $entry = merge $entry (dict
             "kind" .Kind
             "role" $role
+            "material" $material
             "translationKey" .Params.translationKey
             "draft" .Draft
             "headings" $headings

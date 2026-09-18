@@ -45,8 +45,26 @@ case_manifeste_decrit_le_site_fixture() {
   cas=$(jq -c '.files[] | select(.file|test("case-09"))' "$fr")
   assert_eq '[{"level":2,"text":"Contexte"},{"level":2,"text":"Résultat"}]' "$(jq -c .headings <<< "$cas")" \
     "les titres sortent du Markdown brut, avec leur niveau"
-  assert_eq '["diagram-fixture"]' "$(jq -c .placed <<< "$cas")" "l'identifiant placé est extrait"
+  assert_eq '["diagram-fixture","snippet-fixture","callout-fixture","video-fixture"]' "$(jq -c .placed <<< "$cas")" \
+    "les identifiants placés sont extraits, dans l'ordre du texte"
   assert_eq "true" "$(jq -r .todo <<< "$cas")" "un [TODO du front matter est vu"
+  # Les trois types résolus par le gabarit, chacun selon AD-6 : fichier de assets/ pour un schéma ou un
+  # extrait, url du front matter pour une vidéo (constat de la revue de la PR n° 40).
+  assert_eq "assets/diagrams/diagram-fixture.fr.svg" \
+    "$(jq -r '.material[] | select(.id=="diagram-fixture") | .source' <<< "$cas")" "la source d'un schéma suit la langue"
+  assert_eq "assets/live-material/snippet-fixture.fr.md" \
+    "$(jq -r '.material[] | select(.id=="snippet-fixture") | .source' <<< "$cas")" "celle d'un extrait aussi"
+  assert_eq "assets/live-material/callout-fixture.fr.md" \
+    "$(jq -r '.material[] | select(.id=="callout-fixture") | .source' <<< "$cas")" \
+    "un encart suit la même règle qu'un extrait (constat de la revue de la PR n° 40)"
+  assert_eq "https://exemple.invalide/video" \
+    "$(jq -r '.material[] | select(.id=="video-fixture") | .source' <<< "$cas")" "une vidéo a son url pour source"
+  assert_eq "false" "$(jq -r '.material[] | select(.id=="diagram-fixture") | .source_found' <<< "$cas")" \
+    "le SVG du schéma n'existe pas dans la fixture"
+  assert_eq "false" "$(jq -r '.material[] | select(.id=="snippet-fixture") | .source_found' <<< "$cas")" \
+    "le fichier de l'extrait non plus"
+  assert_eq "true" "$(jq -r '.material[] | select(.id=="video-fixture") | .source_found' <<< "$cas")" \
+    "la vidéo, dont l'url est renseignée, a sa source"
   assert_eq "true" "$(jq -r .draft <<< "$cas")" "le brouillon est rapporté"
   assert_eq "case-09" "$(jq -r .translationKey <<< "$cas")" "le translationKey est rapporté"
   assert_eq "position-fixture" "$(jq -r .front_matter.position <<< "$cas")" "le front matter garde ses valeurs"
