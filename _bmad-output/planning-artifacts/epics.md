@@ -1725,21 +1725,25 @@ afin de ne jamais tomber sur une page absente.
 
 **Critères d'acceptation :**
 
-**Étant donné** le build de production de contrôle
+**Étant donné** le build de production de contrôle (AD-10 : les contrôles HTML ne portent pas sur le rendu de travail, qui contient des brouillons volontairement non liés)
 **Quand** `scripts/checks/links.sh` s'exécute
-**Alors** il signale tout lien interne vers un fichier absent et toute ancre absente, dont `#case-NN`, `#<translationKey>-<rubrique>` et `#position-<id>`.
+**Alors** il signale tout lien interne vers un fichier absent, en donnant la cible résolue, et tout fragment qui ne correspond à aucun identifiant de la page visée — notamment `#case-NN`, `#<translationKey>-<rubrique>` et `#position-<id>`, sans qu'aucune de ces formes soit écrite dans le script
+**Et** les liens externes, `mailto:` et `tel:` sortent du périmètre.
 
-**Étant donné** une page de `public/` qu'aucun lien ne rend atteignable depuis l'accueil de sa langue
+**Étant donné** une page de `public/` qu'aucun chemin de liens ne relie à l'accueil de sa langue
 **Quand** le contrôle s'exécute
-**Alors** il la signale, sauf les 404.
+**Alors** il la signale, y compris si elle est liée depuis une autre page elle-même orpheline (parcours en largeur depuis les accueils, jamais un simple comptage de liens entrants)
+**Et** les deux pages 404 en sont exemptées : nginx les sert sur une URL inconnue (AD-13).
 
-**Étant donné** les liens de CV et le lien du dépôt
+**Étant donné** les liens conditionnels
 **Quand** le contrôle s'exécute
-**Alors** il signale des liens de CV présents alors que les deux PDF ne sont pas publiés (ou absents alors qu'ils le sont), et un lien du dépôt présent alors que `params.source_url` est vide (ou l'inverse).
+**Alors** il signale un lien de CV alors que les deux PDF ne sont pas publiés, l'absence de lien alors qu'ils le sont (AD-21), et une `params.source_url` renseignée vers laquelle aucune page ne mène.
 
 **Étant donné** le pilote et le `_index` Chiliz en brouillon (AD-4, D-3)
-**Quand** le contrôle s'exécute sur le build de production
-**Alors** aucune page Chiliz n'existe dans `public/`, et C12 passe ; si le constat de la story 2.5 a échoué, C12 exclut les pages de groupe sans section (repli d'AD-4).
+**Quand** le contrôle s'exécute
+**Alors** aucune page Chiliz n'existe dans `public/` et C12 passe. Le repli d'AD-4 n'a pas lieu d'être : le constat de la story 2.5 a tenu.
+
+- [ ] C12 juge la **cohérence des liens** de CV ; C21 jugera les **fichiers** PDF. Les deux ne se recouvrent pas.
 
 ### Story 3.11 : Page weight and element budget
 
