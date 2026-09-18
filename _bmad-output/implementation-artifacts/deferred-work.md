@@ -33,3 +33,8 @@ Constats de revue reportés à plus tard, au format de `bmad-build`. Chaque entr
 - source_spec: `_bmad-output/implementation-artifacts/epic-2-retro-2026-09-17.md`
   summary: `layouts/_shortcodes/live-material.html:51` ne lit qu'un `viewBox` à coordonnées positives séparées par des espaces : un SVG dont le `viewBox` extérieur a une origine négative ou des virgules fait échouer le build (message explicite, jamais en silence).
   evidence: Constat R3 de la revue du diff de l'epic 2, non reproduit avec D2 0.9.0 (le `viewBox` extérieur vaut `0 0 …` sur un rendu ELK et sur les quatre SVG de `experiment/d2-bilingue`). À revoir par la première story qui publie un schéma « prêt ».
+
+- source_spec: `_bmad-output/implementation-artifacts/3-1-checks-json-manifest-emitted-by-hugo.md`
+  summary: Aucun test n'exerce `layouts/home.checks.json` : les cas hors ligne ne couvrent que la découverte des manifestes (`checks_manifests`), pas les champs qu'ils contiennent.
+  evidence: Angle verification-gap de la revue du code de la PR n° 35 (`82c225e`). À traiter par la story 3.2, premier consommateur du manifeste : un site fixture construit avec le Hugo épinglé, puis les champs vérifiés à `jq`.
+

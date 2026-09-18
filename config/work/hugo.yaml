@@ -1,0 +1,13 @@
+# Rendu de travail seulement (AD-5). Le manifeste des contrôles (AD-10) est émis ici et **jamais** en
+# production : déclarer ce format dans config/_default/ le publierait dans public/.
+outputFormats:
+  checks:
+    mediaType: application/json
+    baseName: checks
+    isPlainText: true
+    notAlternative: true
+
+outputs:
+  home:
+    - html
+    - checks

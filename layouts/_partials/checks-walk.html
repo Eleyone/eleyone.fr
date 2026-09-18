@@ -1,0 +1,20 @@
+{{/*
+  Liste récursive des fichiers Markdown d'un dossier de contenu (AD-10).
+
+  site.Pages ne suffit pas : un fichier en « list: never » (content/cases/_index, content/career/_index)
+  n'appartient à aucune collection de pages, et le manifeste doit lister **tous** les fichiers de
+  content/. Le parcours part donc du disque ; chaque fichier est ensuite résolu par site.GetPage.
+  site.AllPages, qui aurait tout donné, est déprécié depuis Hugo 0.156 et refusé par --panicOnWarning.
+
+  Paramètre : « dir », chemin du dossier. Retour : les chemins des fichiers .md, dossiers compris.
+*/}}
+{{- $files := slice -}}
+{{- range os.ReadDir .dir -}}
+  {{- $path := path.Join $.dir .Name -}}
+  {{- if .IsDir -}}
+    {{- $files = $files | append (partial "checks-walk.html" (dict "dir" $path)) -}}
+  {{- else if strings.HasSuffix .Name ".md" -}}
+    {{- $files = $files | append $path -}}
+  {{- end -}}
+{{- end -}}
+{{- return $files -}}

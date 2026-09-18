@@ -1378,17 +1378,33 @@ afin que les contrôles lisent exactement ce que Hugo voit.
 
 **Critères d'acceptation :**
 
-**Étant donné** `config/work/hugo.yaml`
+**Étant donné** le format de sortie `checks` et `outputs.home` déclarés dans `config/work/hugo.yaml`, et nulle part ailleurs
 **Quand** on lance `scripts/build.sh work`
-**Alors** `build/work/checks.json` et `build/work/en/checks.json` sont du JSON valide
+**Alors** `build/work/checks.json` et `build/work/en/checks.json` sont du JSON valide (`jq`), produits par un seul `jsonify` du gabarit
 **Et** aucun `checks.json` n'existe dans `public/` après le build de production.
 
-**Étant donné** le manifeste
+**Étant donné** le manifeste d'une langue
 **Quand** on le lit
-**Alors** il liste tous les fichiers de `content/` avec `kind`, rôle (`home`, `case`, `group`, `position`, `education`, `page`), fichier, langue, `translationKey`, brouillon, les clés de front matter utiles aux contrôles (dont `position`, `order`, `track`, `period`, `live_material`, `stack`, `summary`), identifiants placés, titres H2 du Markdown brut, présence de `[TODO`, et le vocabulaire de `data/stack.yaml`.
+**Alors** sa racine porte `lang`, le vocabulaire de `data/stack.yaml` une seule fois (`stack`, depuis `hugo.Data`), et `files`, qui liste **tous** les fichiers Markdown de `content/` pour cette langue — y compris ceux qu'aucune collection de pages ne contient (`list: never`), atteints en parcourant `content/` puis résolus par `site.GetPage`
+**Et** chaque entrée porte : `file` (chemin relatif à `content/`, séparateurs `/`), `lang`, `kind` (`home`, `section`, `page`), `role` (`home`, `group`, `case`, `position`, `education`, `section`, `page`), `translationKey`, `draft`, `front_matter`, `h2`, `placed` et `todo`.
+
+**Étant donné** la règle de rôle
+**Quand** le manifeste est écrit
+**Alors** `home` vient du `kind` ; `group` est le `_index` d'un dossier de groupe sous `cases/` ; `case`, `position` et `education` sont les pages de `cases/`, `career/` et `education/` ; `section` est tout autre `_index` technique (`cases/_index`, `career/_index`) — valeur ajoutée à AD-10 le 18/09/2026 ; `page` est le reste.
+
+**Étant donné** un fichier de `content/`
+**Quand** son entrée est écrite
+**Alors** `front_matter` est le front matter **tel qu'écrit dans le fichier** (relu par `os.ReadFile` et `transform.Unmarshal`, casse des clés gardée, sans ce que la cascade ou Hugo ajoutent), une clé absente du fichier restant absente de l'objet
+**Et** `h2` liste les titres de niveau 2 du Markdown brut dans l'ordre, `placed` les identifiants des appels `{{< live-material id="…" >}}` (`findRESubmatch` sur `.RawContent`), et `todo` dit si `[TODO` apparaît dans le fichier, front matter compris.
+
+**Étant donné** un fichier de `content/` sans suffixe de langue
+**Quand** les manifestes sont écrits
+**Alors** il figure dans les deux, avec `lang` vide et une clé `error` qui nomme l'écart (décidé par Arnaud le 18/09/2026) : aucun fichier de `content/` n'échappe aux contrôles.
 
 - [ ] La forme n'est définie que dans `layouts/home.checks.json`, documentée en tête de `scripts/checks/lib.sh`.
 - [ ] Entrée du pilote : six titres H2 tels qu'écrits, trois identifiants placés, `position-chiliz`, `draft: true`.
+- [ ] Entrées de `cases/_index` et `career/_index` présentes, en rôle `section`.
+- [ ] Les deux manifestes listent le même nombre de fichiers, un par langue.
 
 ### Story 3.2 : Check script entry point and draft rule
 

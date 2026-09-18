@@ -1,0 +1,67 @@
+{{- /*
+  Manifeste des contrôles (AD-10), une fois par langue, en rendu de travail seulement. Seule
+  définition de la forme du manifeste ; scripts/checks/lib.sh la documente pour ceux qui la lisent.
+
+  Racine : « lang », « stack » (vocabulaire de data/stack.yaml, une seule fois) et « files ».
+  Une entrée par fichier Markdown de content/ pour cette langue, plus les fichiers sans suffixe de
+  langue, qui sortent dans les deux manifestes avec « error » : aucun fichier n'échappe aux contrôles.
+
+  Le front matter est relu depuis le fichier plutôt que pris dans .Params : .Params met les clés en
+  minuscules et y mêle ce que la cascade et Hugo ajoutent, alors que les contrôles jugent le fichier
+  tel qu'il est écrit. Tout sort d'un seul jsonify : aucun JSON assemblé à la main.
+*/ -}}
+{{- $lang := site.Language.Lang -}}
+{{- $langs := slice -}}
+{{- range site.Home.AllTranslations }}{{ $langs = $langs | append .Site.Language.Lang }}{{ end -}}
+{{- $out := slice -}}
+{{- range partial "checks-walk.html" (dict "dir" "content") -}}
+  {{- $rel := strings.TrimPrefix "content/" . -}}
+  {{- $suffix := "" -}}
+  {{- range $langs }}{{ if strings.HasSuffix $rel (printf ".%s.md" .) }}{{ $suffix = . }}{{ end }}{{ end -}}
+  {{- if eq $suffix "" -}}
+    {{- $out = $out | append (dict "file" $rel "lang" "" "error" "suffixe de langue absent : un fichier de content/ s'écrit <nom>.fr.md et <nom>.en.md") -}}
+  {{- else if eq $suffix $lang -}}
+    {{- $raw := os.ReadFile . -}}
+    {{- $match := findRESubmatch `(?s)\A---\r?\n(.*?)\r?\n---` $raw 1 -}}
+    {{- $page := site.GetPage (strings.TrimSuffix (printf ".%s.md" $lang) $rel) -}}
+    {{- $entry := dict "file" $rel "lang" $lang "todo" (strings.Contains $raw "[TODO") -}}
+    {{- if $match -}}
+      {{- $entry = merge $entry (dict "front_matter" (transform.Unmarshal (index (index $match 0) 1))) -}}
+    {{- else -}}
+      {{/* Sans front matter, Hugo rend quand même la page, avec un titre déduit du nom de fichier :
+           le manifeste le dit, plutôt que de laisser un « front_matter » nul que chaque contrôle
+           devrait interpréter (constat de la revue de la PR n° 35). */}}
+      {{- $entry = merge $entry (dict "error" "front matter absent : un fichier de content/ commence par un bloc --- … ---") -}}
+    {{- end -}}
+    {{- with $page -}}
+      {{- $dir := path.Dir $rel -}}
+      {{- $base := path.Base $rel -}}
+      {{- $index := strings.HasPrefix $base "_index." -}}
+      {{- $role := "page" -}}
+      {{- if .IsHome -}}
+        {{- $role = "home" -}}
+      {{- else if $index -}}
+        {{- $role = cond (and (strings.HasPrefix $dir "cases/") (ne $dir "cases")) "group" "section" -}}
+      {{- else if strings.HasPrefix $dir "cases" -}}
+        {{- $role = "case" -}}
+      {{- else if strings.HasPrefix $dir "career" -}}
+        {{- $role = "position" -}}
+      {{- else if strings.HasPrefix $dir "education" -}}
+        {{- $role = "education" -}}
+      {{- end -}}
+      {{- $placed := slice -}}
+      {{- range findRESubmatch `\{\{<\s*live-material\s+id="([^"]+)"\s*>\}\}` .RawContent }}{{ $placed = $placed | append (index . 1) }}{{ end -}}
+      {{- $entry = merge $entry (dict
+            "kind" .Kind
+            "role" $role
+            "translationKey" .Params.translationKey
+            "draft" .Draft
+            "h2" (findRE `(?m)^## .+$` .RawContent)
+            "placed" $placed) -}}
+    {{- else -}}
+      {{- $entry = merge $entry (dict "error" "page introuvable pour ce fichier") -}}
+    {{- end -}}
+    {{- $out = $out | append $entry -}}
+  {{- end -}}
+{{- end -}}
+{{- dict "lang" $lang "stack" hugo.Data.stack.technologies "files" $out | jsonify (dict "indent" "  ") -}}
