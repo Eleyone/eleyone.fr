@@ -38,7 +38,13 @@ Cinq commandes, avec leur sortie attendue. Tant qu'une échoue, le poste n'est p
 | `scripts/build.sh production` puis `scripts/build.sh work` | aucun avertissement ; la production ne contient pas les brouillons |
 | `scripts/env.sh sh -c 'env \| grep -c "^HUGO_LEGAL_"; env \| grep -c "^GITEA_" \|\| true'` | `7` puis `0` — les valeurs légales passent, les jetons non |
 
-Un appel à la forge (`scripts/verify-and-merge-pr.sh <PR>` sur une PR ouverte) confirme en plus que le jeton est bon.
+Une sixième vérification touche la forge, et n'a besoin d'aucune PR ouverte : lancer l'audit sur une PR **déjà fusionnée** appelle l'API sans rien modifier.
+
+| Commande | Sortie attendue |
+| --- | --- |
+| `scripts/verify-and-merge-pr.sh <numéro d'une PR fusionnée>` | `bloque  PR fusionnable   PR déjà fusionnée : rien à fusionner.` |
+
+Ce message prouve que `GITEA_URL`, `GITEA_USER` et `GITEA_TOKEN` sont bons : sans eux, le script s'arrête plus tôt, sur « la forge refuse le jeton ou ne répond pas (HTTP …) » ou sur « le jeton n'appartient pas au compte GITEA_USER ». Sans cette vérification, une adresse erronée dans un `.env` recréé n'apparaît qu'à l'ouverture de la première PR (constaté le 17/09/2026 ; action 5 de la rétrospective de l'epic 2).
 
 ## Pièges connus
 
