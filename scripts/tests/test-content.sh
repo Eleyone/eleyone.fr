@@ -325,6 +325,173 @@ case_content_c18_fichier_env_absent() {
   assert_contains ".env.example: C18 : fichier absent" "$err" "le signalement le dit"
 }
 
+case_content_c19_cas_publie_sans_position() {
+  rendu '.files[2] |= (.draft = false | .todo = false | del(.front_matter.position))' \
+        '.files[2] |= (.draft = false | .todo = false | del(.front_matter.position))'
+  contenu
+  assert_eq 1 "$rc" "un cas publié sans position fait échouer"
+  assert_contains "C19 : cas publié sans clé position (AD-18)" "$err" "le signalement le dit"
+}
+
+case_content_c19_poste_en_brouillon() {
+  rendu '.files[2] |= (.draft = false | .todo = false)' '.files[2] |= (.draft = false | .todo = false)'
+  contenu
+  assert_eq 1 "$rc" "un cas publié rattaché à un poste en brouillon fait échouer"
+  assert_contains "aucun poste publié de cette langue ne porte ce translationKey" "$err" "le signalement le dit"
+  rendu '.files[2] |= (.draft = false | .todo = false) | .files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025 – 2026")' \
+        '.files[2] |= (.draft = false | .todo = false) | .files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025 – 2026")'
+  contenu
+  assert_eq 0 "$rc" "avec son poste publié, le cas passe (messages : $err)"
+}
+
+case_content_c19_translation_key_du_poste() {
+  rendu '.files[1].translationKey = "position-autre"'
+  contenu
+  assert_eq 1 "$rc" "un translationKey qui ne suit pas le nom de fichier fait échouer"
+  assert_contains 'le nom de fichier dit « position-essai » (AD-18)' "$err" "le signalement donne le nom attendu"
+  rendu '.files[1].translationKey = "essai" | .files[1].file = "career/essai.fr.md"' \
+        '.files[1].translationKey = "essai" | .files[1].file = "career/essai.en.md"'
+  contenu
+  assert_eq 1 "$rc" "un translationKey sans le préfixe position- fait échouer"
+  assert_contains 'préfixe « position- » attendu (AD-18)' "$err" "le signalement donne le préfixe"
+}
+
+case_content_c19_valeurs_du_poste() {
+  rendu '.files[1].front_matter.track = "annexe"'
+  contenu
+  assert_eq 1 "$rc" "un track hors valeurs fait échouer"
+  assert_contains 'C19 : track « annexe » ; attendu main ou parallel' "$err" "le signalement liste les valeurs"
+  # AD-10 et le critère de la story : un brouillon peut porter la valeur en [TODO (constat de la
+  # deuxième revue de la PR n° 42, où track faisait exception à sa propre règle).
+  rendu '.files[1].front_matter.track = "[TODO: track]"' '.files[1].front_matter.track = "[TODO: track]"'
+  contenu
+  assert_eq 0 "$rc" "un track en [TODO passe dans un brouillon (messages : $err)"
+  rendu '.files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025 – 2026" | .front_matter.track = "[TODO: track]")' \
+        '.files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025 – 2026" | .front_matter.track = "[TODO: track]")'
+  contenu
+  assert_eq 1 "$rc" "le même track en [TODO ne passe pas dans un poste publié"
+  rendu 'del(.files[1].front_matter.track)' 'del(.files[1].front_matter.track)'
+  contenu
+  assert_eq 1 "$rc" "un track absent fait échouer"
+  assert_contains "C19 : track absent ou vide" "$err" "le signalement distingue l'absence d'une valeur fausse"
+  rendu 'del(.files[1].front_matter.setup)' 'del(.files[1].front_matter.setup)'
+  contenu
+  assert_eq 1 "$rc" "un poste sans location ni setup fait échouer"
+  assert_contains "ni location ni setup" "$err" "le signalement renvoie à FR-2"
+  rendu 'del(.files[1].front_matter.setup) | .files[1].front_matter.location = "Full remote"' \
+        'del(.files[1].front_matter.setup) | .files[1].front_matter.location = "Full remote"'
+  contenu
+  assert_eq 0 "$rc" "une location seule suffit (messages : $err)"
+}
+
+case_content_c19_order_en_double() {
+  rendu '.files += [(.files[1] | .file = "career/position-autre.fr.md" | .translationKey = "position-autre")]' \
+        '.files += [(.files[1] | .file = "career/position-autre.en.md" | .translationKey = "position-autre")]'
+  contenu
+  assert_eq 1 "$rc" "deux postes du même track au même order font échouer, brouillons compris"
+  assert_contains 'C19 : order 1 déjà pris dans le track « main »' "$err" "le signalement nomme les deux fichiers"
+}
+
+case_content_c19_formation() {
+  rendu '.files += [{"file": "education/education-essai.fr.md", "lang": "fr", "kind": "page", "role": "education", "translationKey": "education-essai", "draft": false, "front_matter": {"translationKey": "education-essai", "kind": "diplome", "order": 1}, "headings": [], "placed": [], "material": [], "todo": false}]' \
+        '.files += [{"file": "education/education-essai.en.md", "lang": "en", "kind": "page", "role": "education", "translationKey": "education-essai", "draft": false, "front_matter": {"translationKey": "education-essai", "kind": "diplome", "order": 1}, "headings": [], "placed": [], "material": [], "todo": false}]'
+  contenu
+  assert_eq 1 "$rc" "une formation sans title et au kind inconnu fait échouer"
+  assert_contains "C19 : title absent ou vide (AD-18)" "$err" "le title manquant est signalé"
+  assert_contains 'C19 : kind « diplome » ; attendu education, certification ou language' "$err" "le kind est signalé"
+}
+
+case_content_c19_cles_obligatoires_du_poste() {
+  # Constat de la revue de la PR n° 42 : ces trois clés n'avaient pas de cas de test.
+  local cle
+  for cle in company role period; do
+    rendu "del(.files[1].front_matter.$cle)" "del(.files[1].front_matter.$cle)"
+    contenu
+    assert_eq 1 "$rc" "un poste sans $cle fait échouer"
+    assert_contains "C19 : $cle absent ou vide (AD-18)" "$err" "le signalement nomme la clé $cle"
+  done
+}
+
+case_content_c19_order_absent() {
+  rendu 'del(.files[1].front_matter.order)' 'del(.files[1].front_matter.order)'
+  contenu
+  assert_eq 1 "$rc" "un poste sans order fait échouer"
+  assert_contains "C19 : clé order absente" "$err" "le signalement le dit, plutôt qu'un doublon sur null"
+}
+
+case_content_c19_formation_order_en_double() {
+  local entree='{"file": "education/education-a.LANG.md", "lang": "LANG", "kind": "page", "role": "education", "translationKey": "education-a", "draft": false, "front_matter": {"translationKey": "education-a", "title": "Titre", "kind": "certification", "order": 1}, "headings": [], "placed": [], "material": [], "todo": false}'
+  local fr=${entree//LANG/fr} en=${entree//LANG/en}
+  rendu ".files += [$fr, ($fr | .file = \"education/education-b.fr.md\" | .front_matter.translationKey = \"education-b\" | .translationKey = \"education-b\")]" \
+        ".files += [$en, ($en | .file = \"education/education-b.en.md\" | .front_matter.translationKey = \"education-b\" | .translationKey = \"education-b\")]"
+  contenu
+  assert_eq 1 "$rc" "deux formations du même kind au même order font échouer"
+  assert_contains 'C19 : order 1 déjà pris pour le kind « certification »' "$err" "le signalement nomme le kind"
+}
+
+case_content_c18_valeur_faite_despaces() {
+  # Report de la story 3.6 : « non vide » ne suffit pas, une valeur d'espaces ne renseigne rien.
+  rendu '.files[2] |= (.draft = false | .todo = false | .front_matter.context.role = "   ")' \
+        '.files[2] |= (.draft = false | .todo = false)'
+  contenu
+  assert_eq 1 "$rc" "une valeur faite uniquement d'espaces ne renseigne rien"
+  assert_contains "C18 : context.role absent ou vide (FR-6)" "$err" "le signalement est le même qu'une clé absente"
+}
+
+# Un brouillon tolère la valeur « [TODO » pour toute règle de forme (AD-10). Ce cas passe en revue
+# toutes les clés concernées d'un coup : les trois blocages successifs de la PR n° 42 venaient de
+# règles qui faisaient exception chacune à son tour.
+case_content_todo_tolere_partout_dans_un_brouillon() {
+  rendu '.files[1] |= (.front_matter.track = "[TODO: track]" | .front_matter.setup = "[TODO: cadre]")
+         | .files[2] |= (.front_matter.number = "[TODO: numéro]" | .front_matter.group = "[TODO: groupe]"
+                         | .front_matter.context.setup = "[TODO: cadre]"
+                         | .material[0].type = "[TODO: type]" | .material[0].status = "[TODO: statut]")' \
+        '.files[1] |= (.front_matter.track = "[TODO: track]" | .front_matter.setup = "[TODO: cadre]")
+         | .files[2] |= (.front_matter.number = "[TODO: numéro]" | .front_matter.group = "[TODO: groupe]"
+                         | .front_matter.context.setup = "[TODO: cadre]"
+                         | .material[0].type = "[TODO: type]" | .material[0].status = "[TODO: statut]")'
+  contenu
+  assert_eq 0 "$rc" "toutes ces clés en [TODO passent dans un brouillon (messages : $err)"
+}
+
+case_content_todo_refuse_dans_un_fichier_publie() {
+  rendu '.files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025 – 2026" | .front_matter.setup = "[TODO: cadre]")' \
+        '.files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025 – 2026" | .front_matter.setup = "[TODO: cadre]")'
+  contenu
+  assert_eq 1 "$rc" "la même valeur en [TODO est refusée dans un poste publié"
+  assert_contains "C19 : setup « [TODO: cadre] »" "$err" "le signalement montre la valeur refusée"
+}
+
+case_content_translation_key_jamais_en_todo() {
+  # La tolérance des brouillons porte sur les valeurs de contenu, jamais sur la clé d'identité :
+  # le translationKey est égal au nom du fichier et sert à la parité (décidé le 18/09/2026).
+  rendu '.files[1].translationKey = "[TODO: clé]" | .files[1].front_matter.translationKey = "[TODO: clé]"' \
+        '.files[1].translationKey = "[TODO: clé]" | .files[1].front_matter.translationKey = "[TODO: clé]"'
+  contenu
+  assert_eq 1 "$rc" "un translationKey en [TODO est refusé, même dans un brouillon"
+  assert_contains "le nom de fichier dit « position-essai » (AD-18)" "$err" "le signalement donne le nom attendu"
+}
+
+case_content_c19_kind_en_todo() {
+  local base='{"file": "education/education-a.LANG.md", "lang": "LANG", "kind": "page", "role": "education", "translationKey": "education-a", "draft": true, "front_matter": {"translationKey": "education-a", "title": "Titre", "kind": "[TODO: nature]", "order": 1}, "headings": [], "placed": [], "material": [], "todo": true}'
+  rendu ".files += [${base//LANG/fr}]" ".files += [${base//LANG/en}]"
+  contenu
+  assert_eq 0 "$rc" "un kind en [TODO passe dans un brouillon (messages : $err)"
+  rendu ".files += [$(sed 's/"draft": true/"draft": false/g' <<< "${base//LANG/fr}")]" \
+        ".files += [$(sed 's/"draft": true/"draft": false/g' <<< "${base//LANG/en}")]"
+  contenu
+  assert_eq 1 "$rc" "le même kind en [TODO est refusé une fois publié"
+}
+
+case_content_c19_order_en_todo_ne_collisionne_pas() {
+  rendu '.files += [(.files[1] | .file = "career/position-autre.fr.md" | .translationKey = "position-autre" | .front_matter.translationKey = "position-autre" | .front_matter.order = "[TODO: ordre]")]
+         | .files[1].front_matter.order = "[TODO: ordre]"' \
+        '.files += [(.files[1] | .file = "career/position-autre.en.md" | .translationKey = "position-autre" | .front_matter.translationKey = "position-autre" | .front_matter.order = "[TODO: ordre]")]
+         | .files[1].front_matter.order = "[TODO: ordre]"'
+  contenu
+  assert_eq 0 "$rc" "deux brouillons dont l'order est en [TODO ne se télescopent pas (messages : $err)"
+}
+
 case_content_entree_en_erreur_ignoree() {
   rendu '.files[2].error = "front matter absent"'
   contenu

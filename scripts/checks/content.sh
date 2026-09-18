@@ -7,6 +7,8 @@
 #   C5  aucun fichier publié ne contient « [TODO », où que ce soit dans le fichier
 #   C6  la stack d'un cas ne cite que des technologies de data/stack.yaml
 #   C16 « En bref » : au plus 3 phrases et 400 points de code par langue
+#   C19 parcours : rattachement d'un cas publié à un poste publié de sa langue, clés et valeurs
+#       des postes et des formations, unicité des ordres
 #   C18 règles du format : title ≤ 70, valeurs de setup, type et status, concordance du numéro
 #       de fichier avec number et le translationKey, encart complet (FR-6, décidé le 18/09/2026),
 #       et les noms de variables de .env.example et de ci/legal-placeholder.env (jamais leurs valeurs)
@@ -27,12 +29,33 @@ def rubric_names($rubrics; $lang): [$rubrics[] | .[$lang]] | map(select(. != nul
 
 def titles($entry): [($entry.headings // [])[] | select(.level == 2) | .text];
 
+# Une valeur faite uniquement d'espaces ne renseigne rien (constat reporté de la story 3.6).
+def blank: (. // "") | tostring | gsub("^\\s+|\\s+$"; "") | length == 0;
+def todo_value: (. // "") | tostring | gsub("^\\s+"; "") | startswith("[TODO");
+
 .lang as $lang
 | (.rubrics // []) as $rubrics
 | (rubric_names($rubrics; $lang)) as $known
 | (.stack // []) as $vocabulary
 | [.files[] | select(.error == null and .lang != "" and .role == "case")] as $cases
+| [.files[] | select(.error == null and .lang != "" and .role == "position")] as $positions
+| [.files[] | select(.error == null and .lang != "" and .role == "education")] as $educations
 | (
+  # C19 — un order par track pour les postes, un order par kind pour les formations ; brouillons
+  # compris (décidé le 18/09/2026) : un doublon se télescoperait à la publication
+  ( ($positions + $educations) | map(select((.front_matter.order == null) and ((.draft == true and ((.front_matter.order // "") | todo_value)) | not)))
+    | .[] | [.file, "C19 : clé order absente ; elle donne la place de l'entrée dans son track ou son kind"] )
+  ,
+  ( $positions | map(select((.front_matter.order != null) and (((.front_matter.order // "") | todo_value) | not)))
+    | group_by([.front_matter.track // "", .front_matter.order]) | .[] | select(length > 1)
+    | . as $doublon | .[]
+    | [.file, "C19 : order \(.front_matter.order) déjà pris dans le track « \(.front_matter.track // "absent") » par \($doublon | map(.file) | join(", "))"] )
+  ,
+  ( $educations | map(select((.front_matter.order != null) and (((.front_matter.order // "") | todo_value) | not)))
+    | group_by([.front_matter.kind // "", .front_matter.order]) | .[] | select(length > 1)
+    | . as $doublon | .[]
+    | [.file, "C19 : order \(.front_matter.order) déjà pris pour le kind « \(.front_matter.kind // "absent") » par \($doublon | map(.file) | join(", "))"] )
+  ,
   # C8 — deux cas d'un même groupe ne partagent pas un « order » (un manifeste, une langue)
   ( $cases | map(select(.front_matter.order == null))
     | .[] | [.file, "C8 : clé order absente ; elle donne la place du cas dans son groupe"] )
@@ -79,10 +102,12 @@ def titles($entry): [($entry.headings // [])[] | select(.level == 2) | .text];
         | [$f.file, "C7 : identifiant « \($id) » déclaré deux fois"])
        ,
        (($f.material // [])[] as $m
+        | select(($f.draft == true and (($m.id | todo_value) or ($m.type | todo_value))) | not)
         | select($m.type != "" and (($m.id | startswith($m.type + "-")) | not))
         | [$f.file, "C7 : identifiant « \($m.id) » non préfixé par son type : « \($m.type)- » attendu (AD-6)"])
        ,
        (($f.material // [])[] as $m
+        | select(($f.draft == true and ($m.type | todo_value)) | not)
         | select(["diagram", "video", "snippet", "callout"] | index($m.type) | not)
         | [$f.file, "C7 : élément « \($m.id) » de type « \($m.type) » ; attendu diagram, video, snippet ou callout (AD-6)"])
        ,
@@ -101,7 +126,8 @@ def titles($entry): [($entry.headings // [])[] | select(.level == 2) | .text];
      | ($f.file | split("/")) as $parts
      | (if ($parts | length) == 3 then $parts[1] else null end) as $folder
      | (
-         (select($folder != null and (($f.front_matter.group // "") != $folder))
+         (select(($f.draft == true and (($f.front_matter.group // "") | todo_value)) | not)
+          | select($folder != null and (($f.front_matter.group // "") != $folder))
           | [$f.file, "C8 : clé group « \($f.front_matter.group // "absente") » alors que le dossier est « \($folder) »"])
          ,
          (select($folder == null and (($f.front_matter.group // "") != ""))
@@ -141,6 +167,7 @@ def titles($entry): [($entry.headings // [])[] | select(.level == 2) | .text];
           | [$f.file, "C18 : setup « \($setup) » ; attendu employee, freelance, agency ou ton-pote-le-geek"])
          ,
          (($f.material // [])[] as $m
+          | select(($f.draft == true and ($m.status | todo_value)) | not)
           | select(["planned", "ready"] | index($m.status) | not)
           | [$f.file, "C18 : status « \($m.status) » de l'élément « \($m.id) » ; attendu planned ou ready"])
          ,
@@ -154,6 +181,7 @@ def titles($entry): [($entry.headings // [])[] | select(.level == 2) | .text];
          ,
          (($f.file | [match("case-(?<n>[0-9]+)-"; "g")] | if length == 0 then "" else .[0].captures[0].string end) as $from_name
           | select($from_name != "")
+          | select(($f.draft == true and ((($f.front_matter.number // "") | todo_value) or (($f.translationKey // "") | todo_value))) | not)
           | (
               (select($from_name != ($f.front_matter.number // ""))
                | [$f.file, "C18 : numéro « \($from_name) » dans le nom de fichier, number « \($f.front_matter.number // "absent") »"])
@@ -165,12 +193,78 @@ def titles($entry): [($entry.headings // [])[] | select(.level == 2) | .text];
          # encart « Contexte mission » complet sur un cas publié (FR-6, décidé le 18/09/2026)
          (["company", "role", "period"][] as $key
           | (($f.front_matter.context // {})[$key] // "") as $value
-          | select(($value | tostring | length) == 0 or (($f.draft != true) and ($value | tostring | startswith("[TODO"))))
-          | [$f.file, "C18 : context.\($key) \(if ($value | tostring | length) == 0 then "absent ou vide" else "encore en [TODO dans un cas publié" end) (FR-6)"])
+          | select(($value | blank) or (($f.draft != true) and ($value | todo_value)))
+          | [$f.file, "C18 : context.\($key) \(if ($value | blank) then "absent ou vide" else "encore en [TODO dans un cas publié" end) (FR-6)"])
          ,
          ((($f.front_matter.context // {}).stack // []) as $stack
           | select(($stack | length) == 0)
           | [$f.file, "C18 : context.stack absente ou vide (FR-6)"])
+       ))
+    ,
+    # C19 — parcours (AD-18). Les _index techniques portent le rôle « section » : ils n'entrent pas ici.
+    #
+    # Portée de la tolérance des brouillons (AD-10) : elle vaut pour les **valeurs de contenu** —
+    # cadre, période, société, rôle, titre, nature, ordre, type et statut d'un élément. Elle ne vaut
+    # pas pour les **clés d'identité** : le translationKey est égal au nom du fichier, et c'est par
+    # lui que la parité (C3) rapproche les deux langues. Un « [TODO » y serait un identifiant, pas un
+    # marqueur de travail en cours (décidé le 18/09/2026, en réponse à la quatrième revue de la PR n° 42).
+    # Un cas publié est rattaché à un poste publié **du même manifeste**, donc de sa langue.
+    (select($f.role == "case" and $f.draft != true)
+     | ($f.front_matter.position // "") as $position
+     | (
+         (select($position | blank)
+          | [$f.file, "C19 : cas publié sans clé position (AD-18)"])
+         ,
+         (select(($position | blank) | not)
+          | select([$positions[] | select(.draft != true) | .translationKey] | index($position) | not)
+          | [$f.file, "C19 : position « \($position) » : aucun poste publié de cette langue ne porte ce translationKey"])
+       ))
+    ,
+    (select($f.role == "position" or $f.role == "education")
+     | ($f.file | split("/") | last | split(".") | first) as $basename
+     | (if $f.role == "position" then "position-" else "education-" end) as $prefix
+     | (
+         (select(($f.translationKey // "") != $basename)
+          | [$f.file, "C19 : translationKey « \($f.translationKey // "absent") » ; le nom de fichier dit « \($basename) » (AD-18)"])
+         ,
+         (select((($f.translationKey // "") | startswith($prefix)) | not)
+          | [$f.file, "C19 : translationKey « \($f.translationKey // "absent") » ; préfixe « \($prefix) » attendu (AD-18)"])
+       ))
+    ,
+    (select($f.role == "position")
+     | (
+         (["company", "role", "period"][] as $key
+          | ($f.front_matter[$key] // "") as $value
+          | select(($value | blank) or (($f.draft != true) and ($value | todo_value)))
+          | [$f.file, "C19 : \($key) \(if ($value | blank) then "absent ou vide" else "encore en [TODO dans un poste publié" end) (AD-18)"])
+         ,
+         (($f.front_matter.track // "") as $track
+          | select(($f.draft == true and ($track | todo_value)) | not)
+          | select((["main", "parallel"] | index($track) | not))
+          | [$f.file, (if ($track | blank) then "C19 : track absent ou vide ; attendu main ou parallel"
+                       else "C19 : track « \($track) » ; attendu main ou parallel" end)])
+         ,
+         (($f.front_matter.setup // "") as $setup
+          | select(($setup | blank) | not)
+          | select(($f.draft == true and ($setup | todo_value)) | not)
+          | select(["employee", "freelance", "agency", "ton-pote-le-geek"] | index($setup) | not)
+          | [$f.file, "C19 : setup « \($setup) » ; attendu employee, freelance, agency ou ton-pote-le-geek"])
+         ,
+         (select((($f.front_matter.location // "") | blank) and (($f.front_matter.setup // "") | blank))
+          | [$f.file, "C19 : ni location ni setup ; l'un des deux au moins est exigé (FR-2)"])
+       ))
+    ,
+    (select($f.role == "education")
+     | (
+         (($f.front_matter.title // "") as $title
+          | select(($title | blank) or (($f.draft != true) and ($title | todo_value)))
+          | [$f.file, "C19 : title \(if ($title | blank) then "absent ou vide" else "encore en [TODO dans une entrée publiée" end) (AD-18)"])
+         ,
+         (($f.front_matter.kind // "") as $kind
+          | select(($f.draft == true and ($kind | todo_value)) | not)
+          | select(["education", "certification", "language"] | index($kind) | not)
+          | [$f.file, (if ($kind | blank) then "C19 : kind absent ou vide ; attendu education, certification ou language"
+                       else "C19 : kind « \($kind) » ; attendu education, certification ou language" end)])
        ))
   ))
 )
@@ -202,7 +296,7 @@ check_env_file ci/legal-placeholder.env "$legal_names" || env_rc=1
 check_env_file .env.example "$(printf '%s GITEA_TOKEN GITEA_URL GITEA_USER' "$legal_names" | tr ' ' '\n' | LC_ALL=C sort | tr '\n' ' ' | sed 's/ *$//')" || env_rc=1
 
 if [[ -z ${report//[$'\n']/} ]] && ((env_rc == 0)); then
-  printf '%s: rubriques, marqueurs [TODO, vocabulaire, matériel vivant, groupes, encarts et format vérifiés.\n' "$script_name"
+  printf '%s: rubriques, marqueurs [TODO, vocabulaire, matériel vivant, groupes, encarts, format et parcours vérifiés.\n' "$script_name"
   exit 0
 fi
 

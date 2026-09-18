@@ -47,7 +47,9 @@
         "setup": "employee",
         "track": "main",
         "order": 1,
-        "draft": true
+        "draft": true,
+        "role": "Backend developer",
+        "period": "[TODO: période]"
       },
       "placed": [],
       "todo": false,

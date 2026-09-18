@@ -1604,18 +1604,36 @@ afin de ne jamais trouver un cas orphelin ou un poste incohérent entre FR et EN
 
 **Critères d'acceptation :**
 
-**Étant donné** un cas publié sans `position`, ou dont `position` désigne un poste absent, en brouillon ou d'une autre langue
+**Étant donné** un cas publié sans clé `position`, ou dont la clé `position` ne désigne aucun poste publié **du même manifeste**, donc de sa langue
 **Quand** on lance les contrôles
-**Alors** C19 le signale.
+**Alors** C19 échoue en nommant le fichier et l'écart ; un cas en brouillon n'est pas concerné, et une valeur `[TODO` y est tolérée (AD-10).
 
-**Étant donné** un poste dont le `translationKey` diffère du nom de fichier, dont `order` se répète dans son `track`, dont `track` ou `setup` est hors valeurs, sans `location` ni `setup`, ou avec une `period` vide
+**Étant donné** un poste ou une entrée de formation dont le `translationKey` diffère du nom de fichier, ou ne commence pas par `position-` ou `education-` (AD-18)
 **Quand** on lance les contrôles
-**Alors** C19 le signale.
+**Alors** C19 échoue en donnant le nom attendu ou le préfixe attendu.
 
-**Étant donné** une entrée de `content/education/` dont `kind` est hors valeurs ou dont `order` se répète pour son `kind`, ou un poste ou une entrée publiés qui contiennent `[TODO`
+**Étant donné** un poste dont `track` sort de `main`, `parallel`, dont `setup` sort des quatre valeurs, qui n'a ni `location` ni `setup` (FR-2), ou dont `company`, `role` ou `period` est vide (ajout décidé par Arnaud le 18/09/2026 : AD-18 les exige, la ligne C19 est complétée)
 **Quand** on lance les contrôles
-**Alors** C19 le signale.
+**Alors** C19 échoue en nommant la clé ; un brouillon peut porter ces valeurs en `[TODO`, jamais les laisser vides.
 
+**Étant donné** une entrée de `content/education/` sans `title`, ou dont `kind` sort de `education`, `certification`, `language`
+**Quand** on lance les contrôles
+**Alors** C19 échoue en nommant la clé.
+
+**Étant donné** deux postes du même `track`, ou deux entrées de formation du même `kind`, qui portent le même `order`
+**Quand** on lance les contrôles
+**Alors** C19 échoue en nommant les deux fichiers ; **les brouillons comptent** (décidé par Arnaud le 18/09/2026), un doublon se télescoperait à la publication.
+
+**Étant donné** un `translationKey` en `[TODO`, même dans un brouillon
+**Quand** on lance les contrôles
+**Alors** C19 échoue : la tolérance des brouillons (AD-10) porte sur les **valeurs de contenu**, jamais sur les **clés d'identité** — le `translationKey` est égal au nom du fichier et sert à la parité C3 (décidé le 18/09/2026, en réponse à la quatrième revue de la PR n° 42).
+
+**Étant donné** une valeur d'encart ou de poste faite uniquement d'espaces
+**Quand** on lance les contrôles
+**Alors** elle est traitée comme absente (report de la story 3.6, fermé ici).
+
+- [ ] `[TODO` dans un fichier publié reste l'affaire de C5, qui couvre déjà tout `content/` : la ligne C19 de l'architecture perd ce doublon.
+- [ ] Les `_index` techniques, de rôle `section`, n'entrent dans aucune de ces règles.
 - [ ] Le pilote et `position-chiliz`, tous deux en brouillon avec `[TODO`, passent.
 
 ### Story 3.8 : Zero JavaScript, no third party, no TODO
