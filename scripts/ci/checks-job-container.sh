@@ -30,7 +30,11 @@ if [ "${1:-}" = "--steps" ]; then
   ENV_FILE=/nonexistent/.env
   # HOME appartient à root dans l'image ; git et hugo écriraient leur cache dans un dossier interdit.
   HOME=/tmp
-  export ENV_FILE HOME
+  # Le dépôt monté peut porter le .tools/ du poste, que scripts/build.sh place en tête du PATH : le
+  # job emploierait alors les binaires du poste au lieu de ceux qu'il vient d'installer dans l'image.
+  # TOOLS_LOCAL_DIR désigne donc un dossier inexistant (constat de la story 3.13).
+  TOOLS_LOCAL_DIR=/nonexistent/.tools
+  export ENV_FILE HOME TOOLS_LOCAL_DIR
   cd "$root"
   # Chaque étape s'annonce : le garde-fou et les tests ne disent rien quand tout va bien, et un
   # journal de CI muet ne permet pas de savoir ce qui a tourné.

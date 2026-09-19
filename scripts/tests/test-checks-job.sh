@@ -144,4 +144,13 @@ case_checks_job_garde_fou_clone_propre() {
   assert_eq 0 "$rc" "un historique propre passe (messages : $err)"
 }
 
+case_checks_job_conteneur_ignore_les_outils_du_poste() {
+  # Le dépôt monté peut porter le .tools/ du poste : le conteneur doit employer les binaires qu'il a
+  # installés lui-même (constat de la story 3.13).
+  local contenu
+  contenu=$(cat "$root/scripts/ci/checks-job-container.sh")
+  assert_contains "TOOLS_LOCAL_DIR=/nonexistent/.tools" "$contenu" "le conteneur écarte le .tools du dépôt monté"
+  assert_contains "export ENV_FILE HOME TOOLS_LOCAL_DIR" "$contenu" "et l'exporte, comme ENV_FILE"
+}
+
 run_case "$@"
