@@ -1821,20 +1821,21 @@ afin qu'aucun écart n'arrive sur `dev` ni sur `main`.
 **Dépendances :** 3.12
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, administration Gitea : runner x86_64 déclaré avec un label **en mode hôte**, dont l'utilisateur accède au démon Docker ; `[actions] WORKFLOW_DIRS` à sa valeur par défaut ; version du runner (2.0.0 au minimum).
+**Opération manuelle (Arnaud) :** **oui**, administration Gitea : runner x86_64 déclaré avec le label **`linux_amd64:host`**, en mode hôte (décidé le 19/09/2026), dont l'utilisateur accède au démon Docker **sans `sudo`** et sur la machine duquel `node` est installé, puisqu'en mode hôte c'est lui qui exécute les actions JavaScript ; `[actions] WORKFLOW_DIRS` à sa valeur par défaut ; version du runner (2.0.0 au minimum). Puis, **après la première exécution verte**, ajouter le statut du job `checks` aux contrôles obligatoires de `dev` et de `main` : Gitea ne propose un statut qu'une fois qu'il a été rapporté.
 
 **Critères d'acceptation :**
 
 **Étant donné** `.gitea/workflows/checks.yaml`
 **Quand** on le lit
-**Alors** il ne contient que les déclencheurs (`push` sur `dev` et sur `main`, `pull_request`, comme le fixe AD-11), le checkout avec `fetch-depth: 0` et l'appel de `checks-job.sh`, sur le label en mode hôte.
+**Alors** il ne contient que les déclencheurs (`push` sur `dev` et sur `main`, `pull_request`, comme le fixe AD-11), le checkout avec `fetch-depth: 0` et l'appel `bash scripts/ci/checks-job.sh`, dans un job nommé `checks` sur le label `linux_amd64:host`
+**Et** l'action de checkout est désignée par une **URL absolue épinglée par SHA** : la source et le commit sont fixés, et rien ne dépend du réglage `DEFAULT_ACTIONS_URL` de la forge. Le workflow de la CI publique de GitHub relève de la story 3.14.
 
-**Étant donné** une PR sur la forge
+**Étant donné** une PR de `feat/*` vers `dev`
 **Quand** elle est ouverte, puis fusionnée
-**Alors** chaque événement lance exactement un run ; une PR qui retire une rubrique EN du pilote échoue et nomme le fichier.
+**Alors** son ouverture et chacun de ses pushs lancent un run `pull_request` et un seul — le déclencheur `push` n'écoute que `dev` et `main` —, et sa fusion lance un run `push` sur `dev`
+**Et** une PR qui retire une rubrique EN du cas pilote 02 fait échouer le run, qui nomme le fichier.
 
-**Questions à poser avant de commencer :**
-- Nom exact du label en mode hôte, fixé dans WS-4 (l'architecture cite `linux_amd64:host` en exemple) ?
+- [ ] Le job ne fait rien d'autre qu'appeler le script : aucune logique de contrôle dans le YAML (AD-11).
 
 ### Story 3.14 : Public checks workflow on GitHub
 
