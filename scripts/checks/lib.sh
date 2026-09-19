@@ -4,6 +4,9 @@
 #                               code 2 si la racine ou les manifestes manquent
 #   checks_die <message>        message sur la sortie d'erreur, code 2 (anomalie)
 #   checks_report <fichier> <écart>   un signalement « <fichier>: <écart> » sur la sortie d'erreur
+#   checks_xpath <fichier> <requête>  résultat d'une requête XPath ; anomalie si le fichier est illisible
+#   checks_grep <arguments…>          grep qui distingue « rien trouvé » (1) d'une erreur (2 et plus)
+#   checks_find <arguments…>          find qui s'arrête sur une erreur de parcours
 #   checks_is_todo <valeur>     la valeur commence par « [TODO »
 #   checks_tolerated <brouillon> <valeur>
 #                               la valeur est tolérée : fichier en brouillon **et** valeur « [TODO »
@@ -64,6 +67,32 @@ checks_manifests() { # $1 = racine du rendu de travail (par défaut build/work)
     || checks_die "lecture de $root impossible."
   [[ -n $found ]] || checks_die "aucun manifeste dans $root : le format checks n'a pas été émis."
   printf '%s\n' "$found"
+}
+
+# Enveloppes des trois outils que les contrôles lancent en boucle. Chacune distingue « rien trouvé »
+# d'une vraie erreur, plutôt que de tout avaler par « || true » (constat de la revue de la PR n° 47).
+#
+#   xmllint : 0 résultat, 10 aucun nœud ne correspond, autre chose = fichier illisible ou fatal
+#   grep    : 0 trouvé, 1 rien trouvé, 2 ou plus = erreur
+#   find    : 0 seulement ; tout le reste est une anomalie
+checks_xpath() { # $1 = fichier, $2 = requête XPath ; la sortie d'erreur de libxml2 est écartée (AD-10)
+  local rc=0
+  xmllint --html --xpath "$2" "$1" 2> /dev/null || rc=$?
+  ((rc == 0 || rc == 10)) || checks_die "lecture XPath impossible sur $1 (xmllint, code $rc)."
+  return 0
+}
+
+checks_grep() { # arguments de grep ; rend 0 si trouvé, 1 sinon, s'arrête sur une erreur
+  local rc=0
+  grep "$@" || rc=$?
+  ((rc <= 1)) || checks_die "recherche impossible (grep, code $rc) : ${*: -1}"
+  return "$rc"
+}
+
+checks_find() { # arguments de find ; s'arrête sur une erreur
+  local rc=0
+  find "$@" || rc=$?
+  ((rc == 0)) || checks_die "parcours impossible (find, code $rc) : $1"
 }
 
 checks_report() { # $1 = fichier, $2 = écart ; format commun à tous les contrôles

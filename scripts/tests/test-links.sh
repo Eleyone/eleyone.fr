@@ -134,6 +134,15 @@ case_links_depot_sans_lien() {
   assert_eq 0 "$rc" "avec le lien, le contrôle passe (messages : $err)"
 }
 
+case_links_page_illisible_est_une_anomalie() {
+  site; config
+  chmod 000 "$work/public/cas/chiliz/index.html"
+  liens
+  chmod 644 "$work/public/cas/chiliz/index.html"
+  assert_eq 2 "$rc" "une page illisible est une anomalie"
+  assert_contains "lecture XPath impossible" "$err" "le message nomme le fichier"
+}
+
 case_links_sans_build() {
   run env CHECK_PUBLIC_ROOT="$work/absent" bash "$root/scripts/checks/links.sh"
   assert_eq 2 "$rc" "une production absente est une anomalie"

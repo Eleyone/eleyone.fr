@@ -1759,13 +1759,28 @@ afin qu'elle s'affiche vite.
 
 **Critères d'acceptation :**
 
-**Étant donné** le build de production de contrôle, en octets non compressés
+**Étant donné** le build de production de contrôle, mesuré en octets non compressés, **1 Ko valant 1 000 octets** (décidé par Arnaud le 19/09/2026 : l'unité des navigateurs et de PageSpeed, celle de la mesure de mise en ligne)
 **Quand** `scripts/checks/budget.sh` s'exécute
-**Alors** il signale tout dépassement d'AD-8 : HTML > 50 Ko, CSS totale > 20 Ko, SVG > 60 Ko, page complète (HTML, CSS, images référencées, photo comprise) > 200 Ko, plus de 10 ressources, un fichier JavaScript ou de police, plus de 800 éléments
-**Et** les PDF, simples liens, ne comptent pas.
+**Alors** il signale, en donnant la mesure et le plafond :
 
-**Questions à poser avant de commencer :**
-- 1 Ko = 1 000 ou 1 024 octets ? Les variantes 1x et 2x d'une même photo comptent-elles toutes deux dans la page ?
+- un HTML de page de plus de 50 000 octets ;
+- une CSS de plus de 20 000 octets pour tout le site, fichiers additionnés ;
+- un SVG de plus de 60 000 octets ;
+- une page complète — le document, la CSS et les médias qu'il charge — de plus de 200 000 octets ;
+- plus de 10 ressources chargées par une page, le document lui-même n'en étant pas une ;
+- plus de 800 éléments HTML dans une page ;
+- tout fichier JavaScript ou de police dans la sortie, référencé ou non ;
+- toute ressource chargée mais absente de la sortie.
+
+**Étant donné** une image déclinée en 1x et 2x
+**Quand** le poids de la page est calculé
+**Alors** elle ne compte qu'une fois, par sa **variante la plus lourde** (décidé par Arnaud le 19/09/2026) : un navigateur n'en télécharge qu'une, et le budget doit refléter le pire cas réel. Chaque variante reste comptée comme ressource.
+
+**Étant donné** un PDF de CV lié depuis une page
+**Quand** le contrôle s'exécute
+**Alors** il ne pèse pas dans le budget : c'est un lien, pas une ressource chargée (AD-21).
+
+- [ ] `check.sh` découvre le contrôle sans être modifié (story 3.2).
 
 ### Story 3.12 : Shared checks job
 

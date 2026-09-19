@@ -66,15 +66,21 @@ fi
 
 # Résultat d'une requête XPath sur un fichier HTML, sans la sortie d'erreur (AD-10 : le parseur de
 # libxml2 signale les balises HTML5 comme invalides).
-xpath() { # $1 = fichier, $2 = requête
-  xmllint --html --xpath "$2" "$1" 2> /dev/null || true
+xpath() { # $1 = fichier, $2 = requête ; enveloppe commune : « rien trouvé » n'est pas une erreur
+  checks_xpath "$1" "$2"
 }
 
 # Valeurs d'un attribut, une par ligne. La version de libxml2 du poste en rend déjà une par ligne,
 # mais d'autres les concatènent : la découpe ne dépend donc pas de la version (constat de la revue
 # de la PR n° 43, rejoué : le défaut n'existait pas ici, la parade le rend impossible partout).
 xpath_attributs() { # $1 = fichier, $2 = requête, $3 = nom de l'attribut
-  xpath "$1" "$2" | grep -oE "$3=\"[^\"]*\"" | sed -E "s/^$3=\"(.*)\"$/\1/" || true
+  # Le XPath est lu **avant** le filtrage : un « exit » dans un élément de pipeline ne quitte que son
+  # sous-shell, et un « || true » final transformerait l'anomalie en succès (constat de la troisième
+  # revue de la PR n° 47). Le code de checks_xpath est donc propagé tel quel.
+  local brut rc=0
+  brut=$(checks_xpath "$1" "$2") || rc=$?
+  ((rc == 0)) || return "$rc"
+  { checks_grep -oE "$3=\"[^\"]*\"" <<< "$brut" || true; } | sed -E "s/^$3=\"(.*)\"$/\1/"
 }
 
 # Les accueils : index.html à la racine de chaque langue, jamais celui d'un sous-dossier.
@@ -82,17 +88,19 @@ est_accueil() { # $1 = chemin relatif à $public
   [[ $1 == index.html || $1 =~ ^[a-z]{2}/index\.html$ ]]
 }
 
+liste_9=$(checks_find "$public" -type f -name '*.html' | LC_ALL=C sort) || exit $?
 while IFS= read -r page; do
   relative=${page#"$public"/}
 
   # --- scripts : un seul type toléré, jamais de src (C10, AD-20) -------------------------------
   # La valeur est extraite, jamais découpée à l'indice : la sérialisation de xmllint varie d'une
   # version à l'autre (constat de la quatrième revue de la PR n° 43).
+  liste_1=$(xpath_attributs "$page" '//script[@type]/@type' type) || exit $?
   while IFS= read -r type; do
     [[ -n $type ]] || continue
     [[ $type == "application/ld+json" ]] \
       || signaler "$relative" "C10 : balise <script> de type «$type» ; seul application/ld+json est toléré (AD-20)"
-  done < <(xpath_attributs "$page" '//script[@type]/@type' type)
+  done <<< "$liste_1"
   count_scripts=$(xpath "$page" 'count(//script)'); count_scripts=${count_scripts:-0}
   count_typed=$(xpath "$page" 'count(//script[@type])'); count_typed=${count_typed:-0}
   [[ ${count_scripts%%.*} == "${count_typed%%.*}" ]] \
@@ -111,24 +119,34 @@ while IFS= read -r page; do
   # --- ressources d'une autre origine : ce qui compte est l'attribut de chargement, pas la balise
   # Un lien <a href> vers un site tiers reste permis : il ne charge rien.
   for attribut in src poster data; do
+    liste_2=$(xpath_attributs "$page" "//*[@$attribut]/@$attribut" "$attribut") || exit $?
     while IFS= read -r valeur; do
       [[ -n $valeur ]] || continue
       origine_tierce "$valeur" || continue
       signaler "$relative" "C10 : ressource d'une autre origine dans un attribut $attribut : $valeur"
-    done < <(xpath_attributs "$page" "//*[@$attribut]/@$attribut" "$attribut")
+    done <<< "$liste_2"
   done
   # srcset porte plusieurs URL séparées par des virgules, chacune suivie d'un descripteur (« 2x ») :
   # la valeur entière est découpée, sinon une URL tierce placée après une URL locale passerait
   # (constat de la troisième revue de la PR n° 43).
+  liste_4=$(xpath_attributs "$page" "//*[@srcset]/@srcset" srcset) || exit $?
   while IFS= read -r valeur; do
+    liste_3=$(tr ',' '\n' <<< "$valeur" | awk 'NF { print $1 }') || exit $?
     while IFS= read -r candidat; do
       [[ -n $candidat ]] || continue
       origine_tierce "$candidat" || continue
       signaler "$relative" "C10 : ressource d'une autre origine dans un attribut srcset : $candidat"
-    done < <(tr ',' '\n' <<< "$valeur" | awk 'NF { print $1 }')
-  done < <(xpath_attributs "$page" "//*[@srcset]/@srcset" srcset)
+    done <<< "$liste_3"
+  done <<< "$liste_4"
   # Un rel peut en combiner plusieurs (« preload stylesheet ») : la comparaison porte sur le jeton,
   # jamais sur la chaîne entière (même constat).
+  liens_declares=$(xpath "$page" "//link[@rel][@href]" \
+            | { checks_grep -oE '<link[^>]*>' || true; } \
+            | while IFS= read -r balise; do
+                r=$({ checks_grep -oE 'rel="[^"]*"' <<< "$balise" || true; } | head -1); r=${r#rel=\"}; r=${r%\"}
+                h=$({ checks_grep -oE 'href="[^"]*"' <<< "$balise" || true; } | head -1); h=${h#href=\"}; h=${h%\"}
+                printf '%s\t%s\n' "$r" "$h"
+              done) || exit $?
   while IFS= read -r ligne; do
     [[ -n $ligne ]] || continue
     rel_value=${ligne%%$'\t'*}
@@ -140,13 +158,7 @@ while IFS= read -r page; do
       signaler "$relative" "C10 : ressource « $rel » chargée depuis une autre origine : $href"
       break
     done
-  done < <(xpath "$page" "//link[@rel][@href]" \
-            | { grep -oE '<link[^>]*>' || true; } \
-            | while IFS= read -r balise; do
-                r=$({ grep -oE 'rel="[^"]*"' <<< "$balise" || true; } | head -1); r=${r#rel=\"}; r=${r%\"}
-                h=$({ grep -oE 'href="[^"]*"' <<< "$balise" || true; } | head -1); h=${h#href=\"}; h=${h%\"}
-                printf '%s\t%s\n' "$r" "$h"
-              done)
+  done <<< "$liens_declares"
 
   # --- bloc JSON-LD : au plus un, sur l'accueil seulement ---------------------------------------
   # story 9.6 : la règle passera de « au plus un » à « exactement un » sur l'accueil de chaque langue.
@@ -173,10 +185,11 @@ while IFS= read -r page; do
           type_jsonld=$(jq -r '."@type" // ""' <<< "$contenu")
           [[ $type_jsonld == Person ]] \
             || signaler "$relative" "C10 : bloc JSON-LD de @type « $type_jsonld » ; Person attendu (FR-35)"
+          liste_5=$(jq -r --argjson permises "$jsonld_keys" 'keys[] | select(. as $k | $permises | index($k) | not)' <<< "$contenu") || exit $?
           while IFS= read -r cle; do
             [[ -n $cle ]] || continue
             signaler "$relative" "C10 : clé « $cle » dans le bloc JSON-LD ; seules les clés de FR-35 sont permises"
-          done < <(jq -r --argjson permises "$jsonld_keys" 'keys[] | select(. as $k | $permises | index($k) | not)' <<< "$contenu")
+          done <<< "$liste_5"
         fi
       fi
     fi
@@ -198,6 +211,7 @@ while IFS= read -r page; do
 
   # Plan des titres : aucun saut de niveau vers le bas (h2 puis h4).
   precedent=0
+  liste_6=$(xpath "$page" '//h1|//h2|//h3|//h4|//h5|//h6' | { checks_grep -oE '<h[1-6]' || true; } | tr -d '<h') || exit $?
   while IFS= read -r niveau; do
     [[ -n $niveau ]] || continue
     if ((precedent > 0 && niveau > precedent + 1)); then
@@ -206,12 +220,13 @@ while IFS= read -r page; do
     precedent=$niveau
   # « || true » : sans titre, grep rend 1, et l'échec passerait en silence dans la substitution
   # de processus (constat de la deuxième revue de la PR n° 45 ; pièges connus de shell-scripts.md).
-  done < <(xpath "$page" '//h1|//h2|//h3|//h4|//h5|//h6' | { grep -oE '<h[1-6]' || true; } | tr -d '<h')
+  done <<< "$liste_6"
 
+  liste_7=$(xpath_attributs "$page" '//*[@id]/@id' id | LC_ALL=C sort | uniq -d) || exit $?
   while IFS= read -r identifiant; do
     [[ -n $identifiant ]] || continue
     signaler "$relative" "C11 : identifiant « $identifiant » en double (4.1.1)"
-  done < <(xpath_attributs "$page" '//*[@id]/@id' id | LC_ALL=C sort | uniq -d)
+  done <<< "$liste_7"
 
   images=$(xpath "$page" 'count(//img)'); images=${images:-0}; images=${images%%.*}
   if ((images > 0)); then
@@ -234,6 +249,7 @@ while IFS= read -r page; do
 
   # « +1 », « 01 » et «  1  » sont des tabindex positifs valides en HTML5 : la valeur est normalisée
   # avant comparaison (constat de la revue de la PR n° 45).
+  liste_8=$(xpath_attributs "$page" '//*[@tabindex]/@tabindex' tabindex) || exit $?
   while IFS= read -r valeur; do
     [[ -n $valeur ]] || continue
     normalisee=${valeur//[[:space:]]/}
@@ -241,32 +257,42 @@ while IFS= read -r page; do
     normalisee=$(sed -E 's/^0+([0-9])/\1/' <<< "$normalisee")
     [[ $normalisee =~ ^[1-9][0-9]*$ ]] || continue
     signaler "$relative" "C11 : tabindex positif « $valeur » : l'ordre de tabulation suit l'ordre du DOM (2.4.3)"
-  done < <(xpath_attributs "$page" '//*[@tabindex]/@tabindex' tabindex)
-done < <(find "$public" -type f -name '*.html' | LC_ALL=C sort)
+  done <<< "$liste_8"
+done <<< "$liste_9"
 
 # --- ressources tierces appelées depuis le CSS, que XPath ne voit pas -----------------------------
+liste_10=$(checks_find "$public" -type f \( -name '*.html' -o -name '*.css' \) | LC_ALL=C sort) || exit $?
 while IFS= read -r fichier; do
   relative=${fichier#"$public"/}
   # Chaque URL absolue citée par le CSS est confrontée à l'hôte du site : une feuille peut légitimement
   # pointer vers le site lui-même.
+  # Le fichier est lu d'abord, avec son code : « || true » sur le pipeline entier masquerait un
+  # fichier illisible (constat de la quatrième revue de la PR n° 47).
+  rc_css=0
+  brut_css=$(checks_grep -oiE "(url\(|@import[[:space:]]+(url\()?)[[:space:]]*['\"]?((https?:)?//[^)'\" ]+)" "$fichier") || rc_css=$?
+  ((rc_css <= 1)) || exit "$rc_css"
+  appels_css=$({ checks_grep -oiE "(https?:)?//[^)'\" ]+" <<< "$brut_css" || true; })
   while IFS= read -r cible; do
     [[ -n $cible ]] || continue
     origine_tierce "$cible" || continue
     signaler "$relative" "C10 : appel CSS vers une autre origine : $cible"
     # -i : les mots-clés CSS ne sont pas sensibles à la casse, « URL( » et « @IMPORT » en sont
     # (constat de la deuxième revue de la PR n° 43).
-  done < <(grep -oiE "(url\(|@import[[:space:]]+(url\()?)[[:space:]]*['\"]?((https?:)?//[^)'\" ]+)" "$fichier" \
-             | grep -oiE "(https?:)?//[^)'\" ]+" || true)
-done < <(find "$public" -type f \( -name '*.html' -o -name '*.css' \) | LC_ALL=C sort)
+  done <<< "$appels_css"
+done <<< "$liste_10"
 
 # --- C5, moitié « sortie » : aucun marqueur dans les fichiers de texte publiés --------------------
+liste_11=$(checks_find "$public" -type f \( -name '*.html' -o -name '*.xml' -o -name '*.css' -o -name '*.txt' -o -name '*.json' \) | LC_ALL=C sort) || exit $?
 while IFS= read -r fichier; do
   relative=${fichier#"$public"/}
+  rc_todo=0
+  marqueurs=$(checks_grep -nF '[TODO' "$fichier") || rc_todo=$?
+  ((rc_todo <= 1)) || exit "$rc_todo"
   while IFS= read -r ligne; do
     [[ -n $ligne ]] || continue
     signaler "$relative" "C5 : « [TODO » dans la sortie de production, ligne ${ligne%%:*}"
-  done < <(grep -nF '[TODO' "$fichier" || true)
-done < <(find "$public" -type f \( -name '*.html' -o -name '*.xml' -o -name '*.css' -o -name '*.txt' -o -name '*.json' \) | LC_ALL=C sort)
+  done <<< "$marqueurs"
+done <<< "$liste_11"
 
 ((fail == 0)) || exit 1
 printf '%s: zéro script, aucune ressource tierce, aucun marqueur, structure accessible.\n' "$script_name"

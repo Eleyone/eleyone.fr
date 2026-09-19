@@ -384,6 +384,29 @@ case_c11_page_sans_aucun_titre() {
   [[ $err != *"saut de niveau"* ]] || { echo "un saut de niveau a été inventé sur une page sans titre" >&2; exit 1; }
 }
 
+case_html_page_illisible_est_une_anomalie() {
+  # Constat de la deuxième revue de la PR n° 47 : « exit » dans une substitution de processus ne
+  # remonte pas. Les listes passent désormais par une variable, et l'anomalie sort en code 2.
+  sortie
+  chmod 000 "$work/public/page.html"
+  controle
+  chmod 644 "$work/public/page.html"
+  assert_eq 2 "$rc" "une page illisible est une anomalie, pas un silence"
+  assert_contains "lecture XPath impossible" "$err" "le message nomme le fichier"
+}
+
+case_html_css_illisible_est_une_anomalie() {
+  # Constat de la quatrième revue de la PR n° 47 : un « || true » sur le pipeline entier avalait
+  # l'erreur de lecture d'un fichier CSS, que le XPath ne touche jamais.
+  sortie
+  printf 'body { color: red; }\n' > "$work/public/site.css"
+  chmod 000 "$work/public/site.css"
+  controle
+  chmod 644 "$work/public/site.css"
+  assert_eq 2 "$rc" "un CSS illisible est une anomalie"
+  assert_contains "recherche impossible" "$err" "le message vient de checks_grep"
+}
+
 case_html_sans_build() {
   run env CHECK_PUBLIC_ROOT="$work/absent" bash "$root/scripts/checks/html.sh"
   assert_eq 2 "$rc" "une production absente est une anomalie"
