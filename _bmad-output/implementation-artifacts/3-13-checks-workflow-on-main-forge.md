@@ -1,6 +1,6 @@
 # Story 3.13 : Checks workflow on main forge
 
-Status: in-progress
+Status: review
 
 Spec : `_bmad-output/planning-artifacts/epics.md`, story 3.13.
 
@@ -108,6 +108,25 @@ Modèle de structure retenu : **Prompt/Task Definition (Functional)**.
 
 - **Label du runner** : `linux_amd64:host`, l'exemple de l'architecture et la convention de la documentation Gitea ; le suffixe dit de lui-même que le job ne tourne pas dans un conteneur, donc qu'il peut lancer Docker.
 - **Ordre** : le runner est déclaré maintenant, avant la fusion de cette story, puisque le verrou « CI verte » passe de `absent` à bloquant dès que `.gitea/workflows/checks.yaml` est sur `dev`.
+
+## Ce qui est livré
+
+- `.gitea/workflows/checks.yaml` — déclencheurs (`push` sur `dev` et `main`, `pull_request`), checkout `fetch-depth: 0`, et `bash scripts/ci/checks-job.sh`. Rien d'autre : le job s'appelle `checks`, tourne sur le label `linux_amd64` et n'embarque aucune logique de contrôle.
+- `docs/procedures/gitea-actions.md` — le mode hôte et pourquoi il est imposé, le label déclaré côté runner (`linux_amd64:host`) dont `runs-on` ne porte que le nom, les prérequis de la machine, l'épinglage du checkout, les deux dossiers de workflows, la protection de branche et le tableau des déclencheurs.
+- `scripts/tests/test-workflows.sh` — 5 cas qui gardent la règle « rien que le déclencheur, le checkout et l'appel du script » : une seule commande `run`, l'action désignée par une URL absolue épinglée par SHA et suivie de son commentaire de version.
+
+### Le runner existait déjà
+
+La première interrogation de la forge n'a regardé que les runners du **dépôt** et du **compte**, tous deux vides, et j'en ai conclu à tort qu'il n'y en avait aucun. Arnaud l'a corrigé : deux runners sont en ligne au niveau de l'**instance** (`/api/v1/admin/actions/runners`). Ce qui manquait n'était donc pas un runner, mais un label en mode hôte, ajouté aux deux sur sa décision (19/09/2026). Le piège est noté dans la procédure : chercher au mauvais niveau fait conclure à l'absence.
+
+### Un correctif de la story 3.12, nommé
+
+Dans le conteneur, `scripts/build.sh` place `.tools/` en tête du `PATH` s'il existe : le dépôt monté porte celui du poste, et le job employait ses binaires au lieu de ceux qu'il venait d'installer dans l'image. Les deux sont épinglés à la même version, donc rien n'a divergé, mais l'image doit tourner avec **ses** outils. `TOOLS_LOCAL_DIR` désigne dans le conteneur un dossier inexistant, comme `ENV_FILE` déjà. Un cas de test le garde.
+
+### Essais
+
+- `scripts/ci/checks-job.sh` : code 0, 272 cas de test et les 5 contrôles, avec les outils de l'image.
+- La vérification en conditions réelles — un run par événement, et un run rouge sur une PR qui retire une rubrique EN — se lit sur cette PR même, une fois le label posé sur les runners.
 
 ## Revue du code
 
