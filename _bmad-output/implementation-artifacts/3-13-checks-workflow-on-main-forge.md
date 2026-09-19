@@ -130,4 +130,70 @@ Dans le conteneur, `scripts/build.sh` place `.tools/` en tête du `PATH` s'il ex
 
 ## Revue du code
 
+### 19/09/2026 — `4fc7ede` — `gemini-3.1-pro-high` — verdict `pass`
+
+Rapport publié en commentaire de la PR n° 49. Angles : edge-case-hunter, verification-gap, plus la couche propre au projet. Fichiers créés ou modifiés par le relecteur : aucun.
+
+JETON: ca747da20359787bf0520f98
+
+##### Revue BMAD
+
+###### Lentille : verification-gap
+
+- **Location** : `scripts/tests/test-workflows.sh` (`case_workflow_gitea_appelle_le_job_partage`)
+  **Trigger condition** : Le test vérifie la déclaration du label `linux_amd64` et la commande lancée, mais omet de vérifier le nom du job (`checks:`), pourtant explicitement exigé par les critères d'acceptation ("dans un job nommé checks").
+  **Guard snippet** : Ajouter une assertion vérifiant le nom, par exemple : `assert_contains "checks:" "$contenu"`.
+  **Potential consequence** : Un développeur pourrait renommer le job par mégarde, ce qui passerait la CI au vert mais briserait le verrou des branches de la forge, ce dernier attendant un statut qui s'appelle strictement `checks`.
+  NON BLOQUANT
+
+- **Location** : `scripts/tests/test-workflows.sh` (`case_workflow_gitea_action_epinglee`)
+  **Trigger condition** : Le test valide que l'action `uses` utilise une URL absolue (`https://`) avec un SHA en suffixe, mais il ne valide pas *quelle* action est appelée (`gitea.com/actions/checkout`).
+  **Guard snippet** : Ajouter une assertion stricte sur le domaine et le chemin : `assert_contains "https://gitea.com/actions/checkout@" "$ligne"`.
+  **Potential consequence** : Une action tierce non officielle (ex: `https://github.com/malicious/action@...`) pourrait être utilisée : le test passerait tant que la syntaxe absolue et le SHA sont respectés, créant une vulnérabilité.
+  NON BLOQUANT
+
+###### Lentille : edge-case-hunter
+
+- **Location** : `scripts/tests/test-workflows.sh` (`case_workflow_gitea_une_seule_commande` et `case_workflow_gitea_action_epinglee`)
+  **Trigger condition** : En cas de disparition du déclencheur ou du mot-clé `uses` dans le YAML, la substitution `uses=$(grep ...)` (ou `commandes=...`) retournera un code d'erreur 1. Sous `set -euo pipefail`, le script plantera immédiatement sans jamais atteindre les blocs prévus (`[[ -n $uses ]] || { echo ... }`).
+  **Guard snippet** : Insérer une tolérance pour la liste vide, par exemple : `uses=$(grep -E '^\s*- uses:' "$gitea_workflow" || true) | sed ...`.
+  **Potential consequence** : L'échec de la CI sera bien effectif et bloquant, mais le harnais crashera sans afficher le message d'erreur d'assertion que le développeur avait pris soin de rédiger.
+  NON BLOQUANT
+
+##### Couche propre au projet
+
+- **Location** : `.gitea/workflows/checks.yaml` et implémentation générale de la story 3.13
+  **Trigger condition** : Les critères d'acceptation (déclencheurs limités, checkout complet et épinglé, nom du job, appel du script avec bash, paramètres du conteneur) sont formellement satisfaits dans le code et les scripts de tests.
+  **Guard snippet** : N/A
+  **Potential consequence** : L'intention fonctionnelle est conservée et implémentée sans être altérée.
+  NON BLOQUANT
+
+- **Location** : Ensemble du correctif (patch)
+  **Trigger condition** : L'adresse privée de la forge, d'éventuels secrets ou des données privées n'apparaissent nulle part (seule l'URL publique `gitea.com` est utilisée).
+  **Guard snippet** : N/A
+  **Potential consequence** : Aucun risque de fuite de sécurité ou d'identité protégée sur le miroir GitHub. Le garde-fou fonctionne comme prévu.
+  NON BLOQUANT
+
+- **Location** : Fichiers `docs/procedures/gitea-actions.md` et `docs/procedures/checks-job.md`
+  **Trigger condition** : Les procédures documentent exhaustivement les prérequis manuels du runner hôte et de l'environnement, en parfaite concordance avec le correctif appliqué au conteneur (`TOOLS_LOCAL_DIR`).
+  **Guard snippet** : N/A
+  **Potential consequence** : Maintien de l'harmonie entre le code exécuté (script), l'intention fonctionnelle (skill/story) et sa trace opérationnelle (procédure).
+  NON BLOQUANT
+
+- **Location** : Scripts shell modifiés
+  **Trigger condition** : L'utilisation de `local var` suivie sur une autre ligne de `var=$(...)` est correctement appliquée, évitant le masquage de code d'erreur (qui surviendrait si on écrivait `local var=$(...)`).
+  **Guard snippet** : N/A
+  **Potential consequence** : Aucune erreur d'exécution bash n'est passée sous silence sous `set -euo pipefail`, préservant la stabilité du pipeline.
+  NON BLOQUANT
+
+VERDICT: NON BLOQUANT — Les critères sont satisfaits et l'implémentation est sûre. Seuls quelques trous de vérification dans les assertions des tests peuvent être renforcés (nom du job, vérification stricte de l'URL de l'action de checkout) pour anticiper d'éventuelles régressions.
+
+#### Décisions sur ces constats (19/09/2026)
+
+Les trois sont retenus et corrigés dans `scripts/tests/test-workflows.sh` :
+
+1. **Le nom du job est vérifié** (`checks`) : c'est le nom du statut que les protections de branche et le verrou « CI verte » cherchent ; le renommer passerait la CI au vert en cassant le verrou.
+2. **La source de l'action est vérifiée**, pas seulement sa forme : une URL absolue épinglée par SHA vers n'importe quel dépôt passait. Le cas exige `https://gitea.com/actions/`.
+3. **`grep` ne tue plus le harnais** : une fonction commune distingue « rien trouvé » (code 1, liste vide, le cas dit alors ce qui manque) d'une vraie erreur (code 2 et plus), comme `checks_grep` le fait pour les contrôles.
+
 ## Reporté
