@@ -1798,15 +1798,18 @@ afin que Gitea et GitHub exécutent la même chose.
 
 **Étant donné** le poste de travail avec Docker
 **Quand** on lance `scripts/ci/checks-job.sh`
-**Alors** il lance `docker run --rm` sur `CHECK_IMAGE` avec le dépôt monté, puis `install-tools.sh`, le chargement de `ci/legal-placeholder.env` (dans le seul processus du conteneur), `check-private.sh history`, `scripts/tests/run.sh` (tests des scripts, story 0.9), puis `scripts/check.sh`
+**Alors** il lit `CHECK_IMAGE` dans `tools.env`, seule déclaration de l'image (AD-1), et lance `docker run --rm` sur cette image, le dépôt monté et pris pour répertoire de travail, avec l'UID et le GID de l'appelant
+**Et** dans le conteneur, les outils sont posés par `scripts/ci/install-tools-bootstrap.sh` en root, puisque `apk` l'exige, puis le job **redescend au compte de l'hôte** par `su-exec` pour la suite : `check-private.sh history`, `scripts/tests/run.sh` (tests des scripts, story 0.9), puis `scripts/check.sh`
+**Et** les fichiers écrits dans le dépôt monté (`public/`, `build/`) appartiennent à l'appelant, jamais à root (décidé par Arnaud le 19/09/2026)
+**Et** les valeurs légales sont les valeurs factices de `ci/legal-placeholder.env`, chargées par `scripts/env.sh` dans le seul processus du conteneur ; le `.env` du poste, monté avec le dépôt, n'est pas lu
 **Et** tout échec rend un code non nul.
 
 **Étant donné** un clone jetable où un commit fait sans hook ajoute un fichier sous `docs/private/`
-**Quand** on lance le job dans ce clone
-**Alors** C1 échoue en nommant le commit et le chemin.
+**Quand** le garde-fou tourne en mode historique dans ce clone
+**Alors** C1 échoue en nommant le commit et le chemin : un test hors ligne de `scripts/tests/` le vérifie sans Docker, et la recette du job complet est consignée dans `docs/procedures/checks-job.md` (décidé par Arnaud le 19/09/2026).
 
 - [ ] Le job ne lit aucun secret et ne construit aucune image.
-- [ ] `CHECK_IMAGE` fournit `git` et `jq`, dont dépendent `check-private.sh` et `scripts/tests/run.sh` (ajouté après la revue de spec de la story 0.9).
+- [ ] `scripts/ci/install-tools.sh` pose dans l'image `git` et `jq`, dont dépendent `check-private.sh` et `scripts/tests/run.sh` (ajouté après la revue de spec de la story 0.9), et `su-exec`, qui rend la main au compte de l'hôte (ajouté après la revue de spec de cette story).
 
 ### Story 3.13 : Checks workflow on main forge
 

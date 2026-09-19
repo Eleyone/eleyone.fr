@@ -28,7 +28,7 @@ Tout le travail vit dans le dépôt. Ce qui manque sur une machine neuve, c'est 
 
 ## Vérifier
 
-Cinq commandes, avec leur sortie attendue. Tant qu'une échoue, le poste n'est pas prêt.
+Six commandes, avec leur sortie attendue. Tant qu'une échoue, le poste n'est pas prêt.
 
 | Commande | Sortie attendue |
 | --- | --- |
@@ -37,6 +37,7 @@ Cinq commandes, avec leur sortie attendue. Tant qu'une échoue, le poste n'est p
 | `scripts/sprint-consistency.sh` | `cohérent dans l'arbre de travail` |
 | `scripts/build.sh production` puis `scripts/build.sh work` | aucun avertissement ; la production ne contient pas les brouillons |
 | `scripts/env.sh sh -c 'env \| grep -c "^HUGO_LEGAL_"; env \| grep -c "^GITEA_" \|\| true'` | `7` puis `0` — les valeurs légales passent, les jetons non |
+| `scripts/ci/checks-job.sh` | `check: N contrôle(s) passés` — tout le job dans le conteneur de contrôle (`checks-job.md`) ; il prouve Docker, l'image et les scripts d'un coup |
 
 Une sixième vérification touche la forge, et n'a besoin d'aucune PR ouverte : lancer l'audit sur une PR **déjà fusionnée** appelle l'API sans rien modifier.
 

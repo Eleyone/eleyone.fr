@@ -11,10 +11,10 @@ Les paquets sont déclarés en trois temps, parce qu'`alpine:3.24` n'a ni `bash`
 | Variable | Contenu | Qui l'installe |
 | --- | --- | --- |
 | `CHECK_BOOTSTRAP_PACKAGES` | `bash` | `scripts/ci/install-tools-bootstrap.sh`, en sh POSIX |
-| `CHECK_BASE_PACKAGES` | `curl`, `ca-certificates` | `scripts/ci/install-tools.sh`, avant tout téléchargement |
-| `CHECK_PACKAGES` | `git`, `grep` GNU, `jq`, `libxml2-utils`, `poppler-utils` | le même, dans le même `apk` |
+| `CHECK_BASE_PACKAGES` | `curl`, `ca-certificates`, `su-exec` | `scripts/ci/install-tools.sh`, avant tout téléchargement |
+| `CHECK_PACKAGES` | `git`, `grep` et `findutils` GNU, `jq`, `libxml2-utils`, `poppler-utils` | le même, dans le même `apk` |
 
-Leur réunion est la liste des outils de contrôle d'AD-1, plus les prérequis du téléchargement.
+Leur réunion est la liste des outils de contrôle d'AD-1, plus les prérequis du job : le téléchargement (`curl`, `ca-certificates`) et la bascule du conteneur vers le compte de l'appelant (`su-exec`, `checks-job.md`).
 
 ## Installer
 
@@ -61,3 +61,5 @@ require_tool_version hugo .tools/hugo "$HUGO_VERSION"
 - **`alpine:3.24` n'a pas `bash`** : d'où l'amorçage en sh POSIX. Appeler `install-tools.sh` directement dans l'image donne `env: can't execute 'bash'`.
 - **`sha256sum` de BusyBox** ne connaît ni `--status` ni le format long de GNU : l'empreinte est donc calculée puis comparée par le script lui-même, ce qui marche des deux côtés. Une empreinte n'est pas un secret, elle peut être affichée.
 - **`curl` est absent d'`alpine:3.24`** : les paquets s'installent avant tout téléchargement, jamais après.
+- **Le `find` de BusyBox ignore `-printf`** (story 3.12) : `scripts/tests/run.sh` s'en sert pour relever l'état de `public/` et de `build/`, et la suite échouait dans l'image avec l'aide de `find`. D'où `findutils` dans `CHECK_PACKAGES`, comme `grep` GNU : le poste et l'image se comportent pareil.
+- **`xmllint` ne rend pas le même code pour « aucun nœud »** selon la version de libxml2 (story 3.12) : 10 en 2.9 (le poste), 11 en 2.13 (l'image), qui garde 10 pour une requête mal écrite. `checks_xpath` tolère les deux ; un fichier illisible rend 1 des deux côtés.

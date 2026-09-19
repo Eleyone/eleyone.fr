@@ -72,13 +72,20 @@ checks_manifests() { # $1 = racine du rendu de travail (par défaut build/work)
 # Enveloppes des trois outils que les contrôles lancent en boucle. Chacune distingue « rien trouvé »
 # d'une vraie erreur, plutôt que de tout avaler par « || true » (constat de la revue de la PR n° 47).
 #
-#   xmllint : 0 résultat, 10 aucun nœud ne correspond, autre chose = fichier illisible ou fatal
+#   xmllint : 0 résultat, 10 et 11 aucun nœud ne correspond, autre chose = fichier illisible ou fatal
 #   grep    : 0 trouvé, 1 rien trouvé, 2 ou plus = erreur
 #   find    : 0 seulement ; tout le reste est une anomalie
+#
+# Les deux codes de « rien trouvé » viennent d'une divergence de libxml2, constatée en lançant le job
+# de contrôles (story 3.12) : la 2.9 du poste rend 10 pour un résultat vide comme pour une requête
+# mal écrite, la 2.13 de CHECK_IMAGE sépare les deux (11 vide, 10 requête invalide). Les deux sont
+# donc tolérés, et une requête mal écrite passe pour un résultat vide : les requêtes sont des
+# littéraux des scripts de contrôle, et leurs tests les rejouent toutes. Un fichier illisible rend 1
+# des deux côtés et reste une anomalie.
 checks_xpath() { # $1 = fichier, $2 = requête XPath ; la sortie d'erreur de libxml2 est écartée (AD-10)
   local rc=0
   xmllint --html --xpath "$2" "$1" 2> /dev/null || rc=$?
-  ((rc == 0 || rc == 10)) || checks_die "lecture XPath impossible sur $1 (xmllint, code $rc)."
+  ((rc == 0 || rc == 10 || rc == 11)) || checks_die "lecture XPath impossible sur $1 (xmllint, code $rc)."
   return 0
 }
 

@@ -15,7 +15,7 @@ scripts/check.sh --release    # ajoute le niveau « release » (contrôles de mi
 
 Codes de sortie : `0` conforme, `1` écart constaté, `2` anomalie (outil ou fichier manquant, option inconnue).
 
-Le script n'appelle jamais `git` : il fonctionne dans un dépôt sans `.git`, par exemple dans l'image du site. Les contrôles qui lisent l'historique vivent dans `scripts/ci/checks-job.sh` (story 3.12).
+Le script n'appelle jamais `git` : il fonctionne dans un dépôt sans `.git`, par exemple dans l'image du site. Les contrôles qui lisent l'historique vivent dans `scripts/ci/checks-job.sh`, le job qui enchaîne le garde-fou, les tests des scripts et ce script dans le conteneur de contrôle (`checks-job.md`).
 
 ## Écrire un contrôle
 
