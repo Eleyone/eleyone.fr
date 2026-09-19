@@ -97,10 +97,7 @@ case_liste_sans_motif() {
 }
 
 case_liste_illisible() {
-  if [[ $(id -u) == 0 ]]; then
-    echo "cas sans objet sous root, qui lit tout fichier"
-    return 0
-  fi
+  skip_if_root "la liste des motifs"
   install_hook
   chmod 000 "$work/custom/eleyone-check-private/forbidden-patterns.txt"
   commit_file publique/a.txt "page publique"

@@ -135,6 +135,7 @@ case_links_depot_sans_lien() {
 }
 
 case_links_page_illisible_est_une_anomalie() {
+  skip_if_root "la page"
   site; config
   chmod 000 "$work/public/cas/chiliz/index.html"
   liens

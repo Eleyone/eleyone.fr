@@ -1,0 +1,27 @@
+# Contrôles bloquants sur la forge principale (AD-11). Le workflow ne contient que son déclencheur,
+# le checkout et l'appel du job partagé : toute la logique vit dans scripts/ci/checks-job.sh, que le
+# poste et la CI publique de GitHub lancent de la même façon. Aucun contrôle ne s'écrit ici.
+#
+# Le runner doit être en **mode hôte** : en mode conteneur, il monte l'espace de travail dans un
+# volume Docker, et le « docker run -v » du job monterait un chemin absent de l'hôte. Son label est
+# déclaré « linux_amd64:host » côté runner ; « runs-on » ne porte que le nom, sans le schéma.
+# Procédures : docs/procedures/gitea-actions.md, docs/procedures/checks-job.md
+name: checks
+
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+
+jobs:
+  checks:
+    runs-on: linux_amd64
+    steps:
+      # URL absolue épinglée par SHA : la source et le commit sont fixés, sans dépendre du réglage
+      # DEFAULT_ACTIONS_URL de la forge. La v4 tourne sur node 20 ; la v5 et au-delà demandent
+      # node 24, que le runner en mode hôte devrait fournir lui-même.
+      - uses: https://gitea.com/actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # tout l'historique : le garde-fou du job l'audite en entier (C1, AD-12)
+          fetch-depth: 0
+      - run: bash scripts/ci/checks-job.sh

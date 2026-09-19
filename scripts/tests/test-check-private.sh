@@ -84,10 +84,7 @@ case_d2_fichier_avec_motif() {
 }
 
 case_d2_fichier_illisible() {
-  if [[ $(id -u) == 0 ]]; then
-    echo "cas sans objet sous root, qui lit tout fichier"
-    return 0
-  fi
+  skip_if_root "la liste des motifs"
   motifs
   chmod 000 "$work/motifs.txt"
   require_patterns "$work/motifs.txt"

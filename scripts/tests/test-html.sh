@@ -387,6 +387,7 @@ case_c11_page_sans_aucun_titre() {
 case_html_page_illisible_est_une_anomalie() {
   # Constat de la deuxième revue de la PR n° 47 : « exit » dans une substitution de processus ne
   # remonte pas. Les listes passent désormais par une variable, et l'anomalie sort en code 2.
+  skip_if_root "la page"
   sortie
   chmod 000 "$work/public/page.html"
   controle
@@ -398,6 +399,7 @@ case_html_page_illisible_est_une_anomalie() {
 case_html_css_illisible_est_une_anomalie() {
   # Constat de la quatrième revue de la PR n° 47 : un « || true » sur le pipeline entier avalait
   # l'erreur de lecture d'un fichier CSS, que le XPath ne touche jamais.
+  skip_if_root "la feuille de style"
   sortie
   printf 'body { color: red; }\n' > "$work/public/site.css"
   chmod 000 "$work/public/site.css"

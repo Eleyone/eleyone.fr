@@ -136,6 +136,7 @@ case_budget_pdf_hors_budget() {
 case_budget_fichier_illisible_est_une_anomalie() {
   # Constat de la revue de la PR n° 47 : « || true » avalait aussi les vraies erreurs. Désormais
   # xmllint code 10 (aucun nœud) passe, code 1 (fichier illisible) est une anomalie.
+  skip_if_root "la page"
   sortie
   chmod 000 "$work/public/index.html"
   budget
