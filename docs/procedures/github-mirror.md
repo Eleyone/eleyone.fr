@@ -36,6 +36,26 @@ Gitea ne sait pas pousser un miroir en SSH (documentation Gitea, constat de la s
 4. **Push direct refusé** : Arnaud pousse un commit sans intérêt depuis son compte personnel sur une branche jetable. Attendu : refus par le ruleset. Le miroir, lui, continue de synchroniser.
 5. **Réécriture** : l'agent pousse une branche jetable sur la forge, la réécrit (push forcé), et la synchronisation suit. Attendu : GitHub accepte la mise à jour non fast-forward, la synchronisation n'échoue pas. La branche est ensuite supprimée sur la forge ; la suppression ne part **pas** avec le push de suppression (voir « Supprimer une branche » ci-dessous), donc demander une synchronisation avant de vérifier qu'elle a disparu de GitHub.
 
+## La CI publique
+
+`.github/workflows/checks.yaml` fait tourner les **contrôles seulement** sur le dépôt public (AD-11) : aucun secret, aucune construction d'image, aucun déploiement. Comme celui de la forge, il ne contient que ses déclencheurs, le checkout et l'appel de `scripts/ci/checks-job.sh` (`checks-job.md`).
+
+- **Machine virtuelle, pas conteneur de job.** Le job tourne sur `ubuntu-24.04` et lance lui-même le conteneur de contrôle. L'inverse casse : les actions JavaScript comme le checkout y sont fragiles, leur node étant lié à la glibc quand l'image de contrôle est en musl.
+- **`push` ne nomme que `dev` et `main`.** Le miroir pousse toutes les branches ; sans filtre, chaque branche de travail lancerait un run public, alors qu'elle est déjà contrôlée sur Gitea par `pull_request`. Ce que le dépôt public montre, c'est l'état du tronc (décidé le 20/09/2026). `workflow_dispatch` permet de relancer à la main.
+- **`permissions: contents: read`.** Le workflow ne fait que lire : il le déclare, plutôt que de dépendre du réglage du dépôt.
+- **Une seule action tierce**, `actions/checkout`, épinglée par SHA. Sur GitHub, `uses` ne prend pas d'URL absolue, contrairement à Gitea ; le SHA, lui, est le même des deux côtés, `gitea.com/actions/checkout` étant un miroir de `github.com/actions/checkout`. Un cas de `scripts/tests/test-workflows.sh` vérifie cette égalité.
+- **Gitea n'exécute pas ce fichier** : dès que `.gitea/workflows/` existe, il est le seul dossier lu (`gitea-actions.md`).
+
+### Ce que le journal public montre, et ce qu'il ne montre pas
+
+L'avertissement « chemins seulement » du garde-fou y est **attendu** : la CI publique n'a pas la liste des motifs, qui vit hors dépôt. Le masquer donnerait à croire que l'audit public est complet ; il ne l'est pas, et le lecteur doit le savoir. L'avertissement ne nomme ni motif ni contenu.
+
+Les valeurs légales du journal sont celles de `ci/legal-placeholder.env`, commitées et portant toutes `VALEUR-FACTICE` (AD-9) ; `scripts/env.sh` coupe la trace avant toute lecture de fichier de valeurs.
+
+### Si aucun run n'apparaît
+
+Les Actions doivent être activées sur le dépôt public. Rien n'échoue tant qu'elles ne le sont pas : il ne se passe simplement rien. Le réglage est dans les paramètres du dépôt GitHub, section Actions.
+
 ## Entretenir
 
 - **Expiration du jeton** : avant la date notée, créer un nouveau jeton classique (mêmes portées) sur le compte machine, le coller dans le miroir de Gitea, vérifier une synchronisation, puis révoquer l'ancien. Un miroir en échec se voit dans les réglages du dépôt sur la forge.

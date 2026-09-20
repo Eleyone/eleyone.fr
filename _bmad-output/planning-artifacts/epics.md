@@ -1841,25 +1841,32 @@ afin qu'aucun écart n'arrive sur `dev` ni sur `main`.
 
 En tant que Sam, tech lead (UJ-3),
 je veux voir sur GitHub les exécutions publiques des contrôles,
-afin de vérifier que la parité, les schémas et le garde-fou des chemins sont contrôlés.
+afin de vérifier publiquement la parité, les schémas et le garde-fou des chemins.
 
 **Couvre :** FR-23, FR-28, UJ-3 · AD-11
 **Dépendances :** 1.4, 3.13
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, si nécessaire : activer GitHub Actions sur le dépôt public.
+**Opération manuelle (Arnaud) :** **oui**, si nécessaire : activer GitHub Actions sur le dépôt public. Rien n'échoue si ce n'est pas fait — aucun run n'a lieu, et le constat se fait après la fusion.
 
 **Critères d'acceptation :**
 
 **Étant donné** `.github/workflows/checks.yaml`
 **Quand** on le lit
-**Alors** il se déclenche sur `push` et `workflow_dispatch`, tourne sur `ubuntu-24.04`, appelle `checks-job.sh` depuis la machine virtuelle (pas de conteneur de job), sans secret ni `docker build`, avec des actions tierces épinglées par SHA.
+**Alors** il se déclenche sur `push` **des seules branches `dev` et `main`** — le miroir pousse toutes les branches, et les branches de travail sont déjà contrôlées sur Gitea (décidé le 20/09/2026) — et sur `workflow_dispatch`
+**Et** il tourne sur `ubuntu-24.04`, en mode hôte : le checkout avec `fetch-depth: 0`, puis `bash scripts/ci/checks-job.sh` depuis la machine virtuelle, jamais dans un conteneur de job
+**Et** il ne demande aucun secret, ne construit aucune image, déclare `permissions: contents: read`, et n'emploie qu'une action tierce, `actions/checkout`, épinglée par SHA.
 
 **Étant donné** un push sur `dev` de la forge
 **Quand** le miroir le publie
-**Alors** exactement un run a lieu sur Gitea et un sur GitHub (démonstration de WS-4), et Gitea n'exécute pas `.github/workflows/`.
+**Alors** un seul run s'exécute sur Gitea et un seul sur GitHub (démonstration de WS-4), et Gitea n'exécute pas `.github/workflows/`, puisque `.gitea/workflows/` existe (story 3.13).
 
-- [ ] Le journal public ne contient ni secret ni motif privé ; C21 y tourne sans liste de motifs.
+**Étant donné** le journal public d'un run
+**Quand** on le lit
+**Alors** il ne contient ni secret ni motif privé, et l'avertissement « chemins seulement » du garde-fou y est **attendu** : la CI publique n'a pas de liste de motifs, et le lecteur doit savoir que l'audit public n'est pas complet.
+
+- [ ] Le tirage de `CHECK_IMAGE` résiste à un refus temporaire du registre : les runners publics partagent leurs adresses IP et le Docker Hub limite les tirages anonymes. La reprise vit dans `scripts/ci/checks-job.sh`, jamais dans le YAML.
+- [ ] C21 (texte des PDF, AD-21) n'existe pas encore : la story qui l'écrira devra définir son comportement sans liste de motifs, puisqu'il tournera aussi dans la CI publique.
 
 ### Story 3.15 : Public repository case README
 

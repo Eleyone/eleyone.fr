@@ -4,19 +4,33 @@
 # reste hors ligne (story 0.9). La recette du job complet vit dans docs/procedures/checks-job.md.
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
-# Faux docker : il écrit ses arguments, un par ligne, puis rend le code voulu.
-faux_docker() { # $1 = code de sortie
+# Faux docker : il répond selon la sous-commande, écrit les arguments du « run » et compte les
+# tirages. « image inspect » dit si l'image est déjà là, « pull » échoue tant qu'il reste des refus.
+faux_docker() { # $1 = code du run ; $2 = 1 si l'image est absente ; $3 = nombre de tirages refusés
   mkdir -p "$work/bin"
-  {
-    printf '#!/bin/sh\n'
-    printf 'printf "%%s\\n" "$@" > %s\n' "$work/arguments"
-    printf 'exit %s\n' "$1"
-  } > "$work/bin/docker"
+  printf '0\n' > "$work/tirages"
+  cat > "$work/bin/docker" <<FIN
+#!/bin/sh
+case "\$1" in
+  image)
+    exit ${2:-0}
+    ;;
+  pull)
+    faits=\$(cat "$work/tirages")
+    faits=\$((faits + 1))
+    printf '%s\\n' "\$faits" > "$work/tirages"
+    [ "\$faits" -le "${3:-0}" ] && exit 1
+    exit 0
+    ;;
+esac
+printf '%s\\n' "\$@" > "$work/arguments"
+exit ${1:-0}
+FIN
   chmod +x "$work/bin/docker"
 }
 
 job() { # lance le script hôte avec le faux docker en tête du PATH
-  run env PATH="$work/bin:$PATH" bash "$root/scripts/ci/checks-job.sh" "$@"
+  run env PATH="$work/bin:$PATH" CHECKS_JOB_RETRY_DELAY=0 bash "$root/scripts/ci/checks-job.sh" "$@"
 }
 
 arguments() { cat "$work/arguments"; }
@@ -52,7 +66,7 @@ case_checks_job_image_de_tools_env() {
 case_checks_job_autre_tools_env() {
   faux_docker 0
   sed 's#^CHECK_IMAGE=.*#CHECK_IMAGE=exemple/image@sha256:0000#' "$root/tools.env" > "$work/tools.env"
-  run env PATH="$work/bin:$PATH" TOOLS_ENV_FILE="$work/tools.env" bash "$root/scripts/ci/checks-job.sh"
+  run env PATH="$work/bin:$PATH" CHECKS_JOB_RETRY_DELAY=0 TOOLS_ENV_FILE="$work/tools.env" bash "$root/scripts/ci/checks-job.sh"
   assert_eq 0 "$rc" "le job passe (messages : $err)"
   assert_contains "exemple/image@sha256:0000" "$(arguments)" "l'image suit le tools.env désigné"
 }
@@ -151,6 +165,33 @@ case_checks_job_conteneur_ignore_les_outils_du_poste() {
   contenu=$(cat "$root/scripts/ci/checks-job-container.sh")
   assert_contains "TOOLS_LOCAL_DIR=/nonexistent/.tools" "$contenu" "le conteneur écarte le .tools du dépôt monté"
   assert_contains "export ENV_FILE HOME TOOLS_LOCAL_DIR" "$contenu" "et l'exporte, comme ENV_FILE"
+}
+
+case_checks_job_image_deja_presente() {
+  # Le registre n'est pas appelé quand l'image est là : un tirage inutile peut être refusé.
+  faux_docker 0 0 0
+  job
+  assert_eq 0 "$rc" "le job passe (messages : $err)"
+  assert_eq 0 "$(cat "$work/tirages")" "aucun tirage : l'image était déjà présente"
+}
+
+case_checks_job_tirage_repris() {
+  # Constat de la story 3.14 : les runners publics partagent leurs adresses IP et le registre limite
+  # les tirages anonymes. Deux refus, puis le troisième essai passe.
+  faux_docker 0 1 2
+  job
+  assert_eq 0 "$rc" "le job passe après reprise (messages : $err)"
+  assert_eq 3 "$(cat "$work/tirages")" "trois tirages : deux refusés, un abouti"
+  assert_contains "tentative 2 sur 3" "$err" "chaque tentative est annoncée"
+  [[ -f $work/arguments ]] || { echo "le conteneur n'a pas été lancé" >&2; exit 1; }
+}
+
+case_checks_job_tirage_definitivement_refuse() {
+  faux_docker 0 1 3
+  job
+  assert_eq 2 "$rc" "trois refus font une anomalie, pas un écart"
+  assert_contains "intirable après 3 tentatives" "$err" "le message nomme la cause"
+  [[ ! -f $work/arguments ]] || { echo "le conteneur a été lancé malgré l'échec du tirage" >&2; exit 1; }
 }
 
 run_case "$@"

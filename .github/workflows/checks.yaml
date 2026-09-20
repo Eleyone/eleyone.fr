@@ -1,0 +1,35 @@
+# Contrôles publics sur le miroir GitHub (AD-11). Contrôles **seulement** : aucun secret, aucune
+# construction d'image, aucun déploiement — tout cela reste sur la forge principale. Le workflow ne
+# contient que ses déclencheurs, le checkout et l'appel du job partagé, celui-là même que lance le
+# poste et que lance Gitea.
+#
+# Le job tourne sur la machine virtuelle du runner, jamais dans un conteneur de job : les actions
+# JavaScript comme celle du checkout y sont fragiles, leur node étant lié à la glibc quand l'image de
+# contrôle est en musl. C'est le job qui lance le conteneur, pas l'inverse.
+#
+# « push » ne nomme que dev et main : le miroir pousse toutes les branches, et les branches de
+# travail sont déjà contrôlées sur Gitea par « pull_request ». Ce que le dépôt public montre, c'est
+# l'état du tronc (décidé le 20/09/2026, story 3.14).
+# Procédures : docs/procedures/github-mirror.md, docs/procedures/checks-job.md
+name: checks
+
+on:
+  push:
+    branches: [dev, main]
+  workflow_dispatch:
+
+# Le workflow ne fait que lire le dépôt : il le déclare, plutôt que de dépendre du réglage du dépôt.
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      # Seule action tierce, épinglée par SHA. Ce SHA est celui de v4.4.0, et c'est le même que celui
+      # du workflow de Gitea : gitea.com/actions/checkout est un miroir de ce dépôt-ci.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # tout l'historique : le garde-fou du job l'audite en entier (C1, AD-12)
+          fetch-depth: 0
+      - run: bash scripts/ci/checks-job.sh

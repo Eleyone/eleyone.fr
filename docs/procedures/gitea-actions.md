@@ -52,7 +52,7 @@ L'URL absolue fixe la **source** en plus du commit : le workflow ne dépend pas 
 
 ## Les deux dossiers de workflows
 
-Gitea lit `.gitea/workflows/` et **ignore** `.github/workflows/` dès que le premier existe (`[actions] WORKFLOW_DIRS`, dont la valeur par défaut est `.gitea/workflows,.github/workflows`, premier dossier présent retenu). `.gitea/workflows/` contient donc toujours au moins un workflow, et le réglage garde sa valeur par défaut. GitHub, lui, ne lit que `.github/workflows/` (story 3.14).
+Gitea lit `.gitea/workflows/` et **ignore** `.github/workflows/` dès que le premier existe (`[actions] WORKFLOW_DIRS`, dont la valeur par défaut est `.gitea/workflows,.github/workflows`, premier dossier présent retenu). `.gitea/workflows/` contient donc toujours au moins un workflow, et le réglage garde sa valeur par défaut. GitHub, lui, ne lit que `.github/workflows/`, où vit la CI publique, contrôles seulement (`github-mirror.md`).
 
 ## Protection de branche
 

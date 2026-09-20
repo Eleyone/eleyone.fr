@@ -30,6 +30,7 @@ Chaque étape s'annonce : le garde-fou et les tests ne disent rien quand tout va
 - `docker run` part d'un environnement vide : rien de l'hôte n'entre, hors `HOST_UID` et `HOST_GID`.
 - Le dépôt est monté tel quel, `.env` compris. Le conteneur désigne donc `ENV_FILE` sur un chemin inexistant : `scripts/env.sh` ne lit pas ce fichier, et les valeurs légales du job sont les valeurs factices de `ci/legal-placeholder.env` (AD-9), chargées dans le seul processus du conteneur.
 - Le job ne construit aucune image : seul le workflow `release` de Gitea le fait (AD-11).
+- **L'image est tirée à part, et seulement si elle manque.** Le registre limite les tirages anonymes par adresse IP, or les runners publics partagent les leurs : un refus temporaire ferait rougir la CI sans que rien ne soit en cause. Le job fait donc trois tentatives espacées avant d'abandonner, et un abandon est une anomalie, nommée comme telle (story 3.14). Quand l'image est déjà là, le registre n'est pas appelé du tout.
 - Le conteneur emploie **ses** outils, pas ceux du poste : le dépôt monté peut porter un `.tools/`, que `scripts/build.sh` place en tête du `PATH`. `TOOLS_LOCAL_DIR` y désigne donc un dossier inexistant, pour que Hugo et D2 soient ceux que le job vient d'installer dans l'image (story 3.13).
 
 ## Recette

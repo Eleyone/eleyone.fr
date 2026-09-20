@@ -35,6 +35,29 @@ command -v docker > /dev/null 2>&1 \
 uid=$(id -u) || tools_die "UID de l'appelant illisible."
 gid=$(id -g) || tools_die "GID de l'appelant illisible."
 
+# L'image est tirée à part, et seulement si elle manque : le registre limite les tirages anonymes par
+# adresse IP, or les runners publics partagent les leurs (constat de la story 3.14). Un refus
+# temporaire ferait rougir la CI sans que rien ne soit en cause ; trois tentatives espacées
+# suffisent, et l'échec définitif est une anomalie, nommée comme telle. CHECKS_JOB_RETRY_DELAY ne
+# sert qu'aux tests, comme TOOLS_ENV_FILE ailleurs.
+delai=${CHECKS_JOB_RETRY_DELAY:-10}
+tirer_image() {
+  local essai=1 rc
+  while ((essai <= 3)); do
+    rc=0
+    docker pull --quiet "$CHECK_IMAGE" > /dev/null || rc=$?
+    ((rc != 0)) || return 0
+    printf '%s: tirage de l'"'"'image refusé (docker, code %s), tentative %s sur 3.\n' "$script_name" "$rc" "$essai" >&2
+    ((essai == 3)) || sleep $((delai * essai))
+    essai=$((essai + 1))
+  done
+  return 1
+}
+if ! docker image inspect "$CHECK_IMAGE" > /dev/null 2>&1; then
+  tirer_image \
+    || tools_die "image de contrôle intirable après 3 tentatives : registre indisponible, ou tirages anonymes limités."
+fi
+
 printf '%s: contrôles dans %s, dépôt monté sur /repo, compte %s:%s.\n' "$script_name" "$CHECK_IMAGE" "$uid" "$gid"
 
 # Le code du conteneur est celui du dernier contrôle en échec : il ressort tel quel.
