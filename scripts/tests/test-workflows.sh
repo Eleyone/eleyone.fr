@@ -31,17 +31,19 @@ case_workflow_gitea_appelle_le_job_partage() {
 
 # Lecture d'une liste de lignes du workflow : « rien trouvé » (grep 1) donne une liste vide et laisse
 # le cas dire ce qui manque, au lieu de tuer le harnais sous set -e ; une vraie erreur (2) échoue.
-lignes() { # $1 = motif étendu, $2 = fichier (le workflow de Gitea par défaut)
-  local sortie rc=0
-  sortie=$(grep -E "$1" "${2:-$gitea_workflow}") || rc=$?
-  ((rc <= 1)) || { printf 'lecture impossible du workflow (grep, code %s)\n' "$rc" >&2; exit 1; }
-  printf '%s' "$sortie"
+# Appelée dans « $(…) », cette fonction ne pourrait pas arrêter le cas : son « exit » ne quitterait
+# que le sous-shell. Elle passe donc par tests_grep_into, qui remplit une variable de l'appelant
+# (constat de la revue de la PR n° 51, où le même piège était reproduit dans un autre test).
+lignes() { # $1 = nom de la variable à remplir, $2 = motif étendu, $3 = fichier (Gitea par défaut)
+  tests_grep_into "$1" -E "$2" "${3:-$gitea_workflow}"
 }
 
 case_workflow_gitea_une_seule_commande() {
   # Aucune logique dans le YAML : une seule étape « run », et c'est l'appel du job.
   local commandes
-  commandes=$(lignes '^\s*- run:|^\s*run:' | sed -E 's/^\s*- ?run:\s*//')
+  local brut
+  lignes brut '^\s*- run:|^\s*run:'
+  commandes=$(sed -E 's/^\s*- ?run:\s*//' <<< "$brut")
   assert_eq "bash scripts/ci/checks-job.sh" "$commandes" "une seule commande, celle du job partagé"
 }
 
@@ -49,7 +51,9 @@ case_workflow_gitea_action_epinglee() {
   # Une URL absolue épinglée par SHA : la source et le commit sont fixés, et rien ne dépend du
   # réglage DEFAULT_ACTIONS_URL de la forge.
   local uses
-  uses=$(lignes '^\s*- uses:' | sed -E 's/^\s*- uses:\s*//')
+  local brut
+  lignes brut '^\s*- uses:'
+  uses=$(sed -E 's/^\s*- uses:\s*//' <<< "$brut")
   [[ -n $uses ]] || { echo "aucune action utilisée : le checkout a disparu" >&2; exit 1; }
   while IFS= read -r ligne; do
     local reference=${ligne%%#*}
@@ -87,20 +91,24 @@ case_workflow_github_contraintes() {
   assert_contains "contents: read" "$contenu" "et réduits à la lecture"
   # Contrôles seulement (AD-11) : ni secret, ni construction d'image, ni conteneur de job.
   local interdits
-  interdits=$(lignes 'secrets\.|docker build|^\s*container:' "$github_workflow")
+  lignes interdits 'secrets\.|docker build|^\s*container:' "$github_workflow"
   assert_eq "" "$interdits" "aucun secret, aucune construction d'image, aucun conteneur de job"
 }
 
 case_workflow_github_une_seule_commande() {
   local commandes
-  commandes=$(lignes '^\s*- run:|^\s*run:' "$github_workflow" | sed -E 's/^\s*- ?run:\s*//')
+  local brut
+  lignes brut '^\s*- run:|^\s*run:' "$github_workflow"
+  commandes=$(sed -E 's/^\s*- ?run:\s*//' <<< "$brut")
   assert_eq "bash scripts/ci/checks-job.sh" "$commandes" "une seule commande, celle du job partagé"
 }
 
 case_workflow_github_action_epinglee() {
   # Sur GitHub, « uses » ne prend pas d'URL absolue : l'action est nommée puis épinglée par SHA.
   local uses
-  uses=$(lignes '^\s*- uses:' "$github_workflow" | sed -E 's/^\s*- uses:\s*//')
+  local brut
+  lignes brut '^\s*- uses:' "$github_workflow"
+  uses=$(sed -E 's/^\s*- uses:\s*//' <<< "$brut")
   [[ -n $uses ]] || { echo "aucune action utilisée : le checkout a disparu" >&2; exit 1; }
   while IFS= read -r ligne; do
     local reference=${ligne%%#*}
@@ -115,8 +123,11 @@ case_workflow_meme_sha_des_deux_cotes() {
   # gitea.com/actions/checkout est un miroir de github.com/actions/checkout : le SHA épinglé est le
   # même, et les deux forges lancent donc le même code.
   local sha_gitea sha_github
-  sha_gitea=$(lignes '^\s*- uses:' | sed -E 's/.*@([0-9a-f]{40}).*/\1/')
-  sha_github=$(lignes '^\s*- uses:' "$github_workflow" | sed -E 's/.*@([0-9a-f]{40}).*/\1/')
+  local brut
+  lignes brut '^\s*- uses:'
+  sha_gitea=$(sed -E 's/.*@([0-9a-f]{40}).*/\1/' <<< "$brut")
+  lignes brut '^\s*- uses:' "$github_workflow"
+  sha_github=$(sed -E 's/.*@([0-9a-f]{40}).*/\1/' <<< "$brut")
   assert_eq "$sha_gitea" "$sha_github" "le checkout est épinglé au même commit des deux côtés"
 }
 

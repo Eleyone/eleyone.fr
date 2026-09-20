@@ -1877,26 +1877,28 @@ afin de comprendre comment le site a été cadré et construit.
 **Couvre :** FR-30, FR-31, UJ-3 · AD-24, section « README-cas » de l'architecture
 **Dépendances :** 0.2, 3.14
 **Bloquée par :** —
-**Prérequis de contenu :** relecture par Arnaud de la voix et des faits du premier jet (D-12).
+**Prérequis de contenu :** relecture par Arnaud de la voix et des faits du premier jet (D-12). **La PR ne se fusionne pas sans son accord explicite sur le texte.**
 **Opération manuelle (Arnaud) :** non
 
 **Critères d'acceptation :**
 
 **Étant donné** la rédaction du README
 **Quand** le développeur écrit le premier jet
-**Alors** il l'écrit en anglais à partir des seuls documents publics (PRD UJ-3 et FR-30, AD-12, AD-24, historique git, branches `design/*` et `experiment/d2-bilingue`), sans source privée, puis Arnaud relit la voix et les faits (D-12).
+**Alors** il l'écrit en anglais, **à la première personne** (décidé le 20/09/2026), à partir des seuls documents publics (PRD UJ-3 et FR-30, AD-12, AD-24, historique git, branches `design/*` et `experiment/d2-bilingue`), sans jamais lire de source privée — nommer `docs/private/` reste permis (NFR-9) —, puis Arnaud relit la voix et les faits (D-12).
 
 **Étant donné** `README.md` à la racine
 **Quand** Sam le lit sur GitHub
-**Alors** il est en anglais et suit la structure des cas : contexte, problème, la solution facile et pourquoi elle a été écartée, ce qui a été décidé, ce qui a résisté, résultat
+**Alors** il est en anglais et suit la **trame narrative** d'un cas : contexte, problème, la solution facile et pourquoi elle a été écartée, ce qui a été décidé, ce qui a résisté, résultat — sans les encarts du gabarit d'une page de cas (`docs/format-cas.md`), qui supposent un front matter et une page jumelle
+**Et** la solution facile nomme les quatre routes évidentes, dont **la stack d'Arnaud lui-même** : un thème tout fait, un profil LinkedIn et un PDF, une application React ou Next, et PHP/Symfony — un framework à base de données, d'authentification et de logique métier pour des pages qui n'ont ni base, ni compte, ni logique (décidé le 20/09/2026)
 **Et** « ce qui a résisté » raconte les sources privées repérées avant publication, la réécriture de l'historique et l'ajout du garde-fou.
 
 **Étant donné** les références du README
 **Quand** Sam les suit
-**Alors** elles mènent aux workflows, à `scripts/check.sh` et à la liste des contrôles, aux exécutions publiques, à l'architecture, aux artefacts de cadrage, à `docs/format-cas.md`, à `docs/measures/`, et aux branches `experiment/d2-bilingue`, `design/dossier-architecture` et `design/suisse`
-**Et** il documente le modèle de branches linéaire : `feat/*`, `fix/*`, `chore/*` et `docs/*` en squash vers `dev`, `dev` vers `main` en fast-forward, `hotfix/*` depuis `main` par le skill `hotfix`, aucun merge commit.
+**Alors** elles mènent aux workflows, à `scripts/check.sh`, à `scripts/checks/` **et** à la section « Liste des contrôles » de l'architecture, aux exécutions publiques, à l'architecture, aux artefacts de cadrage, à `docs/format-cas.md`, à `docs/measures/`, et aux branches `experiment/d2-bilingue`, `design/dossier-architecture` et `design/suisse`
+**Et** il documente le modèle de branches linéaire : `feat/*`, `fix/*`, `chore/*` et `docs/*` en squash vers `dev`, `dev` vers `main` en fast-forward, `hotfix/*` depuis `main`, aucun merge commit — la **règle**, sans promettre un outillage qui n'existe pas encore.
 
 - [ ] Aucun fichier privé nommé (nommer `docs/private/` est permis), aucune donnée de NFR-9 *(relecture)*.
+- [ ] Aucun lien mort : un test vérifie que chaque lien relatif du README mène à un chemin qui existe. `docs/measures/` est créé à cette occasion, avec un fichier qui dit ce qui y sera consigné et par quelle story.
 
 ### Story 3.16 : Green CI gate in verify-and-merge-pr
 
