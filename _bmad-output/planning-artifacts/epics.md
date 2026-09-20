@@ -1903,8 +1903,8 @@ afin de comprendre comment le site a été cadré et construit.
 ### Story 3.16 : Green CI gate in verify-and-merge-pr
 
 En tant qu'Arnaud, mainteneur,
-je veux que la fusion d'une PR exige la CI verte dès que la CI existe,
-afin que le verrou signalé « absent » depuis la story 0.7 devienne réel.
+je veux que la fusion d'une PR exige un run `checks` vert sur le SHA de tête,
+afin qu'aucun code en échec n'entre dans `dev` ni dans `main` — ce que le verrou signalé « absent » depuis la story 0.7 ne garantissait pas.
 
 **Couvre :** FR-23, FR-28 · AD-11, AD-24
 **Dépendances :** 0.7, 3.13
@@ -1914,19 +1914,21 @@ afin que le verrou signalé « absent » depuis la story 0.7 devienne réel.
 
 **Critères d'acceptation :**
 
-**Étant donné** une PR dont le run `checks` de Gitea est en échec, en cours, ou absent pour le SHA de tête
-**Quand** on lance `verify-and-merge-pr --merge`
-**Alors** la fusion est refusée et le verrou nomme l'état du run.
+**Étant donné** l'état de la CI, lu sur le **SHA de tête rendu par la forge**, et la présence de `.gitea/workflows/checks.yaml` sur la base, lue après un `git fetch` de la base
+**Quand** le verrou est évalué — que `--merge` soit passé ou non, l'audit affiche le même verdict
+**Alors** il ne regarde que les statuts du workflow **`checks`** : Gitea nomme un contexte `<workflow> / <job> (<événement>)`, et un autre workflow, comme l'agent de parité qui commente **sans bloquer** (AD-16), ne doit jamais verrouiller la fusion
+**Et** seule la forge principale fait foi : la CI publique de GitHub, qui peut être en retard d'une synchronisation, n'entre pas dans le verrou.
 
-**Étant donné** une PR dont le run `checks` est vert sur le SHA de tête et dont les autres verrous passent
-**Quand** on lance `--merge`
-**Alors** la PR est fusionnée selon sa base (squash vers `dev`).
+**Étant donné** au moins un statut `checks` sur le SHA de tête
+**Quand** le verrou est évalué
+**Alors** il passe si **tous** sont `success` ; il bloque en disant « en cours » si l'un est `pending` ; il bloque en nommant l'état lu pour tout le reste — `failure`, `error`, `cancelled`, `skipped`, `warning` compris, aucun état n'étant traité par omission.
 
-**Étant donné** `.gitea/workflows/checks.yaml` présent sur la base de la PR
-**Quand** aucun statut de CI n'existe pour le SHA de tête
-**Alors** l'état `absent` bloque la fusion : la règle d'amorçage ne s'applique plus (D-1).
+**Étant donné** aucun statut `checks` sur le SHA de tête
+**Quand** `.gitea/workflows/checks.yaml` est **sur la base**
+**Alors** la fusion est refusée : la règle d'amorçage ne s'applique plus (D-1), et le message dit que le workflow existe sur la base — à distinguer à l'écran de l'amorçage, où il en est absent et où le substitut prend le relais.
 
-- [ ] La procédure `docs/procedures/verify-and-merge-pr.md` ne décrit plus l'état `absent` qu'au titre de la règle d'amorçage.
+- [ ] Une PR qui ne touche que `_bmad-output/` est dispensée de **revue**, jamais de **CI** : l'exception documentaire ne touche pas ce verrou.
+- [ ] La procédure `docs/procedures/verify-and-merge-pr.md` dit que l'état `absent` bloque désormais, et ne décrit l'amorçage que comme le régime révolu qu'il est.
 
 ### Story 3.17 : Publish-case skill
 

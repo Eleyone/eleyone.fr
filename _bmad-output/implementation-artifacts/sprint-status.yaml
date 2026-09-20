@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-20-2026 12:10'
+last_updated: '09-20-2026 20:06'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -81,7 +81,7 @@ development_status:
   3-13-checks-workflow-on-main-forge: done
   3-14-public-checks-workflow-on-github: done
   3-15-public-repository-case-readme: done
-  3-16-green-ci-gate-in-verify-and-merge-pr: backlog
+  3-16-green-ci-gate-in-verify-and-merge-pr: done
   3-17-publish-case-skill: backlog
   epic-3-retrospective: optional
 
