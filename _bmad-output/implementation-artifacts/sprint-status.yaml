@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-21-2026 00:18'
+last_updated: '09-21-2026 00:29'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -83,7 +83,7 @@ development_status:
   3-15-public-repository-case-readme: done
   3-16-green-ci-gate-in-verify-and-merge-pr: done
   3-17-publish-case-skill: done
-  epic-3-retrospective: optional
+  epic-3-retrospective: done
 
   epic-4: backlog
   4-1-multi-stage-site-image: backlog
@@ -388,3 +388,39 @@ action_items:
     owner: "agent de développement"
     status: done
     ref: "_bmad-output/implementation-artifacts/epic-2-retro-2026-09-17.md"
+  - id: "epic-3-retro-item-12-mutualiser-l-extraction-d-attributs-xpat"
+    epic: 3
+    action: "Mutualiser l'extraction d'attributs XPath dans scripts/checks/lib.sh
+      (budget, html, links) et supprimer xpath() morte de links.sh"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-3-retro-2026-09-21.md"
+  - id: "epic-3-retro-item-13-une-seule-enveloppe-de-grep-pour-tout-le"
+    epic: 3
+    action: "Une seule enveloppe de grep pour tout le dépôt : réunir checks_grep,
+      select_lines, tests_grep_into et les gardes écrites à la main de publish-case.sh"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-3-retro-2026-09-21.md"
+  - id: "epic-3-retro-item-14-un-contrôle-qui-parcourt-une-liste-vérif"
+    epic: 3
+    action: "Un contrôle qui parcourt une liste vérifie qu'elle n'est pas vide avant
+      de conclure (budget.sh, html.sh), et la règle dans docs/procedures/check.md"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-3-retro-2026-09-21.md"
+  - id: "epic-3-retro-item-15-ajouter-un-mode-range-à-llm-review-sh-po"
+    epic: 3
+    action: "Ajouter un mode --range à llm-review.sh, pour que la revue du diff d'un
+      epic cesse d'être un script jetable"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-3-retro-2026-09-21.md"
+  - id: "epic-3-retro-item-16-écrire-dans-la-table-des-pièges-que-la-p"
+    epic: 3
+    action: "Écrire dans la table des pièges que la parade à un piège doit être écrite
+      une seule fois : dupliquer une garde correcte est un défaut au même titre que
+      l'oublier"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-3-retro-2026-09-21.md"
