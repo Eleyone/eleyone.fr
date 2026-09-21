@@ -26,6 +26,37 @@ case_nginx_conf_aucun_realip() {
   assert_eq "" "$trouve" "aucune directive real_ip"
 }
 
+# Les variables que le format a le droit de citer. Le cas raisonne par liste blanche, pas par liste
+# noire : une liste noire est toujours en retard d'une variable. La règle précédente interdisait
+# « $request » suivi d'autre chose qu'un « _ », pour épargner $request_method — et laissait donc
+# passer $request_uri, qui porte la chaîne de requête. Elle serait restée verte sur une
+# configuration qui la journalise (constat B1 de la rétrospective de l'epic 4, 21/09/2026).
+format_admet=' time_local request_method uri status body_bytes_sent '
+
+variables_intruses() { # $1 = fichier de configuration ; affiche les variables non admises
+  local fichier=$1 ligne variables variable intruses=""
+  shell_grep_into ligne -E '^[[:space:]]*log_format' "$fichier"
+  [[ -n $ligne ]] || { echo "aucune directive log_format hors commentaire dans $fichier" >&2; exit 1; }
+  shell_grep_into variables -oE '\$[a-z_]+' <<< "$ligne"
+  [[ -n $variables ]] || { echo "le format ne cite aucune variable dans $fichier" >&2; exit 1; }
+  while IFS= read -r variable; do
+    [[ -n $variable ]] || continue
+    [[ $format_admet == *" ${variable#$} "* ]] || intruses+="$variable "
+  done <<< "$variables"
+  printf '%s' "${intruses% }"
+}
+
+case_nginx_conf_journal_regle_attrape_la_fuite() {
+  # Sans ce cas, la règle pourrait n'attraper personne et passer pour verte — ce qu'a fait la
+  # précédente pendant toute la story 4.2.
+  local fuite=$work/fuite.conf
+  sed 's|"\$request_method \$uri"|"$request_method $request_uri"|' "$conf" > "$fuite"
+  assert_eq '$request_uri' "$(variables_intruses "$fuite")" "\$request_uri est vue comme une intruse"
+
+  sed 's|\$time_local|$remote_addr|' "$conf" > "$fuite"
+  assert_eq '$remote_addr' "$(variables_intruses "$fuite")" "une adresse dans le format est vue aussi"
+}
+
 case_nginx_conf_journal_sans_adresse() {
   # Le format ne cite ni $remote_addr, ni $request (qui porte la chaîne de requête), ni
   # $http_user_agent, ni $http_referer.
@@ -37,8 +68,8 @@ case_nginx_conf_journal_sans_adresse() {
     shell_grep_into trouve -n "\$$interdit" "$conf"
     assert_eq "" "$trouve" "le journal ne cite pas \$$interdit"
   done
-  shell_grep_into trouve -nE 'log_format[^;]*\$request[^_]' "$conf"
-  assert_eq "" "$trouve" "le journal emploie \$uri, jamais \$request"
+  assert_eq "" "$(variables_intruses "$conf")" \
+    "le format ne cite que les variables voulues, \$uri et jamais \$request ni \$request_uri"
   assert_contains 'access_log /dev/stdout sans_ip;' "$(cat "$conf")" "le journal emploie ce format"
 }
 
@@ -52,7 +83,7 @@ case_nginx_conf_entetes_de_securite() {
   # « always » sur chacun : sans lui, l'en-tête manque sur une 404. Les lignes sont examinées une
   # par une : une expression régulière « qui ne contient pas » se trompe de cible trop facilement.
   local lignes ligne sans_always=""
-  shell_grep_into lignes -nE '^[[:space:]]*add_header [A-Z]' "$conf"
+  shell_grep_into lignes -nE '^[[:space:]]*add_header [A-Za-z]' "$conf"
   while IFS= read -r ligne; do
     [[ -n $ligne ]] || continue
     [[ $ligne == *" always;"* ]] || sans_always+="$ligne"$'\n'

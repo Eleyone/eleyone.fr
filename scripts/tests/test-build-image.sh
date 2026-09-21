@@ -142,11 +142,24 @@ case_dockerfile_directives_en_tete() {
 case_dockerignore_exclut_le_privé_et_les_sorties() {
   # La comparaison porte sur la **ligne entière** : « .env » est une sous-chaîne de « !.env.example »,
   # et retirer l'exclusion aurait laissé le cas passer (constat de la revue de la PR n° 59).
+  # La liste est **complète** : trois entrées y manquaient — « .env.* », « experiment/ » et
+  # « design/ » —, et leur retrait du .dockerignore serait passé en CI (constat B4 de la
+  # rétrospective de l'epic 4, 21/09/2026).
+  local attendus=(
+    '.git/' '.env' '.env.*' '!.env.example' 'docs/private/' '_bmad*/' '.claude/' '.agent/'
+    '.agents/' 'experiments/' 'experiment/' 'design/' 'public/' 'build/' '.tools/'
+    '.pr-body.md' '*.bak*'
+  )
   local chemin ligne
-  for chemin in '.git/' '.env' 'docs/private/' '_bmad*/' '.claude/' '.agent/' '.agents/' 'experiments/' 'public/' 'build/' '.tools/'; do
+  for chemin in "${attendus[@]}"; do
     shell_grep_into ligne -xF "$chemin" "$root/.dockerignore"
     assert_eq "$chemin" "$ligne" "le contexte de build exclut $chemin, sur sa propre ligne"
   done
+  # Le compte ferme la liste : une entrée ajoutée sans passer par ce cas se verrait aussi, et la
+  # liste ci-dessus cesserait d'être une description partielle du fichier.
+  local effectives
+  shell_grep_into effectives -cE '^[^#[:space:]]' "$root/.dockerignore"
+  assert_eq "${#attendus[@]}" "$effectives" "le .dockerignore ne porte rien d'autre que ces entrées"
 }
 
 case_build_image_secret_par_defaut_dans_le_depot_prive() {

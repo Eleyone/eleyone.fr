@@ -8,7 +8,13 @@
          (FR-1), qui porte déjà le nom. L'ajouter donnerait « Arnaud Grousset · … · Arnaud Grousset ·
          Eleyone » dans l'onglet et dans un résultat de recherche (décidé le 16/09/2026, story 2.2). */}}
     {{ $identity := .Site.Home.Params.identity }}
-    <title>{{ .Title }}{{ if not .IsHome }}{{ with $identity }} · {{ . }}{{ end }}{{ end }}</title>
+    {{/* La page 404 n'a pas de contenu, donc pas de titre à elle : Hugo lui donne le sien, « 404
+         Page not found », en anglais dans les deux langues. Son <h1> et son corps passaient par
+         i18n/, pas son <title> — la page française s'annonçait en anglais dans l'onglet et dans
+         l'historique (constat C1 de la rétrospective de l'epic 4, 21/09/2026). */}}
+    {{ $title := .Title }}
+    {{ if eq .Kind "404" }}{{ $title = i18n "not_found_title" }}{{ end }}
+    <title>{{ $title }}{{ if not .IsHome }}{{ with $identity }} · {{ . }}{{ end }}{{ end }}</title>
     {{/* AD-2 : une alternative par traduction, plus x-default vers le français. */}}
     {{ range .AllTranslations }}
       <link rel="alternate" hreflang="{{ .Site.Language.Lang }}" href="{{ .Permalink }}">

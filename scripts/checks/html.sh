@@ -200,6 +200,14 @@ while IFS= read -r page; do
     # L'accueil fait exception : son titre porte déjà le nom (AD-2, story 2.2).
     signaler "$relative" "C11 : <title> « $titre » sans la ligne d'identité « $identity » (AD-2)"
   fi
+  # Hugo donne son propre titre aux pages qu'aucun fichier de contenu ne porte — « 404 Page not
+  # found », en anglais quelle que soit la langue de la page. Le <h1> et le corps de la 404
+  # passaient par i18n/, pas son <title> : la page française s'annonçait en anglais dans l'onglet
+  # et dans l'historique du navigateur, et rien ne le voyait (constat C1 de la rétrospective de
+  # l'epic 4, 21/09/2026). Le libellé est écrit en toutes lettres : c'est le seul titre que le
+  # générateur fournit sur ce site, et une règle plus large se tromperait de cible.
+  [[ $titre != *"404 Page not found"* ]] \
+    || signaler "$relative" "C11 : <title> « $titre » est celui du générateur, non traduit (3.1.1)"
 
   h1=$(checks_xpath "$page" 'count(//h1)'); h1=${h1:-0}; h1=${h1%%.*}
   ((h1 == 1)) || signaler "$relative" "C11 : $h1 balise(s) <h1> ; exactement une est attendue (1.3.1)"

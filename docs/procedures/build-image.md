@@ -17,9 +17,7 @@ Une **seule** commande de build vit dans le dépôt, dans ce script : l'epic 11 
 
 1. **`tools`** — part de `CHECK_IMAGE`, un `ARG` **sans valeur par défaut** : la seule déclaration de l'image est `tools.env` (AD-1), et un `FROM` vide échoue plutôt que de bâtir sur une image non épinglée. L'étape copie `tools.env`, `scripts/ci/` et `scripts/lib/`, puis installe les outils épinglés.
 2. **`build`** — copie les sources et lance **une seule instruction**, dont les commandes sont enchaînées par `&&` : le build Hugo de production, puis `scripts/check.sh`, puis `chmod -R a+rX public`. Un `;` laisserait passer un contrôle en échec, ce qui viderait l'image de sa garantie.
-3. **`runtime`** — `nginx:1.30.4-alpine` **épinglée par digest**, le tag ne servant qu'à la lisibilité. Le contenu par défaut de l'image est retiré avant la copie, puis `public/` est copié dans `/usr/share/nginx/html`.
-
-La configuration nginx de `deploy/nginx/` **n'est pas là** : elle arrive avec la story 4.2. Cette image sert `public/` avec la configuration par défaut de nginx.
+3. **`runtime`** — `nginx:1.30.4-alpine` **épinglée par digest**, le tag ne servant qu'à la lisibilité. Le contenu par défaut de l'image est retiré avant la copie, puis `public/` est copié dans `/usr/share/nginx/html` et `deploy/nginx/site.conf` remplace la configuration par défaut (voir « Ce que sert nginx »).
 
 ## Le fichier de valeurs légales
 
