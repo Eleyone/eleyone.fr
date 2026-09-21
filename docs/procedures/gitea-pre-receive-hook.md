@@ -46,11 +46,14 @@ Variables : `C=<conteneur>`, `R=/data/git/repositories/eleyone/eleyone.fr.git`, 
    docker exec -u git "$C" sh -c "mkdir -p $D && chmod 0700 $D"
    docker exec -u git "$C" sh -c "umask 077 && git -C $P show main:forbidden-patterns.txt > $D/forbidden-patterns.txt"
    docker exec -u git "$C" sh -c "umask 077 && git -C $R show $COMMIT:scripts/check-private.sh > $D/check-private.sh"
-   docker exec -u git "$C" sha256sum $D/check-private.sh
+   docker exec -u git "$C" sh -c "mkdir -p $D/lib && umask 077 && git -C $R show $COMMIT:scripts/lib/image.sh > $D/lib/image.sh"
+   docker exec -u git "$C" sha256sum $D/check-private.sh $D/lib/image.sh
    docker exec -u git "$C" sh -c "test -r $D/forbidden-patterns.txt && test -s $D/forbidden-patterns.txt && echo 'liste lisible par git, non vide'"
    ```
 
-   Attendu : l'empreinte de `scripts/check-private.sh` au commit installé (`git show $COMMIT:scripts/check-private.sh | sha256sum` sur le poste), puis « liste lisible par git, non vide ». Sinon, s'arrêter sans poser le hook.
+   Attendu : les empreintes de `scripts/check-private.sh` et de `scripts/lib/image.sh` au commit installé (`git show $COMMIT:<chemin> | sha256sum` sur le poste), puis « liste lisible par git, non vide ». Sinon, s'arrêter sans poser le hook.
+
+   **Le sous-dossier `lib/` est obligatoire depuis la story 5.4** : `check-private.sh` y charge `image.sh`, qui porte C20. Le garde-fou refuse de s'exécuter sans elle, et le lanceur refuse le push en la nommant — un contrôle qui s'ignorerait en silence ne garderait rien. Le chemin relatif est le même dans le dépôt et sur la forge, pour que le script n'ait pas à deviner où il tourne.
 
 3. **Hook déposé, encore inactif** :
 
@@ -103,17 +106,18 @@ Trois règles qu'un essai rate sans elles (constatées le 16/09/2026, au redépl
 
 ## Entretenir
 
-- **À chaque modification de `scripts/check-private.sh` ou de `scripts/gitea/pre-receive-check-private`** fusionnée dans `dev` : réextraire le fichier au nouveau commit (étapes 2 ou 3 et 4 d'« Installer », avec vérification d'empreinte : le sha256 de la copie du serveur doit être celui du fichier dans `dev`), puis refaire les essais 1 et 3, plus l'essai de chaque surface que la modification touche (3 bis pour les messages de commit, 3 ter pour les chemins). Garder l'ancienne copie du script le temps des essais : elle permet de revenir en arrière sans attendre un correctif.
+- **À chaque modification de `scripts/check-private.sh`, de `scripts/lib/image.sh` ou de `scripts/gitea/pre-receive-check-private`** fusionnée dans `dev` : réextraire le fichier au nouveau commit (étapes 2 ou 3 et 4 d'« Installer », avec vérification d'empreinte : le sha256 de la copie du serveur doit être celui du fichier dans `dev`), puis refaire les essais 1 et 3, plus l'essai de chaque surface que la modification touche (3 bis pour les messages de commit, 3 ter pour les chemins). Garder l'ancienne copie du script le temps des essais : elle permet de revenir en arrière sans attendre un correctif.
 - **À chaque modification de la liste des motifs**, poussée sur `main` du dépôt privé : réextraire la liste (étape 2, deuxième commande), puis refaire l'essai 3. Tant que ce n'est pas fait, le serveur applique l'ancienne liste.
 - **À chaque mise à jour de Gitea ou régénération des hooks** : vérifier que `check-private` est toujours dans `hooks/pre-receive.d/`, puis refaire les essais 1 et 3. La régénération réécrit `pre-receive` et `pre-receive.d/gitea` sans supprimer les autres fichiers du dossier.
 
 ## Ce que le hook refuse
 
-Quatre surfaces, depuis la story 1.5 : le contenu des fichiers, leur chemin, le chemin confronté aux motifs, et le **message des commits** (tous les commits nouveaux de la plage poussée, pas seulement la tête). Deux interdictions de chemin sont temporaires et tombent quand leur contrôle entrera dans le hook : `assets/cv/*.pdf` (C21) et les extensions d'images (C20, story 5.4), avec deux exceptions nommées, `.env.example` et `design/<branche>/screenshots/`. Aucune alerte n'affiche le motif, le contenu trouvé, le chemin fautif d'un motif ni le message de commit.
+Quatre surfaces, depuis la story 1.5 : le contenu des fichiers, leur chemin, le chemin confronté aux motifs, et le **message des commits** (tous les commits nouveaux de la plage poussée, pas seulement la tête). Une interdiction de chemin reste temporaire et tombera quand son contrôle entrera dans le hook : `assets/cv/*.pdf` (C21). **Celle des extensions d'images est levée sous `assets/` depuis la story 5.4** : C20 y lit les métadonnées de chaque image avant publication (AD-19, AD-12). Ailleurs elle tient — C20 sait dire qu'une image ne porte pas de données de prise de vue, pas ce qu'elle montre. Trois exceptions nommées : `.env.example`, `design/<branche>/screenshots/` et les images d'`assets/`. Aucune alerte n'affiche le motif, le contenu trouvé, le chemin fautif d'un motif ni le message de commit.
 
 ## En cas d'échec
 
 - **Un push propre est refusé avec « GITEA_CUSTOM non définie »** : Gitea ne transmet pas cette variable au hook dans cette installation. S'arrêter et décider avec Arnaud d'un autre moyen de trouver le dossier ; ne jamais écrire de chemin du serveur dans le dépôt.
+- **« bibliothèque de lecture d'images absente ou illisible »** : le sous-dossier `lib/` n'a pas été créé, ou `image.sh` n'a pas été extrait (étape 2). Le refuser est voulu : sans elle, C20 ne s'exécute pas.
 - **« script du garde-fou absent ou illisible » ou « liste des motifs absente ou illisible »** : vérifier les copies, le propriétaire `git` et les droits (`docker exec -u git <conteneur> ls -l …`).
 - **Un push interdit est admis** : le hook ne s'exécute pas. Retirer tout de suite la branche admise de la forge, ne pas activer le miroir, et vérifier que `check-private` est exécutable et appartient à `git`.
 - **La fusion depuis l'interface est admise malgré le motif factice** : la story s'arrête et Arnaud décide ; le miroir reste désactivé.

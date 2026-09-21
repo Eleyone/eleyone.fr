@@ -8,6 +8,11 @@ install_hook() {
   local custom_line
   mkdir -p "$work/custom/eleyone-check-private"
   cp "$root/scripts/check-private.sh" "$work/custom/eleyone-check-private/check-private.sh"
+  # La bibliothèque de lecture d'images est copiée sous le même chemin relatif que dans le dépôt,
+  # comme la procédure du hook le prescrit depuis la story 5.4 : check-private.sh la charge par
+  # « dirname $0 »/lib/image.sh, et ce chemin doit valoir des deux côtés.
+  mkdir -p "$work/custom/eleyone-check-private/lib"
+  cp "$root/scripts/lib/image.sh" "$work/custom/eleyone-check-private/lib/image.sh"
   printf '# motifs d essai\nmotif-interdit-essai\n' > "$work/custom/eleyone-check-private/forbidden-patterns.txt"
   git init -q --bare "$work/nu.git"
   git -C "$work/nu.git" config core.hooksPath "$work/nu.git/hooks"
@@ -80,6 +85,15 @@ case_script_du_garde_fou_absent() {
   rm "$work/custom/eleyone-check-private/check-private.sh"
   commit_file publique/a.txt "page publique"
   refused "script absent" "script du garde-fou absent ou illisible"
+}
+
+case_bibliotheque_dimages_absente() {
+  # Sans elle, C20 ne s'exécute pas : le hook refuse le push plutôt que de laisser passer une
+  # image porteuse de métadonnées. Un garde-fou qui s'ignore en silence ne garde rien.
+  install_hook
+  rm "$work/custom/eleyone-check-private/lib/image.sh"
+  commit_file publique/a.txt "page publique"
+  refused "bibliothèque absente" "bibliothèque de lecture d'images absente ou illisible"
 }
 
 case_liste_absente() {

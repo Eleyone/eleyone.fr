@@ -18,15 +18,30 @@
 set -euo pipefail
 
 # Les chemins sont comparés sans tenir compte de la casse : « Docs/Private/ » est aussi refusé.
-# Deux interdictions sont temporaires, le temps que le hook sache lire ces binaires :
+# Une interdiction reste temporaire, le temps que le hook sache lire ce binaire :
 #   assets/cv/*.pdf tant que C21 n'est pas dans le hook (AD-21, story 7.x)
-#   les extensions d'images tant que C20 n'est pas dans le hook (AD-19, story 5.4)
+# L'interdiction des extensions d'images est **levée sous assets/** depuis la story 5.4 : C20 y lit
+# désormais les métadonnées de chaque image, dans le hook comme en CI (AD-19, AD-12). Ailleurs elle
+# tient : C20 sait dire qu'une image ne porte pas de données de prise de vue, pas ce qu'elle montre.
+# Le périmètre a été arbitré par Arnaud le 21/09/2026.
 # .env est refusé seul ou suffixé (.env.production, .env.local) ; .environment.md est admis.
-# Deux exceptions nommées : .env.example, commité par conception (AGENTS.md) et sans aucune valeur ;
-# et les captures des branches de design (design/<branche>/screenshots/), déjà publiées, produites par un
-# navigateur et hors du périmètre de C20 (assets/images/ et public/).
+# Trois exceptions nommées : .env.example, commité par conception (AGENTS.md) et sans aucune valeur ;
+# les captures des branches de design (design/<branche>/screenshots/), déjà publiées et produites par un
+# navigateur ; et les images d'assets/, que C20 contrôle.
 forbidden_paths='^docs/(private|context)/|(^|/)\.env($|\.)|^assets/cv/.*\.pdf$|\.(jpe?g|png|gif|webp|avif|tiff?|bmp|heic|heif|ico)$'
-allowed_paths='(^|/)\.env\.example$|^design/[^/]+/screenshots/'
+allowed_paths='(^|/)\.env\.example$|^design/[^/]+/screenshots/|^assets/.*\.(jpe?g|png|gif|webp|avif|tiff?|bmp|heic|heif|ico)$'
+# Les chemins que C20 doit lire : les images admises ci-dessus.
+image_paths='^assets/.*\.(jpe?g|png|gif|webp|avif|tiff?|bmp|heic|heif|ico)$'
+
+# C20 vit dans scripts/lib/image.sh, copiée à côté de ce script sur la forge (procédure du hook).
+# Son absence **refuse** : un garde-fou qui s'ignore en silence ne garde rien.
+image_lib="$(dirname "${BASH_SOURCE[0]}")/lib/image.sh"
+if [[ -r $image_lib ]]; then
+  . "$image_lib"
+else
+  echo "check-private: scripts/lib/image.sh absent ou illisible ($image_lib) : C20 ne peut pas s'exécuter." >&2
+  exit 1
+fi
 patterns_file="${PRIVATE_PATTERNS_FILE:-$(git rev-parse --show-toplevel 2>/dev/null || true)/docs/private/forbidden-patterns.txt}"
 [[ $patterns_file == /* ]] || patterns_file="$PWD/$patterns_file"
 # depuis un sous-dossier, git ls-files, git ls-tree et git grep ne verraient que ce sous-dossier :
@@ -74,6 +89,34 @@ else
   echo "check-private: pas de fichier de motifs ($patterns_file), chemins seulement" >&2
 fi
 
+# C20 dans le garde-fou (AD-19, AD-12) : une image porteuse de métadonnées est refusée **avant
+# publication**. La CI seule arriverait après que le miroir a poussé, et un commit poussé sur
+# GitHub reste atteignable par son SHA même après un push forcé.
+#
+# Le contenu passe par un fichier temporaire : un blob binaire ne tient pas dans une variable
+# shell, que le premier octet nul tronque — l'image paraîtrait vide, donc propre.
+check_images() { # $1 = libellé, $2 = révision (« --cached » pour l'index), $3 = liste des chemins
+  local label=$1 rev=$2 listing=$3 images chemin marqueurs prc=0 blob
+  images=$(printf '%s\n' "$listing" | grep -E -i "$image_paths") || prc=$?
+  ((prc <= 1)) || { fail "recherche des images impossible dans $label"; return 0; }
+  [[ -n $images ]] || return 0
+  blob=$(mktemp) || { fail "fichier temporaire impossible pour $label"; return 0; }
+  while IFS= read -r chemin; do
+    [[ -n $chemin ]] || continue
+    if [[ $rev == --cached ]]; then
+      git cat-file blob ":$chemin" > "$blob" 2>/dev/null || { fail "lecture impossible d'une image de $label"; continue; }
+    else
+      git cat-file blob "$rev:$chemin" > "$blob" 2>/dev/null || { fail "lecture impossible d'une image de $label"; continue; }
+    fi
+    marqueurs=$(image_metadata_markers "$blob") || { fail "lecture impossible d'une image de $label"; continue; }
+    # Le chemin est affiché, pas le contenu : un marqueur de métadonnée n'est pas un motif privé,
+    # et l'auteur doit savoir quel fichier reprendre.
+    [[ -z $marqueurs ]] \
+      || fail "C20 : métadonnées dans une image de $label : $chemin ($(tr '\n' ' ' <<< "$marqueurs" | sed 's/ $//'))"
+  done <<< "$images"
+  rm -f "$blob"
+}
+
 check_tree() { # $1 = libellé, reste = arguments git (commit ou --cached)
   local label=$1; shift
   local listing paths entry hits="" err rc=0 prc=0
@@ -94,6 +137,7 @@ check_tree() { # $1 = libellé, reste = arguments git (commit ou --cached)
     ((prc <= 1)) || { fail "exception de chemin illisible dans $label"; return 0; }
   fi
   [[ -z $paths ]] || fail "chemin privé dans $label :\n$paths"
+  check_images "$label" "$1" "$listing"
   [[ -n $patterns ]] || return 0
   # les chemins eux-mêmes, confrontés aux motifs : un dossier ou un fichier nommé d'après un client fuit
   # autant que son contenu. Le chemin fautif n'est jamais affiché, il contient le motif.

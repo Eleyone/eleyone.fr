@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-21-2026 22:25'
+last_updated: '09-21-2026 23:30'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -94,7 +94,7 @@ development_status:
   5-1-design-tokens-typography-and-dark-mode: done
   5-2-cv-home-page-template: done
   5-3-education-certification-and-languages-template: done
-  5-4-photo-preparation-and-image-check: backlog
+  5-4-photo-preparation-and-image-check: done
   5-5-photo-published-on-home-page: backlog
   epic-5-retrospective: optional
 

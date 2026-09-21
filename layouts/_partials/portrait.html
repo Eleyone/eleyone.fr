@@ -1,0 +1,35 @@
+{{/*
+  Photo d'Arnaud (AD-19, DESIGN.md « portrait »). Deux variantes WebP par emplacement, empreintées,
+  en srcset 1x/2x, avec les dimensions de la variante 1x et le texte alternatif de la langue.
+
+  Paramètre : « place », « home » ou « about ».
+
+  Les variantes sont produites depuis assets/images/portrait.webp, la copie commitée que prépare
+  scripts/photo/prepare.sh. Le partial ne rend rien tant que cette copie n'existe pas : la story
+  5.4 écrit la mécanique, la photo réelle arrive avec la 5.5. Un <img> vers une ressource absente
+  ferait échouer le build, et un emplacement réservé serait pire que rien (DESIGN.md § Do's).
+
+  Le texte alternatif vient de « portrait_alt » de content/_index.<lang>.md (AD-3, FR-34) : c'est
+  du contenu, dans la langue de la page. Sans lui, la photo n'est pas rendue — une image sans
+  alternative échouerait de toute façon à C11, et mieux vaut ne rien montrer qu'une photo muette.
+*/}}
+{{- $place := .place | default "home" -}}
+{{- $tailles := dict
+      "home"  (slice "120x150" "240x300")
+      "about" (slice "160x200" "320x400") -}}
+{{- with index $tailles $place -}}
+  {{- $paire := . -}}
+  {{- with resources.Get "images/portrait.webp" -}}
+    {{- $source := . -}}
+    {{- with site.Home.Params.portrait_alt -}}
+      {{- $alt := . -}}
+      {{- $un := $source.Process (printf "resize %s webp q80" (index $paire 0)) | fingerprint -}}
+      {{- $deux := $source.Process (printf "resize %s webp q80" (index $paire 1)) | fingerprint -}}
+      <img class="portrait portrait--{{ $place }}"
+           src="{{ $un.RelPermalink }}"
+           srcset="{{ $un.RelPermalink }} 1x, {{ $deux.RelPermalink }} 2x"
+           width="{{ $un.Width }}" height="{{ $un.Height }}"
+           alt="{{ $alt }}">
+    {{- end -}}
+  {{- end -}}
+{{- end -}}

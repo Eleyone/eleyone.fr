@@ -14,7 +14,13 @@ refuse() { printf 'check-private: %s : push refusé.\n' "$1" >&2; exit 1; }
 dir="$GITEA_CUSTOM/eleyone-check-private"
 script="$dir/check-private.sh"
 list="$dir/forbidden-patterns.txt"
+# La bibliothèque de lecture d'images porte C20, que le hook applique depuis la story 5.4 : sans
+# elle, une image porteuse de métadonnées passerait, et le miroir la publierait dans la seconde.
+# Elle est vérifiée ici pour que le refus nomme ce qui manque, plutôt que de laisser le garde-fou
+# échouer sur un « source: fichier introuvable ».
+lib="$dir/lib/image.sh"
 [[ -f $script && -r $script ]] || refuse "script du garde-fou absent ou illisible"
+[[ -f $lib && -r $lib ]] || refuse "bibliothèque de lecture d'images absente ou illisible"
 [[ -f $list && -r $list ]] || refuse "liste des motifs absente ou illisible"
 
 PRIVATE_PATTERNS_FILE=$list exec bash "$script" pre-receive

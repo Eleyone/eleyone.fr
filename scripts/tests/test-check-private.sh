@@ -343,13 +343,42 @@ case_pre_receive_exceptions_nommees() {
   commit_all "exceptions nommées" > /dev/null
   push_branch
   assert_eq 0 "$rc" ".env.example et captures de design admis (messages : $err)"
+  # Depuis la story 5.4, une image d'assets/ est admise : C20 y lit ses métadonnées (AD-19).
+  # Le périmètre a été arbitré par Arnaud le 21/09/2026 — C20 sait dire qu'une image ne porte pas
+  # de données de prise de vue, pas ce qu'elle montre, d'où assets/ et pas tout le dépôt.
   from_base
   mkdir -p "$work/depot/assets/images"
   printf 'faux binaire\n' > "$work/depot/assets/images/portrait.webp"
-  commit_all "image hors des captures de design" > /dev/null
+  commit_all "image d assets sans métadonnée" > /dev/null
   push_branch
-  [[ $rc != 0 ]] || { echo "image du site : push admis" >&2; exit 1; }
-  assert_contains "assets/images/portrait.webp" "$err" "image du site refusée d ici C20"
+  assert_eq 0 "$rc" "une image d assets sans métadonnée est admise (messages : $err)"
+
+  # La même, hors d'assets/ : le chemin reste refusé.
+  from_base
+  printf 'faux binaire\n' > "$work/depot/portrait.webp"
+  commit_all "image hors assets" > /dev/null
+  push_branch
+  [[ $rc != 0 ]] || { echo "image hors assets : push admis" >&2; exit 1; }
+  assert_contains "portrait.webp" "$err" "une image hors assets reste refusée par son chemin"
+}
+
+case_pre_receive_c20_metadonnees() {
+  # C20 dans le hook (AD-19, AD-12) : une image porteuse de métadonnées est refusée **avant**
+  # publication, la CI seule arrivant après que le miroir a poussé.
+  base_pushed
+  from_base
+  mkdir -p "$work/depot/assets/images"
+  {
+    printf 'RIFF'; printf '\070\000\000\000'; printf 'WEBP'
+    printf 'VP8X'; printf '\012\000\000\000'; printf '\010\000\000\000'
+    printf '\177\002\000'; printf '\037\003\000'
+    printf 'EXIF'; printf '\014\000\000\000'; printf 'Exif\000\000MM\000\052\000\000'
+  } > "$work/depot/assets/images/portrait.webp"
+  commit_all "image porteuse de métadonnées" > /dev/null
+  push_branch
+  [[ $rc != 0 ]] || { echo "image avec métadonnées : push admis" >&2; exit 1; }
+  assert_contains "C20 : métadonnées dans une image" "$err" "le refus nomme C20"
+  assert_contains "assets/images/portrait.webp" "$err" "et le fichier à reprendre"
 }
 
 run_case "$@"
