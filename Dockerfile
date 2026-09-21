@@ -50,11 +50,13 @@ RUN --mount=type=secret,id=legal_env,required=true \
     && chmod -R a+rX public
 
 # --- ce qui est servi -------------------------------------------------------------------------------
-# Épinglée par digest ; le tag ne sert qu'à la lisibilité. La configuration de deploy/nginx/ arrive
-# avec la story 4.2 : cette image sert public/ avec la configuration par défaut de nginx.
+# Épinglée par digest ; le tag ne sert qu'à la lisibilité.
 FROM nginx:1.30.4-alpine@sha256:dc5069ad14f19660b141b21236140b91656bf89bbc3e2417c70ae650cd66104c AS runtime
 # Le contenu par défaut de l'image est retiré avant la copie : « COPY » écrase index.html mais
 # laisserait 50x.html, une page d'erreur en anglais que le site ne sert pas et qui n'a passé aucun
 # contrôle (constaté au premier build, 21/09/2026). Ce qui est servi ne vient que de public/.
 RUN rm -rf /usr/share/nginx/html && mkdir -p /usr/share/nginx/html
 COPY --from=build /src/public/ /usr/share/nginx/html/
+# La configuration remplace celle de l'image : en-têtes, cache, 404 par langue et journal sans
+# adresse IP (AD-13, AD-15). TLS et HSTS relèvent du reverse proxy, pas d'ici.
+COPY deploy/nginx/site.conf /etc/nginx/conf.d/default.conf
