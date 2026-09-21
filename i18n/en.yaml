@@ -35,3 +35,8 @@ case_number: "Case {{ . }}"
 cases_of_position: Cases behind this role
 back_to_career: Back to experience
 draft_marker: Draft
+
+# Header, footer and skip link (DESIGN.md, story 5.1)
+skip_to_content: Skip to content
+nav_site: Site navigation
+footer_source: Site source code

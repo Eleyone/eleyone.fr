@@ -1,0 +1,405 @@
+/* Seule feuille de style du site (AD-8, story 5.1). Minifiée et empreintée par Hugo Pipes.
+ *
+ * Toute valeur de design vient du bloc de tokens en tête de DESIGN.md : aucune couleur, taille,
+ * graisse ou espacement n'est inventé ici. Les valeurs purement fonctionnelles (100%, 0, calc())
+ * n'en sont pas : elles ne portent aucune décision.
+ *
+ * Aucune police web (AD-8) : deux piles système, et aucun @import ni @font-face. C10 refuse par
+ * ailleurs toute ressource d'une autre origine, dans le HTML comme dans le CSS.
+ *
+ * Mobile d'abord : les règles nues valent sous md, et deux media queries ajoutent md puis lg.
+ */
+
+/* ---------------------------------------------------------------- tokens */
+
+:root {
+  /* couleurs — mode clair (DESIGN.md § Colors) */
+  --paper: #fbfbf9;
+  --surface: #f0f2f4;
+  --plate: #ffffff;
+  --ink: #1c2030;
+  --ink-muted: #555b6e;
+  --accent: #1c6b45;
+  --rule: #c9cdd8;
+  --border-strong: #7b8194;
+
+  /* piles système, sans aucune police web */
+  --font-serif: Charter, "Bitstream Charter", "Sitka Text", Cambria, "Noto Serif", "DejaVu Serif", serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", "DejaVu Sans Mono", monospace;
+
+  /* échelle typographique — les « -md » sont appliqués dans la media query md */
+  --identity-name: 1.625rem;
+  --site-title: 1.125rem;
+  --pitch: 1.0625rem;
+  --page-title: 1.75rem;
+  --case-title: 1.5rem;
+  --section-heading: 1.25rem;
+  --entry-heading: 1.1875rem;
+  --case-link: 1.0625rem;
+  --body: 1.0625rem;
+  --body-sm: 1rem;
+  --meta: 0.8125rem;
+  --label: 0.8125rem;
+  --rubric-number: 0.7em;
+
+  /* échelle d'espacement : tout écart vient d'ici */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2.5rem;
+  --space-7: 4rem;
+
+  /* grille */
+  --gutter: 1rem;
+  --margin-column: 13.5rem;
+  --column-gap: 2.5rem;
+  --measure: 40rem;
+  --aside-column: 15rem;
+  --frame-md: 60rem;
+  --frame-lg: 77.5rem;
+
+  /* traits */
+  --revision-bar: 2px;
+  --focus-ring: 2px;
+  --focus-offset: 3px;
+  --rounded: 0;
+
+  /* Les contrôles natifs — barre de défilement, sélecteurs — suivent le mode (DESIGN.md § Colors). */
+  color-scheme: light dark;
+}
+
+/* Mode sombre en CSS pur, sans bouton ni JavaScript (NFR-13, AD-8). Seules les couleurs changent :
+ * l'échelle typographique et la grille sont communes aux deux modes. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #14161d;
+    --surface: #1e222b;
+    --plate: #ffffff;
+    --ink: #e6e8ee;
+    --ink-muted: #a3a9b8;
+    --accent: #7cc79d;
+    --rule: #3a3f4d;
+    --border-strong: #6b7285;
+  }
+}
+
+/* --------------------------------------------------------------- réglages */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* Aucune taille en pixels sur html : le réglage de taille du navigateur est respecté (AD-8). */
+html {
+  /* Une ancre atteinte ne se colle pas sous l'en-tête. */
+  scroll-padding-top: var(--space-4);
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-serif);
+  font-size: var(--body);
+  font-weight: 400;
+  line-height: 1.55;
+  /* Pas de césure automatique (UX-DR17) ; un mot long ne provoque pas de défilement horizontal. */
+  hyphens: manual;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  text-wrap: balance;
+}
+
+/* ------------------------------------------------------------------ grille
+ *
+ * Cadre unique dès lg (77,5 rem) : marge | texte | note. La colonne de texte reste au même endroit
+ * d'une page à l'autre (décision d'Arnaud du 13/09/2026). Sous md, une seule colonne.
+ */
+
+/* « frame » ne fait que la largeur et la gouttière : l'en-tête et le pied de page s'en contentent.
+ * « frame--columns » y ajoute les colonnes, et n'est posé que sur le contenu. Les deux rôles sont
+ * séparés parce que la grille écraserait la disposition en ligne de l'en-tête. */
+.frame {
+  width: 100%;
+  max-width: var(--measure);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+/* ------------------------------------------------------------------- liens
+ *
+ * Tous les liens sont soulignés, y compris dans l'en-tête et le pied de page : « accent » contre
+ * « ink » ne fait que 2,49:1 en clair et 1,63:1 en sombre, insuffisant pour distinguer un lien par
+ * la couleur seule (DESIGN.md § Contrastes calculés).
+ */
+
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+a:hover {
+  text-decoration-thickness: 2px;
+}
+
+/* La marque garde un texte « ink » avec un soulignement « accent », pour ne pas ouvrir la page
+ * sur un bloc vert (DESIGN.md § link). */
+.brand {
+  color: var(--ink);
+  text-decoration-color: var(--accent);
+}
+
+/* Anneau de focus : jamais « outline: none », jamais remplacé par une ombre. En forced-colors,
+ * il passe à la couleur système (DESIGN.md § focus-ring). */
+:focus-visible {
+  outline: var(--focus-ring) solid var(--accent);
+  outline-offset: var(--focus-offset);
+  border-radius: var(--rounded);
+}
+
+@media (forced-colors: active) {
+  :focus-visible {
+    outline-color: Highlight;
+  }
+}
+
+/* --------------------------------------------------------- lien d'évitement
+ *
+ * Hors écran tant qu'il n'a pas le focus ; au focus, il apparaît en haut à gauche sur « paper ».
+ * Il est déplacé, jamais masqué : « display: none » le retirerait de l'ordre de tabulation.
+ */
+
+.skip-link {
+  position: absolute;
+  left: var(--space-2);
+  top: var(--space-2);
+  z-index: 1;
+  padding: var(--space-2) var(--space-3);
+  background: var(--paper);
+  font-size: var(--body-sm);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+/* ---------------------------------------------------------------- en-tête */
+
+.site-header {
+  border-bottom: 1px solid var(--rule);
+}
+
+.site-header__inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2) var(--space-4);
+  padding-block: var(--space-3);
+}
+
+.site-header__brand {
+  font-family: var(--font-mono);
+  font-size: var(--meta);
+  /* La marque pousse la navigation à droite ; à 320 px, le flex-wrap la fait passer dessous,
+   * ce qui est accepté : il n'y a pas de menu repliable (DESIGN.md § site-header). */
+  margin-right: auto;
+}
+
+.site-header__nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  font-size: var(--body-sm);
+}
+
+/* ---------------------------------------------------------------- contenu */
+
+main {
+  padding-block: var(--space-6);
+}
+
+/* ------------------------------------------------------------ pied de page */
+
+.site-footer {
+  margin-top: var(--space-6);
+  border-top: 1px solid var(--rule);
+  font-size: var(--body-sm);
+}
+
+.site-footer__list {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-4) 0 var(--space-6);
+}
+
+/* Cibles de navigation : au moins 24 px (WCAG 2.5.8, AD-17).
+ *
+ * Un « line-height » ne suffit pas — il agrandit la ligne, pas la zone cliquable, qui reste la
+ * boîte en ligne du lien. Mesurés au navigateur avant cette règle : 20 px pour la marque, 22 px
+ * pour le pied de page, 23 px pour le sommaire et les liens de retour. « inline-block » plus une
+ * marge intérieure verticale agrandissent la cible elle-même.
+ *
+ * L'exemption d'AD-17 vise les liens « dans le texte courant ». Ceux-ci n'en sont pas : ils sont
+ * seuls dans leur bloc. « nav-links » marque un bloc qui ne contient que des liens. */
+.site-header__brand,
+.site-header__nav a,
+.site-footer__list a,
+.nav-links a,
+.toc a {
+  display: inline-block;
+  padding-block: var(--space-1);
+}
+
+.nav-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+}
+
+/* -------------------------------------------------------------- rôles de texte */
+
+.identity-name {
+  font-size: var(--identity-name);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.005em;
+}
+
+.site-title {
+  font-size: var(--site-title);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.pitch {
+  font-size: var(--pitch);
+  line-height: 1.55;
+}
+
+.page-title {
+  font-size: var(--page-title);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.case-title {
+  font-size: var(--case-title);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.section-heading {
+  font-size: var(--section-heading);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.entry-heading {
+  font-size: var(--entry-heading);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.case-link {
+  font-size: var(--case-link);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.meta {
+  font-family: var(--font-mono);
+  font-size: var(--meta);
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+/* Les capitales sont posées en CSS : le HTML garde « En bref », que les lecteurs d'écran
+ * n'épellent donc pas (DESIGN.md § Échelle). */
+.label {
+  font-family: var(--font-mono);
+  font-size: var(--label);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.rubric-number {
+  font-family: var(--font-mono);
+  font-size: var(--rubric-number);
+  font-weight: 400;
+  line-height: 1;
+  color: var(--ink-muted);
+}
+
+/* ------------------------------------------------------- md : dès 48 rem */
+
+@media (min-width: 48rem) {
+  :root {
+    --gutter: 2rem;
+    --identity-name: 2.25rem;
+    --site-title: 1.3125rem;
+    --pitch: 1.1875rem;
+    --page-title: 2.25rem;
+    --case-title: 1.75rem;
+    --section-heading: 1.375rem;
+    --body: 1.125rem;
+    --meta: 0.875rem;
+  }
+
+  .frame {
+    max-width: var(--frame-md);
+  }
+
+  .frame--columns {
+    /* marge | texte : la colonne de marge reçoit périodes, numéros et sommaire, alignés à droite
+     * contre le texte (DESIGN.md § Grille). */
+    display: grid;
+    grid-template-columns: var(--margin-column) minmax(0, var(--measure));
+    column-gap: var(--column-gap);
+    justify-content: center;
+  }
+
+  /* Un enfant direct qui ne demande pas la marge occupe la colonne de texte. */
+  .frame--columns > * {
+    grid-column: 2;
+  }
+
+  .frame--columns > .in-margin {
+    grid-column: 1;
+    text-align: right;
+  }
+}
+
+/* ------------------------------------------------------- lg : dès 80 rem */
+
+@media (min-width: 80rem) {
+  .frame {
+    max-width: var(--frame-lg);
+  }
+
+  .frame--columns {
+    /* marge | texte | note. La colonne de note est vide hors des pages cas : la colonne de texte
+     * ne bouge donc pas d'une page à l'autre (décision d'Arnaud du 13/09/2026). */
+    grid-template-columns: var(--margin-column) minmax(0, var(--measure)) var(--aside-column);
+  }
+
+  .frame--columns > .in-aside {
+    grid-column: 3;
+  }
+}

@@ -36,3 +36,8 @@ case_number: "Cas {{ . }}"
 cases_of_position: Cas qui prouvent ce poste
 back_to_career: Retour au parcours
 draft_marker: Brouillon
+
+# En-tête, pied de page et évitement (DESIGN.md, story 5.1)
+skip_to_content: Aller au contenu
+nav_site: Navigation du site
+footer_source: Code source du site

@@ -44,6 +44,12 @@ manifests=$(checks_manifests build/work)
 | C4, C5, C6, C7, C8, C16, C18, C19 | `scripts/checks/content.sh` | une rubrique de cas hors de `data/rubrics.yaml`, écrite deux fois ou hors de l'ordre de la liste ; un titre de cas plus profond que `###` ; un `[TODO` dans un fichier publié ; une technologie de `stack` absente de `data/stack.yaml` (une valeur `[TODO…` est tolérée dans un brouillon) ; un élément de matériel vivant déclaré sans être placé ou l'inverse, en double, mal préfixé, ou `ready` sans sa source dans la langue du fichier ; une clé `group` qui ne suit pas le dossier, un cas rangé trop profond, deux cas d'un groupe au même `order` ; un « En bref » de plus de 400 points de code ou de plus de 3 phrases ; un `title` de plus de 70 caractères, un `setup` ou un `status` hors valeurs, un numéro de fichier qui ne suit pas `number` ou le `translationKey`, un encart de cas publié incomplet ; `.env.example` ou `ci/legal-placeholder.env` dont les **noms** de variables ne sont pas exactement ceux d'AD-9 et d'AD-24 ; un cas publié sans poste publié de sa langue, un poste ou une formation dont le `translationKey` ne suit pas le nom de fichier ou son préfixe, un `track`, `setup` ou `kind` hors valeurs, un poste sans `location` ni `setup`, une clé obligatoire vide, deux `order` identiques dans un `track` ou un `kind` |
 | C3 | `scripts/checks/parity.sh` | un fichier de `content/` sans jumeau dans l'autre langue, un `translationKey` absent ou en double, un rôle ou une clé non traduite qui diffère (cas, poste, formation, accueil, contact), un `live_material` déclaré autrement, un nombre de titres de niveau 2 différent, et — pour un cas seulement — une rubrique hors de `data/rubrics.yaml` ou deux rubriques de même rang qui n'en sont pas les deux écritures |
 
+## Ce que les contrôles ne voient pas
+
+AD-17 partage la vérification d'accessibilité en deux, et `check.sh` n'en porte que la moitié. L'autre — contraste mesuré dans les deux modes, clavier, reflow à 320 px, zoom à 200 %, taille des cibles — demande un navigateur, qu'aucune CI du projet ne lance. Elle se fait à la main, à chaque story qui crée ou modifie un gabarit, et se consigne dans **`docs/accessibility.md`** (décidé par Arnaud le 21/09/2026).
+
+Cette moitié-là n'est pas décorative : la story 5.1 y a trouvé huit cibles sous les 24 px de WCAG 2.5.8, qu'aucun contrôle automatique ne pouvait voir — la taille d'une cible n'existe qu'au rendu.
+
 ## Tester un contrôle
 
 Les cas vivent dans `scripts/tests/test-*.sh` et suivent `docs/procedures/shell-scripts.md`.

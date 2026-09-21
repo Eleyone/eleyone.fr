@@ -1,8 +1,16 @@
 {{/*
-  En-tête (DESIGN.md). Ne porte que ce qui existe : la marque, puis le sélecteur de langue.
-  « À propos » et « Contact » arriveront avec leurs pages (epic 9).
+  En-tête (DESIGN.md § site-header). Ne porte que ce qui existe : la marque, puis le sélecteur de
+  langue, qui est toujours le dernier élément. « À propos » et « Contact » arriveront avec leurs
+  pages (epic 9) : un lien vers une page absente ferait échouer C12.
+
+  Un filet « rule » dessous, une seule ligne sur mobile à 390 px. À 320 px, la navigation passe
+  sous la marque par le retour à la ligne du flex ; il n'y a pas de menu repliable.
 */}}
-<header>
-  <a href="{{ .Site.Home.RelPermalink }}">{{ .Site.Home.Params.identity }}</a>
-  {{ partial "language-switch.html" . }}
+<header class="site-header">
+  <div class="site-header__inner frame">
+    <a class="site-header__brand brand" href="{{ .Site.Home.RelPermalink }}">{{ .Site.Home.Params.identity }}</a>
+    <nav class="site-header__nav" aria-label="{{ i18n "nav_site" }}">
+      {{ partial "language-switch.html" . }}
+    </nav>
+  </div>
 </header>

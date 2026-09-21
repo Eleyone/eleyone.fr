@@ -27,9 +27,25 @@
     {{ end }}
     {{/* AD-5 : le rendu de travail n'est jamais indexable. */}}
     {{ if not hugo.IsProduction }}<meta name="robots" content="noindex">{{ end }}
+    {{/* AD-8 : une seule feuille, minifiée et empreintée. L'empreinte est ce qui autorise le cache
+         d'un an posé par nginx sur les fichiers empreintés (story 4.2) : sans elle, un visiteur
+         garderait l'ancienne feuille. Aucune police n'est chargée, ni d'ici ni depuis le CSS. */}}
+    {{/* La ressource est saisie avant d'être transformée : « resources.Get … | minify » sur une
+         ressource absente ne rend pas « rien », il fait paniquer le build (constaté sur le site
+         fixture de scripts/tests/, qui n'a pas d'assets/). Le « with » doit donc porter sur
+         l'obtention, pas sur le résultat de la chaîne. Une feuille disparue laisserait un site
+         sans style : c'est scripts/tests/test-design-tokens.sh qui refuse ce cas. */}}
+    {{ with resources.Get "css/main.css" }}
+      {{ with . | minify | fingerprint }}
+        <link rel="stylesheet" href="{{ .RelPermalink }}">
+      {{ end }}
+    {{ end }}
   </head>
   <body>
+    {{/* Premier élément focalisable de la page (EXPERIENCE.md § skip-link). */}}
+    <a class="skip-link" href="#content">{{ i18n "skip_to_content" }}</a>
     {{ partial "site-header.html" . }}
     {{ block "main" . }}{{ end }}
+    {{ partial "site-footer.html" . }}
   </body>
 </html>

@@ -49,3 +49,9 @@ markup:
       unsafe: false
   highlight:
     noClasses: false
+
+# Adresse du dépôt public (FR-29, impact I-2 d'AD-3). Le pied de page n'affiche « Code source du
+# site » que si ce paramètre est renseigné : le site prouve ainsi comment il a été cadré et
+# construit. Anticipation déclarée de la story 5.1 sur I-2, que porte l'epic 9.
+params:
+  source_url: https://github.com/Eleyone/eleyone.fr
