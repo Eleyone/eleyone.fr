@@ -3686,26 +3686,29 @@ afin de servir exactement ce qui a passé les contrôles.
 **Dépendances :** 3.12
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** non
+**Opération manuelle (Arnaud) :** **oui**, une fois : créer hors du dépôt son fichier de valeurs légales de mise en ligne (`~/.config/eleyone/legal-release.env`, décidé le 21/09/2026), sans quoi seul un build à valeurs quelconques est possible.
 
 **Critères d'acceptation :**
 
 **Étant donné** le `Dockerfile`
 **Quand** on le lit
-**Alors** il enchaîne `tools` (`CHECK_IMAGE`, `install-tools.sh`), `build` (une seule instruction `RUN --mount=type=secret,id=legal_env,required=true` qui lance `ENV_MODE=release LEGAL_ENV_FILE=/run/secrets/legal_env scripts/build.sh production` puis `scripts/check.sh` au niveau `CHECK_LEVEL`, puis `chmod -R a+rX public`) et `runtime` (`nginx:1.30.4-alpine` par digest, copie de `public/`).
+**Alors** il enchaîne trois étapes :
+- `tools`, issue de `CHECK_IMAGE` — un `ARG` **sans valeur par défaut**, puisque la seule déclaration est `tools.env` (AD-1) —, qui copie `tools.env`, `scripts/ci/` et `scripts/lib/`, puis installe les outils épinglés par `scripts/ci/install-tools-bootstrap.sh` ;
+- `build`, avec une seule instruction `RUN --mount=type=secret,id=legal_env,required=true` dont les commandes sont enchaînées par **`&&`** — un `;` laisserait passer un contrôle en échec : `ENV_MODE=release LEGAL_ENV_FILE=/run/secrets/legal_env scripts/build.sh production`, puis `scripts/check.sh` au niveau de l'`ARG CHECK_LEVEL` (`standard` par défaut), puis `chmod -R a+rX public` ;
+- `runtime`, `nginx:1.30.4-alpine` **épinglée par digest** — le tag ne sert qu'à la lisibilité —, qui copie `public/` dans `/usr/share/nginx/html`.
 
-**Étant donné** un build d'image sans secret, puis avec un fichier dotenv en secret
-**Quand** il s'exécute
-**Alors** le premier échoue ; le second réussit sans aucune valeur légale dans `docker history`, et l'image ne contient que les fichiers de `public/`.
+**Et** la configuration nginx de `deploy/nginx/` **n'est pas de cette story** : l'image sert `public/` avec la configuration par défaut, et la story 4.2 y ajoute en-têtes, cache et 404. AD-13 décrit l'état final des deux.
+
+**Étant donné** un build d'image sans secret, puis avec un fichier de valeurs légales en secret
+**Quand** on lance `scripts/build-image.sh` (décidé le 21/09/2026 : un seul script porte la commande, que l'epic 11 appellera avec `CHECK_LEVEL=release`)
+**Alors** le premier échoue faute de secret ; le second réussit **sans aucune valeur légale dans `docker history`**, et l'image ne contient **aucun fichier du dépôt hors `public/`** — ni sources, ni scripts, ni artefacts de cadrage — et rien sous `/usr/share/nginx/html` qui n'en vienne.
 
 **Étant donné** une copie locale qui fait échouer un contrôle
 **Quand** on construit l'image
 **Alors** le build d'image échoue.
 
 - [ ] `.dockerignore` exclut au moins `.git/`, `.env`, `docs/private/`, `_bmad*/`, `.claude/`, `.agent*/`, `experiments/`, `public/`, `build/`.
-
-**Questions à poser avant de commencer :**
-- Pour la démonstration locale, quel fichier passer en secret ? `ENV_MODE=release` refuse le fichier factice et `.env` comme `LEGAL_ENV_FILE` : faut-il un fichier local de test hors dépôt ?
+- [ ] Les essais hors ligne emploient un faux `docker` : la suite reste sans réseau ni démon (story 0.9). Le build réel est joué à la main et consigné.
 
 ### Story 4.2 : Nginx headers, cache, 404 and IP-free logs
 

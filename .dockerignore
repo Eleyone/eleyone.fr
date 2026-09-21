@@ -1,0 +1,22 @@
+# Ce qui n'entre jamais dans le contexte de build (AD-13). Le contexte est envoyé au démon Docker :
+# ce qui en est exclu ne peut ni finir dans une couche, ni être lu par une instruction.
+.git/
+.env
+.env.*
+!.env.example
+docs/private/
+_bmad*/
+.claude/
+.agent/
+.agents/
+experiments/
+experiment/
+design/
+# sorties de build du poste : l'image reconstruit les siennes, et une sortie périmée ferait servir
+# des pages qui n'ont pas passé les contrôles de ce build
+public/
+build/
+.tools/
+# fichiers de travail
+.pr-body.md
+*.bak*

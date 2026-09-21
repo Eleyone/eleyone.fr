@@ -278,8 +278,9 @@ flowchart TD
 - **Binds:** NFR-1, NFR-2, NFR-3, NFR-5, NFR-12, FR-21 ; `Dockerfile`, `.dockerignore`, `deploy/nginx/`.
 - **Prevents:** une image qui embarque des fichiers du dépôt hors `public/`, des fichiers illisibles par nginx, des en-têtes de sécurité perdus dans un bloc `location`, une 404 dans la mauvaise langue.
 - **Rule:**
-  - Étapes : `tools` (`CHECK_IMAGE`, `scripts/ci/install-tools.sh`) → `build` (sources, instruction `RUN` unique décrite en AD-9, `scripts/check.sh` au niveau donné par l'argument `CHECK_LEVEL` : `standard` par défaut, `release` seulement depuis `scripts/release/build-image.sh` ; puis `chmod -R a+rX public`) → `runtime` (`nginx:1.30.4-alpine` épinglé par digest, `COPY --from=build public /usr/share/nginx/html`, configuration de `deploy/nginx/`).
-  - `.dockerignore` exclut au moins `.git/`, `.env`, `docs/private/`, `_bmad*/`, `.claude/`, `.agent*/`, `experiments/`.
+  - Étapes : `tools` (`CHECK_IMAGE`, `scripts/ci/install-tools.sh`) → `build` (sources, instruction `RUN` unique décrite en AD-9, `scripts/check.sh` au niveau donné par l'argument `CHECK_LEVEL` : `standard` par défaut, `release` seulement depuis `scripts/build-image.sh --release` ; puis `chmod -R a+rX public`) → `runtime` (`nginx:1.30.4-alpine` épinglé par digest, `COPY --from=build public /usr/share/nginx/html`, configuration de `deploy/nginx/`).
+  - `.dockerignore` exclut au moins `.git/`, `.env`, `docs/private/`, `_bmad*/`, `.claude/`, `.agent*/`, `experiments/`, et les sorties de build du poste (`public/`, `build/`, `.tools/`) : l'image reconstruit les siennes.
+  - **Une seule commande de build dans le dépôt**, `scripts/build-image.sh` (décidé le 21/09/2026, story 4.1) : elle porte le secret BuildKit et les arguments, et l'epic 11 l'appelle avec `--release` au lieu d'écrire un second script. L'étape `runtime` vide `/usr/share/nginx/html` avant la copie : `COPY` n'efface pas le `50x.html` de l'image nginx, une page qui n'a passé aucun contrôle.
   - Configuration nginx :
     - `server_tokens off; absolute_redirect off; log_not_found off;`
     - `gzip on;` pour HTML, CSS, SVG, JSON et XML, avec `gzip_vary on`.
