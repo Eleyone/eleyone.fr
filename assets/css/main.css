@@ -497,12 +497,25 @@ main {
     max-width: var(--frame-md);
   }
 
-  .frame--columns {
-    /* marge | texte : la colonne de marge reçoit périodes, numéros et sommaire, alignés à droite
-     * contre le texte (DESIGN.md § Grille). */
+  /* La grille « marge | texte », **écrite une seule fois**. Tout bloc qui doit poser un élément
+   * dans la colonne de marge la porte : la page elle-même, le bloc d'identité, un poste, une
+   * entrée de formation. Les colonnes tombent au même endroit parce que les largeurs viennent des
+   * mêmes tokens, et un bloc imbriqué ne peut pas atteindre la grille de la page.
+   *
+   * Elle était écrite **quatre fois**, chaque story la redéclarant sans voir les précédentes —
+   * le nombre exact des quatre copies de garde shell qu'avait comptées la rétrospective de
+   * l'epic 3 (constat A1 de celle de l'epic 5). Un cas de test compte désormais les occurrences.
+   * Un nouveau bloc s'ajoute à cette liste ; il ne recopie pas la règle. */
+  .frame--columns,
+  .identity-block,
+  .cv-position,
+  .education-entry {
     display: grid;
     grid-template-columns: var(--margin-column) minmax(0, var(--measure));
     column-gap: var(--column-gap);
+  }
+
+  .frame--columns {
     justify-content: center;
   }
 
@@ -530,11 +543,6 @@ main {
 
   /* Dès md, la photo passe dans la colonne de marge, alignée à droite contre le texte, et les
    * lignes d'identité rejoignent la colonne de texte (DESIGN.md). */
-  .identity-block {
-    grid-template-columns: var(--margin-column) minmax(0, var(--measure));
-    column-gap: var(--column-gap);
-  }
-
   .identity-block__lines,
   .identity-block > .pitch {
     grid-column: 2;
@@ -547,22 +555,28 @@ main {
     height: 9.375rem;
   }
 
-  .cv-block > .section-heading {
+  /* Un titre porté par un bloc qui occupe toute la largeur du cadre s'aligne sur la colonne de
+   * texte et s'y borne. Sans la borne, il s'étend dans la colonne de note dès lg, et
+   * « text-wrap: balance » raisonne sur une largeur que le texte n'occupe jamais.
+   *
+   * Écrit une seule fois : la story 5.2 l'avait corrigé pour son titre, la 5.3 avait rencontré le
+   * même défaut et recopié le même correctif (constat A2 de la rétrospective de l'epic 5).
+   *
+   * Les périodes suivent la même logique : alignées à droite dans la colonne de marge, où qu'elles
+   * soient posées. */
+  .cv-block > .section-heading,
+  .education-group > .label {
     margin-left: calc(var(--margin-column) + var(--column-gap));
-    /* Borné sur la mesure : sans cela, le titre s'étend dans la colonne de note dès lg, et
-     * « text-wrap: balance » raisonne sur une largeur que le texte n'occupe jamais. */
     max-width: var(--measure);
   }
 
-  .cv-position {
-    display: grid;
-    grid-template-columns: var(--margin-column) minmax(0, var(--measure));
-    column-gap: var(--column-gap);
-    margin-top: var(--space-5);
+  .cv-position__period,
+  .education-entry__period {
+    text-align: right;
   }
 
-  .cv-position__period {
-    text-align: right;
+  .cv-position {
+    margin-top: var(--space-5);
   }
 
   .cv-block {
@@ -571,25 +585,6 @@ main {
 
   .attached-case {
     padding-left: var(--space-5);
-  }
-
-  /* Même montage que pour un poste : le sous-titre de nature s'aligne sur la colonne de texte, et
-   * chaque entrée redéclare la grille marge | texte pour poser sa période à gauche. */
-  .education-group > .label {
-    margin-left: calc(var(--margin-column) + var(--column-gap));
-    /* Borné sur la mesure, comme les titres de bloc : sans cela il s'étend dans la colonne de
-     * note dès lg (constat de la story 5.2, même cause). */
-    max-width: var(--measure);
-  }
-
-  .education-entry {
-    display: grid;
-    grid-template-columns: var(--margin-column) minmax(0, var(--measure));
-    column-gap: var(--column-gap);
-  }
-
-  .education-entry__period {
-    text-align: right;
   }
 
   /* Sans période, la ligne doit tout de même occuper la colonne de texte. */

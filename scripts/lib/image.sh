@@ -36,6 +36,18 @@ readonly image_markers=(
   'zTXt'
 )
 
+# Les extensions qu'un fichier image porte. **Seule liste du dépôt** : le garde-fou public/privé
+# en tire ses motifs de chemin, et C20 sa recherche de fichiers. Elle existait en deux exemplaires
+# — une expression régulière dans check-private.sh, un tableau dans checks/images.sh —, et un
+# format ajouté à l'un et pas à l'autre aurait ouvert un trou, exactement le mécanisme du
+# contournement de C20 (constat B3 de la rétrospective de l'epic 5).
+readonly image_extensions=(jpg jpeg png gif webp avif tif tiff bmp heic heif ico)
+
+image_extensions_regex() { # affiche « (jpg|jpeg|…) », le groupe d'une expression régulière étendue
+  local IFS='|'
+  printf '(%s)' "${image_extensions[*]}"
+}
+
 image_metadata_markers() { # $1 = fichier ; affiche les marqueurs trouvés, un par ligne
   local fichier=$1 marqueur code
   [[ -f $fichier && -r $fichier ]] || return 2

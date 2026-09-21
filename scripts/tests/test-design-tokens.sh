@@ -71,6 +71,43 @@ case_aucune_couleur_hors_design() {
   assert_eq "" "${intruses% }" "chaque couleur de la feuille vient de DESIGN.md"
 }
 
+case_aucune_couleur_hors_notation_hexadecimale() {
+  # La garde des couleurs ne cherchait que l'hexadécimal : « rgb(0,0,0) » ou « red » passaient sans
+  # figurer dans DESIGN.md (constat B9 de la rétrospective de l'epic 5). Les notations
+  # fonctionnelles et les noms de couleur sont donc refusés tout court — DESIGN.md n'écrit ses
+  # tokens qu'en hexadécimal, et une couleur qui n'y est pas n'a pas à exister.
+  #
+  # « currentColor » et les couleurs système (Highlight, en forced-colors) sont admises : elles ne
+  # portent aucune décision de design, elles reprennent celle du navigateur ou du système.
+  local nu trouve
+  nu=$(css_nu "$css")
+  css_equilibre "$nu"
+  shell_grep_into trouve -nEi '(^|[^a-z-])(rgba?|hsla?|color-mix|lab|lch|oklab|oklch)\(' <<< "$nu"
+  assert_eq "" "$trouve" "aucune couleur en notation fonctionnelle"
+  # Les noms de couleur CSS les plus probables sous la main d'un développeur pressé.
+  shell_grep_into trouve -nEi ':[^;{]*(^|[^a-z-])(black|white|red|green|blue|grey|gray|silver|orange|yellow|purple)([^a-z-]|$)' <<< "$nu"
+  assert_eq "" "$trouve" "aucun nom de couleur primitif"
+}
+
+case_la_grille_marge_texte_nest_ecrite_quune_fois() {
+  # Elle l'a été **quatre fois**, chaque story la redéclarant sans voir les précédentes — le nombre
+  # exact des quatre copies de garde shell de la rétrospective de l'epic 3 (constat A1 de celle de
+  # l'epic 5). Deux occurrences restent légitimes : la déclaration partagée à md, et la variante
+  # de lg qui ajoute la colonne de note. Une troisième est une copie.
+  local nu nb
+  nu=$(css_nu "$css")
+  css_equilibre "$nu"
+  shell_grep_into nb -c 'grid-template-columns: var(--margin-column)' <<< "$nu"
+  ((nb <= 2)) || {
+    printf 'la grille « marge | texte » est déclarée %s fois ; deux au plus (md et lg).\n' "$nb" >&2
+    echo "Un nouveau bloc s ajoute à la liste de sélecteurs, il ne recopie pas la règle." >&2
+    exit 1
+  }
+  # Même règle pour les deux correctifs que les stories 5.2 et 5.3 ont écrits chacune de leur côté.
+  shell_grep_into nb -c 'margin-left: calc(var(--margin-column)' <<< "$nu"
+  ((nb <= 1)) || { printf 'l alignement d un titre sur la colonne de texte est écrit %s fois ; une seule suffit.\n' "$nb" >&2; exit 1; }
+}
+
 case_les_huit_roles_de_couleur_sont_la() {
   # Les deux modes, huit rôles chacun (DESIGN.md § Colors). Un rôle oublié en sombre laisserait la
   # valeur claire s'appliquer, sans que rien n'échoue.

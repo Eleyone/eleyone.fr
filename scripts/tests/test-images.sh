@@ -49,6 +49,34 @@ case_image_dimensions_sans_outil() {
   assert_eq "16383x16383" "$(image_webp_dimensions "$f")" "la borne des 14 bits est lue juste"
 }
 
+# Un WebP sans perte (VP8L) : signature 0x2F, puis largeur-1 et hauteur-1 sur 14 bits, à cheval
+# sur les octets. La branche existait sans être exercée (constat B10 de la rétrospective de
+# l'epic 5) : une régression du décalage arithmétique serait passée inaperçue.
+webp_sans_perte() { # $1 = fichier, $2 = largeur, $3 = hauteur
+  local f=$1 l=$(( $2 - 1 )) h=$(( $3 - 1 ))
+  local mot=$(( l | (h << 14) ))
+  {
+    printf 'RIFF'; printf '\377\377\000\000'
+    printf 'WEBP'
+    printf 'VP8L'; printf '\377\377\000\000'
+    printf '\057'                                          # signature 0x2F
+    printf "$(printf '\\%03o' $((mot & 0xff)) $(((mot >> 8) & 0xff)) $(((mot >> 16) & 0xff)) $(((mot >> 24) & 0xff)))"
+    head -c 16 /dev/zero
+  } > "$f"
+}
+
+case_image_dimensions_sans_perte() {
+  local f="$work/sans-perte.webp"
+  webp_sans_perte "$f" 640 800
+  assert_eq "640x800" "$(image_webp_dimensions "$f")" "les dimensions d un VP8L se lisent aussi"
+  webp_sans_perte "$f" 120 150
+  assert_eq "120x150" "$(image_webp_dimensions "$f")" "une petite variante aussi"
+  # 16384 est le maximum d'un champ de 14 bits pour VP8L, qui stocke la valeur moins un.
+  webp_sans_perte "$f" 16384 16384
+  assert_eq "16384x16384" "$(image_webp_dimensions "$f")" "la borne des 14 bits est lue juste"
+  assert_eq "" "$(image_metadata_markers "$f")" "et il ne porte aucun marqueur"
+}
+
 case_image_marqueurs_de_metadonnees() {
   local propre="$work/propre.webp" sale="$work/sale.webp"
   webp_simple "$propre" 640 800

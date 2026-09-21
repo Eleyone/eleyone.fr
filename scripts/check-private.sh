@@ -28,13 +28,9 @@ set -euo pipefail
 # Trois exceptions nommées : .env.example, commité par conception (AGENTS.md) et sans aucune valeur ;
 # les captures des branches de design (design/<branche>/screenshots/), déjà publiées et produites par un
 # navigateur ; et les images d'assets/, que C20 contrôle.
-forbidden_paths='^docs/(private|context)/|(^|/)\.env($|\.)|^assets/cv/.*\.pdf$|\.(jpe?g|png|gif|webp|avif|tiff?|bmp|heic|heif|ico)$'
-allowed_paths='(^|/)\.env\.example$|^design/[^/]+/screenshots/|^assets/.*\.(jpe?g|png|gif|webp|avif|tiff?|bmp|heic|heif|ico)$'
-# Les chemins que C20 doit lire : les images admises ci-dessus.
-image_paths='^assets/.*\.(jpe?g|png|gif|webp|avif|tiff?|bmp|heic|heif|ico)$'
-
-# C20 vit dans scripts/lib/image.sh, copiée à côté de ce script sur la forge (procédure du hook).
-# Son absence **refuse** : un garde-fou qui s'ignore en silence ne garde rien.
+# C20 et la liste des extensions d'images vivent dans scripts/lib/image.sh, copiée à côté de ce
+# script sur la forge (procédure du hook). Son absence **refuse** : un garde-fou qui s'ignore en
+# silence ne garde rien. Elle est chargée **avant** les motifs, qui en dérivent.
 image_lib="$(dirname "${BASH_SOURCE[0]}")/lib/image.sh"
 if [[ -r $image_lib ]]; then
   . "$image_lib"
@@ -42,6 +38,11 @@ else
   echo "check-private: scripts/lib/image.sh absent ou illisible ($image_lib) : C20 ne peut pas s'exécuter." >&2
   exit 1
 fi
+images_ext=$(image_extensions_regex)
+forbidden_paths="^docs/(private|context)/|(^|/)\.env($|\.)|^assets/cv/.*\.pdf$|\.$images_ext\$"
+allowed_paths="(^|/)\.env\.example\$|^design/[^/]+/screenshots/|^assets/.*\.$images_ext\$"
+# Les chemins que C20 doit lire : les images admises ci-dessus.
+image_paths="^assets/.*\.$images_ext\$"
 patterns_file="${PRIVATE_PATTERNS_FILE:-$(git rev-parse --show-toplevel 2>/dev/null || true)/docs/private/forbidden-patterns.txt}"
 [[ $patterns_file == /* ]] || patterns_file="$PWD/$patterns_file"
 # depuis un sous-dossier, git ls-files, git ls-tree et git grep ne verraient que ce sous-dossier :

@@ -37,11 +37,12 @@ signaler() { checks_report "$1" "$2"; status=1; }
 
 # Toutes les images des deux arbres. « find » et non une liste écrite à la main : une image ajoutée
 # sans passer par la story qui l'attendait doit être vue elle aussi.
-readonly extensions=(jpg jpeg png gif webp avif tif tiff bmp heic heif ico)
+# La liste vient de scripts/lib/image.sh : une seule écriture pour le garde-fou et pour C20
+# (constat B3 de la rétrospective de l'epic 5).
 lister() { # $1 = racine
   local racine=$1 args=() ext premier=1
   [[ -d $racine ]] || return 0
-  for ext in "${extensions[@]}"; do
+  for ext in "${image_extensions[@]}"; do
     ((premier)) || args+=(-o)
     args+=(-iname "*.$ext"); premier=0
   done
