@@ -100,10 +100,27 @@ case_dockerfile_trois_etapes() {
   assert_contains "--mount=type=secret,id=legal_env,required=true" "$contenu" "le secret est exigé"
   assert_contains "ENV_MODE=release" "$contenu" "le build de l'image est un build de mise en ligne"
   assert_contains "chmod -R a+rX public" "$contenu" "les fichiers servis sont lisibles"
-  # Un « ; » laisserait passer un contrôle en échec.
-  local sans_et
-  shell_grep_into sans_et -nE '^\s*\./scripts/build\.sh production\s*;' "$root/Dockerfile"
-  assert_eq "" "$sans_et" "les commandes de l'instruction unique sont enchaînées par &&"
+  # Un « ; » laisserait passer un contrôle en échec. Le cas ne cherche plus le point-virgule à un
+  # seul endroit : il extrait l'instruction entière, retire le « if … ; then … ; else … ; fi » qui en
+  # contient légitimement, et exige qu'il n'en reste aucun (constat de la revue de la PR n° 59).
+  local instruction
+  instruction=$(awk '/^RUN --mount=type=secret/ { dans = 1 } dans { print; if ($0 !~ /\\$/) exit }' "$root/Dockerfile")
+  [[ -n $instruction ]] || { echo "instruction RUN du build introuvable" >&2; exit 1; }
+  # L'instruction est d'abord repliée en une seule ligne logique : un « if » écrit sur plusieurs
+  # lignes échapperait sinon au retrait, et le cas échouerait à tort (constat de la revue de la
+  # PR n° 60). Le comptage porte sur les occurrences, pas sur les lignes, pour la même raison.
+  local une_ligne reste
+  une_ligne=$(sed -e 's/\\$//' <<< "$instruction" | tr '\n' ' ')
+  # Les segments s'écrivent « [^;]* » et non « .* » : gourmand, le second engloutirait tout entre le
+  # premier « if » et le dernier « fi », et masquerait un « ; » illégal entre deux blocs. Le « else »
+  # est facultatif (constats de la revue de la PR n° 60).
+  reste=$(sed -E 's/if [^;]*; then [^;]*(; else [^;]*)?; fi//g' <<< "$une_ligne")
+  assert_eq "" "$(tr -cd ';' <<< "$reste")" "aucun « ; » hors du if : les commandes sont enchaînées par &&"
+  # Comptage sans commande externe : « grep -o … | wc -l » rend 1 quand il ne trouve rien, ce que
+  # pipefail transforme en arrêt silencieux du cas, avant même son assertion.
+  local sans_et=${une_ligne//&&/}
+  # Trois commandes — build, contrôles, chmod — font deux enchaînements.
+  assert_eq 2 "$(( (${#une_ligne} - ${#sans_et}) / 2 ))" "deux enchaînements pour trois commandes"
 }
 
 case_dockerfile_image_nginx_epinglee() {
@@ -152,6 +169,17 @@ case_build_image_secret_qui_est_un_dossier() {
   image --secret "$work/dossier-secret"
   assert_eq 1 "$rc" "un dossier n'est pas un fichier de valeurs légales"
   assert_contains "qui n'est pas un fichier" "$err" "le message le dit"
+  [[ ! -f $work/arguments ]] || { echo "docker a été lancé malgré le refus" >&2; exit 1; }
+}
+
+case_build_image_secret_avec_virgule() {
+  # « --secret id=…,src=… » sépare ses champs par des virgules (constat de la revue de la PR n° 59).
+  faux_docker 0
+  mkdir -p "$work/avec,virgule"
+  printf 'HUGO_LEGAL_PUBLISHER_NAME=Essai\n' > "$work/avec,virgule/legal.env"
+  image --secret "$work/avec,virgule/legal.env"
+  assert_eq 1 "$rc" "un chemin à virgule est refusé avant le build"
+  assert_contains "contient une virgule" "$err" "le message dit pourquoi"
   [[ ! -f $work/arguments ]] || { echo "docker a été lancé malgré le refus" >&2; exit 1; }
 }
 

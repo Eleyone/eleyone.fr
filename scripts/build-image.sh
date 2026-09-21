@@ -58,6 +58,11 @@ for interdit in "$root/.env" "$root/ci/legal-placeholder.env"; do
     || refuse "un fichier de travail du dépôt ne peut pas servir de secret de mise en ligne : ${interdit#"$root"/}."
 done
 
+# « --secret id=…,src=… » sépare ses champs par des virgules : un chemin qui en contient une serait
+# coupé, et le démon répondrait sur un champ inconnu (constat de la revue de la PR n° 59).
+[[ $secret != *,* ]] \
+  || refuse "le chemin du fichier de valeurs légales contient une virgule, que « docker build --secret » lit comme un séparateur : le déplacer."
+
 printf '%s: image %s, contrôles au niveau %s, outils de %s.\n' "$script_name" "$tag" "$level" "$CHECK_IMAGE"
 
 # Le secret est nommé « legal_env » dans le Dockerfile, qui l'exige (required=true) : un build sans
