@@ -102,7 +102,8 @@ Tout ce qui manque s'écrit `[TODO: précision]`, dans les deux langues. Un cas 
 5. **Aucune information personnelle** : ni rémunération, ni ville de résidence, téléphone ou mobilité, ni auto-évaluation d'entretien, ni proches. Le lieu de résidence public se limite à « basé en France », porté par le site ; les villes où se sont déroulées les missions peuvent apparaître.
 6. Un sujet **jamais mis en production** le reste explicitement dans le texte.
 7. **Ton factuel envers les anciens employeurs et clients** : le texte est public et nominatif.
-8. **Le texte se lit sans le matériel vivant.** Un élément `planned` est invisible en production : aucune phrase ne s'appuie sur lui (« comme le montre le schéma »).
+8. **Une personne physique n'est pas nommée ; une entreprise peut l'être.** L'entreprise cliente est nommée — c'est `context.company`, et c'est ce qui donne son poids au cas. Le dirigeant, l'interlocuteur ou l'utilisateur sont désignés par leur rôle (« ma cliente », « la dirigeante », « les commerciaux terrain »), jamais par leur prénom ou leur nom. Le dépôt est public et le miroir publie à chaque push : un prénom commité reste atteignable par son SHA, même retiré ensuite. Un nom de personne ne s'écrit qu'avec l'accord explicite de l'intéressé, demandé pour cet usage-là (décidé par Arnaud le 21/09/2026, cas 01).
+9. **Le texte se lit sans le matériel vivant.** Un élément `planned` est invisible en production : aucune phrase ne s'appuie sur lui (« comme le montre le schéma »).
 
 ## Modèle vide
 
