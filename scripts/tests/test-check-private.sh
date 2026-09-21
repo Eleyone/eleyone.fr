@@ -362,6 +362,27 @@ case_pre_receive_exceptions_nommees() {
   assert_contains "portrait.webp" "$err" "une image hors assets reste refusée par son chemin"
 }
 
+case_pre_receive_c20_chemin_cite_par_git() {
+  # git cite entre guillemets et échappe en octal tout chemin non-ASCII : « "assets/images/
+  # caf\303\251.webp" ». Les motifs de chemin ne collaient alors plus, et l'image n'était pas même
+  # sélectionnée pour C20 — elle passait avec ses métadonnées, en silence (constat B5 de la
+  # rétrospective de l'epic 5, reproduit). Sans le correctif, ce cas passe au vert à tort.
+  base_pushed
+  from_base
+  mkdir -p "$work/depot/assets/images"
+  {
+    printf 'RIFF'; printf '\070\000\000\000'; printf 'WEBP'
+    printf 'VP8X'; printf '\012\000\000\000'; printf '\010\000\000\000'
+    printf '\177\002\000'; printf '\037\003\000'
+    printf 'EXIF'; printf '\014\000\000\000'; printf 'Exif\000\000MM\000\052\000\000'
+  } > "$work/depot/assets/images/café été.webp"
+  commit_all "image au nom accentue, porteuse de metadonnees" > /dev/null
+  push_branch
+  [[ $rc != 0 ]] || { echo "image au nom accentué : push admis" >&2; exit 1; }
+  assert_contains "C20 : métadonnées dans une image" "$err" "le refus nomme C20 malgré l accent"
+  assert_contains "café été.webp" "$err" "et le fichier, sans guillemets ni échappement"
+}
+
 case_pre_receive_c20_metadonnees() {
   # C20 dans le hook (AD-19, AD-12) : une image porteuse de métadonnées est refusée **avant**
   # publication, la CI seule arrivant après que le miroir a poussé.

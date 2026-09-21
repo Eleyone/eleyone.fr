@@ -70,9 +70,17 @@ Le lieu prévu est docs/private/assets/, qui est un autre dépôt, ignoré par c
 fi
 
 load_tools_env "${TOOLS_ENV_FILE:-$root/tools.env}"
-hugo=${TOOLS_LOCAL_DIR:-$root/.tools}/hugo
-[[ -x $hugo ]] || hugo=$(command -v hugo) \
-  || die "hugo est introuvable : lancer scripts/ci/install-tools.sh --local."
+# **Le Hugo épinglé, et lui seul.** Le script se rabattait sur le Hugo du système lorsque .tools/
+# était absent : AD-19 fait pourtant reposer toute sa garantie sur la version épinglée — « le spike
+# montre qu'un JPEG portant EXIF et GPS ressort sans aucune trace ». L'epic 5 a montré que le
+# comportement de Hugo au recadrage n'est pas anodin (crop n'est pas fill) ; une version non
+# contrôlée peut donc produire une autre image, ou en laisser des métadonnées. La vérification est
+# celle de scripts/build.sh, et pour la même raison (constat B6 de la rétrospective de l'epic 5).
+tools_dir=${TOOLS_LOCAL_DIR:-$root/.tools}
+[[ -d $tools_dir ]] && PATH="$tools_dir:$PATH"
+export PATH
+require_tool_version hugo hugo "$HUGO_VERSION" || exit 2
+hugo=hugo
 
 # Le mini-projet est temporaire et hors du dépôt : rien n'y est laissé, et un échec ne dépose aucun
 # fichier à moitié écrit dans assets/.

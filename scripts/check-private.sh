@@ -121,10 +121,16 @@ check_tree() { # $1 = libellé, reste = arguments git (commit ou --cached)
   local label=$1; shift
   local listing paths entry hits="" err rc=0 prc=0
   if [[ $1 == --cached ]]; then
-    listing=$(git ls-files) || { fail "lecture impossible de $label"; return 0; }
+    listing=$(git -c core.quotePath=false ls-files) || { fail "lecture impossible de $label"; return 0; }
   else
-    listing=$(git ls-tree -r --name-only "$1") || { fail "lecture impossible de $label"; return 0; }
+    listing=$(git -c core.quotePath=false ls-tree -r --name-only "$1") || { fail "lecture impossible de $label"; return 0; }
   fi
+  # « core.quotePath=false » : sans lui, git cite entre guillemets et échappe en octal tout chemin
+  # non-ASCII — « "assets/images/caf\303\251.webp" ». Les motifs de chemin ne collaient alors plus,
+  # et l'image **n'était pas même sélectionnée** pour C20 : elle passait avec ses métadonnées, en
+  # silence. Reproduit à la rétrospective de l'epic 5, constat B5.
+  #
+
   # grep rend 1 quand il ne trouve rien et 2 sur une erreur : une erreur ne vaut jamais « aucun chemin privé »
   paths=$(printf '%s\n' "$listing" | grep -E -i "$forbidden_paths") || prc=$?
   if ((prc > 1)); then
@@ -137,6 +143,15 @@ check_tree() { # $1 = libellé, reste = arguments git (commit ou --cached)
     ((prc <= 1)) || { fail "exception de chemin illisible dans $label"; return 0; }
   fi
   [[ -z $paths ]] || fail "chemin privé dans $label :\n$paths"
+  # Un chemin reste cité par git s'il contient un saut de ligne ou un caractère de contrôle, que
+  # « core.quotePath=false » ne désarme pas. Celui-là est **refusé** plutôt qu'analysé de travers :
+  # la lecture ligne à ligne de ce script ne saurait de toute façon pas le traiter, et un garde-fou
+  # qui doute refuse. La vérification vient après celle des chemins interdits, pour que l'échec de
+  # grep garde son propre message.
+  local cites prc_cite=0
+  cites=$(printf '%s\n' "$listing" | grep -c '^"') || prc_cite=$?
+  ((prc_cite <= 1)) || { fail "comptage des chemins cités impossible dans $label"; return 0; }
+  ((cites == 0)) || fail "chemin illisible dans $label : $cites fichier(s) dont le nom porte un saut de ligne ou un caractère de contrôle ; les renommer"
   check_images "$label" "$1" "$listing"
   [[ -n $patterns ]] || return 0
   # les chemins eux-mêmes, confrontés aux motifs : un dossier ou un fichier nommé d'après un client fuit

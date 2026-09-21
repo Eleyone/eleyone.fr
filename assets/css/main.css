@@ -260,7 +260,12 @@ main {
 .site-header__nav a,
 .site-footer__list a,
 .nav-links a,
-.toc a {
+.toc a,
+/* Le lien d'un cas rattaché : mesuré à 22,1 px avec un titre court, sous le seuil. Le titre du
+ * seul cas existant est long et se replie, ce qui portait sa boîte à 44 px et masquait le défaut —
+ * la mesure faite sur le contenu du jour ne disait rien du contenu à venir (constat B8 de la
+ * rétrospective de l'epic 5). */
+.attached-case a {
   display: inline-block;
   padding-block: var(--space-1);
 }
