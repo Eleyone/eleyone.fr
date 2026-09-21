@@ -3686,7 +3686,7 @@ afin de servir exactement ce qui a passé les contrôles.
 **Dépendances :** 3.12
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, une fois : créer hors du dépôt son fichier de valeurs légales de mise en ligne (`~/.config/eleyone/legal-release.env`, décidé le 21/09/2026), sans quoi seul un build à valeurs quelconques est possible.
+**Opération manuelle (Arnaud) :** **oui**, une fois : créer dans le dépôt privé son fichier de valeurs légales de mise en ligne (`docs/private/legal-release.env`, décidé le 21/09/2026), sans quoi seul un build à valeurs quelconques est possible.
 
 **Critères d'acceptation :**
 
@@ -7191,7 +7191,7 @@ afin de servir exactement ce qui a passé les contrôles.
 **Dépendances :** 3.12
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, une fois : créer hors du dépôt son fichier de valeurs légales de mise en ligne (`~/.config/eleyone/legal-release.env`, décidé le 21/09/2026), sans quoi seul un build à valeurs quelconques est possible.
+**Opération manuelle (Arnaud) :** **oui**, une fois : créer dans le dépôt privé son fichier de valeurs légales de mise en ligne (`docs/private/legal-release.env`, décidé le 21/09/2026), sans quoi seul un build à valeurs quelconques est possible.
 
 **Critères d'acceptation :**
 

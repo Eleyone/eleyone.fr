@@ -9,9 +9,9 @@
 #   scripts/build-image.sh --secret <fichier>  autre fichier de valeurs légales
 #
 # Les valeurs légales passent par un **secret BuildKit** : monté le temps d'une instruction, il
-# n'entre dans aucune couche, et « docker history » n'en montre rien (AD-9). Le fichier vit **hors
-# du dépôt** — ~/.config/eleyone/legal-release.env par défaut : ENV_MODE=release refuse aussi bien
-# le .env du poste que le fichier factice commité, et c'est voulu.
+# n'entre dans aucune couche, et « docker history » n'en montre rien (AD-9). Le fichier vit dans le
+# dépôt privé — docs/private/legal-release.env par défaut : ENV_MODE=release refuse aussi bien le
+# .env du poste que le fichier factice commité, et c'est voulu.
 # Codes de sortie : 0 image construite, 1 refus (build en échec, secret manquant), 2 anomalie.
 # Procédure : docs/procedures/build-image.md
 set -euo pipefail
@@ -30,7 +30,9 @@ refuse() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 1; }
 
 level=standard
 tag=eleyone-site:dev
-secret=${LEGAL_RELEASE_ENV_FILE:-$HOME/.config/eleyone/legal-release.env}
+# Le défaut est absolu : une valeur relative se résout depuis le dossier d'appel (voir plus bas),
+# ce qui ferait dépendre le défaut de l'endroit d'où le script est lancé.
+secret=${LEGAL_RELEASE_ENV_FILE:-$root/docs/private/legal-release.env}
 while (($#)); do
   case $1 in
     --release) level=release; shift ;;
@@ -47,7 +49,7 @@ load_tools_env "${TOOLS_ENV_FILE:-$root/tools.env}"
 # « -f » et pas seulement « -r » : un dossier lisible passerait ce test, et Docker échouerait plus
 # tard sur un montage de secret impossible, en langage de démon (constat de la revue de la PR n° 59).
 [[ -f $secret && -r $secret ]] \
-  || refuse "fichier de valeurs légales introuvable, illisible, ou qui n'est pas un fichier ($secret) : le créer hors du dépôt, ou en désigner un autre par --secret (docs/procedures/build-image.md)."
+  || refuse "fichier de valeurs légales introuvable, illisible, ou qui n'est pas un fichier ($secret) : le créer dans le dépôt privé, ou en désigner un autre par --secret (docs/procedures/build-image.md)."
 
 # Les deux fichiers du dépôt sont refusés ici, avant le build : scripts/env.sh les refuse aussi en
 # mode release, mais un message qui arrive après cinq minutes de build ne sert à personne.

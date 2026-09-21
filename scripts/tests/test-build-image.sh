@@ -149,6 +149,24 @@ case_dockerignore_exclut_le_privé_et_les_sorties() {
   done
 }
 
+case_build_image_secret_par_defaut_dans_le_depot_prive() {
+  # Le défaut vit dans le dépôt privé, et il est **absolu** : résolu depuis le dossier d'appel, il
+  # changerait de sens selon l'endroit d'où le script est lancé. Le cas se joue depuis /tmp pour
+  # que la différence se voie, et sans LEGAL_RELEASE_ENV_FILE, qui masquerait le défaut.
+  faux_docker 0
+  local attendu=$root/docs/private/legal-release.env
+  run env -u LEGAL_RELEASE_ENV_FILE PATH="$work/bin:$PATH" \
+    bash -c 'cd "$1" && bash "$2/scripts/build-image.sh"' _ "$work" "$root"
+  # Le fichier existe sur le poste d'Arnaud et pas en CI : les deux issues nomment le même chemin.
+  if ((rc == 0)); then
+    assert_contains "src=$attendu" "$(cat "$work/arguments")" "le défaut est le fichier du dépôt privé"
+  else
+    assert_eq 1 "$rc" "sans le fichier, le script refuse (messages : $err)"
+    assert_contains "$attendu" "$err" "le refus nomme le chemin par défaut"
+    assert_contains "dépôt privé" "$err" "et dit où le créer"
+  fi
+}
+
 case_build_image_secret_relatif_au_dossier_dappel() {
   # Le script se place à la racine du dépôt : un chemin relatif s'y résoudrait, alors qu'il est
   # écrit depuis le dossier de l'appelant (constat de la revue de la PR n° 59).

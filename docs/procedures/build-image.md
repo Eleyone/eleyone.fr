@@ -25,7 +25,11 @@ La configuration nginx de `deploy/nginx/` **n'est pas là** : elle arrive avec l
 
 `ENV_MODE=release` exige un fichier **dédié** et refuse aussi bien le `.env` du poste que le fichier factice commité (AD-9) — c'est voulu : une image de mise en ligne ne se construit pas avec des valeurs d'essai sans qu'on l'ait décidé.
 
-Le fichier vit **hors du dépôt**, par défaut `~/.config/eleyone/legal-release.env` (décidé par Arnaud le 21/09/2026), et porte les sept variables `HUGO_LEGAL_*`. `LEGAL_RELEASE_ENV_FILE` ou `--secret` en désignent un autre.
+Le fichier vit **dans le dépôt privé**, par défaut `docs/private/legal-release.env` (décidé par Arnaud le 21/09/2026), et porte les sept variables `HUGO_LEGAL_*`. `LEGAL_RELEASE_ENV_FILE` ou `--secret` en désignent un autre ; le défaut, lui, est absolu, pour ne pas dépendre du dossier d'où le script est lancé.
+
+Ces sept valeurs ne sont pas des identifiants : ce sont les mentions légales, destinées à être publiées. Le mot « secret » est ici le terme de BuildKit — « n'entre dans aucune couche » — et non une affirmation de confidentialité. Elles restent hors du dépôt public parce qu'il est public, pas parce qu'elles seraient sensibles ; `docs/private/` est donc leur place, et les y versionner les sauvegarde sur la forge privée au lieu de les laisser sur une seule machine. Le penser à créer après un `git clean -ffdx` est le prix à payer ; `git -C docs/private commit` les enregistre, comme tout le reste du dépôt privé.
+
+Quatre garde-fous indépendants les empêchent d'entrer dans le dépôt public : `.gitignore` ignore `docs/private/`, `scripts/check-private.sh` refuse ce chemin **et** le suffixe `.env` séparément, le hook `pre-receive` de la forge refuse les mêmes, et `.dockerignore` exclut le dossier du contexte de build. Ce dernier ne gêne pas la lecture du secret : `docker build --secret id=…,src=…` lit le fichier sur le disque, hors du contexte (vérifié le 21/09/2026).
 
 Il passe par un **secret BuildKit** : monté le temps d'une instruction, il n'entre dans aucune couche, et `docker history` n'en montre rien.
 
