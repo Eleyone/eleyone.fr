@@ -79,4 +79,28 @@ case_liste_vide_nest_pas_une_conformite() {
   done
 }
 
+case_shell_grep_jamais_en_tete_de_pipeline() {
+  # « shell_grep » promet d'arrêter le script sur une erreur de lecture. En tête d'un pipeline, son
+  # « exit » ne quitte que son sous-shell : la promesse y serait fausse. La règle est vérifiée plutôt
+  # qu'écrite en note (constat de la première revue de plage, 21/09/2026).
+  #
+  # Le motif cherche un tube précédé d'autre chose qu'un tube et suivi d'une commande, l'espace
+  # étant facultative — « shell_grep x|wc » se cache sinon (constat de la revue de la PR n° 56).
+  # Ni « || », ni un « | » d'alternative dans une expression régulière n'en sont.
+  local trouves
+  shell_grep_into trouves -rnE 'shell_grep[[:space:]].*[^|]\|[[:space:]]*[a-z]' --include='*.sh' "$root/scripts"
+  local restants="" ligne code
+  while IFS= read -r ligne; do
+    [[ -n $ligne ]] || continue
+    # la bibliothèque et ce cas parlent de la règle ; un commentaire n'est pas un appel
+    case $ligne in
+      *scripts/lib/shell.sh:*|*test-shell-lib.sh:*) continue ;;
+    esac
+    code=${ligne#*:*:}
+    [[ ${code#"${code%%[![:space:]]*}"} != \#* ]] || continue
+    restants+="$ligne"$'\n'
+  done <<< "$trouves"
+  assert_eq "" "${restants%$'\n'}" "aucun « shell_grep … | commande » : dans un pipeline, lire d'abord dans une variable"
+}
+
 run_case "$@"

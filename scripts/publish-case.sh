@@ -77,7 +77,7 @@ printf '%s: %s fichier(s) à passer hors brouillon :\n' "$script_name" "${#fichi
 printf '  %s\n' "${fichiers[@]}"
 ajouts=()
 for entree in "${cles[@]}"; do
-  if grep -qxF "$entree" "$pages_file"; then
+  if shell_grep -qxF "$entree" "$pages_file"; then
     printf '  %s est déjà dans %s\n' "$entree" "$pages_file"
   else
     ajouts+=("$entree")
@@ -108,7 +108,13 @@ git switch --quiet --create "$branche" || die "création de la branche $branche 
 # --- 4. draft: false, dans le front matter seulement --------------------------------------------------
 # La réécriture est bornée au front matter, entre les deux premiers « --- » : un « draft: » cité dans
 # le corps du texte n'est pas touché. Le script vérifie qu'il a changé une ligne, et une seule.
+# Les fichiers sont d'abord tous réécrits dans le dossier temporaire, et seulement ensuite posés :
+# un arrêt au milieu laissait sinon l'arbre à moitié modifié, ce que la procédure promet d'éviter
+# (constat de la première revue de plage, 21/09/2026).
+declare -A publies=()
+indice=0
 for fichier in "${fichiers[@]}"; do
+  indice=$((indice + 1))
   [[ -f $fichier ]] || die "fichier annoncé par le manifeste mais absent : $fichier"
   # L'enveloppe commune distingue « rien trouvé » d'une erreur de lecture : grep -c affiche « 0 »
   # et rend 1 quand rien ne correspond.
@@ -118,17 +124,24 @@ for fichier in "${fichiers[@]}"; do
     dans && $0 == "---" { dans = 0; print; next }
     dans && /^draft:[[:space:]]*true[[:space:]]*$/ { print "draft: false"; next }
     { print }
-  ' "$fichier" > "$tmp/publie" || die "réécriture impossible de $fichier."
-  shell_grep_into apres -c '^draft: *false *$' "$tmp/publie"
+  ' "$fichier" > "$tmp/publie-$indice" || die "réécriture impossible de $fichier."
+  shell_grep_into apres -c '^draft: *false *$' "$tmp/publie-$indice"
   ((apres == avant + 1)) || die "front matter inattendu dans $fichier : $avant puis $apres ligne(s) « draft: false ». La ligne attendue s'écrit « draft: true », seule sur sa ligne et sans commentaire ; rien n'a été remplacé."
-  cp "$tmp/publie" "$fichier" || die "remplacement impossible de $fichier."
+  publies[$fichier]="$tmp/publie-$indice"
+done
+
+for fichier in "${fichiers[@]}"; do
+  cp "${publies[$fichier]}" "$fichier" || die "remplacement impossible de $fichier."
 done
 
 if ((${#ajouts[@]})); then
   # Un fichier qui ne finit pas par un saut de ligne collerait la première clé à la dernière ligne
   # (constat de la revue de la PR n° 53). Le cas se règle avant d'ajouter, pas après.
-  [[ -s $pages_file && $(tail -c 1 "$pages_file") == "" ]] \
-    || printf '\n' >> "$pages_file" || die "écriture impossible dans $pages_file."
+  # Un fichier vide n'a pas besoin du saut : le « -s » seul y aurait fait naître une ligne vide en
+  # tête (constat de la première revue de plage, 21/09/2026).
+  if [[ -s $pages_file && $(tail -c 1 "$pages_file") != "" ]]; then
+    printf '\n' >> "$pages_file" || die "écriture impossible dans $pages_file."
+  fi
   printf '%s\n' "${ajouts[@]}" >> "$pages_file" || die "écriture impossible dans $pages_file."
 fi
 

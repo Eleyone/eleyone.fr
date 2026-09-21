@@ -110,7 +110,9 @@ checks_attributes() { # $1 = fichier, $2 = requête, $3 = nom de l'attribut
   local brut rc=0
   brut=$(checks_xpath "$1" "$2") || rc=$?
   ((rc == 0)) || return "$rc"
-  { shell_grep -oE "$3=\"[^\"]*\"" <<< "$brut" || true; } | sed -E "s/^$3=\"(.*)\"$/\1/"
+  local valeurs
+  shell_grep_into valeurs -oE "$3=\"[^\"]*\"" <<< "$brut"
+  [[ -z $valeurs ]] || sed -E "s/^$3=\"(.*)\"$/\1/" <<< "$valeurs"
 }
 
 checks_find() { # arguments de find ; s'arrête sur une erreur

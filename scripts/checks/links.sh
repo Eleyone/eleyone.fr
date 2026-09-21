@@ -111,9 +111,12 @@ done
 # --- liens conditionnels : CV et dépôt --------------------------------------------------------------
 cv_publies=0
 [[ ! -f $public/assets/cv/cv-fr.pdf || ! -f $public/assets/cv/cv-en.pdf ]] || cv_publies=1
-# « || true » : sans correspondance, grep rend 1 et l'affectation tuerait le script sous set -e
-# (piège de docs/procedures/shell-scripts.md, reproduit ici et attrapé au premier essai).
-liens_cv=$({ shell_grep -rlE 'href="?/assets/cv/' "$public" --include='*.html' || true; } | wc -l)
+# Le comptage passe par une variable, jamais par « shell_grep … | wc -l » : un « exit » en tête de
+# pipeline ne quitte que son sous-shell, et un répertoire illisible se compterait pour zéro lien
+# (constat de la première revue de plage, 21/09/2026).
+shell_grep_into fichiers_cv -rlE 'href="?/assets/cv/' "$public" --include='*.html'
+liens_cv=0
+[[ -z $fichiers_cv ]] || liens_cv=$(wc -l <<< "$fichiers_cv")
 if ((cv_publies == 1 && liens_cv == 0)); then
   signaler "assets/cv/" "C12 : les deux CV sont publiés mais aucune page n'y mène (AD-21)"
 elif ((cv_publies == 0 && liens_cv > 0)); then
@@ -123,7 +126,10 @@ fi
 source_url=""
 [[ ! -f $config ]] || source_url=$(sed -n 's#^[[:space:]]*source_url:[[:space:]]*["'"'"']\?\([^"'"'"'[:space:]]*\).*#\1#p' "$config" | head -1)
 liens_depot=0
-[[ -z $source_url ]] || liens_depot=$({ shell_grep -rlF "$source_url" "$public" --include='*.html' || true; } | wc -l)
+if [[ -n $source_url ]]; then
+  shell_grep_into fichiers_depot -rlF "$source_url" "$public" --include='*.html'
+  [[ -z $fichiers_depot ]] || liens_depot=$(wc -l <<< "$fichiers_depot")
+fi
 if [[ -n $source_url ]] && ((liens_depot == 0)); then
   signaler "$config" "C12 : params.source_url est renseignée mais aucune page ne mène au dépôt"
 fi

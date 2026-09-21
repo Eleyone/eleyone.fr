@@ -129,13 +129,19 @@ while IFS= read -r page; do
   done <<< "$liste_4"
   # Un rel peut en combiner plusieurs (« preload stylesheet ») : la comparaison porte sur le jeton,
   # jamais sur la chaîne entière (même constat).
-  liens_declares=$(checks_xpath "$page" "//link[@rel][@href]" \
-            | { shell_grep -oE '<link[^>]*>' || true; } \
-            | while IFS= read -r balise; do
-                r=$({ shell_grep -oE 'rel="[^"]*"' <<< "$balise" || true; } | head -1); r=${r#rel=\"}; r=${r%\"}
-                h=$({ shell_grep -oE 'href="[^"]*"' <<< "$balise" || true; } | head -1); h=${h#href=\"}; h=${h%\"}
-                printf '%s\t%s\n' "$r" "$h"
-              done) || exit $?
+  # Chaque lecture passe par une variable, jamais par un pipeline : un « exit » en tête de pipeline
+  # ne quitte que son sous-shell (constat de la première revue de plage, 21/09/2026).
+  brut_liens=$(checks_xpath "$page" "//link[@rel][@href]") || exit $?
+  shell_grep_into balises_link -oE '<link[^>]*>' <<< "$brut_liens"
+  liens_declares=""
+  while IFS= read -r balise; do
+    [[ -n $balise ]] || continue
+    shell_grep_into r -oE 'rel="[^"]*"' <<< "$balise"
+    shell_grep_into h -oE 'href="[^"]*"' <<< "$balise"
+    r=${r%%$'\n'*}; r=${r#rel=\"}; r=${r%\"}
+    h=${h%%$'\n'*}; h=${h#href=\"}; h=${h%\"}
+    liens_declares+="$r"$'\t'"$h"$'\n'
+  done <<< "$balises_link"
   while IFS= read -r ligne; do
     [[ -n $ligne ]] || continue
     rel_value=${ligne%%$'\t'*}
@@ -200,7 +206,9 @@ while IFS= read -r page; do
 
   # Plan des titres : aucun saut de niveau vers le bas (h2 puis h4).
   precedent=0
-  liste_6=$(checks_xpath "$page" '//h1|//h2|//h3|//h4|//h5|//h6' | { shell_grep -oE '<h[1-6]' || true; } | tr -d '<h') || exit $?
+  brut_titres=$(checks_xpath "$page" '//h1|//h2|//h3|//h4|//h5|//h6') || exit $?
+  shell_grep_into balises_titres -oE '<h[1-6]' <<< "$brut_titres"
+  liste_6=$(tr -d '<h' <<< "$balises_titres")
   while IFS= read -r niveau; do
     [[ -n $niveau ]] || continue
     if ((precedent > 0 && niveau > precedent + 1)); then
@@ -260,7 +268,7 @@ while IFS= read -r fichier; do
   rc_css=0
   brut_css=$(shell_grep -oiE "(url\(|@import[[:space:]]+(url\()?)[[:space:]]*['\"]?((https?:)?//[^)'\" ]+)" "$fichier") || rc_css=$?
   ((rc_css <= 1)) || exit "$rc_css"
-  appels_css=$({ shell_grep -oiE "(https?:)?//[^)'\" ]+" <<< "$brut_css" || true; })
+  shell_grep_into appels_css -oiE "(https?:)?//[^)'\" ]+" <<< "$brut_css"
   while IFS= read -r cible; do
     [[ -n $cible ]] || continue
     origine_tierce "$cible" || continue
