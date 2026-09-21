@@ -252,6 +252,20 @@ def todo_value: (. // "") | tostring | gsub("^\\s+"; "") | startswith("[TODO");
          ,
          (select((($f.front_matter.location // "") | blank) and (($f.front_matter.setup // "") | blank))
           | [$f.file, "C19 : ni location ni setup ; l'un des deux au moins est exigé (FR-2)"])
+         ,
+         # « company_url » est facultative, mais si elle est là le nom de la société devient un
+         # lien : une valeur relative ou vide ferait un lien mort qu'aucun contrôle ne verrait,
+         # C12 ne lisant que les liens internes (clé ajoutée le 21/09/2026, story 5.2).
+         # Le nom n'est pas « url » : Hugo réserve cette clé pour forcer l'adresse d'une page et
+         # refuse une valeur à protocole, ce qui fait échouer le build (constaté le 21/09/2026).
+         (($f.front_matter.company_url // "") as $url
+          | select(($f.front_matter | has("company_url")))
+          | select(($f.draft == true and ($url | todo_value)) | not)
+          # « https:// » tout seul passait le test du préfixe : un hôte est exigé après le protocole
+          # (constat de la revue de la PR n° 67).
+          | select(($url | test("^https://[^/?#\\s]+")) | not)
+          | [$f.file, (if ($url | blank) then "C19 : company_url présente mais vide ; la retirer ou l'écrire en https://"
+                       else "C19 : company_url « \($url) » ; une adresse absolue en https:// avec un hôte est attendue" end)])
        ))
     ,
     (select($f.role == "education")

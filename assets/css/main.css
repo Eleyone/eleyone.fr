@@ -271,6 +271,71 @@ main {
   gap: var(--space-4);
 }
 
+/* --------------------------------------------------- accueil : le CV (story 5.2)
+ *
+ * Trois blocs de premier niveau — identité, « Parcours », « En parallèle » — séparés par
+ * « space-6 » sous md et « space-7 » dès md (DESIGN.md § Échelle d'espacement).
+ */
+
+.identity-block > * {
+  margin-block: 0 var(--space-2);
+}
+
+.cv-block {
+  margin-top: var(--space-6);
+}
+
+.pitch > :last-child {
+  margin-bottom: 0;
+}
+
+/* Un poste est « une ligne de registre » : période dans la marge dès md, le reste dans le texte.
+ * Le filet qui sépare deux postes ne court que sur la colonne de texte — la marge reste nette
+ * (DESIGN.md § cv-position). Il est posé au-dessus de chaque poste sauf le premier, plutôt qu'en
+ * dessous : ainsi aucun filet ne pend sous le dernier poste d'un bloc. */
+.cv-position {
+  margin-top: var(--space-4);
+}
+
+.cv-position + .cv-position .cv-position__body {
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--rule);
+}
+
+.cv-position__period {
+  margin-block: 0 var(--space-1);
+}
+
+.cv-position__body > * {
+  margin-block: 0 var(--space-2);
+}
+
+/* Le lieu, le cadre et « prestation … » sont secondaires ; l'intitulé du poste ne l'est pas. */
+.cv-position__detail {
+  color: var(--ink-muted);
+}
+
+.cv-position__content {
+  font-size: var(--body-sm);
+}
+
+/* La barre de révision : le seul motif graphique propre au site. Elle marque les postes qui ont
+ * une preuve, et couvre **toute la liste**, pas chaque cas (DESIGN.md § attached-case). */
+.attached-case {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0 0 0 var(--space-4);
+  border-left: var(--revision-bar) solid var(--accent);
+}
+
+.attached-case > li + li {
+  margin-top: var(--space-2);
+}
+
+.attached-case__number {
+  display: block;
+}
+
 /* -------------------------------------------------------------- rôles de texte */
 
 .identity-name {
@@ -383,6 +448,55 @@ main {
   .frame--columns > .in-margin {
     grid-column: 1;
     text-align: right;
+  }
+
+  /* Un poste doit poser sa période dans la colonne de marge **de la page**, alors qu'il est
+   * imbriqué dans sa section : la grille de la page ne l'atteint pas. Le bloc prend donc toute la
+   * largeur du cadre, et chaque poste redéclare la même grille marge | texte. Les largeurs venant
+   * des mêmes tokens, les colonnes tombent au même endroit que celles de la page.
+   *
+   * Un poste reste **un seul élément de grille** : ses deux morceaux ne peuvent pas se désolidariser
+   * quand les postes s'empilent, ce qu'un « display: contents » aurait risqué. */
+  .cv-block {
+    grid-column: 1 / -1;
+  }
+
+  .cv-block > .section-heading {
+    margin-left: calc(var(--margin-column) + var(--column-gap));
+    /* Borné sur la mesure : sans cela, le titre s'étend dans la colonne de note dès lg, et
+     * « text-wrap: balance » raisonne sur une largeur que le texte n'occupe jamais. */
+    max-width: var(--measure);
+  }
+
+  .cv-position {
+    display: grid;
+    grid-template-columns: var(--margin-column) minmax(0, var(--measure));
+    column-gap: var(--column-gap);
+    margin-top: var(--space-5);
+  }
+
+  .cv-position__period {
+    text-align: right;
+  }
+
+  .cv-block {
+    margin-top: var(--space-7);
+  }
+
+  .attached-case {
+    padding-left: var(--space-5);
+  }
+
+  /* Le numéro « Cas 02 » dans une petite colonne, pour que les numéros s'alignent verticalement
+   * (DESIGN.md § attached-case). */
+  .attached-case > li {
+    display: grid;
+    grid-template-columns: 3.75rem minmax(0, 1fr);
+    column-gap: var(--space-2);
+  }
+
+  .attached-case__number {
+    display: inline;
   }
 }
 

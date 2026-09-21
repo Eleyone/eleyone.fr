@@ -147,7 +147,7 @@ case_le_lien_devitement_et_lancre() {
   done <<< "$liste"
   assert_eq "" "${manquants% }" "chaque <main> porte id=\"content\", cible du lien d'évitement"
   local cle cle_fr cle_en
-  for cle in skip_to_content nav_site footer_source; do
+  for cle in skip_to_content nav_site footer_source block_parallel block_education via_label; do
     shell_grep_into cle_fr -n "^$cle:" "$root/i18n/fr.yaml"
     assert_contains "$cle" "$cle_fr" "la clé « $cle » existe en français"
     shell_grep_into cle_en -n "^$cle:" "$root/i18n/en.yaml"
@@ -168,6 +168,37 @@ case_la_feuille_est_empreintee_dans_le_gabarit() {
   assert_contains 'with resources.Get "css/main.css" }} {{ with . | minify | fingerprint }}' \
     "$sans_espaces" "la feuille du dépôt est celle qui est minifiée puis empreintée"
   assert_contains 'href="{{ .RelPermalink }}"' "$baseof" "le <link> porte l'URL empreintée"
+}
+
+case_le_poste_nemploie_pas_la_cle_url_de_hugo() {
+  # « url » est réservée par Hugo : elle force l'adresse d'une page, et une valeur à protocole fait
+  # échouer le build (« URLs with protocol (http*) not supported »), constaté le 21/09/2026 en
+  # écrivant la story 5.2. L'adresse du site d'une société vit donc dans « company_url ».
+  local partial="$root/layouts/_partials/position.html" contenu
+  contenu=$(cat "$partial")
+  assert_contains '.Params.company_url' "$contenu" "le lien de société passe par company_url"
+  local trouve
+  shell_grep_into trouve -nE '\.Params\.url\b' "$partial"
+  assert_eq "" "$trouve" "le gabarit n'emploie pas .Params.url, que Hugo réserve"
+  # Les deux contrôles connaissent la clé : la parité la traite en non traduite, C19 la valide.
+  assert_contains '"company_url"' "$(cat "$root/scripts/checks/parity.sh")" "C3 la compte parmi les clés non traduites"
+  assert_contains 'company_url' "$(cat "$root/scripts/checks/content.sh")" "C19 la valide"
+}
+
+case_laccueil_necrit_aucun_texte() {
+  # AD-3 : tout le texte vient du contenu ou d'i18n. Un libellé écrit dans le gabarit échapperait
+  # à la traduction et à la parité FR/EN.
+  local home
+  home=$(cat "$root/layouts/home.html")
+  local bloc
+  for bloc in block_career block_parallel; do
+    assert_contains "i18n \"$bloc\"" "$home" "le titre du bloc « $bloc » vient d'i18n"
+  done
+  # Les deux blocs sont conditionnés à l'existence d'un poste : pas de titre au-dessus du néant
+  # (constat de la revue de spec de la story 5.2).
+  local nb
+  shell_grep_into nb -c 'Params.track' "$root/layouts/home.html"
+  assert_eq 2 "$nb" "les deux blocs filtrent sur track, chacun dans son « with »"
 }
 
 run_case "$@"

@@ -25,7 +25,7 @@ read -r -d '' program <<'JQ' || true
 def untranslated($role):
   {
     case:      ["number", "group", "order", "draft", "position"],
-    position:  ["company", "via", "setup", "track", "order", "draft"],
+    position:  ["company", "via", "company_url", "setup", "track", "order", "draft"],
     education: ["kind", "order", "draft"],
     home:      ["identity"],
     page:      ["email", "linkedin", "github"]

@@ -1,27 +1,44 @@
 {{/*
   Un poste du parcours (AD-18, DESIGN.md « cv-position » et « attached-case »). Le poste ne liste pas
   ses cas : ils sont retrouvés par leur clé « position » et triés par numéro ; Hugo exclut les
-  brouillons en production. Le corps du poste n'est rendu que s'il n'a aucun cas, et rien ne signale
-  l'absence de cas. La mise en forme relève de la story 5.2.
+  brouillons en production, donc un poste dont tous les cas sont en brouillon retombe de lui-même
+  sur son corps, sans zone de cas ni barre de révision orpheline. Rien ne signale l'absence de cas.
+
+  Disposition (DESIGN.md « Mise en page par page ») : la **colonne de marge ne porte que la
+  période**. Le lieu et le cadre restent dans la colonne de texte — en marge, un lieu en monospace
+  passait mal à la ligne.
 
   Paramètre : la page du poste.
 */}}
 {{- $key := .Params.translationKey -}}
 {{- $cases := sort (where site.RegularPages "Params.position" $key) "Params.number" -}}
+{{/* Ordre imposé par DESIGN.md § cv-position : location, puis le libellé du cadre, puis via. */}}
 {{- $details := slice -}}
 {{- with .Params.location }}{{ $details = $details | append . }}{{ end -}}
 {{- with .Params.setup }}{{ $details = $details | append (i18n (printf "setup_%s" (replace . "-" "_"))) }}{{ end -}}
-<div class="cv-position" id="{{ $key }}">
-  {{ with .Params.period }}<p>{{ . }}</p>{{ end }}
-  <h3>{{ partial "draft-marker.html" . }}{{ .Params.company }}</h3>
-  <p>{{ .Params.role }}{{ range $details }} · {{ . }}{{ end }}</p>
-  {{- with $cases }}
-    <ol class="attached-case" aria-label="{{ i18n "cases_of_position" }}">
-      {{- range . }}
-        <li>{{ i18n "case_number" .Params.number }} {{ partial "draft-marker.html" . }}<a href="{{ partial "case-url.html" . }}">{{ .Title }}</a></li>
-      {{- end }}
-    </ol>
-  {{- else }}
-    {{ .Content }}
-  {{- end }}
-</div>
+{{- with .Params.via }}{{ $details = $details | append (i18n "via_label" .) }}{{ end -}}
+<article class="cv-position" id="{{ $key }}">
+  {{/* La période est un enfant direct de la grille : elle passe dans la colonne de marge dès md. */}}
+  {{ with .Params.period }}<p class="cv-position__period meta in-margin">{{ . }}</p>{{ end }}
+  <div class="cv-position__body">
+    {{/* Une « company_url » transforme le nom de la société en lien (clé ajoutée le 21/09/2026,
+         story 5.2 ; pas « url », que Hugo réserve pour forcer l’adresse d’une page).
+         La règle est générale : le gabarit ne connaît aucune société en particulier. */}}
+    <h3 class="entry-heading">{{ partial "draft-marker.html" . }}
+      {{- with .Params.company_url }}<a href="{{ . }}">{{ $.Params.company }}</a>{{ else }}{{ .Params.company }}{{ end -}}
+    </h3>
+    <p class="cv-position__role">{{ .Params.role }}{{ range $details }} · <span class="cv-position__detail">{{ . }}</span>{{ end }}</p>
+    {{- with $cases }}
+      <ol class="attached-case" aria-label="{{ i18n "cases_of_position" }}">
+        {{- range . }}
+          <li>
+            <span class="attached-case__number meta">{{ i18n "case_number" .Params.number }}</span>
+            <a class="case-link" href="{{ partial "case-url.html" . }}">{{ partial "draft-marker.html" . }}{{ .Title }}</a>
+          </li>
+        {{- end }}
+      </ol>
+    {{- else }}
+      <div class="cv-position__content">{{ .Content }}</div>
+    {{- end }}
+  </div>
+</article>

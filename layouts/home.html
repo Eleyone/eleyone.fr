@@ -1,19 +1,37 @@
 {{ define "main" }}
-  {{/* AD-3 : aucun texte de contenu ici ; tout vient du front-matter de content/_index.<lang>.md. */}}
+  {{/* AD-3 : aucun texte de contenu ici ; tout vient du front-matter et du corps de
+       content/_index.<lang>.md, et les libellés de blocs d'i18n/. */}}
   <main id="content" class="frame frame--columns">
-    <header>
-      {{ with .Params.identity }}<p class="identity-name">{{ . }}</p>{{ end }}
-      <h1 class="site-title">{{ .Title }}</h1>
+    {{/* Bloc d'identité (DESIGN.md « identity-block », AD-19). L'ordre du DOM est celui que fixe la
+         story 5.2 : ligne d'identité, titre du site, « Basé en France », pitch. La photo arrive
+         avec la story 5.5 ; sa place est la colonne de marge dès md. */}}
+    <header class="identity-block">
+      {{ with .Params.identity }}<h1 class="identity-name">{{ . }}</h1>{{ end }}
+      <p class="site-title">{{ .Title }}</p>
       {{ with .Params.based_in }}<p class="meta">{{ . }}</p>{{ end }}
+      {{ with .Content }}<div class="pitch">{{ . }}</div>{{ end }}
     </header>
-    {{ .Content }}
-    {{/* AD-18 : bloc « Parcours », postes « main » par « order ». Sans poste publié, aucun bloc. L'accueil
-         complet (« En parallèle », formation, contact) vient de la story 5.2. */}}
+
+    {{/* AD-18 : « Parcours », postes « main » par « order ». Le bloc entier — son titre compris —
+         n'existe pas sans poste publié : un titre au-dessus du néant n'apprend rien. */}}
     {{ with sort (where (where site.RegularPages "Section" "career") "Params.track" "main") "Params.order" }}
-      <section aria-labelledby="block-career">
+      <section class="cv-block" aria-labelledby="block-career">
         <h2 class="section-heading" id="block-career">{{ i18n "block_career" }}</h2>
         {{ range . }}{{ partial "position.html" . }}{{ end }}
       </section>
     {{ end }}
+
+    {{/* « En parallèle » : même composant, postes « parallel ». Même règle d'existence que
+         « Parcours » (constat de la revue de spec de la story 5.2). */}}
+    {{ with sort (where (where site.RegularPages "Section" "career") "Params.track" "parallel") "Params.order" }}
+      <section class="cv-block" aria-labelledby="block-parallel">
+        <h2 class="section-heading" id="block-parallel">{{ i18n "block_parallel" }}</h2>
+        {{ range . }}{{ partial "position.html" . }}{{ end }}
+      </section>
+    {{ end }}
+
+    {{/* Emplacement du bloc « Formation, certification, langues » : story 5.3, qui lira
+         content/education/ par « kind » puis « order ». L'appel à contact (FR-3) vient avec la
+         page Contact, story 9.3 : un lien vers une page absente ferait échouer C12. */}}
   </main>
 {{ end }}

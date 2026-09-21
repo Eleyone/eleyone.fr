@@ -40,3 +40,8 @@ draft_marker: Draft
 skip_to_content: Skip to content
 nav_site: Site navigation
 footer_source: Site source code
+
+# CV home page (AD-18, DESIGN.md, story 5.2)
+block_parallel: Alongside
+block_education: "Education, certification, languages"
+via_label: "via {{ . }}"

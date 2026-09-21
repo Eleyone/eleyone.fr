@@ -41,3 +41,8 @@ draft_marker: Brouillon
 skip_to_content: Aller au contenu
 nav_site: Navigation du site
 footer_source: Code source du site
+
+# Accueil CV (AD-18, DESIGN.md, story 5.2)
+block_parallel: En parallèle
+block_education: "Formation, certification, langues"
+via_label: "prestation {{ . }}"

@@ -358,6 +358,38 @@ case_content_c19_translation_key_du_poste() {
   assert_contains 'préfixe « position- » attendu (AD-18)' "$err" "le signalement donne le préfixe"
 }
 
+case_content_c19_url_de_societe() {
+  # « company_url » est facultative : son absence ne dit rien. Présente, elle fait du nom de la
+  # société un lien, et une valeur relative ou vide donnerait un lien mort qu'aucun contrôle ne
+  # verrait — C12 ne lit que les liens internes (clé ajoutée le 21/09/2026, story 5.2).
+  rendu '.files[1].front_matter.company_url = "https://exemple.invalid/"' \
+        '.files[1].front_matter.company_url = "https://exemple.invalid/"'
+  contenu
+  assert_eq 0 "$rc" "une adresse absolue en https:// passe (messages : $err)"
+
+  rendu '.files[1].front_matter.company_url = "exemple.invalid"' \
+        '.files[1].front_matter.company_url = "exemple.invalid"'
+  contenu
+  assert_eq 1 "$rc" "une adresse sans protocole fait échouer"
+  assert_contains 'C19 : company_url « exemple.invalid »' "$err" "le signalement cite la valeur"
+
+  rendu '.files[1].front_matter.company_url = ""' '.files[1].front_matter.company_url = ""'
+  contenu
+  assert_eq 1 "$rc" "une valeur vide fait échouer"
+  assert_contains 'company_url présente mais vide' "$err" "le signalement distingue le vide de la valeur fausse"
+
+  rendu '.files[1].front_matter.company_url = "http://exemple.invalid/"' \
+        '.files[1].front_matter.company_url = "http://exemple.invalid/"'
+  contenu
+  assert_eq 1 "$rc" "http:// sans TLS fait échouer aussi"
+
+  # Le protocole seul passait le test du préfixe (constat de la revue de la PR n° 67).
+  rendu '.files[1].front_matter.company_url = "https://"' '.files[1].front_matter.company_url = "https://"'
+  contenu
+  assert_eq 1 "$rc" "le protocole sans hôte fait échouer"
+  assert_contains 'avec un hôte est attendue' "$err" "le signalement dit ce qui manque"
+}
+
 case_content_c19_valeurs_du_poste() {
   rendu '.files[1].front_matter.track = "annexe"'
   contenu
