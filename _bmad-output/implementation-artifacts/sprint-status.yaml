@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-21-2026 17:32'
+last_updated: '09-21-2026 18:05'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -334,7 +334,7 @@ action_items:
     action: "Étendre l action 8 de l epic 0 à AGENTS.md : une story qui rend vraie
       une phrase au futur la met au présent dans sa propre PR"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-1-retro-2026-09-16.md"
   - id: "epic-1-retro-item-5-reprendre-les-actions-3-5-et-6-de-la-rét"
     epic: 1
@@ -430,7 +430,7 @@ action_items:
       A1), et verifier que chacun des 14 titres « ## Epic N » apparait exactement
       une fois. Avant l epic 5."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-4-retro-2026-09-21.md"
   - id: "epic-4-retro-item-18-ajouter-un-controle-qui-refuse-un-titre"
     epic: 4
@@ -438,21 +438,21 @@ action_items:
       planification et de procedure : la garde qui aurait attrape A1 des la story
       3.17."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-4-retro-2026-09-21.md"
   - id: "epic-4-retro-item-19-corriger-la-regle-du-journal-test-nginx"
     epic: 4
     action: "Corriger la regle du journal (test-nginx-conf.sh:40) pour n excepter
       que $request_method, avec un cas qui echoue sur $request_uri (constat B1)."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-4-retro-2026-09-21.md"
   - id: "epic-4-retro-item-20-retirer-la-phrase-perimee-de-docs-proced"
     epic: 4
     action: "Retirer la phrase perimee de docs/procedures/build-image.md:22, que la
       story 4.2 a rendue fausse (constat A2)."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-4-retro-2026-09-21.md"
   - id: "epic-4-retro-item-21-trois-correctifs-mineurs-a-za-z-dans-la"
     epic: 4
@@ -460,14 +460,14 @@ action_items:
       d application/rss+xml des gzip_types (B3), completion de la liste .dockerignore
       du test (B4)."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-4-retro-2026-09-21.md"
   - id: "epic-4-retro-item-22-traduire-le-title-de-la-page-404-et-ajou"
     epic: 4
     action: "Traduire le <title> de la page 404 et ajouter le controle de langue du
       <title> qui manque (constat C1, perimetre story 2.3)."
     owner: "Arnaud arbitre le rattachement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-4-retro-2026-09-21.md"
   - id: "epic-4-retro-item-23-porter-dans-agents-md-une-story-qui-modi"
     epic: 4
@@ -475,12 +475,12 @@ action_items:
       en entier avant de le commiter, pas seulement son diff (lecon A3 ; execute aussi
       epic-1-retro-item-4)."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-4-retro-2026-09-21.md"
   - id: "epic-4-retro-item-24-un-arbitrage-soumis-a-arnaud-presente-l"
     epic: 4
     action: "Un arbitrage soumis a Arnaud presente l eventail complet des options,
       y compris celles que l agent n a pas retenues (lecon A4)."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-4-retro-2026-09-21.md"
