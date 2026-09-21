@@ -147,7 +147,8 @@ case_le_lien_devitement_et_lancre() {
   done <<< "$liste"
   assert_eq "" "${manquants% }" "chaque <main> porte id=\"content\", cible du lien d'évitement"
   local cle cle_fr cle_en
-  for cle in skip_to_content nav_site footer_source block_parallel block_education via_label; do
+  for cle in skip_to_content nav_site footer_source block_parallel block_education via_label \
+             education_kind_education education_kind_certification education_kind_language; do
     shell_grep_into cle_fr -n "^$cle:" "$root/i18n/fr.yaml"
     assert_contains "$cle" "$cle_fr" "la clé « $cle » existe en français"
     shell_grep_into cle_en -n "^$cle:" "$root/i18n/en.yaml"
@@ -199,6 +200,32 @@ case_laccueil_necrit_aucun_texte() {
   local nb
   shell_grep_into nb -c 'Params.track' "$root/layouts/home.html"
   assert_eq 2 "$nb" "les deux blocs filtrent sur track, chacun dans son « with »"
+}
+
+case_le_bloc_formation() {
+  local partial="$root/layouts/_partials/education.html" contenu
+  [[ -f $partial ]] || { echo "partial de formation absent : $partial" >&2; exit 1; }
+  contenu=$(cat "$partial")
+  # Les trois natures sont énumérées dans le gabarit, dans l'ordre voulu : découvertes dans les
+  # données, l'ordre des sous-titres dépendrait du contenu et changerait tout seul.
+  assert_contains 'slice "education" "certification" "language"' "$contenu" \
+    "les trois natures sont énumérées dans leur ordre d'affichage"
+  assert_contains 'education_kind_%s' "$contenu" "les sous-titres viennent d'i18n (AD-3)"
+  # Extension d'AD-5 décidée le 21/09/2026 : une entrée en brouillon se voit dans le rendu de travail.
+  assert_contains 'draft-marker.html' "$contenu" "une entrée en brouillon porte le marqueur"
+  # Même règle que « Parcours » et « En parallèle » : pas de titre au-dessus du néant.
+  assert_contains '{{- with $entries }}' "$contenu" "le bloc entier n'existe pas sans entrée"
+
+  # AD-18 : content/education/ ne produit aucune page.
+  local index
+  for index in fr en; do
+    local f="$root/content/education/_index.$index.md"
+    [[ -f $f ]] || { echo "_index.$index.md absent de content/education/" >&2; exit 1; }
+    local texte
+    texte=$(cat "$f")
+    assert_contains "render: never" "$texte" "la section n'est pas rendue ($index)"
+    assert_contains "list: never" "$texte" "ni listée ($index)"
+  done
 }
 
 run_case "$@"

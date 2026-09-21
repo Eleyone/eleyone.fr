@@ -45,3 +45,6 @@ footer_source: Site source code
 block_parallel: Alongside
 block_education: "Education, certification, languages"
 via_label: "via {{ . }}"
+education_kind_education: Education
+education_kind_certification: Certification
+education_kind_language: Languages

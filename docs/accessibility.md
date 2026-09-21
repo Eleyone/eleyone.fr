@@ -27,7 +27,7 @@ Mesures relevées au navigateur, à 320 px, sur le rendu de travail.
 
 | Gabarit | Vérifié le | Par | Contraste min. (clair / sombre) | Cible min. | Défilement à 320 px | Focus |
 |---|---|---|---|---|---|---|
-| Accueil (CV) | 21/09/2026 | story 5.2 | aucune paire sous 4,5:1 | 28 px | aucun | anneau 2 px `accent` dans les deux modes |
+| Accueil (CV) | 21/09/2026 | story 5.3 | aucune paire sous 4,5:1 | 28 px | aucun | anneau 2 px `accent` dans les deux modes |
 | Page de groupe (Chiliz) | 21/09/2026 | story 5.1 | aucune paire sous 4,5:1 | 28 px | aucun | idem |
 | 404 | 21/09/2026 | story 5.1 | 15,61:1 / 14,75:1 | 28 px | aucun | idem |
 

@@ -1,0 +1,45 @@
+{{/*
+  Bloc « Formation, certification, langues » de l'accueil (AD-18, FR-36, DESIGN.md « Mise en page
+  par page »). Un registre compact : un sous-titre par nature, puis les entrées de cette nature
+  dans l'ordre de leur clé « order ».
+
+  Les trois natures sont énumérées ici dans l'ordre d'affichage voulu — pas découvertes dans les
+  données : sans cela, l'ordre des sous-titres dépendrait du contenu, donc changerait tout seul.
+  Les valeurs sont celles qu'AD-18 fixe et que C19 contrôle.
+
+  Le bloc entier, son titre compris, n'existe pas sans entrée publiée, comme « Parcours » et
+  « En parallèle » (DESIGN.md § Do's and Don'ts : laisser vide ce qui n'existe pas).
+
+  Aucun paramètre : le bloc lit content/education/.
+*/}}
+{{- $entries := where site.RegularPages "Section" "education" -}}
+{{- with $entries }}
+  <section class="cv-block" aria-labelledby="block-education">
+    <h2 class="section-heading" id="block-education">{{ i18n "block_education" }}</h2>
+    {{- range $kind := slice "education" "certification" "language" }}
+      {{- with sort (where $entries "Params.kind" $kind) "Params.order" }}
+        <div class="education-group">
+          <h3 class="label">{{ i18n (printf "education_kind_%s" $kind) }}</h3>
+          <ul class="education-list">
+            {{- range . }}
+              {{/* Les segments secondaires sont assemblés puis joints : une entrée sans institution
+                   ni période ne laisse aucun séparateur pendant (constat de la revue de spec). */}}
+              {{- $details := slice -}}
+              {{- with .Params.institution }}{{ $details = $details | append . }}{{ end -}}
+              {{- with .Params.level }}{{ $details = $details | append . }}{{ end -}}
+              <li class="education-entry">
+                {{ with .Params.period }}<span class="education-entry__period meta">{{ . }}</span>{{ end }}
+                {{/* Titre et détails dans un seul conteneur : ils sont une seule ligne de registre,
+                     et deux enfants distincts tomberaient sur deux lignes de la grille dès md. */}}
+                <span class="education-entry__body">
+                  <span class="education-entry__title">{{ partial "draft-marker.html" . }}{{ .Title }}</span>
+                  {{- with $details }}<span class="education-entry__details">{{ delimit . " · " }}</span>{{ end }}
+                </span>
+              </li>
+            {{- end }}
+          </ul>
+        </div>
+      {{- end }}
+    {{- end }}
+  </section>
+{{- end }}

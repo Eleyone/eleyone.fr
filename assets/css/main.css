@@ -336,6 +336,40 @@ main {
   display: block;
 }
 
+/* ------------------------------- formation, certification, langues (story 5.3)
+ *
+ * Un registre plus compact que le parcours : un sous-titre `label` par nature, puis une ligne par
+ * entrée. La période passe dans la colonne de marge dès md, comme celle d'un poste.
+ */
+
+.education-group + .education-group {
+  margin-top: var(--space-5);
+}
+
+.education-list {
+  list-style: none;
+  margin: var(--space-2) 0 0;
+  padding: 0;
+}
+
+.education-entry + .education-entry {
+  margin-top: var(--space-2);
+}
+
+.education-entry__period {
+  display: block;
+}
+
+.education-entry__details {
+  color: var(--ink-muted);
+}
+
+/* Le séparateur est posé en CSS et non dans le gabarit : il n'apparaît que lorsqu'il y a bien
+ * quelque chose devant et derrière, donc jamais en ponctuation orpheline. */
+.education-entry__details::before {
+  content: " · ";
+}
+
 /* -------------------------------------------------------------- rôles de texte */
 
 .identity-name {
@@ -485,6 +519,30 @@ main {
 
   .attached-case {
     padding-left: var(--space-5);
+  }
+
+  /* Même montage que pour un poste : le sous-titre de nature s'aligne sur la colonne de texte, et
+   * chaque entrée redéclare la grille marge | texte pour poser sa période à gauche. */
+  .education-group > .label {
+    margin-left: calc(var(--margin-column) + var(--column-gap));
+    /* Borné sur la mesure, comme les titres de bloc : sans cela il s'étend dans la colonne de
+     * note dès lg (constat de la story 5.2, même cause). */
+    max-width: var(--measure);
+  }
+
+  .education-entry {
+    display: grid;
+    grid-template-columns: var(--margin-column) minmax(0, var(--measure));
+    column-gap: var(--column-gap);
+  }
+
+  .education-entry__period {
+    text-align: right;
+  }
+
+  /* Sans période, la ligne doit tout de même occuper la colonne de texte. */
+  .education-entry__body {
+    grid-column: 2;
   }
 
   /* Le numéro « Cas 02 » dans une petite colonne, pour que les numéros s'alignent verticalement

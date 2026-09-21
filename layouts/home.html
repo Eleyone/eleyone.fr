@@ -30,8 +30,8 @@
       </section>
     {{ end }}
 
-    {{/* Emplacement du bloc « Formation, certification, langues » : story 5.3, qui lira
-         content/education/ par « kind » puis « order ». L'appel à contact (FR-3) vient avec la
-         page Contact, story 9.3 : un lien vers une page absente ferait échouer C12. */}}
+    {{/* « Formation, certification, langues » (AD-18, FR-36). L'appel à contact (FR-3) vient avec
+         la page Contact, story 9.3 : un lien vers une page absente ferait échouer C12. */}}
+    {{ partial "education.html" . }}
   </main>
 {{ end }}

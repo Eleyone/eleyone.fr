@@ -46,3 +46,6 @@ footer_source: Code source du site
 block_parallel: En parallèle
 block_education: "Formation, certification, langues"
 via_label: "prestation {{ . }}"
+education_kind_education: Formation
+education_kind_certification: Certification
+education_kind_language: Langues
