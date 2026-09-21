@@ -50,3 +50,7 @@ Constats de revue reportés à plus tard, au format de `bmad-build`. Chaque entr
   summary: C18 accepte une valeur d'encart faite uniquement d'espaces : la règle teste la longueur, pas le contenu utile (`context.company`, `role`, `period`).
   evidence: Constat non bloquant de la deuxième revue de la PR n° 41 (`c12e2d5`). À reprendre par la story 3.7, qui rouvre `content.sh` pour C19 et vérifie des clés voisines.
 
+
+- source_spec: `_bmad-output/implementation-artifacts/5-5-photo-published-on-home-page.md`
+  summary: La photo publiée est provisoire. Arnaud la garde « pour l'instant » et la remplacera quand il en aura une autre sous la main (décidé le 21/09/2026). Le registre du site est celui d'un dossier d'architecture, « sobre, exact, sans effet de séduction » (`DESIGN.md`) ; la photo actuelle est prise en extérieur, casquette et sac à dos, avec un logo de marque au centre du buste. Le remplacement ne demande aucune story : déposer l'original dans `docs/private/assets/`, relancer `scripts/photo/prepare.sh <original> <ancrage>`, regarder le cadrage, **réécrire `portrait_alt` dans `content/_index.{fr,en}.md`** pour décrire la nouvelle photo — sans quoi l'alternative décrirait l'ancienne, régression d'accessibilité qu'aucun contrôle ne verrait (constat de la revue de la PR n° 70) —, puis commiter.
+  evidence: Question posée à Arnaud à la story 5.5, avec les deux cadrages candidats sous les yeux ; réponse « on garde celle-ci pour l'instant ».

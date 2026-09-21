@@ -6,9 +6,16 @@
          story 5.2 : ligne d'identité, titre du site, « Basé en France », pitch. La photo arrive
          avec la story 5.5 ; sa place est la colonne de marge dès md. */}}
     <header class="identity-block">
-      {{ with .Params.identity }}<h1 class="identity-name">{{ . }}</h1>{{ end }}
-      <p class="site-title">{{ .Title }}</p>
-      {{ with .Params.based_in }}<p class="meta">{{ . }}</p>{{ end }}
+      {{/* Les trois lignes d'identité sont regroupées : la photo se place à côté d'elles sous md
+           et dans la colonne de marge dès md (DESIGN.md « Mise en page par page »). Un conteneur
+           explicite vaut mieux qu'un « grid-row » qui compterait les lignes — « Basé en France »
+           est facultatif, et le compte changerait sans prévenir. */}}
+      <div class="identity-block__lines">
+        {{ with .Params.identity }}<h1 class="identity-name">{{ . }}</h1>{{ end }}
+        <p class="site-title">{{ .Title }}</p>
+        {{ with .Params.based_in }}<p class="meta">{{ . }}</p>{{ end }}
+      </div>
+      {{ partial "portrait.html" (dict "place" "home") }}
       {{ with .Content }}<div class="pitch">{{ . }}</div>{{ end }}
     </header>
 

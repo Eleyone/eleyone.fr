@@ -10,7 +10,11 @@
 # algorithme, et un résultat différent d'une version de Hugo à l'autre ne se verrait pas.
 #
 # Le travail est fait par le **Hugo épinglé de tools.env** sur un mini-projet temporaire hors du
-# dépôt : « .Process "crop 640x800 <ancrage> webp q80" ». Aucun autre outil d'image n'est ajouté
+# dépôt : « .Process "fill 640x800 <ancrage> webp q80" ». **fill et non crop** : dans Hugo, « crop »
+# découpe une fenêtre de 640 × 800 pixels *de l'original*, sans redimensionner — sur une photo de
+# 1360 × 2048, cela donne un gros plan qui coupe le menton. « fill » met à l'échelle puis recadre
+# au ratio, ce qu'AD-19 décrit en toutes lettres (« recadre au ratio 4:5 et le ramène à 640 × 800 »)
+# mais prescrivait mal (constaté le 21/09/2026, story 5.5). Aucun autre outil d'image n'est ajouté
 # (AD-19). Le spike, revérifié le 21/09/2026, montre qu'un JPEG portant EXIF et GPS ressort en
 # WebP sans aucune trace d'Exif, de XMP ni de VP8X — donc sans emplacement de métadonnées.
 #
@@ -44,11 +48,26 @@ for a in "${ancrages[@]}"; do [[ $ancrage == "$a" ]] && connu=1; done
 [[ $original == /* ]] || original="$appel/$original"
 [[ -f $original && -r $original ]] || refuse "original introuvable ou illisible ($original)."
 
-# L'original ne doit jamais entrer dans le dépôt, même le temps d'un traitement (AD-19). La
-# comparaison porte sur le chemin canonique : un lien symbolique posé dans le dépôt ne passe pas.
+# L'original ne doit jamais entrer dans **l'historique de ce dépôt** (AD-19). La comparaison porte
+# sur le chemin canonique : un lien symbolique posé dans le dépôt ne passe pas.
+#
+# docs/private/ fait exception, et c'est le lieu prévu : c'est un **autre dépôt**, ignoré par
+# celui-ci, refusé par check-private.sh et par le hook de la forge, et AGENTS.md y place l'original
+# de la photo. Sa position physique sous le dossier de travail n'en fait pas un fichier de ce
+# dépôt (précision apportée par Arnaud le 21/09/2026, story 5.5 ; AD-19 disait « sous le dossier
+# du dépôt », ce qui visait l'historique et non le disque).
+#
+# **Les deux côtés sont canonisés.** « pwd » rend le chemin logique : atteint par un lien
+# symbolique, $root garde la forme du lien, tandis que readlink -f rend la forme réelle. La
+# comparaison échouait alors pour *tout* fichier du dépôt, et le garde-fou ne gardait rien —
+# vérifié en appelant le script à travers un lien (constat bloquant de la revue de la PR n° 70).
 canonique=$(readlink -f -- "$original") || die "chemin de l'original illisible."
-[[ $canonique != "$root"/* ]] \
-  || refuse "l'original est sous le dossier du dépôt ($canonique) : AD-19 veut qu'il reste au dehors, pour qu'il ne puisse pas être commité par accident."
+racine=$(readlink -f -- "$root") || die "chemin du dépôt illisible."
+prive=$(readlink -f -- "$racine/docs/private" 2>/dev/null || printf '%s' "$racine/docs/private")
+if [[ $canonique == "$racine"/* && $canonique != "$prive"/* ]]; then
+  refuse "l'original est dans ce dépôt ($canonique) : AD-19 veut qu'il n'entre jamais dans son historique.
+Le lieu prévu est docs/private/assets/, qui est un autre dépôt, ignoré par celui-ci (AGENTS.md)."
+fi
 
 load_tools_env "${TOOLS_ENV_FILE:-$root/tools.env}"
 hugo=${TOOLS_LOCAL_DIR:-$root/.tools}/hugo
@@ -78,7 +97,7 @@ EOF
 # « .Publish » écrit la ressource même si la page ne la référence pas dans son HTML.
 cat > "$travail/layouts/home.html" <<EOF
 {{- with resources.Get "images/$source_nom" -}}
-  {{- \$p := .Process "crop 640x800 $ancrage webp q80" -}}
+  {{- \$p := .Process "fill 640x800 $ancrage webp q80" -}}
   {{- \$p.Publish -}}
   {{ \$p.RelPermalink }}
 {{- end -}}

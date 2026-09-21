@@ -27,7 +27,7 @@ Mesures relevées au navigateur, à 320 px, sur le rendu de travail.
 
 | Gabarit | Vérifié le | Par | Contraste min. (clair / sombre) | Cible min. | Défilement à 320 px | Focus |
 |---|---|---|---|---|---|---|
-| Accueil (CV) | 21/09/2026 | story 5.3 | aucune paire sous 4,5:1 | 28 px | aucun | anneau 2 px `accent` dans les deux modes |
+| Accueil (CV) | 21/09/2026 | story 5.5 | aucune paire sous 4,5:1 | 28 px | aucun | anneau 2 px `accent` dans les deux modes |
 | Page de groupe (Chiliz) | 21/09/2026 | story 5.1 | aucune paire sous 4,5:1 | 28 px | aucun | idem |
 | 404 | 21/09/2026 | story 5.1 | 15,61:1 / 14,75:1 | 28 px | aucun | idem |
 
@@ -35,7 +35,9 @@ Les ratios relevés au navigateur retrouvent exactement ceux de `DESIGN.md` : `i
 
 **Gabarits pas encore vérifiés**, parce qu'ils n'existent pas : page d'un cas seul (story 6.2), pages simples (9.x).
 
-**Critère mobile 390 × 844 de l'accueil** (FR-37), vérifié le 21/09/2026 par la story 5.2, sur un contenu d'essai local : sans défiler, on voit la ligne d'identité (98 px), le titre du site, « Basé en France », le pitch de trois phrases (227 → 333 px), le titre « Parcours », et le premier poste entier avec son lien de cas (415 → 578 px). À revérifier à chaque modification du haut de l'accueil ou du premier poste, et notamment quand la photo arrivera (story 5.5).
+**Critère mobile 390 × 844 de l'accueil** (FR-37), revérifié le 21/09/2026 par la story 5.5, **photo comprise**, sur un pitch d'essai de trois phrases : sans défiler, on voit la ligne d'identité (98 → 158 px), la photo à sa droite (98 → 188 px), le pitch (256 → 379 px), le titre « Parcours » (419 px), et le premier poste entier avec son lien de cas, qui finit à **622 px sur 844**. Il reste 222 px de marge.
+
+La photo ne repousse donc pas le pitch hors du premier écran, ce qu'exige `DESIGN.md` : sous `md` elle occupe la colonne de droite à hauteur des seules lignes d'identité, et le pitch passe pleine largeur dessous. À revérifier à chaque modification du haut de l'accueil, du premier poste ou de la photo.
 
 ## Ce que la vérification manuelle a trouvé
 

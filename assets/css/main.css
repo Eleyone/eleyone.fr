@@ -277,8 +277,35 @@ main {
  * « space-6 » sous md et « space-7 » dès md (DESIGN.md § Échelle d'espacement).
  */
 
-.identity-block > * {
+/* Sous md : les lignes d'identité à gauche, la photo à leur droite, le pitch pleine largeur
+ * dessous (DESIGN.md). La photo ne repousse donc jamais le pitch hors du premier écran. */
+.identity-block {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: var(--space-4);
+}
+
+.identity-block__lines {
+  grid-column: 1;
+}
+
+.identity-block__lines > * {
   margin-block: 0 var(--space-2);
+}
+
+.identity-block > .pitch {
+  grid-column: 1 / -1;
+  margin-block: var(--space-2) 0;
+}
+
+/* Les dimensions d'affichage viennent de DESIGN.md § identity-block ; celles de l'attribut sont
+ * les dimensions intrinsèques de la variante 1x, qu'AD-19 fixe (120 × 150). */
+.portrait--home {
+  grid-column: 2;
+  align-self: start;
+  width: 4.5rem;
+  height: 5.625rem;
+  object-fit: cover;
 }
 
 .cv-block {
@@ -491,8 +518,28 @@ main {
    *
    * Un poste reste **un seul élément de grille** : ses deux morceaux ne peuvent pas se désolidariser
    * quand les postes s'empilent, ce qu'un « display: contents » aurait risqué. */
-  .cv-block {
+  .cv-block,
+  .identity-block {
     grid-column: 1 / -1;
+  }
+
+  /* Dès md, la photo passe dans la colonne de marge, alignée à droite contre le texte, et les
+   * lignes d'identité rejoignent la colonne de texte (DESIGN.md). */
+  .identity-block {
+    grid-template-columns: var(--margin-column) minmax(0, var(--measure));
+    column-gap: var(--column-gap);
+  }
+
+  .identity-block__lines,
+  .identity-block > .pitch {
+    grid-column: 2;
+  }
+
+  .portrait--home {
+    grid-column: 1;
+    justify-self: end;
+    width: 7.5rem;
+    height: 9.375rem;
   }
 
   .cv-block > .section-heading {

@@ -167,4 +167,24 @@ case_c20_ignore_ce_qui_nest_pas_une_image() {
   assert_eq 0 "$rc" "un fichier qui n'est pas une image est ignoré (messages : $err)"
 }
 
+case_prepare_refuse_un_original_du_depot_meme_par_un_lien() {
+  # « pwd » rend le chemin logique : atteint par un lien symbolique, la racine gardait la forme du
+  # lien tandis que readlink -f rendait la forme réelle, et la comparaison échouait pour *tout*
+  # fichier du dépôt — le garde-fou ne gardait rien (constat bloquant de la revue de la PR n° 70).
+  local piege="$root/assets/.essai-original-du-depot.jpg"
+  # Un fichier qui n'est pas une image : le refus doit tomber **avant** que Hugo soit lancé.
+  printf 'pas une image\n' > "$piege"
+  local lien="$work/lien-depot"
+  ln -s "$root" "$lien"
+
+  run bash "$root/scripts/photo/prepare.sh" "$piege" Top
+  assert_eq 1 "$rc" "un original du dépôt est refusé par son chemin réel"
+  assert_contains "est dans ce dépôt" "$err" "le refus le dit"
+
+  run bash "$lien/scripts/photo/prepare.sh" "$lien/assets/.essai-original-du-depot.jpg" Top
+  assert_eq 1 "$rc" "et aussi lorsqu'on passe par un lien symbolique"
+  assert_contains "est dans ce dépôt" "$err" "le refus le dit aussi"
+  rm -f "$piege"
+}
+
 run_case "$@"
