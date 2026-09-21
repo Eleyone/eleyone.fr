@@ -18,7 +18,7 @@ context:
 summary: >-
   L'équipe finance décidait d'acheter, vendre ou staker des tokens à partir d'un export recalculé à côté par la BI.
   J'ai porté ce calcul dans l'application, prouvé qu'il était juste contre l'ancien système, et il est devenu la référence.
-  Le plus dur n'a pas été la règle, mais les exceptions faites à la main dans l'historique — on les a toutes retrouvées.
+  Le plus dur n'a pas été la règle, mais les exceptions faites à la main dans l'historique.
 
 live_material:
   - id: "diagram-ncs-cs-flow"
@@ -40,7 +40,7 @@ live_material:
 
 ## Contexte
 
-Dernière équipe sur place : quatre à cinq développeurs back, sans front dédié, chargés de construire un nouvel outil pour la branche finance — l'équipe qui fait du trading interne sur les tokens de la société. L'outil sert à décider s'il faut acheter, vendre ou staker. Environ 90 tokens, un pool par token.
+Dernière équipe sur place : quatre à cinq développeurs back, sans front dédié, chargés de construire un nouvel outil pour la branche finance — l'équipe qui fait du trading interne sur les tokens de la société. L'outil sert à décider s'il faut acheter, vendre ou staker. Environ 90 tokens, un pool par token. Le trading de ces tokens et le pourcentage prélevé sur les échanges sont une source de revenus centrale de l'entreprise ; les montants exacts sont confidentiels.
 
 Le projet avait été démarré en Python, en interne, sur l'idée que Python est ce qui ressort le plus avec l'IA. Personne dans la société ne le maîtrisait. Retour sur ce que l'équipe savait tenir en production : PHP et Symfony. Même logique pour le front : plutôt qu'un framework JS que personne ne maîtrisait, Symfony UX et Twig, décision à laquelle j'ai contribué.
 
@@ -54,9 +54,9 @@ Particularité qui pèse sur tout le reste : le calcul est cumulatif. Chaque val
 
 ## Ce que j'ai décidé
 
-Le POC existait déjà. J'ai réécrit la documentation d'implémentation — comment on porte ça dans l'app — puis découpé l'epic en stories et en tâches. Le chiffrage a été fait en refinement par l'équipe. J'ai pris l'essentiel de l'implémentation et l'ownership du sujet. Première version en un mois.
+Le POC existait déjà. J'ai réécrit la documentation d'implémentation — comment on porte ça dans l'application — puis découpé l'epic en stories et en tâches. Le chiffrage a été fait en refinement par l'équipe. J'ai pris l'essentiel de l'implémentation et l'ownership du sujet. Première version en un mois.
 
-La validation contre les données de prod s'est faite en binôme avec un collègue, parce que je n'avais pas les accès prod.
+La validation contre les données de production s'est faite en binôme avec un collègue, parce que je n'avais pas les accès de production.
 
 {{< live-material id="snippet-history-replay" >}}
 
@@ -70,7 +70,7 @@ Dernière source d'écart : la précision. Les montants sont à 18 décimales, b
 
 {{< live-material id="callout-18-decimals" >}}
 
-Côté organisation, une bonne partie du travail a consisté à s'aligner sur ce qu'on livrait avant de le construire.
+Friction non technique : des attentes qui ont demandé de l'alignement. Une bonne partie du travail a consisté à s'accorder sur ce qu'on livrait avant de le construire.
 
 ## Résultat
 
@@ -80,4 +80,4 @@ Côté organisation, une bonne partie du travail a consisté à s'aligner sur ce
 
 ## Ce que ça montre
 
-Je sais prendre un POC et le transformer en logiciel qui tient : doc d'implémentation, découpage, ownership de bout en bout. Je sais que la règle métier et les données réelles sont deux choses différentes, et que le travail est presque toujours dans l'écart entre les deux. Je choisis les technos sur ce que l'équipe sait maintenir, pas sur la mode. Et quand un calcul sert à décider, je ne le considère pas livré tant qu'il n'est pas prouvé contre la référence existante, avec une tolérance explicite.
+Je sais prendre un POC et le transformer en logiciel qui tient : documentation d'implémentation, découpage, ownership de bout en bout. Je sais que la règle métier et les données réelles sont deux choses différentes, et que le travail est presque toujours dans l'écart entre les deux. Je choisis les technos sur ce que l'équipe sait maintenir, pas sur la mode. Et quand un calcul sert à décider, je ne le considère pas livré tant qu'il n'est pas prouvé contre la référence existante, avec une tolérance explicite.

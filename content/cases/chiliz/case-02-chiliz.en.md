@@ -18,7 +18,7 @@ context:
 summary: >-
   The finance team decided whether to buy, sell or stake tokens from an export recalculated on the side by the BI team.
   I brought that calculation into the application, proved it correct against the old system, and it became the reference.
-  The hard part was not the rule but the manual exceptions buried in the history — we found every one of them.
+  The hard part was not the rule but the manual exceptions buried in the history.
 
 live_material:
   - id: "diagram-ncs-cs-flow"
@@ -40,7 +40,7 @@ live_material:
 
 ## Context
 
-Chiliz is a blockchain company best known for fan tokens — crypto tokens tied to sports clubs — and for running its own chain. My last team there: four to five backend developers, no dedicated frontend, tasked with building a new tool for the finance branch — the team that trades the company's own tokens internally. The tool helps decide whether to buy, sell or stake. About 90 tokens, one liquidity pool per token.
+Chiliz is a blockchain company best known for fan tokens — crypto tokens tied to sports clubs — and for running its own chain. My last team there: four to five backend developers, no dedicated frontend, tasked with building a new tool for the finance branch — the team that trades the company's own tokens internally. The tool helps decide whether to buy, sell or stake. About 90 tokens, one liquidity pool per token. Trading those tokens, and the percentage taken on exchanges, is a core revenue stream for the company; exact figures are confidential.
 
 The project had been started in Python, in-house, on the idea that Python is what comes up most with AI. Nobody in the company had mastered it. So we went back to what the team could actually run in production: PHP and Symfony. Same logic for the frontend: rather than a JS framework nobody knew, Symfony UX and Twig — a decision I contributed to.
 
@@ -54,9 +54,9 @@ One property weighs on everything else: the calculation is cumulative. Each valu
 
 ## What I decided
 
-The proof of concept already existed. I rewrote the implementation documentation — how we bring this into the app — then broke the epic down into stories and tasks. The team estimated it in refinement. I took most of the implementation and ownership of the subject. First version in one month.
+The proof of concept already existed. I rewrote the implementation documentation — how we bring this into the application — then broke the epic down into stories and tasks. The team estimated it in refinement. I took most of the implementation and ownership of the subject. First version in one month.
 
-I validated against production data paired with a colleague, because I did not have production access.
+Validation against production data was done in pair with a colleague, because I did not have production access.
 
 {{< live-material id="snippet-history-replay" >}}
 
@@ -70,7 +70,7 @@ Last source of discrepancy: precision. Amounts have 18 decimal places, bounded. 
 
 {{< live-material id="callout-18-decimals" >}}
 
-On the organisational side, a good part of the work was aligning on what we were delivering before building it.
+Non-technical friction: expectations that needed aligning. A good part of the work was agreeing on what we were delivering before building it.
 
 ## Outcome
 
@@ -80,4 +80,4 @@ On the organisational side, a good part of the work was aligning on what we were
 
 ## What it shows
 
-I can take a proof of concept and turn it into software that holds: implementation doc, breakdown, end-to-end ownership. I know the business rule and the real data are two different things, and that the work is almost always in the gap between them. I choose technologies on what the team can maintain, not on fashion. And when a calculation drives decisions, I do not consider it delivered until it is proven against the existing reference, with an explicit tolerance.
+I can take a proof of concept and turn it into software that holds: implementation documentation, breakdown, end-to-end ownership. I know the business rule and the real data are two different things, and that the work is almost always in the gap between them. I choose technologies on what the team can maintain, not on fashion. And when a calculation drives decisions, I do not consider it delivered until it is proven against the existing reference, with an explicit tolerance.
