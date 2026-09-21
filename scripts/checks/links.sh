@@ -27,21 +27,6 @@ command -v xmllint > /dev/null 2>&1 \
 fail=0
 signaler() { checks_report "$1" "$2"; fail=1; }
 
-xpath() { # $1 = fichier, $2 = requête ; enveloppe commune : « rien trouvé » n'est pas une erreur
-  checks_xpath "$1" "$2"
-}
-
-# Valeurs d'un attribut, une par ligne, quelle que soit la sérialisation de libxml2.
-attributs() { # $1 = fichier, $2 = requête, $3 = nom de l'attribut
-  # Le XPath est lu **avant** le filtrage : un « exit » dans un élément de pipeline ne quitte que son
-  # sous-shell, et un « || true » final transformerait l'anomalie en succès (constat de la troisième
-  # revue de la PR n° 47). Le code de checks_xpath est donc propagé tel quel.
-  local brut rc=0
-  brut=$(checks_xpath "$1" "$2") || rc=$?
-  ((rc == 0)) || return "$rc"
-  { checks_grep -oE "$3=\"[^\"]*\"" <<< "$brut" || true; } | sed -E "s/^$3=\"(.*)\"$/\1/"
-}
-
 # Page visée par un lien, en chemin relatif à $public ; vide si le lien ne désigne pas une page.
 page_visee() { # $1 = page courante (relative), $2 = cible du lien sans fragment
   local courante=$1 cible=$2 dossier resultat
@@ -59,14 +44,17 @@ page_visee() { # $1 = page courante (relative), $2 = cible du lien sans fragment
 }
 
 liste_pages=$(cd "$public" && checks_find . -type f -name '*.html' | sed 's#^\./##' | LC_ALL=C sort) || exit $?
+# La liste est éprouvée **avant** mapfile : sur une liste vide, « mapfile <<< » rend un tableau d'un
+# seul élément vide, jamais un tableau vide, et la garde ne se déclenchait donc jamais (constaté en
+# écrivant le cas de test de l'action 3 de la rétrospective de l'epic 3).
+[[ -n $liste_pages ]] || checks_die "aucune page HTML dans $public : rien à contrôler."
 mapfile -t pages <<< "$liste_pages"
-((${#pages[@]} > 0)) || checks_die "aucune page HTML dans $public."
 
 # --- liens internes et ancres ---------------------------------------------------------------------
 declare -A liens_sortants=()
 for page in "${pages[@]}"; do
   sortants=""
-  liste_1=$(attributs "$public/$page" '//a[@href]/@href' href) || exit $?
+  liste_1=$(checks_attributes "$public/$page" '//a[@href]/@href' href) || exit $?
   while IFS= read -r href; do
     [[ -n $href ]] || continue
     # Liens externes et protocoles : hors de C12, qui ne juge que l'intérieur du site.
@@ -82,8 +70,8 @@ for page in "${pages[@]}"; do
     fi
     [[ -z $cible ]] || sortants+="$visee"$'\n'
     if [[ -n $fragment ]]; then
-      identifiants=$(attributs "$public/$visee" '//*[@id]/@id' id)
-      checks_grep -qxF "$fragment" <<< "$identifiants" \
+      identifiants=$(checks_attributes "$public/$visee" '//*[@id]/@id' id)
+      shell_grep -qxF "$fragment" <<< "$identifiants" \
         || signaler "$page" "C12 : ancre « #$fragment » absente de $visee"
     fi
   done <<< "$liste_1"
@@ -125,7 +113,7 @@ cv_publies=0
 [[ ! -f $public/assets/cv/cv-fr.pdf || ! -f $public/assets/cv/cv-en.pdf ]] || cv_publies=1
 # « || true » : sans correspondance, grep rend 1 et l'affectation tuerait le script sous set -e
 # (piège de docs/procedures/shell-scripts.md, reproduit ici et attrapé au premier essai).
-liens_cv=$({ checks_grep -rlE 'href="?/assets/cv/' "$public" --include='*.html' || true; } | wc -l)
+liens_cv=$({ shell_grep -rlE 'href="?/assets/cv/' "$public" --include='*.html' || true; } | wc -l)
 if ((cv_publies == 1 && liens_cv == 0)); then
   signaler "assets/cv/" "C12 : les deux CV sont publiés mais aucune page n'y mène (AD-21)"
 elif ((cv_publies == 0 && liens_cv > 0)); then
@@ -135,7 +123,7 @@ fi
 source_url=""
 [[ ! -f $config ]] || source_url=$(sed -n 's#^[[:space:]]*source_url:[[:space:]]*["'"'"']\?\([^"'"'"'[:space:]]*\).*#\1#p' "$config" | head -1)
 liens_depot=0
-[[ -z $source_url ]] || liens_depot=$({ checks_grep -rlF "$source_url" "$public" --include='*.html' || true; } | wc -l)
+[[ -z $source_url ]] || liens_depot=$({ shell_grep -rlF "$source_url" "$public" --include='*.html' || true; } | wc -l)
 if [[ -n $source_url ]] && ((liens_depot == 0)); then
   signaler "$config" "C12 : params.source_url est renseignée mais aucune page ne mène au dépôt"
 fi

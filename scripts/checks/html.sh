@@ -66,60 +66,49 @@ fi
 
 # Résultat d'une requête XPath sur un fichier HTML, sans la sortie d'erreur (AD-10 : le parseur de
 # libxml2 signale les balises HTML5 comme invalides).
-xpath() { # $1 = fichier, $2 = requête ; enveloppe commune : « rien trouvé » n'est pas une erreur
-  checks_xpath "$1" "$2"
-}
-
 # Valeurs d'un attribut, une par ligne. La version de libxml2 du poste en rend déjà une par ligne,
 # mais d'autres les concatènent : la découpe ne dépend donc pas de la version (constat de la revue
 # de la PR n° 43, rejoué : le défaut n'existait pas ici, la parade le rend impossible partout).
-xpath_attributs() { # $1 = fichier, $2 = requête, $3 = nom de l'attribut
-  # Le XPath est lu **avant** le filtrage : un « exit » dans un élément de pipeline ne quitte que son
-  # sous-shell, et un « || true » final transformerait l'anomalie en succès (constat de la troisième
-  # revue de la PR n° 47). Le code de checks_xpath est donc propagé tel quel.
-  local brut rc=0
-  brut=$(checks_xpath "$1" "$2") || rc=$?
-  ((rc == 0)) || return "$rc"
-  { checks_grep -oE "$3=\"[^\"]*\"" <<< "$brut" || true; } | sed -E "s/^$3=\"(.*)\"$/\1/"
-}
-
 # Les accueils : index.html à la racine de chaque langue, jamais celui d'un sous-dossier.
 est_accueil() { # $1 = chemin relatif à $public
   [[ $1 == index.html || $1 =~ ^[a-z]{2}/index\.html$ ]]
 }
 
 liste_9=$(checks_find "$public" -type f -name '*.html' | LC_ALL=C sort) || exit $?
+# Une liste vide ferait sortir ce contrôle en « conforme » sans avoir rien lu : un CHECK_PUBLIC_ROOT
+# erroné, ou une sortie de build vide, passeraient pour un succès (rétrospective de l'epic 3, A3).
+[[ -n $liste_9 ]] || checks_die "aucune page HTML dans $public : rien à contrôler."
 while IFS= read -r page; do
   relative=${page#"$public"/}
 
   # --- scripts : un seul type toléré, jamais de src (C10, AD-20) -------------------------------
   # La valeur est extraite, jamais découpée à l'indice : la sérialisation de xmllint varie d'une
   # version à l'autre (constat de la quatrième revue de la PR n° 43).
-  liste_1=$(xpath_attributs "$page" '//script[@type]/@type' type) || exit $?
+  liste_1=$(checks_attributes "$page" '//script[@type]/@type' type) || exit $?
   while IFS= read -r type; do
     [[ -n $type ]] || continue
     [[ $type == "application/ld+json" ]] \
       || signaler "$relative" "C10 : balise <script> de type «$type» ; seul application/ld+json est toléré (AD-20)"
   done <<< "$liste_1"
-  count_scripts=$(xpath "$page" 'count(//script)'); count_scripts=${count_scripts:-0}
-  count_typed=$(xpath "$page" 'count(//script[@type])'); count_typed=${count_typed:-0}
+  count_scripts=$(checks_xpath "$page" 'count(//script)'); count_scripts=${count_scripts:-0}
+  count_typed=$(checks_xpath "$page" 'count(//script[@type])'); count_typed=${count_typed:-0}
   [[ ${count_scripts%%.*} == "${count_typed%%.*}" ]] \
     || signaler "$relative" "C10 : balise <script> sans type ; seul un bloc application/ld+json est toléré (AD-20)"
-  [[ $(xpath "$page" 'count(//script[@src])') == 0 ]] \
+  [[ $(checks_xpath "$page" 'count(//script[@src])') == 0 ]] \
     || signaler "$relative" "C10 : balise <script src> : aucune page ne charge de JavaScript (NFR-12)"
 
   # --- gestionnaires d'événements, iframes, formulaires ----------------------------------------
-  [[ $(xpath "$page" "count(//@*[starts-with(name(), 'on')])") == 0 ]] \
+  [[ $(checks_xpath "$page" "count(//@*[starts-with(name(), 'on')])") == 0 ]] \
     || signaler "$relative" "C10 : attribut on… : aucune page n'exécute de script (NFR-12)"
-  [[ $(xpath "$page" 'count(//iframe)') == 0 ]] \
+  [[ $(checks_xpath "$page" 'count(//iframe)') == 0 ]] \
     || signaler "$relative" "C10 : <iframe> : interdite (FR-14, une vidéo est un lien)"
-  [[ $(xpath "$page" 'count(//form)') == 0 ]] \
+  [[ $(checks_xpath "$page" 'count(//form)') == 0 ]] \
     || signaler "$relative" "C10 : <form> : hors périmètre v1 (FR-17)"
 
   # --- ressources d'une autre origine : ce qui compte est l'attribut de chargement, pas la balise
   # Un lien <a href> vers un site tiers reste permis : il ne charge rien.
   for attribut in src poster data; do
-    liste_2=$(xpath_attributs "$page" "//*[@$attribut]/@$attribut" "$attribut") || exit $?
+    liste_2=$(checks_attributes "$page" "//*[@$attribut]/@$attribut" "$attribut") || exit $?
     while IFS= read -r valeur; do
       [[ -n $valeur ]] || continue
       origine_tierce "$valeur" || continue
@@ -129,7 +118,7 @@ while IFS= read -r page; do
   # srcset porte plusieurs URL séparées par des virgules, chacune suivie d'un descripteur (« 2x ») :
   # la valeur entière est découpée, sinon une URL tierce placée après une URL locale passerait
   # (constat de la troisième revue de la PR n° 43).
-  liste_4=$(xpath_attributs "$page" "//*[@srcset]/@srcset" srcset) || exit $?
+  liste_4=$(checks_attributes "$page" "//*[@srcset]/@srcset" srcset) || exit $?
   while IFS= read -r valeur; do
     liste_3=$(tr ',' '\n' <<< "$valeur" | awk 'NF { print $1 }') || exit $?
     while IFS= read -r candidat; do
@@ -140,11 +129,11 @@ while IFS= read -r page; do
   done <<< "$liste_4"
   # Un rel peut en combiner plusieurs (« preload stylesheet ») : la comparaison porte sur le jeton,
   # jamais sur la chaîne entière (même constat).
-  liens_declares=$(xpath "$page" "//link[@rel][@href]" \
-            | { checks_grep -oE '<link[^>]*>' || true; } \
+  liens_declares=$(checks_xpath "$page" "//link[@rel][@href]" \
+            | { shell_grep -oE '<link[^>]*>' || true; } \
             | while IFS= read -r balise; do
-                r=$({ checks_grep -oE 'rel="[^"]*"' <<< "$balise" || true; } | head -1); r=${r#rel=\"}; r=${r%\"}
-                h=$({ checks_grep -oE 'href="[^"]*"' <<< "$balise" || true; } | head -1); h=${h#href=\"}; h=${h%\"}
+                r=$({ shell_grep -oE 'rel="[^"]*"' <<< "$balise" || true; } | head -1); r=${r#rel=\"}; r=${r%\"}
+                h=$({ shell_grep -oE 'href="[^"]*"' <<< "$balise" || true; } | head -1); h=${h#href=\"}; h=${h%\"}
                 printf '%s\t%s\n' "$r" "$h"
               done) || exit $?
   while IFS= read -r ligne; do
@@ -164,7 +153,7 @@ while IFS= read -r page; do
   # story 9.6 : la règle passera de « au plus un » à « exactement un » sur l'accueil de chaque langue.
   # Une sortie vide ne doit jamais casser l'évaluation arithmétique, quelle que soit la version de
   # libxml2 (parade de la troisième revue de la PR n° 43 ; le cas ne se produit pas ici).
-  nombre=$(xpath "$page" 'count(//script[@type="application/ld+json"])')
+  nombre=$(checks_xpath "$page" 'count(//script[@type="application/ld+json"])')
   nombre=${nombre:-0}; nombre=${nombre%%.*}; nombre=${nombre:-0}
   if ((nombre > 0)); then
     if ! est_accueil "$relative"; then
@@ -172,7 +161,7 @@ while IFS= read -r page; do
     elif ((nombre > 1)); then
       signaler "$relative" "C10 : $nombre blocs JSON-LD ; au plus un (AD-20)"
     else
-      contenu=$(xpath "$page" 'string(//script[@type="application/ld+json"])')
+      contenu=$(checks_xpath "$page" 'string(//script[@type="application/ld+json"])')
       if ! jq -e . > /dev/null 2>&1 <<< "$contenu"; then
         signaler "$relative" "C10 : le bloc JSON-LD n'est pas un JSON valide (AD-20)"
       else
@@ -195,10 +184,10 @@ while IFS= read -r page; do
     fi
   fi
   # --- C11 : accessibilité automatisable (AD-17) ------------------------------------------------
-  lang=$(xpath_attributs "$page" '/html/@lang' lang | head -1)
+  lang=$(checks_attributes "$page" '/html/@lang' lang | head -1)
   [[ -n $lang ]] || signaler "$relative" "C11 : <html lang> absent : la langue de la page n'est pas déclarée (3.1.1)"
 
-  titre=$(xpath "$page" 'string(//title)')
+  titre=$(checks_xpath "$page" 'string(//title)')
   if [[ -z ${titre// /} ]]; then
     signaler "$relative" "C11 : <title> vide (2.4.2)"
   elif ! est_accueil "$relative" && [[ $titre != *"$identity"* ]]; then
@@ -206,12 +195,12 @@ while IFS= read -r page; do
     signaler "$relative" "C11 : <title> « $titre » sans la ligne d'identité « $identity » (AD-2)"
   fi
 
-  h1=$(xpath "$page" 'count(//h1)'); h1=${h1:-0}; h1=${h1%%.*}
+  h1=$(checks_xpath "$page" 'count(//h1)'); h1=${h1:-0}; h1=${h1%%.*}
   ((h1 == 1)) || signaler "$relative" "C11 : $h1 balise(s) <h1> ; exactement une est attendue (1.3.1)"
 
   # Plan des titres : aucun saut de niveau vers le bas (h2 puis h4).
   precedent=0
-  liste_6=$(xpath "$page" '//h1|//h2|//h3|//h4|//h5|//h6' | { checks_grep -oE '<h[1-6]' || true; } | tr -d '<h') || exit $?
+  liste_6=$(checks_xpath "$page" '//h1|//h2|//h3|//h4|//h5|//h6' | { shell_grep -oE '<h[1-6]' || true; } | tr -d '<h') || exit $?
   while IFS= read -r niveau; do
     [[ -n $niveau ]] || continue
     if ((precedent > 0 && niveau > precedent + 1)); then
@@ -222,17 +211,17 @@ while IFS= read -r page; do
   # de processus (constat de la deuxième revue de la PR n° 45 ; pièges connus de shell-scripts.md).
   done <<< "$liste_6"
 
-  liste_7=$(xpath_attributs "$page" '//*[@id]/@id' id | LC_ALL=C sort | uniq -d) || exit $?
+  liste_7=$(checks_attributes "$page" '//*[@id]/@id' id | LC_ALL=C sort | uniq -d) || exit $?
   while IFS= read -r identifiant; do
     [[ -n $identifiant ]] || continue
     signaler "$relative" "C11 : identifiant « $identifiant » en double (4.1.1)"
   done <<< "$liste_7"
 
-  images=$(xpath "$page" 'count(//img)'); images=${images:-0}; images=${images%%.*}
+  images=$(checks_xpath "$page" 'count(//img)'); images=${images:-0}; images=${images%%.*}
   if ((images > 0)); then
-    sans_alt=$(xpath "$page" 'count(//img[not(@alt) or normalize-space(@alt) = ""])'); sans_alt=${sans_alt%%.*}
+    sans_alt=$(checks_xpath "$page" 'count(//img[not(@alt) or normalize-space(@alt) = ""])'); sans_alt=${sans_alt%%.*}
     ((${sans_alt:-0} == 0)) || signaler "$relative" "C11 : ${sans_alt} image(s) sans alternative textuelle (1.1.1)"
-    sans_dimensions=$(xpath "$page" 'count(//img[not(@width) or not(@height)])'); sans_dimensions=${sans_dimensions%%.*}
+    sans_dimensions=$(checks_xpath "$page" 'count(//img[not(@width) or not(@height)])'); sans_dimensions=${sans_dimensions%%.*}
     ((${sans_dimensions:-0} == 0)) \
       || signaler "$relative" "C11 : ${sans_dimensions} image(s) sans width ni height : la page se décale au chargement (CLS, AD-17)"
   fi
@@ -240,16 +229,16 @@ while IFS= read -r page; do
   # Nom accessible d'un lien : du texte, un aria-label, un title, ou une image au alt non vide.
   # Un aria-label ou un title **vide** ne nomme rien : l'attribut doit porter du texte
   # (constat de la revue de la PR n° 45).
-  liens_muets=$(xpath "$page" "count(//a[@href][normalize-space(string(.)) = ''][not(@aria-label) or normalize-space(@aria-label) = ''][not(@title) or normalize-space(@title) = ''][not(.//img[@alt][normalize-space(@alt) != ''])])")
+  liens_muets=$(checks_xpath "$page" "count(//a[@href][normalize-space(string(.)) = ''][not(@aria-label) or normalize-space(@aria-label) = ''][not(@title) or normalize-space(@title) = ''][not(.//img[@alt][normalize-space(@alt) != ''])])")
   liens_muets=${liens_muets%%.*}
   ((${liens_muets:-0} == 0)) || signaler "$relative" "C11 : ${liens_muets} lien(s) sans nom accessible (2.4.4)"
 
-  hreflangs=$(xpath "$page" "count(//link[@rel='alternate'][@hreflang])"); hreflangs=${hreflangs%%.*}
+  hreflangs=$(checks_xpath "$page" "count(//link[@rel='alternate'][@hreflang])"); hreflangs=${hreflangs%%.*}
   ((${hreflangs:-0} > 0)) || signaler "$relative" "C11 : aucun lien hreflang : la page ne déclare pas ses traductions (AD-2)"
 
   # « +1 », « 01 » et «  1  » sont des tabindex positifs valides en HTML5 : la valeur est normalisée
   # avant comparaison (constat de la revue de la PR n° 45).
-  liste_8=$(xpath_attributs "$page" '//*[@tabindex]/@tabindex' tabindex) || exit $?
+  liste_8=$(checks_attributes "$page" '//*[@tabindex]/@tabindex' tabindex) || exit $?
   while IFS= read -r valeur; do
     [[ -n $valeur ]] || continue
     normalisee=${valeur//[[:space:]]/}
@@ -269,9 +258,9 @@ while IFS= read -r fichier; do
   # Le fichier est lu d'abord, avec son code : « || true » sur le pipeline entier masquerait un
   # fichier illisible (constat de la quatrième revue de la PR n° 47).
   rc_css=0
-  brut_css=$(checks_grep -oiE "(url\(|@import[[:space:]]+(url\()?)[[:space:]]*['\"]?((https?:)?//[^)'\" ]+)" "$fichier") || rc_css=$?
+  brut_css=$(shell_grep -oiE "(url\(|@import[[:space:]]+(url\()?)[[:space:]]*['\"]?((https?:)?//[^)'\" ]+)" "$fichier") || rc_css=$?
   ((rc_css <= 1)) || exit "$rc_css"
-  appels_css=$({ checks_grep -oiE "(https?:)?//[^)'\" ]+" <<< "$brut_css" || true; })
+  appels_css=$({ shell_grep -oiE "(https?:)?//[^)'\" ]+" <<< "$brut_css" || true; })
   while IFS= read -r cible; do
     [[ -n $cible ]] || continue
     origine_tierce "$cible" || continue
@@ -286,7 +275,7 @@ liste_11=$(checks_find "$public" -type f \( -name '*.html' -o -name '*.xml' -o -
 while IFS= read -r fichier; do
   relative=${fichier#"$public"/}
   rc_todo=0
-  marqueurs=$(checks_grep -nF '[TODO' "$fichier") || rc_todo=$?
+  marqueurs=$(shell_grep -nF '[TODO' "$fichier") || rc_todo=$?
   ((rc_todo <= 1)) || exit "$rc_todo"
   while IFS= read -r ligne; do
     [[ -n $ligne ]] || continue

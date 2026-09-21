@@ -5,9 +5,10 @@
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 faux_depot() { # prépare $work/faux : check.sh réel, build.sh bouchonné, dossier de contrôles vide
-  mkdir -p "$work/faux/scripts/checks"
+  mkdir -p "$work/faux/scripts/checks" "$work/faux/scripts/lib"
   cp "$root/scripts/check.sh" "$work/faux/scripts/"
   cp "$root/scripts/checks/lib.sh" "$work/faux/scripts/checks/"
+  cp "$root/scripts/lib/shell.sh" "$work/faux/scripts/lib/"
   : > "$work/faux/build.log"
   printf '#!/usr/bin/env bash\necho "$1" >> "%s/faux/build.log"\n[ "${BUILD_FAIL:-}" != "$1" ] || { echo "hugo: avertissement" >&2; exit 1; }\n' "$work" \
     > "$work/faux/scripts/build.sh"

@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# Enveloppes communes (scripts/lib/shell.sh, actions de la rétrospective de l'epic 3). Elles sont
+# employées par les contrôles, les tests, les scripts et les bibliothèques de décision : leur contrat
+# se vérifie ici une fois pour toutes.
+. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+
+# Chaque appel tourne dans son propre bash : shell_die s'arrête par « exit », qui terminerait le cas.
+enveloppe() { # $1 = corps à exécuter après le chargement
+  run bash -c 'script_name=essai; . "$1/scripts/lib/shell.sh"; shift; eval "$1"' _ "$root" "$1"
+}
+
+case_shell_grep_into_trouve_et_ne_trouve_pas() {
+  enveloppe 'shell_grep_into v -c "shell_grep_into" "'"$root"'/scripts/lib/shell.sh"; echo "rc=$? v=$v"'
+  assert_eq 0 "$rc" "une correspondance passe (messages : $err)"
+  assert_contains "rc=0" "$out" "l'enveloppe rend 0"
+  enveloppe 'shell_grep_into v -F "zzz-motif-absent-zzz" "'"$root"'/scripts/lib/shell.sh"; echo "rc=$? v=[$v]"'
+  assert_eq 0 "$rc" "rien trouvé n'est pas une erreur"
+  assert_contains "rc=0 v=[]" "$out" "l'enveloppe rend 0 et la variable est vide : rendre 1 tuerait un appel nu sous set -e"
+}
+
+case_shell_grep_into_erreur_arrete() {
+  enveloppe 'shell_grep_into v -F "x" /fichier/qui/nexiste/pas; echo "jamais atteint"'
+  assert_eq 2 "$rc" "une erreur de lecture arrête le script, code 2 (anomalie)"
+  assert_contains "recherche impossible (grep, code 2)" "$err" "le message nomme l'outil et son code"
+  assert_eq "" "$out" "rien n'est exécuté après l'arrêt"
+}
+
+case_shell_grep_into_code_darret_configurable() {
+  # Les tests mettent shell_error_exit à 1 : un cas en échec, pas une anomalie.
+  run bash -c 'script_name=essai; shell_error_exit=1; . "$1/scripts/lib/shell.sh"; shell_grep_into v -F x /fichier/absent' _ "$root"
+  assert_eq 1 "$rc" "le code d'arrêt suit shell_error_exit"
+}
+
+case_shell_grep_status_ne_quitte_jamais() {
+  # Contrat de bibliothèque : répondre par son code, jamais quitter l'appelant.
+  enveloppe 'shell_grep_status v -F "x" /fichier/absent; echo "rc=$?"'
+  assert_eq 0 "$rc" "l'appelant continue (messages : $err)"
+  assert_contains "rc=2" "$out" "le code de grep est rendu tel quel"
+  enveloppe 'shell_grep_status v -F "zzz-absent-zzz" "'"$root"'/scripts/lib/shell.sh"; echo "rc=$?"'
+  assert_contains "rc=1" "$out" "rien trouvé se distingue d'une erreur"
+}
+
+case_shell_grep_sur_la_sortie_standard() {
+  enveloppe 'printf "a\nb\n" | shell_grep -x b'
+  assert_eq 0 "$rc" "la forme pipeline rend le résultat (messages : $err)"
+  assert_eq "b" "$out" "la ligne trouvée"
+  enveloppe 'printf "a\n" | shell_grep -x zzz; echo "rc=$?"'
+  assert_contains "rc=1" "$out" "rien trouvé rend 1, pour un test dans une condition"
+}
+
+case_checks_attributes_ecrite_une_fois() {
+  # Constat A1 de la rétrospective : la fonction vivait en trois exemplaires.
+  local copies
+  shell_grep_into copies -lE '^(attributs|xpath_attributs)\(\)' "$root"/scripts/checks/*.sh
+  assert_eq "" "$copies" "aucun contrôle ne garde sa copie de l'extraction d'attributs"
+  local contenu
+  contenu=$(cat "$root/scripts/checks/lib.sh")
+  assert_contains "checks_attributes()" "$contenu" "elle vit dans la bibliothèque des contrôles"
+}
+
+case_liste_vide_nest_pas_une_conformite() {
+  # Constat A3 : un contrôle qui ne trouve aucun fichier annonçait « conforme ».
+  #
+  # Chaque contrôle reçoit tout ce qu'il lui faut **sauf** des pages : html.sh lit le manifeste avant
+  # la liste des pages, et sans lui le cas s'arrêtait sur une autre anomalie — vrai sur un poste où
+  # un rendu de travail traîne, faux en CI, où la suite tourne avant tout build. Le cas a échoué
+  # ainsi à sa première exécution en CI : un cas doit rendre le même verdict des deux côtés.
+  mkdir -p "$work/vide" "$work/rendu"
+  printf '{"lang":"fr","files":[{"file":"_index.fr.md","lang":"fr","role":"home","front_matter":{"identity":"Prénom Nom · Pseudo"}}]}\n' \
+    > "$work/rendu/checks.json"
+  printf 'params:\n  source_url:\n' > "$work/hugo.yaml"
+  local nom
+  for nom in budget html links; do
+    run env CHECK_PUBLIC_ROOT="$work/vide" CHECK_WORK_ROOT="$work/rendu" \
+      CHECK_CONFIG_FILE="$work/hugo.yaml" CHECK_SITE_HOST=eleyone.fr \
+      bash "$root/scripts/checks/$nom.sh"
+    assert_eq 2 "$rc" "$nom : une sortie sans page est une anomalie, pas une conformité"
+    assert_contains "aucune page HTML" "$err" "$nom : le message dit ce qui manque"
+  done
+}
+
+run_case "$@"

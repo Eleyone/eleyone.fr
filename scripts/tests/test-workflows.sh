@@ -32,10 +32,10 @@ case_workflow_gitea_appelle_le_job_partage() {
 # Lecture d'une liste de lignes du workflow : « rien trouvé » (grep 1) donne une liste vide et laisse
 # le cas dire ce qui manque, au lieu de tuer le harnais sous set -e ; une vraie erreur (2) échoue.
 # Appelée dans « $(…) », cette fonction ne pourrait pas arrêter le cas : son « exit » ne quitterait
-# que le sous-shell. Elle passe donc par tests_grep_into, qui remplit une variable de l'appelant
+# que le sous-shell. Elle passe donc par shell_grep_into, qui remplit une variable de l'appelant
 # (constat de la revue de la PR n° 51, où le même piège était reproduit dans un autre test).
 lignes() { # $1 = nom de la variable à remplir, $2 = motif étendu, $3 = fichier (Gitea par défaut)
-  tests_grep_into "$1" -E "$2" "${3:-$gitea_workflow}"
+  shell_grep_into "$1" -E "$2" "${3:-$gitea_workflow}"
 }
 
 case_workflow_gitea_une_seule_commande() {

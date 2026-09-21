@@ -23,7 +23,7 @@ trame=(
 
 case_readme_trame_de_cas() {
   local brut titres
-  tests_grep_into brut -E '^## ' "$readme"
+  shell_grep_into brut -E '^## ' "$readme"
   [[ -n $brut ]] || { echo "aucun titre de niveau 2 dans le README" >&2; exit 1; }
   titres=$(sed 's/^## //' <<< "$brut")
   local titre
@@ -36,14 +36,14 @@ case_readme_trame_de_cas() {
   # qui l'écrit y serait invisible (piège connu, docs/procedures/shell-scripts.md).
   local restants
   printf '%s\n' "${trame[@]}" > "$work/trame"
-  tests_grep_into restants -xF -f "$work/trame" <<< "$titres"
+  shell_grep_into restants -xF -f "$work/trame" <<< "$titres"
   assert_eq "$(printf '%s\n' "${trame[@]}")" "$restants" "les six rubriques sont dans l'ordre du récit"
 }
 
 case_readme_liens_relatifs_existent() {
   # Tout lien « ](cible) » qui n'est ni externe ni une ancre doit mener à un chemin du dépôt.
   local cibles
-  tests_grep_into cibles -oE '\]\([^)]+\)' "$readme"
+  shell_grep_into cibles -oE '\]\([^)]+\)' "$readme"
   [[ -n $cibles ]] || { echo "aucun lien dans le README" >&2; exit 1; }
   local cible chemin morts=""
   while IFS= read -r cible; do
@@ -92,7 +92,7 @@ case_readme_en_anglais_a_la_premiere_personne() {
   contenu=$(cat "$readme")
   assert_contains "I decided" "$contenu" "la voix est celle d'un cas, à la première personne"
   local accents
-  tests_grep_into accents -cE '^[^|]*\b(le|la|les|des|une) ' "$readme"
+  shell_grep_into accents -cE '^[^|]*\b(le|la|les|des|une) ' "$readme"
   ((accents == 0)) || { printf 'le README contient %s ligne(s) qui semblent en français\n' "$accents" >&2; exit 1; }
 }
 

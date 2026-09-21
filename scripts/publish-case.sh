@@ -18,6 +18,7 @@ set -euo pipefail
 script_name=publish-case
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root"
+. "$root/scripts/lib/shell.sh"
 . "$root/scripts/lib/publish-case.sh"
 
 die() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 2; }
@@ -34,6 +35,12 @@ done
 [[ -n $cle ]] || die "usage : $0 <translationKey> [--relu]"
 
 command -v jq > /dev/null 2>&1 || die "jq est introuvable : prérequis du poste."
+
+# La réécriture passe par un fichier temporaire hors du dépôt, supprimé quoi qu'il arrive : un arrêt
+# au milieu ne laisse ni fichier orphelin dans content/, ni dossier à nettoyer à la main (constat de
+# la revue de la PR n° 55).
+tmp=$(mktemp -d) || die "dossier temporaire impossible."
+trap 'rm -rf "$tmp"' EXIT
 readonly pages_file="ci/release-pages.txt"
 [[ -f $pages_file ]] || die "$pages_file est introuvable."
 
@@ -103,21 +110,18 @@ git switch --quiet --create "$branche" || die "création de la branche $branche 
 # le corps du texte n'est pas touché. Le script vérifie qu'il a changé une ligne, et une seule.
 for fichier in "${fichiers[@]}"; do
   [[ -f $fichier ]] || die "fichier annoncé par le manifeste mais absent : $fichier"
-  # grep -c rend 1 sans correspondance, en affichant « 0 » : 2 et plus est une vraie erreur.
-  rc=0
-  avant=$(grep -c '^draft: *false *$' "$fichier") || rc=$?
-  ((rc <= 1)) || die "lecture impossible de $fichier (grep, code $rc)."
+  # L'enveloppe commune distingue « rien trouvé » d'une erreur de lecture : grep -c affiche « 0 »
+  # et rend 1 quand rien ne correspond.
+  shell_grep_into avant -c '^draft: *false *$' "$fichier"
   awk '
     NR == 1 && $0 == "---" { dans = 1; print; next }
     dans && $0 == "---" { dans = 0; print; next }
     dans && /^draft:[[:space:]]*true[[:space:]]*$/ { print "draft: false"; next }
     { print }
-  ' "$fichier" > "$fichier.publie" || die "réécriture impossible de $fichier."
-  rc=0
-  apres=$(grep -c '^draft: *false *$' "$fichier.publie") || rc=$?
-  ((rc <= 1)) || { rm -f "$fichier.publie"; die "lecture impossible de $fichier.publie (grep, code $rc)."; }
-  ((apres == avant + 1)) || { rm -f "$fichier.publie"; die "front matter inattendu dans $fichier : $avant puis $apres ligne(s) « draft: false ». La ligne attendue s'écrit « draft: true », seule sur sa ligne et sans commentaire ; rien n'a été remplacé."; }
-  mv "$fichier.publie" "$fichier" || die "remplacement impossible de $fichier."
+  ' "$fichier" > "$tmp/publie" || die "réécriture impossible de $fichier."
+  shell_grep_into apres -c '^draft: *false *$' "$tmp/publie"
+  ((apres == avant + 1)) || die "front matter inattendu dans $fichier : $avant puis $apres ligne(s) « draft: false ». La ligne attendue s'écrit « draft: true », seule sur sa ligne et sans commentaire ; rien n'a été remplacé."
+  cp "$tmp/publie" "$fichier" || die "remplacement impossible de $fichier."
 done
 
 if ((${#ajouts[@]})); then

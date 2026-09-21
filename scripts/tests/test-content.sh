@@ -280,8 +280,10 @@ case_content_c18_nom_de_fichier_hors_format() {
 # Les deux fichiers d'environnement sont lus dans le dépôt, pas dans le manifeste : ces cas travaillent
 # donc sur une copie du dépôt, avec le contrôle lancé depuis cette copie.
 copie_depot() {
-  mkdir -p "$work/depot/scripts/checks" "$work/depot/ci"
+  mkdir -p "$work/depot/scripts/checks" "$work/depot/scripts/lib" "$work/depot/ci"
   cp "$root/scripts/checks/content.sh" "$root/scripts/checks/lib.sh" "$work/depot/scripts/checks/"
+  # lib.sh charge les enveloppes communes du dépôt : le dépôt d'essai les emporte aussi
+  cp "$root/scripts/lib/shell.sh" "$work/depot/scripts/lib/"
   cp "$root/.env.example" "$work/depot/"
   cp "$root/ci/legal-placeholder.env" "$work/depot/ci/"
   mkdir -p "$work/depot/rendu/en"

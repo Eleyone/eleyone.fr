@@ -5,7 +5,8 @@
 #   checks_die <message>        message sur la sortie d'erreur, code 2 (anomalie)
 #   checks_report <fichier> <écart>   un signalement « <fichier>: <écart> » sur la sortie d'erreur
 #   checks_xpath <fichier> <requête>  résultat d'une requête XPath ; anomalie si le fichier est illisible
-#   checks_grep <arguments…>          grep qui distingue « rien trouvé » (1) d'une erreur (2 et plus)
+#   shell_grep <arguments…>           grep qui distingue « rien trouvé » (1) d'une erreur (2 et plus)
+#   checks_attributes <fichier> <requête> <attribut>   valeurs d'un attribut, une par ligne
 #   checks_find <arguments…>          find qui s'arrête sur une erreur de parcours
 #   checks_is_todo <valeur>     la valeur commence par « [TODO »
 #   checks_tolerated <brouillon> <valeur>
@@ -58,6 +59,12 @@
 # - « error » apparaît aussi si le fichier n'a pas de front matter, ou si Hugo ne résout aucune page
 #   pour lui. Les clés qui en dépendent manquent alors : un contrôle lit « error » avant tout le reste.
 
+# Chemin absolu : un contrôle lancé par un chemin relatif, puis un « cd », ne retrouverait pas
+# l'enveloppe commune (constaté en rejouant la suite de tests).
+checks_lib_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) || exit 2
+# shellcheck source=../lib/shell.sh
+. "$checks_lib_dir/../lib/shell.sh"
+
 checks_die() { printf '%s: %s\n' "${script_name:-check}" "$*" >&2; exit 2; }
 
 checks_manifests() { # $1 = racine du rendu de travail (par défaut build/work)
@@ -73,8 +80,11 @@ checks_manifests() { # $1 = racine du rendu de travail (par défaut build/work)
 # d'une vraie erreur, plutôt que de tout avaler par « || true » (constat de la revue de la PR n° 47).
 #
 #   xmllint : 0 résultat, 10 et 11 aucun nœud ne correspond, autre chose = fichier illisible ou fatal
-#   grep    : 0 trouvé, 1 rien trouvé, 2 ou plus = erreur
 #   find    : 0 seulement ; tout le reste est une anomalie
+#
+# La garde de grep n'est pas ici : elle est commune à tout le dépôt (« shell_grep » et
+# « shell_grep_into », scripts/lib/shell.sh). Elle y avait fini en quatre exemplaires
+# (rétrospective de l'epic 3, constat A2).
 #
 # Les deux codes de « rien trouvé » viennent d'une divergence de libxml2, constatée en lançant le job
 # de contrôles (story 3.12) : la 2.9 du poste rend 10 pour un résultat vide comme pour une requête
@@ -89,11 +99,18 @@ checks_xpath() { # $1 = fichier, $2 = requête XPath ; la sortie d'erreur de lib
   return 0
 }
 
-checks_grep() { # arguments de grep ; rend 0 si trouvé, 1 sinon, s'arrête sur une erreur
-  local rc=0
-  grep "$@" || rc=$?
-  ((rc <= 1)) || checks_die "recherche impossible (grep, code $rc) : ${*: -1}"
-  return "$rc"
+# Valeurs d'un attribut, une par ligne, quelle que soit la sérialisation de libxml2. Le XPath est lu
+# **avant** le filtrage : un « exit » dans un élément de pipeline ne quitte que son sous-shell, et un
+# « || true » final transformerait l'anomalie en succès (constat de la troisième revue de la PR
+# n° 47). Le code de checks_xpath est donc propagé tel quel.
+#
+# Trois contrôles en portaient chacun sa copie, dont deux identiques au caractère près, si bien que
+# le correctif ci-dessus a dû être appliqué trois fois (rétrospective de l'epic 3, constat A1).
+checks_attributes() { # $1 = fichier, $2 = requête, $3 = nom de l'attribut
+  local brut rc=0
+  brut=$(checks_xpath "$1" "$2") || rc=$?
+  ((rc == 0)) || return "$rc"
+  { shell_grep -oE "$3=\"[^\"]*\"" <<< "$brut" || true; } | sed -E "s/^$3=\"(.*)\"$/\1/"
 }
 
 checks_find() { # arguments de find ; s'arrête sur une erreur

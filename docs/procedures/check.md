@@ -31,6 +31,8 @@ manifests=$(checks_manifests build/work)
 - **Forme du manifeste** : documentée en tête de `scripts/checks/lib.sh`, définie une seule fois dans `layouts/home.checks.json`. Une entrée peut porter `error` (front matter absent, suffixe de langue absent, page introuvable) : un contrôle lit `error` avant tout le reste.
 - **Niveau** : `CHECK_LEVEL` vaut `standard`, ou `release` avec `--release`. Aucun contrôle de mise en ligne n'existe avant l'epic 11.
 - **Racine du rendu** : un contrôle lit `${CHECK_WORK_ROOT:-build/work}`, pour qu'un cas de test le lance sur des manifestes écrits à la main sans toucher au rendu du dépôt.
+- **Une liste vide n'est pas une conformité** : un contrôle qui parcourt des fichiers vérifie qu'il en a trouvé au moins un avant de conclure, sans quoi une racine erronée ou une sortie de build vide passeraient pour un succès (rétrospective de l'epic 3).
+- **Les enveloppes sont communes** : `checks_xpath`, `checks_attributes` et `checks_find` dans `scripts/checks/lib.sh`, `shell_grep` et `shell_grep_into` dans `scripts/lib/shell.sh`, partagées avec les tests et les scripts. Un contrôle n'écrit pas la sienne.
 
 ## Contrôles livrés
 

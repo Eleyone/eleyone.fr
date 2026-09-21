@@ -36,16 +36,6 @@ readonly max_elements=800
 fail=0
 signaler() { checks_report "$1" "$2"; fail=1; }
 
-attributs() { # $1 = fichier, $2 = requête, $3 = nom de l'attribut
-  # Le XPath est lu **avant** le filtrage : un « exit » dans un élément de pipeline ne quitte que son
-  # sous-shell, et un « || true » final transformerait l'anomalie en succès (constat de la troisième
-  # revue de la PR n° 47). Le code de checks_xpath est donc propagé tel quel.
-  local brut rc=0
-  brut=$(checks_xpath "$1" "$2") || rc=$?
-  ((rc == 0)) || return "$rc"
-  { checks_grep -oE "$3=\"[^\"]*\"" <<< "$brut" || true; } | sed -E "s/^$3=\"(.*)\"$/\1/"
-}
-
 poids() { # $1 = fichier ; 0 si absent
   [[ -f $1 ]] && stat -c %s "$1" || echo 0
 }
@@ -89,6 +79,9 @@ done <<< "$liste_3"
 
 # --- page par page ---------------------------------------------------------------------------------
 liste_4=$(checks_find "$public" -type f -name '*.html' | LC_ALL=C sort) || exit $?
+# Une liste vide ferait sortir ce contrôle en « conforme » sans avoir rien lu : un CHECK_PUBLIC_ROOT
+# erroné, ou une sortie de build vide, passeraient pour un succès (rétrospective de l'epic 3, A3).
+[[ -n $liste_4 ]] || checks_die "aucune page HTML dans $public : rien à mesurer."
 while IFS= read -r page; do
   relative=${page#"$public"/}
 
@@ -103,14 +96,14 @@ while IFS= read -r page; do
   # Ressources chargées : feuilles de style, images, schémas. Un lien <a> ne charge rien.
   ressources=()
   urls_chargees=$({
-    attributs "$page" "//link[@rel='stylesheet']/@href" href
-    attributs "$page" '//img/@src' src
-    attributs "$page" '//*[@poster]/@poster' poster
-    attributs "$page" '//img/@srcset' srcset | tr ',' '\n' | awk 'NF { print $1 }'
+    checks_attributes "$page" "//link[@rel='stylesheet']/@href" href
+    checks_attributes "$page" '//img/@src' src
+    checks_attributes "$page" '//*[@poster]/@poster' poster
+    checks_attributes "$page" '//img/@srcset' srcset | tr ',' '\n' | awk 'NF { print $1 }'
     # <picture><source srcset> : ces images-là chargent aussi (constat de la cinquième revue
     # de la PR n° 47).
-    attributs "$page" '//source/@src' src
-    attributs "$page" '//source/@srcset' srcset | tr ',' '\n' | awk 'NF { print $1 }'
+    checks_attributes "$page" '//source/@src' src
+    checks_attributes "$page" '//source/@srcset' srcset | tr ',' '\n' | awk 'NF { print $1 }'
   }) || exit $?
   while IFS= read -r url; do
     [[ -n $url ]] || continue
