@@ -57,9 +57,20 @@ Dans l'interface : **Paramètres → Branches**, une règle par branche.
 | Comptes autorisés à fusionner | `merge_whitelist_usernames` | `Eleyone` | `Eleyone` |
 | Bloquer la fusion si la branche est en retard | `block_on_outdated_branch` | `true` | `true` |
 | Contournement par un administrateur | `enable_bypass_allowlist` | `false` | `false` |
-| Contrôles d'état requis | `enable_status_check` | dès que la CI existe (story 3.16) | idem |
+| Contrôles d'état requis | `enable_status_check` | `true` (21/09/2026) | `true` (21/09/2026) |
+| Contextes exigés | `status_check_contexts` | `checks / checks*` | idem |
 
 Tout compte ou toute clé de déploiement absent de ces listes est refusé. Au 14/09/2026, le dépôt n'a ni autre compte ni clé de déploiement. Un compte ou une clé ajoutés plus tard (miroir, CI) n'entrent **pas** dans ces listes.
+
+### Les contextes exigés
+
+Le contexte d'un statut Gitea s'écrit `<workflow> / <job> (<événement>)` : le workflow des contrôles en pose deux selon ce qui l'a déclenché, `checks / checks (pull_request)` et `checks / checks (push)`. Le motif exigé est donc **`checks / checks*`**, un glob qui couvre les deux : nommer un seul événement bloquerait l'autre, et se tromper d'un caractère bloquerait toutes les fusions sans rien dire de plus qu'« en attente ».
+
+Le réglage a été posé le 21/09/2026, après la première exécution verte : Gitea ne propose un contexte dans cette liste qu'une fois qu'il a été rapporté au moins une fois. La PR qui a introduit cette ligne a servi d'essai — elle ne pouvait se fusionner que si le motif correspondait vraiment.
+
+Ce réglage change ce que la forge rapporte : depuis qu'il est posé, la tête d'une PR porte **deux** statuts, `checks / checks (pull_request)` vert et `checks / checks (push)` **ignoré** — le déclencheur `push` n'écoutant que `dev` et `main`. `scripts/verify-and-merge-pr.sh` a dû l'apprendre : un statut ignoré est écarté, mais ne remplace pas un run effectif (constaté en fusionnant la PR qui a introduit ce réglage).
+
+Ce réglage est le second verrou sur la CI, côté forge. Le premier est `scripts/verify-and-merge-pr.sh`, qui refuse de fusionner sans un run `checks` vert sur le SHA de tête (`verify-and-merge-pr.md`). Les deux disent la même chose à deux endroits : le script protège l'audit, la protection de branche protège l'interface et l'API.
 
 Modifier une règle par l'API (`PATCH /api/v1/repos/Eleyone/eleyone.fr/branch_protections/<règle>`) : un champ imbriqué n'est pris en compte que si la requête porte aussi ses champs parents. Envoyé seul, `push_whitelist_deploy_keys: false` répond `200` sans rien changer ; il faut envoyer `enable_push`, `enable_push_whitelist` et `push_whitelist_usernames` avec lui, et de même `enable_force_push`, `enable_force_push_allowlist` et `force_push_allowlist_usernames` avec `force_push_allowlist_deploy_keys`. Une réponse `200` ne prouve donc rien : relire la règle.
 
