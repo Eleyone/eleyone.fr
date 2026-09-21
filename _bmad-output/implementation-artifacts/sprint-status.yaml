@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-21-2026 23:15'
+last_updated: '09-21-2026 23:55'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -490,7 +490,7 @@ action_items:
       (constat B5) : un nom non-ASCII echappe entierement au controle, reproduit sur
       pieces. Avant l epic 6."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-09-21.md"
   - id: "epic-5-retro-item-26-bloquant-exiger-le-hugo-epingle-dans-scr"
     epic: 5
@@ -498,35 +498,35 @@ action_items:
       par require_tool_version comme build.sh, sans repli sur le Hugo du systeme.
       Avant l epic 6."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-09-21.md"
   - id: "epic-5-retro-item-27-bloquant-donner-sa-cible-de-24-px-au-lie"
     epic: 5
     action: "BLOQUANT. Donner sa cible de 24 px au lien de cas (B8) : 22,1 px avec
       un titre court, verifie au navigateur. Avant l epic 6."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-09-21.md"
   - id: "epic-5-retro-item-28-ecrire-la-grille-marge-texte-une-seule-f"
     epic: 5
     action: "Ecrire la grille marge | texte une seule fois (A1, quatre copies) et
       borner d office tout titre du cadre sur la mesure (A2, deux copies)."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-09-21.md"
   - id: "epic-5-retro-item-29-une-seule-liste-d-extensions-d-images-b3"
     epic: 5
     action: "Une seule liste d extensions d images (B3), dans scripts/lib/image.sh,
       lue par le garde-fou et par C20."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-09-21.md"
   - id: "epic-5-retro-item-30-completer-deux-gardes-refuser-une-couleu"
     epic: 5
     action: "Completer deux gardes : refuser une couleur en rgb() ou nommee (B9) ;
       couvrir la branche VP8L de image.sh (B10)."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-09-21.md"
   - id: "epic-5-retro-item-31-agents-md-toute-garde-recoit-un-cas-de-t"
     epic: 5
@@ -534,19 +534,19 @@ action_items:
       l entree qu elle doit refuser. Cinq gardes en trois epics ne gardaient rien
       (lecon A4)."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-09-21.md"
   - id: "epic-5-retro-item-32-agents-md-une-regle-d-architecture-qui-d"
     epic: 5
     action: "AGENTS.md : une regle d architecture qui decrit un comportement d outil
       n est vraie que verifiee (lecon A3, GPS et crop/fill)."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-09-21.md"
   - id: "epic-5-retro-item-33-une-mesure-faite-sur-le-contenu-existant"
     epic: 5
     action: "Une mesure faite sur le contenu existant ne prouve rien du contenu a
       venir : mesurer aussi le cas court, vide et long (lecon B8)."
     owner: "Agent"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-09-21.md"
