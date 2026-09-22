@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-22-2026 07:43'
+last_updated: '09-22-2026 12:30'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -102,7 +102,7 @@ development_status:
   6-1-styled-chiliz-page: done
   6-2-ungrouped-case-page: done
   6-3-french-typography-applied-at-build: done
-  epic-6-retrospective: optional
+  epic-6-retrospective: done
 
   epic-7: backlog
   7-1-cv-pdf-check-and-pre-commit: backlog
@@ -550,3 +550,59 @@ action_items:
     owner: "Agent"
     status: done
     ref: "_bmad-output/implementation-artifacts/epic-5-retro-2026-09-21.md"
+  - id: "epic-6-retro-item-34-faire-tourner-la-règle-du-retour-au-parc"
+    epic: 6
+    action: "Faire tourner la règle du retour au parcours sur les deux rendus (A4)
+      : elle ne s exécute aujourd hui sur aucune page de cas"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-6-retro-2026-09-22.md"
+  - id: "epic-6-retro-item-35-une-seule-résolution-des-deux-rendus-a5"
+    epic: 6
+    action: "Une seule résolution des deux rendus (A5) dans scripts/checks/lib.sh,
+      lue par html.sh, typo.sh et links.sh"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-6-retro-2026-09-22.md"
+  - id: "epic-6-retro-item-36-retirer-la-règle-css-morte-et-son-commen"
+    epic: 6
+    action: "Retirer la règle CSS morte et son commentaire faux (A3) : .case-section
+      sort de la liste de .frame--columns à lg"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-6-retro-2026-09-22.md"
+  - id: "epic-6-retro-item-37-agents-md-a1-a2-quand-la-solution-change"
+    epic: 6
+    action: "AGENTS.md (A1, A2) : quand la solution change en cours de story, la spec
+      qu on vient d écrire se relit"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-6-retro-2026-09-22.md"
+  - id: "epic-6-retro-item-38-agents-md-a3-a4-un-revirement-se-termine"
+    epic: 6
+    action: "AGENTS.md (A3, A4) : un revirement se termine par un balayage de ce que
+      l ancienne approche avait laissé ailleurs"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-6-retro-2026-09-22.md"
+  - id: "epic-6-retro-item-39-agents-md-a6-une-position-a-deux-axes-et"
+    epic: 6
+    action: "AGENTS.md (A6) : une position a deux axes, et une disposition collante
+      se vérifie en défilant"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-6-retro-2026-09-22.md"
+  - id: "epic-6-retro-item-40-agents-md-a7-un-contrôle-écrit-par-l-aut"
+    epic: 6
+    action: "AGENTS.md (A7) : un contrôle écrit par l auteur du code hérite de son
+      angle mort ; chercher les autres formes de la faute"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-6-retro-2026-09-22.md"
+  - id: "epic-6-retro-item-41-agents-md-a8-une-fixture-déclare-ce-que"
+    epic: 6
+    action: "AGENTS.md (A8) : une fixture déclare ce que la vraie page déclare, sous
+      peine de rendre un contrôle décoratif"
+    owner: "agent de développement"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-6-retro-2026-09-22.md"
