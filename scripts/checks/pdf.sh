@@ -79,23 +79,25 @@ if [[ -n $patterns_file && -f $patterns_file ]]; then
   [[ -s $patterns ]] || { patterns=""; patterns_text=""; }
 fi
 
-# Confronte un extrait à la liste sans jamais l'afficher, ni lui ni le motif.
+# Confronte un extrait à la liste sans jamais l'afficher, ni lui ni le motif. La recherche vit
+# dans « pdf_confront » (lib/pdf.sh), partagée avec le garde-fou : ici, seule la mise en forme du
+# signalement est propre au contrôle (constat A2, rétrospective de l'epic 7).
 confronter() { # $1 = nom du fichier, $2 = source (texte, métadonnées, XMP), $3 = extrait
-  local nom=$1 source=$2 extrait=$3 rc=0 entry lignes=""
+  local nom=$1 source=$2 extrait=$3 lignes code=0
   [[ -n $patterns ]] || return 0
-  [[ -n $extrait ]] || return 0
-  printf '%s\n' "$extrait" | grep -q -i -F -f "$patterns_text" || rc=$?
-  ((rc <= 1)) || { signaler "$nom" "C21 : recherche des motifs impossible dans $source"; return 0; }
-  ((rc == 0)) || return 0
-  # « shell_grep » plutôt que « grep » nu dans la condition : un code 2 y serait lu comme « pas
-  # trouvé », et le motif manquerait sans un mot. Même classe d'erreur que le « if git diff | grep »
-  # du hook, corrigé une ligne plus haut dans la même PR — la deuxième occurrence était à trois
-  # lignes de la première (deuxième revue du code de la PR n° 84).
-  while IFS= read -r entry; do
-    local trouve=0
-    shell_grep -q -i -F -e "${entry#*:}" <<< "$extrait" || trouve=$?
-    ((trouve == 0)) && lignes+=" ${entry%%:*}"
-  done < "$patterns"
+  # L'affectation est séparée de la déclaration : « local x=$(…) » rend le code de « local », pas
+  # celui de la substitution, et le code 2 serait perdu (piège connu, shell-scripts.md).
+  lignes=$(pdf_confront "$patterns" "$patterns_text" "$extrait") || code=$?
+  # **Tout code autre que 0 ou 1 est un échec de recherche**, et non « rien trouvé ». Une première
+  # écriture testait « code != 2 » puis « code == 1 », si bien qu'un code inattendu — sous-shell
+  # tué, commande introuvable, arrêt sur « set -e » — retombait sur « return 0 » et déclarait le
+  # fichier propre. C'est un garde-fou qui s'ouvre en cas de panne, exactement ce qu'il ne doit
+  # jamais faire (revue de la PR n° 95).
+  case $code in
+    0) return 0 ;;
+    1) ;;
+    *) signaler "$nom" "C21 : recherche des motifs impossible dans $source (code $code)"; return 0 ;;
+  esac
   signaler "$nom" "C21 : contenu privé dans $source (contenu masqué) ; motif ligne${lignes}"
 }
 

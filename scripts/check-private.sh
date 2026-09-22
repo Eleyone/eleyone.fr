@@ -192,18 +192,21 @@ check_pdfs() { # $1 = libellé, $2 = révision (« --cached » pour l'index), $3
 
 # Un extrait confronté à la liste, sans que rien de ce qu'il contient ne soit affiché : le fichier
 # et la source sont nommés, le motif cité par son numéro de ligne.
+# La recherche vit dans « pdf_confront » (lib/pdf.sh), partagée avec C21 : ici, seule la mise en
+# forme du signalement est propre au garde-fou (constat A2, rétrospective de l'epic 7). Les deux
+# écritures avaient déjà divergé sur le traitement d'un code de grep ≥ 2.
 check_extract() { # $1 = libellé, $2 = chemin, $3 = source, $4 = extrait
-  local label=$1 chemin=$2 source=$3 extrait=$4 rc=0 entry lignes="" trouve
-  [[ -n $extrait ]] || return 0
-  printf '%s\n' "$extrait" | grep -q -i -F -f "$patterns_text" || rc=$?
-  ((rc <= 1)) || { fail "C21 : recherche des motifs impossible dans $source d'un PDF de $label"; return 0; }
-  ((rc == 0)) || return 0
-  while IFS= read -r entry; do
-    trouve=0
-    printf '%s\n' "$extrait" | grep -q -i -F -e "${entry#*:}" || trouve=$?
-    ((trouve <= 1)) || { fail "C21 : recherche d'un motif impossible dans $source d'un PDF de $label"; return 0; }
-    ((trouve == 0)) && lignes+=" ${entry%%:*}"
-  done < "$patterns"
+  local label=$1 chemin=$2 source=$3 extrait=$4 lignes code=0
+  # L'affectation est séparée de la déclaration : « local x=$(…) » rend le code de « local », pas
+  # celui de la substitution, et le code 2 serait perdu (piège connu, shell-scripts.md).
+  lignes=$(pdf_confront "$patterns" "$patterns_text" "$extrait") || code=$?
+  # Tout code autre que 0 ou 1 est un échec de recherche, jamais « rien trouvé » : un garde-fou qui
+  # s'ouvre en cas de panne ne garde rien (revue de la PR n° 95).
+  case $code in
+    0) return 0 ;;
+    1) ;;
+    *) fail "C21 : recherche des motifs impossible dans $source d'un PDF de $label (code $code)"; return 0 ;;
+  esac
   fail "C21 : contenu privé dans $source d'un PDF de $label (contenu masqué) : $chemin ; motif ligne${lignes}"
 }
 

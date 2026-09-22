@@ -14,6 +14,7 @@
 #
 #   pdf_cv_names                      les deux seuls CV qu'AD-21 nomme
 #   pdf_cv_names_regex                affiche « (cv-fr\.pdf|cv-en\.pdf) », le groupe d'une regex étendue
+#   pdf_confront <numérotés> <nus> <extrait>  rend 1 et les numéros de ligne des motifs trouvés
 #   pdf_missing_tool                  affiche l'outil poppler manquant, ou rend 1 si les deux sont là
 #   pdf_text <fichier>                affiche le texte du PDF
 #   pdf_metadata <fichier>            affiche les métadonnées lisibles
@@ -46,6 +47,37 @@ pdf_cv_names_regex() { # affiche « (cv-fr\.pdf|cv-en\.pdf) », le groupe d'une 
   for nom in "${pdf_cv_names[@]}"; do motifs+=("${nom//./\\.}"); done
   local IFS='|'
   printf '(%s)' "${motifs[*]}"
+}
+
+# Confronte un extrait à la liste des motifs. **N'affiche jamais l'extrait ni le motif** : elle
+# rend des **numéros de ligne**, et c'est l'appelant qui compose son message.
+#
+# Une seule écriture pour C21 et pour le garde-fou. Les deux en avaient la leur, à la virgule près,
+# et elles avaient déjà divergé : l'une mourait sur un code de grep ≥ 2, l'autre le signalait et
+# continuait. Le commentaire de l'une racontait d'ailleurs que le même défaut de code de retour
+# avait dû être corrigé **des deux côtés dans la même PR** — la duplication facturait déjà
+# (constat A2, rétrospective de l'epic 7).
+#
+#   $1 = fichier « numéro:motif », $2 = fichier des motifs nus, $3 = extrait
+#
+# Codes : 0 aucun motif ; 1 au moins un, et les numéros de ligne sont affichés, séparés par une
+# espace, dans l'ordre de la liste ; 2 la recherche a échoué et **rien n'est affirmé** — un code 2
+# de grep lu comme « pas trouvé » laisserait passer un motif sans un mot.
+pdf_confront() {
+  local numerotes=$1 nus=$2 extrait=$3 rc=0 entry lignes="" trouve
+  [[ -n $numerotes && -n $nus ]] || return 0
+  [[ -n $extrait ]] || return 0
+  printf '%s\n' "$extrait" | grep -q -i -F -f "$nus" || rc=$?
+  ((rc <= 1)) || return 2
+  ((rc == 0)) || return 0
+  while IFS= read -r entry; do
+    trouve=0
+    printf '%s\n' "$extrait" | grep -q -i -F -e "${entry#*:}" || trouve=$?
+    ((trouve <= 1)) || return 2
+    if ((trouve == 0)); then lignes+=" ${entry%%:*}"; fi
+  done < "$numerotes"
+  printf '%s' "$lignes"
+  return 1
 }
 
 # Les deux commandes nécessaires. Rend 1 si l'une manque, et nomme le paquet : l'appelant décide

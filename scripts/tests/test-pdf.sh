@@ -8,6 +8,10 @@
 #
 # Hors ligne. Dépend de poppler-utils, prérequis du poste et présent dans CHECK_IMAGE.
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+# La bibliothèque est chargée pour être éprouvée **en direct**, comme test-images.sh le fait de
+# lib/image.sh : depuis qu'elle porte la confrontation aux motifs, son chemin « code 2 » n'est
+# atteignable par aucun test d'intégration (constat A2, rétrospective de l'epic 7).
+. "$root/scripts/lib/pdf.sh"
 
 readonly motif=MOTIFFACTICE
 
@@ -102,6 +106,86 @@ case_pdf_une_liste_normale_ne_laisse_rien() {
     PRIVATE_PATTERNS_FILE="$(liste)" bash "$root/scripts/checks/pdf.sh"
   assert_eq 0 "$rc" "le contrôle va jusqu'au bout (messages : $err)"
   assert_eq 0 "$(restes_dans "$tmp")" "C21 ne laisse aucun fichier temporaire avec une liste normale"
+}
+
+case_pdf_un_code_inattendu_nest_pas_un_fichier_propre() {
+  # **Le contrôle ne doit jamais s'ouvrir en cas de panne.** Une première écriture testait
+  # « code != 2 » puis « code == 1 » : un code inattendu — sous-shell tué, commande introuvable,
+  # arrêt sur « set -e » — retombait sur « rien trouvé » et déclarait le CV propre (revue de la
+  # PR n° 95). Aucun test d'intégration ne peut produire un tel code ; celui-ci le fabrique, en
+  # dégradant la bibliothèque dans un arbre jetable.
+  local arbre=$work/arbre
+  rm -rf "$arbre"; mkdir -p "$arbre/scripts/checks" "$arbre/scripts/lib" "$arbre/cv"
+  cp "$root/scripts/checks/pdf.sh" "$root/scripts/checks/lib.sh" "$arbre/scripts/checks/"
+  cp "$root"/scripts/lib/*.sh "$arbre/scripts/lib/"
+  # La bibliothèque copiée rend 7 : ni « rien », ni « trouvé », ni « recherche impossible ».
+  printf '\npdf_confront() { return 7; }\n' >> "$arbre/scripts/lib/pdf.sh"
+  tests_pdf "$arbre/cv/cv-fr.pdf" "Parcours"
+  tests_pdf "$arbre/cv/cv-en.pdf" "Experience"
+  run env CHECK_CV_DIR="$arbre/cv" PRIVATE_PATTERNS_FILE="$(liste)" bash "$arbre/scripts/checks/pdf.sh"
+  assert_eq 1 "$rc" "un code inattendu fait échouer le contrôle, il ne le laisse pas passer"
+  assert_contains "recherche des motifs impossible" "$err" "et le message dit que la recherche a échoué"
+  assert_contains "code 7" "$err" "en donnant le code, pour qu on puisse le chercher"
+}
+
+# --- pdf_confront, éprouvée en direct -------------------------------------------------------------
+
+motifs_confront() { # écrit les deux fichiers de motifs, affiche « numérotés nus »
+  printf '1:%s\n3:AUTREMOTIF\n' "$motif" > "$work/numerotes.txt"
+  printf '%s\nAUTREMOTIF\n' "$motif" > "$work/nus.txt"
+}
+
+case_pdf_confront_rend_les_numeros_de_ligne() {
+  motifs_confront
+  local lignes code=0
+  lignes=$(pdf_confront "$work/numerotes.txt" "$work/nus.txt" "un texte avec $motif dedans") || code=$?
+  assert_eq 1 "$code" "un motif trouvé rend 1"
+  assert_eq "1" "${lignes# }" "le numéro de ligne du motif, et lui seul"
+}
+
+case_pdf_confront_plusieurs_motifs() {
+  motifs_confront
+  local lignes code=0
+  lignes=$(pdf_confront "$work/numerotes.txt" "$work/nus.txt" "$motif puis AUTREMOTIF") || code=$?
+  assert_eq 1 "$code" "deux motifs trouvés rendent 1"
+  assert_eq "1 3" "${lignes# }" "les deux numéros, dans l ordre de la liste"
+}
+
+case_pdf_confront_rien_a_trouver() {
+  motifs_confront
+  local lignes code=0
+  lignes=$(pdf_confront "$work/numerotes.txt" "$work/nus.txt" "un texte parfaitement anodin") || code=$?
+  assert_eq 0 "$code" "aucun motif rend 0"
+  assert_eq "" "$lignes" "et rien n est affiché"
+}
+
+case_pdf_confront_naffiche_jamais_le_motif() {
+  # La garantie qui compte : la fonction rend des numéros, jamais le motif ni l'extrait.
+  motifs_confront
+  local lignes code=0
+  lignes=$(pdf_confront "$work/numerotes.txt" "$work/nus.txt" "un texte avec $motif dedans" 2>&1) || code=$?
+  assert_eq 1 "$code" "le motif est trouvé"
+  [[ $lignes != *"$motif"* ]] || { echo "le motif apparaît dans la sortie" >&2; exit 1; }
+  [[ $lignes != *"un texte"* ]] || { echo "l extrait apparaît dans la sortie" >&2; exit 1; }
+}
+
+case_pdf_confront_recherche_impossible_rend_2() {
+  # Le chemin qu'aucun test d'intégration n'atteint : grep rend 2 sur une liste illisible. Le
+  # confondre avec « pas trouvé » laisserait passer un motif sans un mot — c'est la classe d'erreur
+  # que les six tours de la story 7.1 ont poursuivie.
+  skip_if_root "la liste des motifs"
+  motifs_confront
+  chmod 000 "$work/nus.txt"
+  local code=0
+  pdf_confront "$work/numerotes.txt" "$work/nus.txt" "un texte avec $motif dedans" > /dev/null 2>&1 || code=$?
+  chmod 644 "$work/nus.txt"
+  assert_eq 2 "$code" "une recherche impossible rend 2, et n affirme rien"
+}
+
+case_pdf_confront_sans_liste_ne_dit_rien() {
+  local code=0
+  pdf_confront "" "" "un texte avec $motif dedans" > /dev/null || code=$?
+  assert_eq 0 "$code" "sans liste, la fonction ne conclut rien"
 }
 
 case_pdf_aucun_fichier() {
