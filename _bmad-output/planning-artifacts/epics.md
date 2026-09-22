@@ -2363,30 +2363,33 @@ afin qu'un PDF contenant un téléphone ou une ville de résidence soit refusé 
 
 **Critères d'acceptation :**
 
-**Étant donné** `scripts/checks/pdf.sh`
+**Étant donné** `scripts/checks/pdf.sh`, découvert seul par `scripts/check.sh` comme tout `scripts/checks/*.sh`
 **Quand** `assets/cv/` ne contient aucun PDF, puis les deux, puis un seul
-**Alors** il passe, passe, puis échoue.
+**Alors** il passe, passe, puis échoue en nommant le fichier manquant : c'est la règle « ensemble ou rien » d'AD-21, qui vaut aussi pour le contrôle et pas seulement pour les liens.
 
 **Étant donné** un PDF présent
-**Quand** il n'a pas l'en-tête PDF, n'a aucune page ou dépasse 500 Ko
-**Alors** C21 échoue.
+**Quand** il n'a pas l'en-tête `%PDF-`, n'a aucune page selon `pdfinfo`, ou dépasse 500 Ko
+**Alors** C21 échoue. Le seuil de 500 Ko est propre à cette story : AD-8 sort les CV du budget de page, et rien d'autre ne les borne — un CV de deux pages qui dépasse ce poids contient une image oubliée.
 
-**Étant donné** la liste des motifs disponible et un PDF de test dont le texte, les métadonnées (`pdfinfo`) ou le XMP (`pdfinfo -meta`) contiennent un motif factice
+**Étant donné** la liste des motifs, trouvée par **`PRIVATE_PATTERNS_FILE`** comme le fait `check-private.sh`, et un PDF de test dont le texte (`pdftotext`), les métadonnées (`pdfinfo`) ou le XMP (`pdfinfo -meta`) contiennent un motif factice
 **Quand** le script s'exécute
-**Alors** il échoue en nommant le fichier et la source (texte, métadonnée, XMP), sans recopier le motif.
+**Alors** il échoue en nommant le fichier et la source (texte, métadonnée, XMP), **sans recopier le motif ni le texte trouvé**, et en citant le motif par son numéro de ligne, comme le garde-fou.
 
 **Étant donné** l'absence de liste des motifs (GitHub)
 **Quand** le script s'exécute
-**Alors** seules présence, en-tête, pages et taille sont vérifiées.
+**Alors** seules présence, en-tête, pages et taille sont vérifiées, et le script le dit.
+
+**Étant donné** `pdftotext` ou `pdfinfo` absent
+**Quand** le script s'exécute
+**Alors** il sort en **code 2** (anomalie) en nommant le paquet `poppler-utils`, comme `html.sh` le fait pour `xmllint` — jamais en code 0, qui ferait passer un PDF non lu pour un PDF propre.
 
 **Étant donné** `.githooks/pre-commit`
 **Quand** un fichier de `assets/cv/` est indexé
-**Alors** il lance `pdf.sh` avec la liste des motifs, en plus de `check-private.sh staged`.
+**Alors** il lance **`pdf.sh` d'abord**, puis `check-private.sh staged` (arbitrage d'Arnaud, 22/09/2026). Les deux refusent aujourd'hui, et l'ordre décide de ce qu'on lit en premier : le jour où l'interdiction de chemin tombera, un PDF qui contient vraiment un téléphone doit se voir reprocher son téléphone, pas son chemin.
 
-- [ ] `assets/cv/*.pdf` reste un chemin interdit à l'issue de la story (AD-21).
-
-**Questions à poser avant de commencer :**
-- Tant que ce chemin est interdit, `check-private.sh staged` refuse déjà tout PDF indexé : le pre-commit se démontre-t-il sur un dépôt jetable où la règle est retirée ?
+- [ ] `assets/cv/*.pdf` reste un chemin interdit à l'issue de la story (AD-21) : sa levée est liée à C21 **dans le hook pre-receive**, qui vient plus tard.
+- [ ] Le pre-commit se démontre sur un **dépôt jetable** où la règle de chemin est retirée, comme les essais du hook pre-receive. Aucun PDF n'est commité.
+- [ ] `poppler-utils` entre dans les prérequis du poste (`AGENTS.md`).
 
 ### Story 7.2 : Conditional CV links in footer
 

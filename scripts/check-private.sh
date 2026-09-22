@@ -164,11 +164,16 @@ check_tree() { # $1 = libellé, reste = arguments git (commit ou --cached)
     return 0
   fi
   if ((prc == 0)); then
-    local names=""
+    local names="" trouve
     while IFS= read -r entry; do
-      if printf '%s\n' "$listing" | grep -q -i -F -e "${entry#*:}"; then
-        names+="  motif ligne ${entry%%:*}"$'\n'
-      fi
+      # Le code de grep est lu : dans un « if … | grep -q …; then », un code 2 se lirait « pas
+      # trouvé », et le motif manquerait sans un mot. Même classe d'erreur que celle trouvée dans
+      # pdf.sh à la même revue — deux occurrences de plus, ici, dans le garde-fou lui-même
+      # (quatrième revue du code de la PR n° 84).
+      trouve=0
+      printf '%s\n' "$listing" | grep -q -i -F -e "${entry#*:}" || trouve=$?
+      ((trouve <= 1)) || { fail "recherche d'un motif impossible dans $label (code $trouve)"; return 0; }
+      ((trouve == 0)) && names+="  motif ligne ${entry%%:*}"$'\n'
     done < "$patterns"
     fail "chemin qui reprend un motif dans $label (chemin masqué) :\n${names%$'\n'}"
   fi
@@ -200,10 +205,12 @@ check_message() { # $1 = commit ; le message n'est jamais affiché
     return 0
   fi
   ((rc == 0)) || return 0
+  local trouve
   while IFS= read -r entry; do
-    if printf '%s\n' "$msg" | grep -q -i -F -e "${entry#*:}"; then
-      lines+="  motif ligne ${entry%%:*}"$'\n'
-    fi
+    trouve=0
+    printf '%s\n' "$msg" | grep -q -i -F -e "${entry#*:}" || trouve=$?
+    ((trouve <= 1)) || { fail "recherche d'un motif impossible dans le message de $label (code $trouve)"; return 0; }
+    ((trouve == 0)) && lines+="  motif ligne ${entry%%:*}"$'\n'
   done < "$patterns"
   fail "message de commit privé dans $label (message masqué) :\n${lines%$'\n'}"
 }

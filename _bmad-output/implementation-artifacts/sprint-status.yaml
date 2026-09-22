@@ -104,8 +104,8 @@ development_status:
   6-3-french-typography-applied-at-build: done
   epic-6-retrospective: done
 
-  epic-7: backlog
-  7-1-cv-pdf-check-and-pre-commit: backlog
+  epic-7: in-progress
+  7-1-cv-pdf-check-and-pre-commit: done
   7-2-conditional-cv-links-in-footer: backlog
   7-3-pdf-extraction-in-pre-receive-hook: backlog
   7-4-publish-cv-pdfs: backlog

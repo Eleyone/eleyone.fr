@@ -1,2 +1,83 @@
 #!/usr/bin/env bash
-exec "$(git rev-parse --show-toplevel)/scripts/check-private.sh" staged
+# Garde-fou local, activé par « git config core.hooksPath .githooks ».
+#
+# **C21 passe avant le garde-fou** (arbitrage d'Arnaud, 22/09/2026). Les deux refusent aujourd'hui
+# un PDF de `assets/cv/` : le chemin est encore interdit tant que C21 n'est pas dans le hook
+# pre-receive (AD-21). L'ordre décide donc de ce qu'on lit en premier — et le jour où
+# l'interdiction tombera, un PDF qui contient vraiment un téléphone doit se voir reprocher son
+# téléphone, pas son chemin.
+#
+# C21 ne tourne que si un fichier de `assets/cv/` est indexé : il n'a rien à dire des autres
+# commits, et lancer poppler à chaque commit serait payer pour rien.
+set -euo pipefail
+
+racine=$(git rev-parse --show-toplevel)
+
+# La liste est lue **d'abord**, avec son code : « if git diff … | grep … » ferait d'un plantage de
+# git une condition fausse, et C21 serait sauté en silence — exactement l'erreur que ce dépôt
+# traque partout ailleurs (constat de la revue du code de la PR n° 84).
+indexes=""
+rc=0
+# **Aucun filtre de type de changement.** Il en a coûté trois tours de revue : le filtre initial
+# « ACMR » excluait les suppressions, alors que retirer un CV casse « ensemble ou rien » aussi
+# sûrement que d'en ajouter un mauvais. Plutôt que d'ajouter la lettre manquante — et de recommencer
+# au prochain type de changement oublié, un changement de type ou une fusion non résolue — la
+# question est reprise à l'envers : **tout** ce qui touche « assets/cv/ » dans l'index réveille C21.
+# Le contrôle lit le dossier tel qu'il est, il n'a que faire de la nature du changement.
+#
+# « --no-renames » pour la même raison : un renommage hors du dossier n'afficherait que sa
+# destination, et la disparition du CV passerait inaperçue. Sans lui, c'est une suppression et un
+# ajout, tous deux visibles.
+#
+# « core.quotePath=false » : sans lui, git cite et échappe en octal tout chemin non-ASCII —
+# « assets/cv/café.pdf » devient « "assets/cv/caf\303\251.pdf" », le motif ne colle plus, et C21
+# est sauté en silence. C'est mot pour mot le trou que la rétrospective de l'epic 5 avait fermé
+# dans le garde-fou (constat B5) ; je ne l'avais pas reporté dans ce hook neuf.
+indexes=$(git -c core.quotePath=false diff --cached --name-only --no-renames) || rc=$?
+((rc == 0)) || { echo "pre-commit: lecture de l'index impossible (git diff, code $rc)." >&2; exit 2; }
+
+rc=0
+grep -qE '^assets/cv/' <<< "$indexes" || rc=$?
+((rc <= 1)) || { echo "pre-commit: recherche impossible dans l'index (grep, code $rc)." >&2; exit 2; }
+
+if ((rc == 0)); then
+  # **C21 lit l'index, pas l'arbre de travail.** C'est ce qui va être commité qui compte : indexer
+  # un PDF porteur d'un téléphone puis nettoyer le fichier sur le disque aurait fait lire la
+  # version propre, et la version privée serait entrée dans l'historique (quatrième revue du code
+  # de la PR n° 84). Les objets indexés sont donc extraits dans un dossier temporaire, comme le
+  # garde-fou le fait déjà pour passer C20 sur les images.
+  #
+  # Un fichier supprimé de l'index n'est pas extrait : il manque au dossier, et « ensemble ou
+  # rien » le voit — ce qui est exactement le comportement voulu.
+  travail=$(mktemp -d) || { echo "pre-commit: dossier temporaire impossible." >&2; exit 2; }
+  trap 'rm -rf "$travail"' EXIT
+  mkdir -p "$travail/cv"
+  # **L'état complet de l'index**, pas seulement les chemins modifiés. Extraire les seuls chemins
+  # changés vidait le dossier quand le changement était une suppression : « ensemble ou rien » n'y
+  # voyait plus aucun CV au lieu d'en voir un seul, et passait. C'est le cas de test du dépôt
+  # jetable qui l'a montré, sur le correctif lui-même.
+  rc=0
+  suivis=$(git -c core.quotePath=false ls-files --cached -- 'assets/cv') || rc=$?
+  ((rc == 0)) || { echo "pre-commit: lecture de l'index impossible (git ls-files, code $rc)." >&2; exit 2; }
+  while IFS= read -r chemin; do
+    [[ -n $chemin ]] || continue
+    cible=$travail/cv/${chemin#assets/cv/}
+    mkdir -p "$(dirname "$cible")"
+    git cat-file blob ":$chemin" > "$cible" \
+      || { echo "pre-commit: lecture impossible d'un objet indexé de assets/cv/." >&2; exit 2; }
+  done <<< "$suivis"
+
+  # La liste des motifs n'est pas cherchée par pdf.sh comme par le garde-fou : elle lui est passée,
+  # parce qu'il tourne aussi là où elle n'existe pas (GitHub), et qu'un chemin par défaut y ferait
+  # croire à une confrontation qui n'a pas eu lieu.
+  CHECK_CV_DIR="$travail/cv" \
+  PRIVATE_PATTERNS_FILE="${PRIVATE_PATTERNS_FILE:-$racine/docs/private/forbidden-patterns.txt}" \
+    "$racine/scripts/checks/pdf.sh"
+fi
+
+# **Jamais « exec » ici.** Il remplace le processus, donc le « trap EXIT » posé plus haut ne
+# s'exécute pas : le dossier temporaire, qui contient les CV extraits de l'index, survivrait à
+# chaque commit réussi et s'accumulerait dans /tmp. Une fuite de données, dans le hook qui existe
+# pour l'empêcher (cinquième revue du code de la PR n° 84). Le garde-fou est donc appelé
+# normalement ; sous « set -e », son code de sortie reste celui du hook.
+"$racine/scripts/check-private.sh" staged
