@@ -1,0 +1,25 @@
+{{ define "main" }}
+  {{/*
+    Page d'un cas sans groupe (AD-3, AD-4). Même partial que la page de groupe, au niveau de titre 1 :
+    le cas est le sujet de la page, donc son titre est le titre de la page, et ses « ## » restent des
+    « h2 » — le hook de titres ne les descend que pour un cas groupé.
+
+    « page.html » est bien le nom attendu : depuis Hugo 0.146, layouts/<section>/page.html est le
+    gabarit d'une page seule de la section, sans clé « layout » en front matter. « single.html » est
+    la convention d'avant et ne serait pas trouvée ici.
+
+    Le sommaire ne reçoit pas « group » : son résumé annonce les rubriques seules, sans nombre de cas
+    (DESIGN.md § toc).
+
+    Le cas est enveloppé dans la même « case-section » que sur une page de groupe : c'est elle qui
+    porte la grille texte | note, donc qui place « Contexte mission » dans la colonne de note à
+    hauteur du cas. Un seul mécanisme pour les deux gabarits, plutôt qu'une variante par page.
+  */}}
+  <main id="content" class="frame frame--columns case-page">
+    <p class="nav-links"><a href="{{ partial "career-url.html" . }}">{{ i18n "back_to_career" }}</a></p>
+    {{ partial "toc.html" (dict "pages" (slice .)) }}
+    <div class="case-section">
+      {{ partial "case.html" (dict "page" . "level" 1) }}
+    </div>
+  </main>
+{{ end }}

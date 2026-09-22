@@ -8,11 +8,20 @@
 
   Paramètres : « page » (le cas), « level » (entier).
 */}}
+{{/*
+  Le rôle du titre suit la page, pas la balise (DESIGN.md § Typography) : sur une page de cas seul
+  le cas est le sujet de la page, donc « page-title » ; dans une section de groupe, « case-title ».
+
+  Le numéro est au-dessus du titre dans les deux cas. DESIGN.md le voulait suspendu dans la colonne
+  de marge sur une page de cas seul, mais cette colonne appartient au sommaire collant, et tout ce
+  qui défile en dessous passe par-dessus lui (arbitrage d'Arnaud, 22/09/2026).
+*/}}
 {{- $page := .page -}}
 {{- $level := .level | default 2 -}}
+{{- $seul := eq $level 1 -}}
 {{- $context := $page.Params.context -}}
 {{- with $page.Params.number }}<p class="case-number meta">{{ i18n "case_number" . }}</p>{{ end }}
-<h{{ $level }} class="case-title">{{ partial "draft-marker.html" $page }}{{ $page.Title }}</h{{ $level }}>
+<h{{ $level }} class="{{ if $seul }}page-title{{ else }}case-title{{ end }}">{{ partial "draft-marker.html" $page }}{{ $page.Title }}</h{{ $level }}>
 {{- with $context }}
   <aside class="engagement-context in-aside">
     <h{{ add $level 1 }} class="label">{{ i18n "engagement_context" }}</h{{ add $level 1 }}>

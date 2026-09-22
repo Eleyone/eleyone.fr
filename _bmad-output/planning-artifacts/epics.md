@@ -2282,21 +2282,32 @@ En tant que Claire, CTO (UJ-1),
 je veux qu'un cas sans groupe ait sa page, avec les mêmes encarts et le même retour au parcours,
 afin de lire les cas 01, 05 et 06 comme le cas 02.
 
-**Couvre :** FR-5, FR-15 · AD-3, AD-4, AD-18 · UX-DR11, UX-DR12
+**Couvre :** FR-5, FR-8, FR-15, FR-20 · AD-3, AD-4, AD-18 · UX-DR11, UX-DR12
 **Dépendances :** 6.1
 **Bloquée par :** —
-**Prérequis de contenu :** — (démonstration sur une copie locale non commitée)
+**Prérequis de contenu :** les cas 01, 05 et 06, commités en brouillon par la PR n° 72
 **Opération manuelle (Arnaud) :** non
 
 **Critères d'acceptation :**
 
-**Étant donné** une copie locale d'un cas sans groupe
+**Étant donné** les cas 01, 05 et 06, sans groupe et en brouillon
 **Quand** on lance le rendu de travail
-**Alors** le cas est rendu à `/cas/<slug>/` et `/en/cases/<slug>/` par `layouts/cases/page.html`, avec le même `_partials/case.html` au niveau de titre 1
-**Et** ses `##` sont rendus en `<h2>`, numérotés « NN.r », avec numéro de cas dans la marge dès md et « Retour au parcours » vers son poste.
+**Alors** chacun est rendu à `/cas/<slug>/` et `/en/cases/<slug>/` par `layouts/cases/page.html`, avec le même `_partials/case.html` au niveau de titre 1
+**Et** ses `##` sont rendus en `<h2>`, numérotés « NN.r » **devant leur titre à toutes les largeurs**, et « Retour au parcours » vise l'ancre de son poste sur l'accueil de sa langue.
 
-- [ ] La copie locale est supprimée ; seul le gabarit est commité.
-- [ ] Check-list d'AD-17 sur la page de cas, en clair et en sombre.
+**Étant donné** la colonne de marge, que `DESIGN.md` promettait au sommaire collant **et** aux numéros
+**Quand** on défile une page de cas
+**Alors** elle n'appartient qu'au **sommaire** (arbitrage d'Arnaud, 22/09/2026) : les deux s'y recouvraient — quatre collisions mesurées sur la page Chiliz, « 02.3 » à 39 px sur un sommaire occupant 16 à 784 px — et le conflit ne se voit qu'en défilant
+**Et** le numéro du cas est empilé au-dessus de son titre, sur les deux gabarits
+**Et** le sommaire **longe** le texte au lieu de le précéder : posé en élément de ligne, il en consommait une et le contenu passait dessous (278 à 1 046 px sur la page Chiliz, première section à 1 102 — défaut livré par la story 6.1, dont la vérification avait porté sur la colonne et pas sur la ligne).
+
+**Étant donné** C10 et C11 (`scripts/checks/html.sh`), qui ne lisaient que la production
+**Quand** les contrôles tournent
+**Alors** ils lisent **aussi le rendu de travail** (arbitrage d'Arnaud, 22/09/2026) : tant que les six cas sont en brouillon, la production ne contient que les deux accueils, et aucun verrou ne voyait une page de cas — pas même celle qu'a livrée la story 6.1
+**Et** C5 (« [TODO » interdit) reste en production seule, puisqu'un marqueur est légitime dans un brouillon.
+
+- [ ] Le gabarit s'appelle bien `page.html`, et non `single.html` : depuis Hugo 0.146, `layouts/<section>/page.html` **est** le nom d'un gabarit de page seule, sans clé `layout` en front matter. `single.html` est la convention d'avant, et la remettre casserait le rendu (constat refusé de la revue de spec, vérifié dans la documentation Hugo et sur le rendu).
+- [ ] Check-list d'AD-17 sur la page de cas, en clair et en sombre, **avant** toute autre finition.
 
 ### Story 6.3 : French typography applied at build
 

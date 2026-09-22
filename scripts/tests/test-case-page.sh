@@ -13,8 +13,9 @@ script_name=test-case-page
 . "$root/scripts/lib/tools.sh"
 
 # $1, facultatif : un corps à écrire sous le front matter du _index du groupe français.
+# $2, facultatif : « seul » pour ajouter un cas sans groupe, hors de tout dossier de groupe.
 construire() {
-  local corps=${1:-}
+  local corps=${1:-} seul=${2:-}
   load_tools_env "$root/tools.env"
   local tools_dir=${TOOLS_LOCAL_DIR:-$root/.tools}
   [[ ! -d $tools_dir ]] || PATH="$tools_dir:$PATH"
@@ -25,6 +26,15 @@ construire() {
   cp -r "$root/layouts" "$root/config" "$root/data" "$root/i18n" "$work/site/"
   cp -r "$fixtures/site/content" "$work/site/content"
   [[ -z $corps ]] || printf '\n%s\n' "$corps" >> "$work/site/content/cases/groupe/_index.fr.md"
+  if [[ $seul == seul ]]; then
+    local langue
+    for langue in fr en; do
+      sed -e '/^group: /d' -e "s/^slug: .*/slug: \"cas-seul\"/" -e 's/^translationKey: .*/translationKey: case-08/' \
+        -e 's/^number: .*/number: "08"/' \
+        "$fixtures/site/content/cases/groupe/case-09-fixture.$langue.md" \
+        > "$work/site/content/cases/case-08-seul.$langue.md"
+    done
+  fi
   (cd "$work/site" && hugo --environment work --buildDrafts --panicOnWarning --destination sortie) \
     > "$work/hugo.out" 2>&1
 }
@@ -93,6 +103,53 @@ case_groupe_sans_aucun_cas() {
   assert_contains "page-title" "$html" "la page du groupe vide est bien rendue"
   [[ $html != *"nav-links"* ]] \
     || { echo "un groupe sans cas ne peut pas porter de retour au parcours" >&2; exit 1; }
+}
+
+# La page française du cas sans groupe.
+page_seule() { printf '%s' "$work/site/sortie/cas/cas-seul/index.html"; }
+
+case_cas_sans_groupe_a_sa_page() {
+  run construire "" seul
+  assert_eq 0 "$rc" "le build du site fixture réussit (sortie : $(cat "$work/hugo.out"))"
+  [[ -f $(page_seule) ]] || { echo "aucune page rendue pour un cas sans groupe" >&2; exit 1; }
+  [[ -f $work/site/sortie/en/cases/cas-seul/index.html ]] \
+    || { echo "la page anglaise du cas sans groupe manque (FR-20)" >&2; exit 1; }
+  # Les deux langues sont vérifiées, pas seulement la française : un libellé i18n ou un rôle qui
+  # manquerait du seul côté anglais passerait sinon inaperçu, alors que FR-20 exige la parité
+  # (constat retenu de la revue du code de la PR n° 80).
+  local page html
+  for page in "$(page_seule)" "$work/site/sortie/en/cases/cas-seul/index.html"; do
+    html=$(cat "$page")
+    # Le cas est le sujet de la page : son titre est le titre de la page, et « page.html » est bien
+    # le gabarit trouvé — sans clé « layout » dans le front matter du cas.
+    assert_contains 'class="page-title"' "$html" "le titre du cas porte le rôle de titre de page ($page)"
+    [[ $html != *'class="case-title"'* ]] \
+      || { echo "le titre porte le rôle d une section de groupe sur $page" >&2; exit 1; }
+    assert_contains 'class="nav-links"' "$html" "la page porte le retour au parcours ($page)"
+    assert_contains '#position-' "$html" "le retour vise l ancre du poste ($page)"
+  done
+}
+
+case_cas_sans_groupe_garde_ses_niveaux_de_titre() {
+  # Le hook ne descend d un niveau que les cas groupés (AD-4, FR-8) : ici les « ## » restent des h2,
+  # numérotés « 08.r ». Le même cas, dans un groupe, sort en h3 — c est ce que garde ce cas.
+  run construire "" seul
+  assert_eq 0 "$rc" "le build du site fixture réussit (sortie : $(cat "$work/hugo.out"))"
+  local seule groupe
+  seule=$(cat "$(page_seule)")
+  groupe=$(cat "$(page_groupe)")
+  assert_contains '<h2 id="case-08-contexte" class="rubric-heading">' "$seule" "une rubrique de cas seul est un h2"
+  assert_contains '<h3 id="case-09-contexte" class="rubric-heading">' "$groupe" "la même rubrique groupée est un h3"
+  assert_contains '>08.1<' "$seule" "la rubrique porte le numéro du cas"
+}
+
+case_resume_du_sommaire_dun_cas_seul() {
+  # Une page de cas seul n annonce que ses rubriques : le nombre de cas n aurait pas de sens.
+  run construire "" seul
+  assert_eq 0 "$rc" "le build du site fixture réussit (sortie : $(cat "$work/hugo.out"))"
+  local resume
+  resume=$(sed -n 's/.*<summary[^>]*>\([^<]*\)<\/summary>.*/\1/p' "$(page_seule)" | head -1)
+  assert_eq "Sommaire · 2 rubriques" "$resume" "le résumé ne compte que les rubriques"
 }
 
 run_case "$@"

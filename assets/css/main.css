@@ -652,8 +652,7 @@ main {
   .frame--columns,
   .identity-block,
   .cv-position,
-  .education-entry,
-  .case-section {
+  .education-entry {
     display: grid;
     grid-template-columns: var(--margin-column) minmax(0, var(--measure));
     column-gap: var(--column-gap);
@@ -750,16 +749,11 @@ main {
 
   /* --------------------------------------------- page de cas, dès md (story 6.1) */
 
-  /* Une section de cas pose des éléments dans la colonne de marge **de la page** alors qu'elle y
-   * est imbriquée : elle prend donc toute la largeur du cadre et redéclare la grille, comme un
-   * poste du CV. Les largeurs venant des mêmes tokens, les colonnes tombent au même endroit. */
+  /* La colonne de marge appartient au **sommaire seul** (arbitrage d'Arnaud, 22/09/2026) : une
+   * section de cas ne la réclame donc plus, et occupe le texte puis la note. Tant qu'elle prenait
+   * toute la largeur du cadre, le sommaire ne pouvait pas longer le texte — il consommait une
+   * ligne de grille et le contenu passait dessous. */
   .case-section {
-    grid-column: 1 / -1;
-    row-gap: 0;
-  }
-
-  /* Tout ce qui n'est pas explicitement dans la marge ou la note occupe la colonne de texte. */
-  .case-section > * {
     grid-column: 2;
   }
 
@@ -773,6 +767,12 @@ main {
    * tient que tant qu'un seul cas est publié. */
   .toc {
     grid-column: 1;
+    /* Le sommaire **longe** le texte, il ne le précède pas. Sans « grid-row-end: -1 » il consomme
+     * une ligne de la grille : le contenu passe dessous et la colonne de marge reste vide en
+     * regard du texte. Mesuré sur la page Chiliz avant correction — sommaire de 278 à 1046 px,
+     * première section à 1102. La story 6.1 avait vérifié sa **colonne** et pas sa **ligne**.
+     * Le début reste automatique, pour que le numéro de cas garde sa place au-dessus sur une page
+     * de cas seul ; seule la fin est forcée au bout de la grille. */
     position: sticky;
     top: var(--space-4);
     max-height: calc(100vh - 2 * var(--space-4));
@@ -789,15 +789,14 @@ main {
     block-size: auto;
   }
 
-  /* Le numéro de rubrique est suspendu dans la colonne de marge, aligné à droite contre le texte.
-   * Une rubrique est imbriquée dans le contenu Markdown, hors d'atteinte de la grille : le numéro
-   * est donc posé hors flux, relativement à son propre titre. */
-  .rubric-heading > .rubric-number {
-    position: absolute;
-    right: calc(100% + var(--column-gap));
-    width: var(--margin-column);
-    text-align: right;
-  }
+  /* Le numéro de rubrique reste **devant son titre**, à toutes les largeurs. Suspendu dans la
+   * colonne de marge, comme le demandait DESIGN.md, il passait par-dessus le sommaire collant dès
+   * qu'on défilait : quatre collisions mesurées sur la page Chiliz, « 02.3 » à 39 px sur un
+   * sommaire occupant 16 à 784 px. Les deux éléments voulaient la même colonne ; Arnaud a tranché
+   * pour le sommaire (22/09/2026).
+   *
+   * Le numéro reste ainsi collé à ce qu'il numérote, et aucune largeur de fenêtre ne peut les
+   * faire se recouvrir. */
 
   /* La barre de cible se place dans la gouttière entre marge et texte, pas contre le texte. */
   .rubric-heading:target::before,
@@ -834,11 +833,43 @@ main {
    * regard — 15 rem ne suffisent pas pour deux colonnes (DESIGN.md § context-box). */
   /* L'encart occupe toute la hauteur de la grille et se cale en haut : il se place ainsi « à
    * hauteur de sa propre section » (DESIGN.md § Page Chiliz) sans dépendre du nombre de lignes,
-   * donc sans casser sur un cas qui n'aurait pas d'« En bref » ou pas de numéro. */
+   * donc sans casser sur un cas qui n'aurait pas d'« En bref » ou pas de numéro.
+   *
+   * Sans cette portée, l'encart consomme une ligne de la grille et laisse un **trou** de sa
+   * hauteur dans la colonne de texte : 440 px mesurés sur la page de cas seul avant correction,
+   * entre le titre et « En bref ». */
+  /* La section de cas s'étend sur texte + note et redéclare cette grille-là : la marge ne lui
+   * appartient plus. L'encart de note occupe toute la hauteur et se cale en haut, donc « à hauteur
+   * de sa propre section » (DESIGN.md § Page Chiliz), sans dépendre du nombre de lignes — un cas
+   * sans « En bref » ou sans numéro tient toujours. Sans cette portée, l'encart consommait une
+   * ligne et laissait un trou de sa hauteur dans la colonne de texte : 440 px mesurés sur la page
+   * de cas seul avant correction. */
+  .case-section {
+    position: relative;
+    grid-column: 2 / -1;
+    display: grid;
+    grid-template-columns: minmax(0, var(--measure)) var(--aside-column);
+    column-gap: var(--column-gap);
+  }
+
+  .case-section > * {
+    grid-column: 1;
+  }
+
   .case-section > .in-aside {
-    grid-column: 3;
-    grid-row: 1 / -1;
-    align-self: start;
+    /* L'encart est **sorti du flux des lignes**. Posé en élément de grille, il occupait la ligne 1
+     * et la gonflait à sa propre hauteur : 398 px mesurés, d'où un trou de 400 px entre le numéro
+     * du cas et son titre, sur les deux gabarits. « grid-row: 1 / -1 » ne le corrige pas — une
+     * ligne négative compte depuis la grille **explicite**, et il n'y en a pas ici : « -1 » vaut
+     * donc la ligne 1, et la portée se réduit à cette seule ligne.
+     *
+     * La colonne de note garde sa largeur même vide (« grid-template-columns » la fixe), donc
+     * « right: 0 » tombe exactement dedans. L'encart est plus court qu'un cas par construction :
+     * cinq couples terme-valeur contre sept rubriques au moins (docs/format-cas.md). */
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: var(--aside-column);
     background: none;
     border-top: var(--revision-bar) solid var(--accent);
     padding: var(--space-3) 0 0;

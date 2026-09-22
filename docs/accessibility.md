@@ -28,12 +28,15 @@ Mesures relevées au navigateur, à 320 px, sur le rendu de travail.
 | Gabarit | Vérifié le | Par | Contraste min. (clair / sombre) | Cible min. | Défilement à 320 px | Focus |
 |---|---|---|---|---|---|---|
 | Accueil (CV) | 21/09/2026 | story 5.5 | aucune paire sous 4,5:1 | 28 px | aucun | anneau 2 px `accent` dans les deux modes |
-| Page de groupe (Chiliz) | 22/09/2026 | story 6.1 | aucune paire sous 4,5:1 | 26,2 px | aucun | idem |
+| Page de groupe (Chiliz) | 22/09/2026 | story 6.2 | aucune paire sous 4,5:1 | 26,2 px | aucun | idem |
+| Page de cas seul | 22/09/2026 | story 6.2 | aucune paire sous 4,5:1 | 26,2 px | aucun | idem |
 | 404 | 21/09/2026 | story 5.1 | 15,61:1 / 14,75:1 | 28 px | aucun | idem |
 
 Les ratios relevés au navigateur retrouvent exactement ceux de `DESIGN.md` : `ink` sur `paper` 15,61:1 en clair et 14,75:1 en sombre, `accent` sur `paper` 6,26:1 et 9,05:1, `ink-muted` sur `paper` 6,52:1 et 7,68:1.
 
-**Gabarits pas encore vérifiés**, parce qu'ils n'existent pas : page d'un cas seul (story 6.2), pages simples (9.x).
+**Gabarits pas encore vérifiés**, parce qu'ils n'existent pas : pages simples (9.x).
+
+**Page de cas seul, vérifiée le 22/09/2026 par la story 6.2**, sur le cas 05 du rendu de travail. À 320 px en mode sombre : aucun défilement horizontal (`scrollWidth` 305), aucun élément qui dépasse, toutes les cibles au-dessus de 24 px — la plus petite est le résumé du sommaire à 26,2 px. Contrastes, clair puis sombre : terme de « Contexte mission » 6,02 / 6,77 ; valeur 14,41 / 13,00 ; « En bref » 14,41 / 13,00 ; sommaire et retour au parcours 6,26 / 9,05 ; numéros de cas et de rubrique 6,52 / 7,68. À 1 280 px : sommaire dans la marge (x = 45, 216 px), cas dans texte + note (x = 301, 920 px), « Contexte mission » dans la colonne de note (x = 981, 240 px) en tête du cas. **Premier écran à 390 × 844** : sommaire replié, numéro, titre, « Contexte mission » entier et début d'« En bref » à 736 px sur 844.
 
 **Page de groupe, revérifiée le 22/09/2026 par la story 6.1**, sur les **trois** cas Chiliz du rendu de travail et non sur le seul cas 02. Relevés au navigateur :
 
@@ -61,5 +64,13 @@ Aucun contrôle automatique ne l'aurait vu : C11 vérifie qu'un lien a un nom ac
 **Story 6.1, 22/09/2026 — le résumé du sommaire, neuvième cible sous 24 px.** Mesuré à **18 px** avec un libellé court comme « Sommaire · 6 rubriques ». Il passait inaperçu depuis la story 2.6 pour deux raisons qui se sont additionnées : ce n'est pas un lien mais une commande, et la règle des 24 px, écrite à l'epic 5, ne listait que des liens ; et le libellé de la page Chiliz, « Sommaire · 3 cas, 19 rubriques », se replie sur deux lignes à 320 px, ce qui portait la boîte à 36 px. **Mesuré sur le contenu du jour, il passait.** C'est le troisième élément que ce piège atteint, après le lien de cas rattaché de l'epic 5 — le point 11 d'`AGENTS.md` en situation.
 
 Corrigé par l'entrée de `.toc summary` dans la même règle : 26,2 px avec un libellé court. Le marqueur natif du `<details>`, que `display: inline-block` supprime, est reposé explicitement.
+
+**Story 6.2, 22/09/2026 — le sommaire ne longeait pas le texte, et les numéros de rubrique lui passaient dessus.** Deux défauts livrés par la story 6.1, trouvés en mesurant la page de cas seul et retrouvés sur la page de groupe.
+
+Le premier : le sommaire occupait une **ligne** de la grille au lieu de longer le contenu. Sur la page Chiliz il s'étalait de 278 à 1 046 px et la première section commençait à 1 102 — la colonne de texte restait vide en regard, sur 768 px. La story 6.1 avait vérifié sa **colonne** (x = 45, la marge) et pas sa **ligne**. Une mesure de position n'est complète que sur les deux axes.
+
+Le second : les numéros de rubrique, suspendus dans la même colonne de marge, passaient **par-dessus** le sommaire collant dès qu'on défilait. Quatre collisions mesurées — « 02.3 » à 39 px sur un sommaire occupant 16 à 784 px. `DESIGN.md` demandait les deux au même endroit, et le conflit ne se voit qu'en défilant : une capture immobile ne le montre pas. Arnaud a donné la marge au sommaire ; les numéros reviennent devant leur titre à toutes les largeurs.
+
+Un troisième, de la même famille : l'encart de note consommait une ligne de grille et laissait un trou de sa hauteur — 398 px — entre le numéro du cas et son titre, sur les deux gabarits. `grid-row: 1 / -1` ne le corrigeait pas, une ligne négative comptant depuis la grille **explicite**, inexistante ici. L'encart est désormais hors du flux des lignes.
 
 **Story 6.1, 22/09/2026 — le sommaire collant ne tenait pas dans la fenêtre.** Mesuré à **1 088 px** pour les 22 entrées des trois cas, dans une colonne de 13,5 rem, contre **368 px** pour le seul cas 02 publié aujourd'hui. `DESIGN.md` ne disait pas ce qui se passe au-delà : la question ne se posait pas quand un seul cas existait. Arnaud a tranché pour un défilement interne borné par la fenêtre.

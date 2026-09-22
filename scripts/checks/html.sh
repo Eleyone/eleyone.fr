@@ -1,10 +1,16 @@
 #!/usr/bin/env bash
-# C10 et la moitié « sortie » de C5 (AD-8, AD-10, AD-20), sur le build de production.
+# C10 et la moitié « sortie » de C5 (AD-8, AD-10, AD-20).
+#
+# C10 et C11 lisent **les deux rendus**, travail et production (arbitrage d'Arnaud, 22/09/2026).
+# Tant qu'un cas est en brouillon, la production ne le contient pas : avec les six cas en brouillon,
+# elle ne portait que les deux accueils, et ces contrôles n'avaient jamais vu une page de cas — pas
+# même celle de la story 6.1. C5 reste en production seule, puisqu'un « [TODO » est légitime dans un
+# brouillon (c'est même ce que le format des cas prescrit).
 #
 #   C10  aucune balise <script> hors du bloc JSON-LD de l'accueil, aucun attribut on*, aucune iframe,
 #        aucun formulaire, aucune ressource chargée depuis une autre origine (HTML et CSS) ;
 #        le bloc JSON-LD, s'il existe, est un JSON valide de @type Person aux seules clés de FR-35
-#   C5   aucune occurrence de « [TODO » dans les fichiers de texte publiés
+#   C5   aucune occurrence de « [TODO » dans les fichiers de texte publiés (production seule)
 #   C11  accessibilité automatisable (AD-17) : langue de la page, titre, plan des titres,
 #        identifiants uniques, images décrites et dimensionnées, liens nommés, hreflang,
 #        aucun tabindex positif
@@ -21,6 +27,17 @@ script_name=html
 
 public=${CHECK_PUBLIC_ROOT:-public}
 [[ -d $public ]] || checks_die "build de production absent ($public) : lancer scripts/build.sh production."
+travail=${CHECK_WORK_ROOT:-build/work}
+# Les racines que C10 et C11 parcourent. Le rendu de travail n'est ajouté que s'il existe : un
+# contrôle lancé sur une sortie seule (essais, image de CI) reste possible.
+#
+# Un fichier présent dans les deux rendus est lu deux fois. C'est voulu : dédupliquer sur le chemin
+# relatif écarterait la copie de travail d'une page qui existe aussi en production **avec un
+# contenu différent** — c'est exactement le cas d'un cas passé de brouillon à publié, ou d'une page
+# qui porte le marqueur « Brouillon » d'un seul côté. Le coût est une seconde lecture de la feuille
+# de style et des deux accueils ; le risque, celui de ne pas voir un défaut propre à un rendu.
+racines=("$public")
+[[ ! -d $travail || $travail -ef $public ]] || racines+=("$travail")
 command -v xmllint > /dev/null 2>&1 \
   || checks_die "xmllint est introuvable (paquet libxml2-utils) : prérequis du poste, présent dans CHECK_IMAGE (AD-1)."
 command -v jq > /dev/null 2>&1 || checks_die "jq est introuvable."
@@ -74,12 +91,13 @@ est_accueil() { # $1 = chemin relatif à $public
   [[ $1 == index.html || $1 =~ ^[a-z]{2}/index\.html$ ]]
 }
 
-liste_9=$(checks_find "$public" -type f -name '*.html' | LC_ALL=C sort) || exit $?
+liste_9=$(checks_find "${racines[@]}" -type f -name '*.html' | LC_ALL=C sort) || exit $?
 # Une liste vide ferait sortir ce contrôle en « conforme » sans avoir rien lu : un CHECK_PUBLIC_ROOT
 # erroné, ou une sortie de build vide, passeraient pour un succès (rétrospective de l'epic 3, A3).
-[[ -n $liste_9 ]] || checks_die "aucune page HTML dans $public : rien à contrôler."
+[[ -n $liste_9 ]] || checks_die "aucune page HTML dans ${racines[*]} : rien à contrôler."
 while IFS= read -r page; do
   relative=${page#"$public"/}
+  relative=${relative#"$travail"/}
 
   # --- scripts : un seul type toléré, jamais de src (C10, AD-20) -------------------------------
   # La valeur est extraite, jamais découpée à l'indice : la sérialisation de xmllint varie d'une
@@ -266,9 +284,10 @@ while IFS= read -r page; do
 done <<< "$liste_9"
 
 # --- ressources tierces appelées depuis le CSS, que XPath ne voit pas -----------------------------
-liste_10=$(checks_find "$public" -type f \( -name '*.html' -o -name '*.css' \) | LC_ALL=C sort) || exit $?
+liste_10=$(checks_find "${racines[@]}" -type f \( -name '*.html' -o -name '*.css' \) | LC_ALL=C sort) || exit $?
 while IFS= read -r fichier; do
   relative=${fichier#"$public"/}
+  relative=${relative#"$travail"/}
   # Chaque URL absolue citée par le CSS est confrontée à l'hôte du site : une feuille peut légitimement
   # pointer vers le site lui-même.
   # Le fichier est lu d'abord, avec son code : « || true » sur le pipeline entier masquerait un

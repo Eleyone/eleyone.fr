@@ -458,9 +458,9 @@ Pas de numéro de section « § » sur l'accueil (validé par Arnaud le 13/09/20
 | Zone | sm | md | lg |
 |---|---|---|---|
 | Lien de retour au parcours | texte, en haut | colonne de texte | idem |
-| « Cas 05 » (numéro) + titre (`page-title`) | empilés | numéro dans la marge, aligné sur la première ligne du titre | idem |
+| « Cas 05 » (numéro) + titre (`page-title`) | empilés | empilés : le numéro reste au-dessus du titre, la colonne de marge étant celle du sommaire (story 6.2) | idem |
 | Sommaire | `<details>` fermé, une ligne | ouvert dans la colonne de marge, collant (`position: sticky`) | idem |
-| « Contexte mission » | encart `surface`, sous le titre | idem, dans la colonne de texte | dans la colonne de note, à hauteur de « En bref », filet vert en haut, sans fond |
+| « Contexte mission » | encart `surface`, sous le titre | idem, dans la colonne de texte | dans la colonne de note, **en tête du cas**, filet vert en haut, sans fond. Une seule règle sert la page de cas seul et la page de groupe : l'encart se cale en haut de son cas, hors du flux des lignes de grille (story 6.2) |
 | « En bref » | encart `surface`, filet vert à gauche | idem | idem |
 | Rubriques | numéro « 05.1 » devant le titre | numéro suspendu dans la marge | idem |
 
@@ -623,7 +623,7 @@ Liens vers les CV PDF. Emplacements décidés par Arnaud le 13/09/2026 : **pied 
 Sommaire d'une page cas ou de la page Chiliz.
 
 - **Sous md** : élément `<details>` fermé, avec un résumé d'une ligne en `label`. Une page de cas seul annonce ses rubriques (« Sommaire · 6 rubriques ») ; une page de groupe annonce **les deux nombres**, accordés séparément (« Sommaire · 3 cas, 19 rubriques ») — le comptage des seules rubriques, tranché le 17/09/2026, n'annonçait plus rien que le lecteur voie dès que la page a porté trois cas (arbitrage d'Arnaud du 22/09/2026). Le résumé est une cible de navigation comme une autre : au moins 24 px et le marqueur natif du navigateur. Ouvert, il affiche la liste en `body-sm`. Il occupe environ 2,75 rem fermé, contre environ 230 px dans la maquette (validé par Arnaud le 13/09/2026).
-- **Dès md** : dans la colonne de marge, collant, liste visible. Le résumé est masqué et le contenu forcé visible par `::details-content`. Un navigateur qui ne prend pas en charge ce pseudo-élément garde le sommaire repliable dans la marge : la page reste utilisable.
+- **Dès md** : dans la colonne de marge, collant, liste visible, et il **longe** le texte au lieu de le précéder — sans quoi il consomme une ligne de grille et le contenu passe dessous (278 à 1046 px mesurés sur la page Chiliz, première section à 1102, story 6.2). Le résumé est masqué et le contenu forcé visible par `::details-content`. Un navigateur qui ne prend pas en charge ce pseudo-élément garde le sommaire repliable dans la marge : la page reste utilisable.
 - **Plus haut que la fenêtre** : sa hauteur est bornée par celle de la fenêtre et il défile sur lui-même (arbitrage d'Arnaud du 22/09/2026). Mesuré à 1 088 px pour les 22 entrées des trois cas Chiliz dans une colonne de 13,5 rem, contre 368 px pour le seul cas 02 : sans cette borne, la disposition ne tient que tant qu'un cas est publié.
 - **Entrées** : numéro en `ink-muted` (« 02.3 »), texte `ink`, soulignement `accent`. Page Chiliz : un niveau par section publiée (« Cas 02 — titre »), rubriques en retrait de 2,5 ch.
 - **Entrée courante** : pas de mise en évidence de défilement (il faudrait du JavaScript). La cible d'une ancre est marquée dans le texte (voir `rubric-heading`).
@@ -632,7 +632,7 @@ Sommaire d'une page cas ou de la page Chiliz.
 
 Titre de rubrique d'un cas, en `section-heading`.
 
-- **Numéro** « 02.3 » : numéro du cas, point, rang de la rubrique dans le cas, en `rubric-number` et `ink-muted`. Sous md, il précède le titre, séparé par une espace de largeur fixe ; dès md, il est suspendu dans la colonne de marge, aligné à droite.
+- **Numéro** « 02.3 » : numéro du cas, point, rang de la rubrique dans le cas, en `rubric-number` et `ink-muted`. Il précède le titre, séparé par une espace de largeur fixe, **à toutes les largeurs**. Il était suspendu dans la colonne de marge dès md : il passait alors par-dessus le sommaire collant dès qu'on défilait — quatre collisions mesurées sur la page Chiliz, « 02.3 » à 39 px sur un sommaire occupant 16 à 784 px. Les deux éléments voulaient la même colonne ; **la colonne de marge appartient au sommaire seul** (arbitrage d'Arnaud, 22/09/2026, story 6.2).
 - **Numéroter par le cas, pas par la position dans la page** (validé par Arnaud le 13/09/2026) : le numéro « 02.3 » reste le même quand le cas 03 ou le cas 04 est publié sur la page Chiliz. Deux versions linguistiques ont les mêmes rubriques (C3), donc les mêmes numéros.
 - **Cible d'ancre** (`:target`) : barre `accent` de 2 px à gauche du titre, dans la gouttière, sans animation. Même marque pour la section d'un cas sur la page Chiliz (`#case-02`), à gauche de son titre.
 - `scroll-margin-top: {spacing.5}` : le titre ne colle pas au bord supérieur de la fenêtre.

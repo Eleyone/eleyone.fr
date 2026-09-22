@@ -115,6 +115,28 @@ case_html_marqueur_todo() {
   assert_contains "C5 : « [TODO » dans la sortie de production" "$err" "le signalement donne la ligne"
 }
 
+case_html_brouillon_du_rendu_de_travail_controle() {
+  # C10 et C11 lisent les deux rendus depuis la story 6.2 : tant qu'un cas est en brouillon, la
+  # production ne le contient pas, et ces contrôles n'avaient jamais vu une page de cas — pas même
+  # celle de la story 6.1. Une page qui n'existe que dans le rendu de travail doit donc être lue.
+  sortie
+  cp "$fixtures/html/page.html" "$work/rendu/brouillon.html"
+  sed -i 's#</body>#<script>console.log(1)</script></body>#' "$work/rendu/brouillon.html"
+  controle
+  assert_eq 1 "$rc" "un défaut présent seulement dans le rendu de travail fait échouer"
+  assert_contains "brouillon.html" "$err" "le signalement nomme la page du rendu de travail"
+}
+
+case_html_marqueur_todo_tolere_dans_un_brouillon() {
+  # C5 reste en production seule : « [TODO » est légitime dans un brouillon, c'est même ce que
+  # docs/format-cas.md prescrit pour ce qui manque encore.
+  sortie
+  cp "$fixtures/html/page.html" "$work/rendu/brouillon.html"
+  sed -i 's#</body>#<p>[TODO: periode]</p></body>#' "$work/rendu/brouillon.html"
+  controle
+  assert_eq 0 "$rc" "un marqueur dans un brouillon ne fait pas échouer (messages : $err)"
+}
+
 case_html_jsonld_hors_accueil() {
   sortie '' '<script type="application/ld+json">{"@type":"Person"}</script>'
   controle
