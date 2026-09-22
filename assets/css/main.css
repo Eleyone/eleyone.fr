@@ -815,12 +815,12 @@ main {
   /* marge | texte | note. La colonne de note est vide hors des pages cas : la colonne de texte
    * ne bouge donc pas d'une page à l'autre (décision d'Arnaud du 13/09/2026).
    *
-   * Une section de cas redéclare la grille de la page (voir le bloc md) : elle doit donc recevoir
-   * la troisième colonne ici aussi. Sans elle, l'encart posé en « grid-column: 3 » créait une
-   * colonne implicite qui rognait la mesure de 640 à 405 px — la colonne de texte n'était plus
-   * au même endroit que sur les autres pages, ce que cette grille existe précisément pour tenir. */
-  .frame--columns,
-  .case-section {
+   * « .case-section » figurait ici, avec un commentaire qui disait qu'elle devait recevoir la
+   * troisième colonne. Elle redéclare vingt lignes plus bas sa propre grille à deux colonnes,
+   * depuis que la marge appartient au sommaire seul : la règle était morte et son commentaire
+   * disait l'inverse de ce que fait la page. Débris d'un revirement de la story 6.2, balayé par
+   * la rétrospective de l'epic 6 (A3). */
+  .frame--columns {
     grid-template-columns: var(--margin-column) minmax(0, var(--measure)) var(--aside-column);
   }
 

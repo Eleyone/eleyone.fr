@@ -27,17 +27,7 @@ script_name=html
 
 public=${CHECK_PUBLIC_ROOT:-public}
 [[ -d $public ]] || checks_die "build de production absent ($public) : lancer scripts/build.sh production."
-travail=${CHECK_WORK_ROOT:-build/work}
-# Les racines que C10 et C11 parcourent. Le rendu de travail n'est ajouté que s'il existe : un
-# contrôle lancé sur une sortie seule (essais, image de CI) reste possible.
-#
-# Un fichier présent dans les deux rendus est lu deux fois. C'est voulu : dédupliquer sur le chemin
-# relatif écarterait la copie de travail d'une page qui existe aussi en production **avec un
-# contenu différent** — c'est exactement le cas d'un cas passé de brouillon à publié, ou d'une page
-# qui porte le marqueur « Brouillon » d'un seul côté. Le coût est une seconde lecture de la feuille
-# de style et des deux accueils ; le risque, celui de ne pas voir un défaut propre à un rendu.
-racines=("$public")
-[[ ! -d $travail || $travail -ef $public ]] || racines+=("$travail")
+checks_roots_into racines "$public"
 command -v xmllint > /dev/null 2>&1 \
   || checks_die "xmllint est introuvable (paquet libxml2-utils) : prérequis du poste, présent dans CHECK_IMAGE (AD-1)."
 command -v jq > /dev/null 2>&1 || checks_die "jq est introuvable."
@@ -96,8 +86,7 @@ liste_9=$(checks_find "${racines[@]}" -type f -name '*.html' | LC_ALL=C sort) ||
 # erroné, ou une sortie de build vide, passeraient pour un succès (rétrospective de l'epic 3, A3).
 [[ -n $liste_9 ]] || checks_die "aucune page HTML dans ${racines[*]} : rien à contrôler."
 while IFS= read -r page; do
-  relative=${page#"$public"/}
-  relative=${relative#"$travail"/}
+  relative=$(checks_relative "$page" "$public")
 
   # --- scripts : un seul type toléré, jamais de src (C10, AD-20) -------------------------------
   # La valeur est extraite, jamais découpée à l'indice : la sérialisation de xmllint varie d'une
@@ -286,8 +275,7 @@ done <<< "$liste_9"
 # --- ressources tierces appelées depuis le CSS, que XPath ne voit pas -----------------------------
 liste_10=$(checks_find "${racines[@]}" -type f \( -name '*.html' -o -name '*.css' \) | LC_ALL=C sort) || exit $?
 while IFS= read -r fichier; do
-  relative=${fichier#"$public"/}
-  relative=${relative#"$travail"/}
+  relative=$(checks_relative "$fichier" "$public")
   # Chaque URL absolue citée par le CSS est confrontée à l'hôte du site : une feuille peut légitimement
   # pointer vers le site lui-même.
   # Le fichier est lu d'abord, avec son code : « || true » sur le pipeline entier masquerait un

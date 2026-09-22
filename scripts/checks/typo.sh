@@ -26,9 +26,7 @@ script_name=typo
 
 public=${CHECK_PUBLIC_ROOT:-public}
 [[ -d $public ]] || checks_die "build de production absent ($public) : lancer scripts/build.sh production."
-travail=${CHECK_WORK_ROOT:-build/work}
-racines=("$public")
-[[ ! -d $travail || $travail -ef $public ]] || racines+=("$travail")
+checks_roots_into racines "$public"
 command -v xmllint > /dev/null 2>&1 \
   || checks_die "xmllint est introuvable (paquet libxml2-utils) : prérequis du poste, présent dans CHECK_IMAGE (AD-1)."
 
@@ -54,8 +52,7 @@ liste_24=$(checks_find "${racines[@]}" -type f -name '*.html' | LC_ALL=C sort) |
 [[ -n $liste_24 ]] || checks_die "aucune page HTML dans ${racines[*]} : rien à contrôler."
 
 while IFS= read -r page; do
-  relative=${page#"$public"/}
-  relative=${relative#"$travail"/}
+  relative=$(checks_relative "$page" "$public")
   langue=$(langue_de "$page") || exit $?
   texte=$(texte_de "$page") || exit $?
   [[ -n $texte ]] || continue
@@ -110,8 +107,7 @@ done <<< "$liste_24"
 liste_25=$(checks_find "${racines[@]}" -type f -name '*.css' | LC_ALL=C sort) || exit $?
 while IFS= read -r feuille; do
   [[ -n $feuille ]] || continue
-  relative=${feuille#"$public"/}
-  relative=${relative#"$travail"/}
+  relative=$(checks_relative "$feuille" "$public")
   ! shell_grep -qE 'hyphens[[:space:]]*:[[:space:]]*auto' "$feuille" \
     || signaler "$relative" "C24 : « hyphens: auto » dans la feuille de style ; la césure automatique est interdite (UX-DR17)"
 done <<< "$liste_25"

@@ -11,8 +11,8 @@ page() { # $1 = chemin relatif, $2 = contenu du body
 
 # Site conforme : chaque accueil mène à la page de groupe de sa langue, qui porte ses ancres.
 site() {
-  rm -rf "$work/public"
-  mkdir -p "$work/public"
+  rm -rf "$work/public" "$work/rendu"
+  mkdir -p "$work/public" "$work/rendu"
   page index.html '<h1>Accueil</h1><p><a href="/cas/chiliz/#case-02">Cas 02</a></p>'
   page en/index.html '<h1>Home</h1><p><a href="/en/cases/chiliz/#case-02">Case 02</a></p>'
   page cas/chiliz/index.html '<h1>Chiliz</h1><p class="nav-links"><a href="/#position-chiliz">Retour</a></p><section id=case-02><h2 id=case-02-contexte>Contexte</h2></section>'
@@ -24,8 +24,12 @@ site() {
   page en/404.html '<h1>Not found</h1>'
 }
 
+# CHECK_WORK_ROOT est **toujours** posé, même quand le cas ne s'en sert pas : depuis que la règle du
+# retour au parcours lit les deux rendus, une valeur absente ferait retomber le contrôle sur le
+# « build/work » du dépôt, et les cas dépendraient de l'état d'un build voisin.
 liens() {
-  run env CHECK_PUBLIC_ROOT="$work/public" CHECK_CONFIG_FILE="$work/hugo.yaml" bash "$root/scripts/checks/links.sh"
+  run env CHECK_PUBLIC_ROOT="$work/public" CHECK_WORK_ROOT="$work/rendu" \
+    CHECK_CONFIG_FILE="$work/hugo.yaml" bash "$root/scripts/checks/links.sh"
 }
 
 config() { # $1 = valeur de source_url, vide pour aucune
@@ -109,6 +113,31 @@ case_links_retour_vers_laccueil_de_lautre_langue() {
   liens
   assert_eq 1 "$rc" "un retour vers l accueil de l autre langue fait échouer"
   assert_contains "sur index.html" "$err" "le signalement nomme l accueil attendu"
+}
+
+case_links_retour_dune_page_de_cas_en_brouillon() {
+  # Les cas sont en brouillon : la production ne les contient pas, et la règle du retour au
+  # parcours ne s'exécutait donc sur aucune page de cas (rétrospective de l'epic 6, A4). Elle lit
+  # désormais les deux rendus — contrairement à la règle des pages orphelines, qui serait fausse
+  # sur un rendu plein de brouillons volontairement non liés.
+  site; config
+  mkdir -p "$work/rendu/cas/brouillon"
+  printf '<!doctype html><html lang=fr><head><meta charset="utf-8"><title>T</title></head><body><p class="nav-links"><a href="/">Retour</a></p></body></html>' \
+    > "$work/rendu/cas/brouillon/index.html"
+  liens
+  assert_eq 1 "$rc" "une page de cas du rendu de travail est contrôlée"
+  assert_contains "cas/brouillon/index.html" "$err" "le signalement nomme la page du rendu de travail"
+}
+
+case_links_orphelines_ignorent_le_rendu_de_travail() {
+  # La portée étendue ne vaut que pour le retour au parcours : un brouillon non lié n'est pas une
+  # page orpheline, et le contrôle ne doit pas le signaler comme tel.
+  site; config
+  mkdir -p "$work/rendu/cas/brouillon"
+  printf '<!doctype html><html lang=fr><head><meta charset="utf-8"><title>T</title></head><body><p class="nav-links"><a href="/#position-chiliz">Retour</a></p></body></html>' \
+    > "$work/rendu/cas/brouillon/index.html"
+  liens
+  assert_eq 0 "$rc" "un brouillon non lié ne compte pas comme page orpheline (messages : $err)"
 }
 
 case_links_page_orpheline() {

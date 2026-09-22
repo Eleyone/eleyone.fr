@@ -132,3 +132,29 @@ checks_is_todo() { # $1 = valeur
 checks_tolerated() { # $1 = « true » si le fichier est un brouillon, $2 = valeur
   [[ ${1-} == true ]] && checks_is_todo "${2-}"
 }
+
+# Les racines que parcourt un contrôle qui lit **les deux rendus** : la production, et le rendu de
+# travail quand il existe et n'est pas la même chose. Écrite une seule fois (rétrospective de
+# l'epic 6, A5) : le bloc était recopié dans html.sh puis dans typo.sh, et c'est précisément parce
+# qu'il vivait en silos qu'un troisième contrôle, links.sh, est resté en arrière avec sa règle
+# neuve qui ne s'exécutait sur aucune page de cas (A4).
+#
+# Tant qu'un cas est en brouillon, la production ne le contient pas : un contrôle qui ne lit
+# qu'elle ne voit rien du travail en cours. Le rendu de travail n'est ajouté que s'il existe, pour
+# qu'un contrôle lancé sur une sortie seule (essais, image de CI) reste possible.
+#
+# Emploi : « checks_roots_into racines "$public" » puis « checks_relative <chemin> ».
+checks_roots_into() { # $1 = nom du tableau à remplir, $2 = racine de production
+  local -n checks_roots_destination=$1
+  local public=$2
+  checks_roots_destination=("$public")
+  local travail=${CHECK_WORK_ROOT:-build/work}
+  [[ ! -d $travail || $travail -ef $public ]] || checks_roots_destination+=("$travail")
+}
+
+# Le chemin d'un fichier, dépouillé de la racine d'où il vient, pour que le signalement nomme la
+# page et non l'arborescence de build. Le dépouillement était écrit quatre fois.
+checks_relative() { # $1 = chemin du fichier, $2 = racine de production
+  local chemin=${1#"$2"/}
+  printf '%s' "${chemin#"${CHECK_WORK_ROOT:-build/work}"/}"
+}

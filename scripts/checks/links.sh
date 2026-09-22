@@ -7,6 +7,8 @@
 #     écrite ici (« #case-02 », « #case-02-contexte », « #position-chiliz » se vérifient donc seuls) ;
 #   - toute page est atteignable **depuis l'accueil de sa langue**, par un chemin de liens (FR-15) ;
 #     les deux pages 404 en sont exemptées, nginx les sert sur une URL inconnue (AD-13) ;
+#   - le lien « Retour au parcours » d'une page de cas vise l'ancre de son poste sur l'accueil de
+#     **sa** langue ; cette règle seule lit aussi le rendu de travail, les cas étant en brouillon ;
 #   - les liens de CV apparaissent si et seulement si les **deux** PDF sont publiés (AD-21) ;
 #   - le lien du dépôt apparaît si et seulement si « params.source_url » est renseignée.
 #
@@ -114,9 +116,19 @@ done
 # un lien vers « / » sans ancre résout parfaitement, et les règles ci-dessus l'auraient accepté.
 # C'est pourtant l'ancre qui ramène Claire au poste qu'elle lisait ; sans elle, elle retombe en haut
 # du CV et doit retrouver sa place (constat de la revue de spec de la story 6.1).
-for page in "${pages[@]}"; do
+# **Cette règle lit les deux rendus**, contrairement au reste du contrôle. Les six cas sont en
+# brouillon : la production ne contient que les deux accueils, si bien que la règle ajoutée par la
+# story 6.1 ne s'exécutait sur **aucune page de cas** (rétrospective de l'epic 6, A4). La règle des
+# pages orphelines, elle, reste en production seule — un rendu de travail contient des brouillons
+# volontairement non liés, et elle y serait fausse. Deux portées dans un même contrôle, parce que
+# les deux règles ne jugent pas la même chose.
+checks_roots_into racines_retour "$public"
+pages_retour=$(checks_find "${racines_retour[@]}" -type f -name 'index.html' | LC_ALL=C sort) || exit $?
+while IFS= read -r chemin; do
+  [[ -n $chemin ]] || continue
+  page=$(checks_relative "$chemin" "$public")
   [[ $page == cas/*/index.html || $page == en/cases/*/index.html ]] || continue
-  retours=$(checks_attributes "$public/$page" '//p[contains(@class,"nav-links")]/a/@href' href) || exit $?
+  retours=$(checks_attributes "$chemin" '//p[contains(@class,"nav-links")]/a/@href' href) || exit $?
   # Une liste vide n'est jamais passée sous silence : sans lien de retour, la page manque à AD-18,
   # et un « continue » ici rendrait la règle muette au lieu de la faire échouer.
   if [[ -z $retours ]]; then
@@ -144,7 +156,7 @@ for page in "${pages[@]}"; do
   done <<< "$retours"
   ((conforme == 1)) \
     || signaler "$page" "C12 : le retour au parcours ne vise pas l'ancre de son poste sur $attendu (AD-18)"
-done
+done <<< "$pages_retour"
 
 # --- liens conditionnels : CV et dépôt --------------------------------------------------------------
 cv_publies=0
