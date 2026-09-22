@@ -2478,8 +2478,8 @@ afin de le garder et de le transmettre.
 **Couvre :** FR-38, NFR-9, SM-5 · AD-21 · C21
 **Dépendances :** 7.2, 7.3
 **Bloquée par :** —
-**Prérequis de contenu :** deux CV PDF, FR et EN, **sans numéro de téléphone ni ville de résidence** dans le texte, les métadonnées ou le XMP. Les PDF actuels en contiennent : la publication reste bloquée jusqu'à la fourniture de versions conformes.
-**Opération manuelle (Arnaud) :** **oui**, Arnaud fournit les deux fichiers et les commite.
+**Prérequis de contenu :** deux CV PDF, FR et EN, **sans numéro de téléphone ni ville de résidence** dans le texte, les métadonnées ou le XMP. Les versions d'origine en contenaient ; Arnaud a fourni le 22/09/2026 deux exports conformes, que C21 confronte à la liste des motifs sans rien en afficher.
+**Opération manuelle (Arnaud) :** **oui**, Arnaud fournit les deux fichiers ; l'agent les range sur la branche de la story et les commite. Si un contrôle refuse un PDF, la story s'arrête et attend un nouvel export : un PDF n'est jamais retouché pour faire passer un contrôle.
 
 **Critères d'acceptation :**
 
@@ -2487,11 +2487,11 @@ afin de le garder et de le transmettre.
 **Quand** ils sont indexés, poussés, puis contrôlés en CI
 **Alors** le pre-commit, le hook pre-receive et C21 passent tous les trois.
 
-**Étant donné** le build suivant
+**Étant donné** le build incluant ces deux PDF
 **Quand** on l'affiche
 **Alors** les liens des deux CV apparaissent dans le pied de page de chaque page ; ils seront mis en évidence sur « À propos » par la story 9.4.
 
-- [ ] Le job `release` rejouera C21 avec la liste des motifs à chaque mise en ligne (story 11.3).
+Hors périmètre, noté ici pour mémoire : le job `release` rejouera C21 avec la liste des motifs à chaque mise en ligne (story 11.3). Cette story ne touche pas au workflow `release`.
 
 ## Epic 8 : Schémas D2 à double thème, régénérés et vérifiés
 
