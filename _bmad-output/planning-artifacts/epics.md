@@ -2497,6 +2497,8 @@ Hors périmètre, noté ici pour mémoire : le job `release` rejouera C21 avec l
 
 Un schéma bilingue suit le mode du lecteur (ou son repli validé), et la CI refuse tout SVG désynchronisé. Le spike passe avant toute story du pipeline (AD-7).
 
+> **Reporté après l'epic 9, décision d'Arnaud du 22/09/2026.** Aucun schéma n'est à produire pour l'instant, et cet epic n'outille que des schémas. Il ne bloque rien avant la mise en ligne : sa seule dépendance hors epic est la story 13.4 (« premier schéma publié »), postérieure à la release et déjà bloquée par **Q1**. Les epics 9, 10, 11 et 12 n'en dépendent pas — vérifié en relisant toutes les lignes « Dépendances » du backlog. À reprendre quand un cas aura un schéma à montrer ; la branche `experiment/d2-bilingue` porte déjà le travail exploratoire.
+
 ### Story 8.1 : Dual-theme D2 spike
 
 En tant qu'Arnaud, mainteneur,
