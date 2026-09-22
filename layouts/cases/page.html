@@ -1,4 +1,14 @@
-{{ define "main" }}
+{{/*
+  La typographie française s'applique ici, sur le corps rendu de la page (AD-23). Hugo ne permet pas
+  de capturer la sortie d'un « block » ; le corps est donc écrit dans un partial en ligne, que
+  « partial » sait rendre en valeur, et qui traverse typo-fr.html avant d'être émis. Un appel par
+  gabarit, jamais un appel par titre ou par libellé — et scripts/tests/test-typo.sh refuse un
+  gabarit qui définirait « main » sans passer par là.
+*/}}
+{{ define "main" }}{{ partial "typo-fr.html" (dict "page" . "html" (partial "inline/main-cas.html" .)) }}{{ end }}
+
+{{ define "_partials/inline/main-cas.html" }}
+
   {{/*
     Page d'un cas sans groupe (AD-3, AD-4). Même partial que la page de groupe, au niveau de titre 1 :
     le cas est le sujet de la page, donc son titre est le titre de la page, et ses « ## » restent des

@@ -2323,20 +2323,27 @@ afin de lire un texte soigné sans qu'Arnaud tape d'espaces insécables.
 
 **Critères d'acceptation :**
 
-**Étant donné** `_partials/typo-fr.html` appliqué au HTML rendu des pages FR (contenu, titres, encarts, libellés)
-**Quand** le pilote est rendu
-**Alors** l'espace ordinaire devant `;`, `!`, `?` devient une espace fine insécable, celle devant `:` une espace insécable, et celles à l'intérieur des « » une espace fine insécable, comme le prescrit `DESIGN.md`
-**Et** aucune espace n'est insérée là où l'auteur n'en a pas mis.
-
-**Étant donné** un bloc `<pre>`, un `<code>`, une URL ou un attribut contenant ces signes
+**Étant donné** `_partials/typo-fr.html`, appliqué au corps rendu d'une page de langue `fr`
 **Quand** la page est rendue
-**Alors** ils ne sont pas modifiés.
+**Alors** l'espace ordinaire devant `;`, `!` et `?` devient une espace **fine** insécable **U+202F**, celle devant `:` une espace insécable **U+00A0**, celle après `«` et celle avant `»` une espace fine insécable U+202F — les points de code sont ceux de `DESIGN.md` (« Typographie française et anglaise »), et `&nbsp;` partout serait faux
+**Et** aucune espace n'est insérée là où l'auteur n'en a pas mis : la règle remplace, elle n'ajoute pas.
+
+**Un appel par gabarit principal**, pas un appel par titre, encart et libellé. Hugo ne sait pas capturer la sortie d'un `block` (documentation du système de gabarits) : chaque `define "main"` écrit donc son corps dans un partial en ligne, que `partial` rend en valeur, et le fait traverser `typo-fr.html`. La propriété « la règle ne peut pas être oubliée » est perdue, et remplacée par un cas de test qui refuse un `define "main"` sans ce passage.
+
+**Étant donné** le `<title>`, qui vit hors du corps
+**Quand** la page est rendue
+**Alors** il est composé à part, dans `layouts/baseof.html` : aucun gabarit ne l'atteint, et il s'affiche dans l'onglet comme dans un résultat de recherche.
+
+**Étant donné** un bloc `<pre>`, un `<code>`, une balise et donc ses attributs — `href="mailto:…"`, `title="Note :"` — ou une URL
+**Quand** la page est rendue
+**Alors** rien n'y est modifié. Le partial **isole** ces segments avant tout remplacement puis les réassemble (AD-23) : appliquer `replaceRE` au HTML complet sans cette isolation casserait un lien ou un attribut, ce qui est la façon la plus probable de rater cette story.
 
 **Étant donné** `scripts/checks/typo.sh`
-**Quand** une page FR garde une espace ordinaire devant ces signes hors `pre`, `code`, `script` et URL, qu'une page EN contient une espace insécable devant eux, ou que la CSS contient `hyphens: auto`
+**Quand** une page FR garde une espace ordinaire devant `;`, `!`, `?`, `:`, après `«` ou avant `»`, hors `pre`, `code`, `script` et URL ; qu'une page EN contient une espace insécable **U+00A0 ou une espace fine insécable U+202F** à ces mêmes places ; ou que la CSS contient `hyphens: auto`
 **Alors** C24 échoue ; il tourne sur les deux forges.
 
 - [ ] Les pages EN ne passent jamais par le partial.
+- [ ] Le contrôle nomme la place exacte : « après `«` » et « avant `»` », jamais « devant eux », qui ne veut rien dire pour une paire de guillemets.
 
 ## Epic 7 : CV PDF, ensemble ou rien
 

@@ -1,0 +1,64 @@
+{{/*
+  Typographie française appliquée au build (AD-23, FR-20, NFR-10). Le Markdown s'écrit avec des
+  espaces ordinaires ; c'est ici que la composition se fait, une fois, sur le HTML rendu d'une page
+  de langue « fr ». **Les pages EN ne passent jamais par les substitutions** : elles traversent ce
+  partial inchangées, ce qui garde un seul point d'application pour les deux langues.
+
+  Pourquoi isoler avant de remplacer. Appliquer « replaceRE » au HTML complet casserait un
+  « href="mailto:…" » ou un « title="Note :" » : l'espace y est dans un attribut, pas dans le texte.
+  Le partial découpe donc le HTML sur « < », ce qui sépare chaque balise de ce qui la suit, puis ne
+  compose **que** les nœuds de texte. Les attributs, les URL et les balises elles-mêmes ne sont
+  jamais traversés par une substitution.
+
+  Les blocs « pre » et « code » sont comptés, pas simplement marqués : un « code » dans un « pre »
+  ne doit pas rouvrir la composition en se fermant. Tant que le compteur n'est pas nul, le texte
+  sort tel quel.
+
+  Limite écrite : une espace séparée de son signe par une balise — « <strong>Attention </strong>: » —
+  n'est pas composée, chaque nœud de texte étant traité isolément. C24 la signale pourtant, puisqu'il
+  concatène les nœuds : c'est le bon couple, car le rendu **affiche** bien une espace ordinaire devant
+  le « : ». La correction est alors dans la source, pas ici.
+
+  Limite connue et assumée : un « > » à l'intérieur d'une valeur d'attribut (« title="a > b" »)
+  décale la frontière entre la balise et son texte, et une partie de l'attribut serait composée.
+  Le cas n'existe pas dans ce dépôt — aucun attribut n'en contient — et l'écrire ici vaut mieux que
+  de compliquer le découpage pour un cas absent.
+
+  Paramètres : « page » (la page, pour sa langue) et « html » (le HTML rendu).
+  Retour : le HTML composé.
+*/}}
+{{- $page := .page -}}
+{{- $html := printf "%s" .html -}}
+{{- if ne $page.Site.Language.Lang "fr" -}}
+  {{- return .html -}}
+{{- end -}}
+{{- $out := "" -}}
+{{- $code := 0 -}}
+{{- range $i, $seg := split $html "<" -}}
+  {{- if eq $i 0 -}}
+    {{- $out = printf "%s%s" $out (partial "typo-fr-texte.html" $seg) -}}
+  {{- else -}}
+    {{- $bits := split $seg ">" -}}
+    {{- if eq (len $bits) 1 -}}
+      {{/* Pas de « > » : ce n'est pas une balise mais du texte qui contient un « < » littéral. Il
+           est donc composé comme du texte, et son « < » lui est rendu (constat de la revue du code
+           de la PR n° 81). */}}
+      {{- $out = printf "%s<%s" $out (partial "typo-fr-texte.html" $seg) -}}
+    {{- else -}}
+      {{- $tag := index $bits 0 -}}
+      {{- $texte := delimit (after 1 $bits) ">" -}}
+      {{- $nom := lower (index (split (replace (trim $tag " \n\t") "/" "") " ") 0) -}}
+      {{- if or (eq $nom "pre") (eq $nom "code") (eq $nom "script") (eq $nom "style") -}}
+        {{- if hasPrefix (trim $tag " \n\t") "/" -}}
+          {{- $code = cond (gt $code 0) (sub $code 1) 0 -}}
+        {{- else if not (hasSuffix (trim $tag " \n\t") "/") -}}
+          {{- $code = add $code 1 -}}
+        {{- end -}}
+      {{- end -}}
+      {{- $compose := $texte -}}
+      {{- if eq $code 0 -}}{{- $compose = partial "typo-fr-texte.html" $texte -}}{{- end -}}
+      {{- $out = printf "%s<%s>%s" $out $tag $compose -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return ($out | safeHTML) -}}

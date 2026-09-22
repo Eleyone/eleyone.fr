@@ -1,4 +1,14 @@
-{{ define "main" }}
+{{/*
+  La typographie française s'applique ici, sur le corps rendu de la page (AD-23). Hugo ne permet pas
+  de capturer la sortie d'un « block » ; le corps est donc écrit dans un partial en ligne, que
+  « partial » sait rendre en valeur, et qui traverse typo-fr.html avant d'être émis. Un appel par
+  gabarit, jamais un appel par titre ou par libellé — et scripts/tests/test-typo.sh refuse un
+  gabarit qui définirait « main » sans passer par là.
+*/}}
+{{ define "main" }}{{ partial "typo-fr.html" (dict "page" . "html" (partial "inline/main-introuvable.html" .)) }}{{ end }}
+
+{{ define "_partials/inline/main-introuvable.html" }}
+
   {{/* AD-3 : aucun texte ici ; titre, phrase et libellés viennent d'i18n/. */}}
   <main id="content" class="frame frame--columns">
     <h1 class="page-title">{{ i18n "not_found_title" }}</h1>

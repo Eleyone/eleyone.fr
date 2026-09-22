@@ -14,7 +14,18 @@
          l'historique (constat C1 de la rétrospective de l'epic 4, 21/09/2026). */}}
     {{ $title := .Title }}
     {{ if eq .Kind "404" }}{{ $title = i18n "not_found_title" }}{{ end }}
-    <title>{{ $title }}{{ if not .IsHome }}{{ with $identity }} · {{ . }}{{ end }}{{ end }}</title>
+    {{/* Le <title> est du texte français lui aussi, et il vit hors du corps : le partial de
+         typographie, appliqué au corps par chaque gabarit, ne l'atteint pas. C24 l'a montré sur le
+         cas 01 — « au produit : une calculette » gardait une espace ordinaire dans l'onglet et dans
+         un résultat de recherche. Il passe donc par le même traitement de texte, sans balisage à
+         isoler puisqu'un <title> n'en admet aucun.
+
+         Le séparateur « · » est précédé d'une espace insécable dans les deux langues, comme le
+         prescrit DESIGN.md et comme le fait déjà la ligne d'identité elle-même. */}}
+    {{ $complet := $title }}
+    {{ if not .IsHome }}{{ with $identity }}{{ $complet = printf "%s\u00a0· %s" $title . }}{{ end }}{{ end }}
+    {{ if eq $.Site.Language.Lang "fr" }}{{ $complet = partial "typo-fr-texte.html" $complet }}{{ end }}
+    <title>{{ $complet }}</title>
     {{/* AD-2 : une alternative par traduction, plus x-default vers le français. */}}
     {{ range .AllTranslations }}
       <link rel="alternate" hreflang="{{ .Site.Language.Lang }}" href="{{ .Permalink }}">

@@ -1,0 +1,30 @@
+{{/*
+  Les quatre substitutions de la typographie française, appliquées à **un nœud de texte** déjà
+  isolé de tout balisage par typo-fr.html (AD-23, DESIGN.md § « Typographie française et anglaise »).
+
+  Les points de code sont ceux de DESIGN.md, et ils ne sont pas interchangeables : espace **fine**
+  insécable U+202F devant « ; », « ! », « ? » et à l'intérieur des guillemets, espace insécable
+  U+00A0 devant « : ». Poser « &nbsp; » partout donnerait un texte qui paraît correct et ne l'est
+  pas (constat de la revue de spec).
+
+  La règle **remplace** une espace, elle n'en ajoute jamais : « Mot: » écrit sans espace reste tel
+  quel. C'est ce qui la rend sûre — elle ne peut pas inventer une composition que l'auteur n'a pas
+  voulue, et elle ne touche pas un « : » d'URL ou d'heure, qui n'a pas d'espace devant lui.
+
+  Une seule espace est remplacée, jamais une suite : deux espaces devant un « ? » gardent la
+  première, que le rendu HTML replie de toute façon.
+
+  **Une insécable mal choisie est corrigée comme une espace ordinaire.** Un auteur qui tape U+00A0
+  devant un « ? » a bien voulu une insécable, mais pas celle-là : la classe de caractères couvre
+  donc l'espace ordinaire, l'insécable et la fine, et chaque signe reçoit celle que DESIGN.md lui
+  destine. La règle devient idempotente au passage — un texte déjà composé ressort identique
+  (constat de la revue du code de la PR n° 81).
+
+  Paramètre : le texte. Retour : le texte composé.
+*/}}
+{{- $t := . -}}
+{{- $t = replaceRE "[   ]([;!?])" " $1" $t -}}
+{{- $t = replaceRE "[   ](:)" " $1" $t -}}
+{{- $t = replaceRE "(«)[   ]" "$1 " $t -}}
+{{- $t = replaceRE "[   ](»)" " $1" $t -}}
+{{- return $t -}}
