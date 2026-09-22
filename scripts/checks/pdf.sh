@@ -41,6 +41,14 @@ fi
 fail=0
 signaler() { checks_report "$1" "$2"; fail=1; }
 
+# Le nettoyage ne lit que « temporaires », jamais une variable qui désigne aussi autre chose :
+# « patterns » porte **deux sens** — le chemin du fichier, et « la liste contient-elle au moins un
+# motif ». Le vider pour dire « aucun motif » effaçait l'adresse du fichier à supprimer, et deux
+# temporaires restaient à chaque exécution (constat B1 de la rétrospective de l'epic 7, mesuré).
+# Séparer les deux sens ferme le piège ; une condition de plus ne l'aurait que déplacé.
+temporaires=()
+trap '((${#temporaires[@]} == 0)) || rm -f "${temporaires[@]}"' EXIT
+
 # La liste des motifs, sous la forme « numéro:motif », et les motifs seuls pour un premier passage.
 # Même variable que le garde-fou : PRIVATE_PATTERNS_FILE. Sans elle — GitHub, clone sans
 # docs/private/ — seules présence, en-tête, pages et taille s'appliquent, et le script le dit.
@@ -55,8 +63,12 @@ patterns="" patterns_text=""
 racine_depot=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 patterns_file=${PRIVATE_PATTERNS_FILE:-$racine_depot/docs/private/forbidden-patterns.txt}
 if [[ -n $patterns_file && -f $patterns_file ]]; then
-  patterns=$(mktemp) && patterns_text=$(mktemp) || checks_die "fichier temporaire impossible."
-  trap 'rm -f "$patterns" "$patterns_text"' EXIT
+  # Deux commandes, chacune avec son arrêt : « a && b || die » suspend « set -e » pour tout le
+  # bloc, ce que docs/procedures/shell-scripts.md proscrit.
+  patterns=$(mktemp) || checks_die "fichier temporaire impossible."
+  temporaires+=("$patterns")
+  patterns_text=$(mktemp) || checks_die "fichier temporaire impossible."
+  temporaires+=("$patterns_text")
   rc=0
   grep -nvE '^[[:space:]]*(#|$)' "$patterns_file" > "$patterns" 2>/dev/null || rc=$?
   ((rc <= 1)) || checks_die "liste des motifs illisible ($patterns_file)"

@@ -49,6 +49,54 @@ controle() { # $1 = chemin de la liste des motifs, vide pour aucune
 
 vide() { rm -rf "$work/cv"; mkdir -p "$work/cv"; }
 
+# Un TMPDIR **qui n'appartient qu'au cas** : « ${TMPDIR:-/tmp} » est partagé avec le reste de la
+# machine, et un cas qui compte là-dedans suppose son environnement (piège connu de
+# docs/procedures/shell-scripts.md). Ici, tout ce qui s'y trouve vient du script qu'on éprouve.
+#
+# La fonction rend le chemin et ne lance rien : une première écriture lançait la commande et
+# rendait le seul compte, en avalant le code de sortie par un « || true ». Un script mort avant
+# d'avoir créé son premier temporaire laissait alors 0 fichier, et le cas passait au vert sur un
+# script qui n'avait rien fait (constat bloquant de la deuxième revue de la PR n° 92). Le cas
+# lance donc lui-même, par « run », et affirme le code **avant** de compter.
+tmpdir_a_soi() {
+  local tmp=$work/tmp-a-soi
+  rm -rf "$tmp"; mkdir -p "$tmp"
+  printf '%s' "$tmp"
+}
+
+restes_dans() { find "$1" -mindepth 1 | wc -l; }
+
+case_pdf_une_liste_sans_motif_ne_laisse_rien() {
+  # Le chemin qui fuyait : la liste existe, mais ne porte que des commentaires. Le contrôle créait
+  # alors deux fichiers temporaires, puis **vidait les variables qui les désignaient** pour dire
+  # « aucun motif » — et le nettoyage, qui lisait ces mêmes variables, ne supprimait plus rien
+  # (constat B1, rétrospective de l'epic 7).
+  #
+  # Deux cas existants tenaient chacun une moitié de ce qu'il fallait : l'un exerçait la liste sans
+  # motif sans regarder le disque, l'autre regardait le disque sur le chemin nominal. Aucun
+  # croisement, et la fuite a vécu deux stories. Ce cas est le croisement.
+  vide
+  pdf "$work/cv/cv-fr.pdf"; pdf "$work/cv/cv-en.pdf"
+  printf '# que des commentaires\n\n#\n' > "$work/motifs-sans-motif.txt"
+  local tmp; tmp=$(tmpdir_a_soi)
+  run env TMPDIR="$tmp" CHECK_CV_DIR="$work/cv" \
+    PRIVATE_PATTERNS_FILE="$work/motifs-sans-motif.txt" bash "$root/scripts/checks/pdf.sh"
+  assert_eq 0 "$rc" "le contrôle va jusqu'au bout, sans quoi zéro reste ne prouverait rien (messages : $err)"
+  assert_eq 0 "$(restes_dans "$tmp")" "C21 ne laisse aucun fichier temporaire quand la liste ne porte aucun motif"
+}
+
+case_pdf_une_liste_normale_ne_laisse_rien() {
+  # La contre-épreuve : sans elle, un contrôle qui ne créerait jamais de temporaire passerait pour
+  # un contrôle qui nettoie bien.
+  vide
+  pdf "$work/cv/cv-fr.pdf"; pdf "$work/cv/cv-en.pdf"
+  local tmp; tmp=$(tmpdir_a_soi)
+  run env TMPDIR="$tmp" CHECK_CV_DIR="$work/cv" \
+    PRIVATE_PATTERNS_FILE="$(liste)" bash "$root/scripts/checks/pdf.sh"
+  assert_eq 0 "$rc" "le contrôle va jusqu'au bout (messages : $err)"
+  assert_eq 0 "$(restes_dans "$tmp")" "C21 ne laisse aucun fichier temporaire avec une liste normale"
+}
+
 case_pdf_aucun_fichier() {
   vide
   controle "$(liste)"

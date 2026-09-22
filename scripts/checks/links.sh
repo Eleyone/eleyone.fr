@@ -159,18 +159,35 @@ while IFS= read -r chemin; do
 done <<< "$pages_retour"
 
 # --- liens conditionnels : CV et dépôt --------------------------------------------------------------
+# **Le chemin publié est « /cv/ », pas « /assets/cv/ »** : Hugo sort une ressource de « assets/x »
+# à « /x ». La clause visait la source au lieu de la sortie, si bien que « cv_publies » et
+# « liens_cv » valaient **toujours 0** — les deux branches exigent l'inverse, aucune ne pouvait se
+# déclencher, et le critère d'acceptation de la story 7.2 la déclarait passante. Mesuré sur le
+# build réel après la publication des CV : deux PDF publiés, quatre pages y menant, et le contrôle
+# comptait zéro des deux côtés (constat B2, rétrospective de l'epic 7).
+#
+# Ce que la fixture du test écrivait sous « /assets/cv/ » reproduisait l'hypothèse fausse : les
+# deux cas passaient au vert sur un contrôle qui ne pouvait rien voir. C'est le point 16 d'AGENTS.md.
+#
+# Le délimiteur de fin accepte le guillemet, l'espace **et** « > », parce que le rendu de production
+# est **minifié** : Hugo y écrit « href=/cv/cv-fr.pdf », sans guillemets, alors que les fixtures des
+# tests en portent. Un motif exigeant le guillemet fermant passe les tests et compte zéro lien sur le
+# vrai site — la même faute que celle qu'on corrige ici, retrouvée dans son correctif, et vue en le
+# mesurant sur « public/ » plutôt qu'en le relisant.
+# « ?# » y figure aussi : « /cv/cv-fr.pdf#page=2 » est un lien de CV valide, et l'exclure
+# recréerait un compteur aveugle à une forme légitime.
 cv_publies=0
-[[ ! -f $public/assets/cv/cv-fr.pdf || ! -f $public/assets/cv/cv-en.pdf ]] || cv_publies=1
+[[ ! -f $public/cv/cv-fr.pdf || ! -f $public/cv/cv-en.pdf ]] || cv_publies=1
 # Le comptage passe par une variable, jamais par « shell_grep … | wc -l » : un « exit » en tête de
 # pipeline ne quitte que son sous-shell, et un répertoire illisible se compterait pour zéro lien
 # (constat de la première revue de plage, 21/09/2026).
-shell_grep_into fichiers_cv -rlE 'href="?/assets/cv/' "$public" --include='*.html'
+shell_grep_into fichiers_cv -rlE 'href="?/cv/cv-(fr|en)\.pdf([?#]|"|[[:space:]]|>)' "$public" --include='*.html'
 liens_cv=0
 [[ -z $fichiers_cv ]] || liens_cv=$(wc -l <<< "$fichiers_cv")
 if ((cv_publies == 1 && liens_cv == 0)); then
-  signaler "assets/cv/" "C12 : les deux CV sont publiés mais aucune page n'y mène (AD-21)"
+  signaler "cv/" "C12 : les deux CV sont publiés mais aucune page n'y mène (AD-21)"
 elif ((cv_publies == 0 && liens_cv > 0)); then
-  signaler "assets/cv/" "C12 : $liens_cv page(s) mènent à un CV alors que les deux PDF ne sont pas publiés (AD-21)"
+  signaler "cv/" "C12 : $liens_cv page(s) mènent à un CV alors que les deux PDF ne sont pas publiés (AD-21)"
 fi
 
 source_url=""

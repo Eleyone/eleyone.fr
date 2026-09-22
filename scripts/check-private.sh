@@ -87,20 +87,31 @@ status=0
 #
 # Le coût est un fichier vide quand il n'y a ni image ni PDF à lire. C'est le prix de n'avoir
 # plus rien à compter.
-blob_temporaire=$(mktemp) || { echo "check-private: fichier temporaire impossible." >&2; exit 2; }
-nettoyer() {
-  rm -f "$blob_temporaire"
-  [[ -z $patterns ]] || rm -f "$patterns" "$patterns_text"
-}
+#
+# **Cinquième écriture** (constat B1 de la rétrospective de l'epic 7), et la quatrième fuyait
+# encore : le nettoyage lisait « $patterns », une variable qui porte **deux sens** — le chemin du
+# fichier, et « la liste contient-elle au moins un motif ». La vider pour dire « aucun motif »
+# effaçait du même coup l'adresse du fichier à supprimer, et deux temporaires restaient à chaque
+# exécution. Mesuré, sur le poste comme en mode pre-receive.
+#
+# La parade n'est pas une condition de plus : c'est de séparer les deux sens. « temporaires » ne
+# sert qu'au nettoyage et n'est jamais vidé ; toute variable qui désigne un fichier peut être
+# réaffectée ou effacée sans rien emporter. Le piège tenait au cumul, pas à l'oubli.
+temporaires=()
+nettoyer() { ((${#temporaires[@]} == 0)) || rm -f "${temporaires[@]}"; }
 trap nettoyer EXIT
+blob_temporaire=$(mktemp) || { echo "check-private: fichier temporaire impossible." >&2; exit 2; }
+temporaires+=("$blob_temporaire")
 sep=$'\001' # séparateur des champs de git grep -z : absent des noms de fichier, contrairement à la tabulation
 
 fail() { printf 'check-private: %b\n' "$*" >&2; status=1; }
 
 patterns=""
 if [[ -f $patterns_file ]]; then
-  patterns=$(mktemp)
-  patterns_text=$(mktemp)
+  patterns=$(mktemp) || { echo "check-private: fichier temporaire impossible." >&2; exit 2; }
+  temporaires+=("$patterns")
+  patterns_text=$(mktemp) || { echo "check-private: fichier temporaire impossible." >&2; exit 2; }
+  temporaires+=("$patterns_text")
   # "numéro de ligne:motif", pour citer un motif par son numéro sans l'afficher
   rc=0
   grep -nvE '^[[:space:]]*(#|$)' "$patterns_file" > "$patterns" 2>/dev/null || rc=$?

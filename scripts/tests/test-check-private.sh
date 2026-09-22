@@ -154,6 +154,53 @@ case_pre_receive_liste_sans_motif() {
   assert_contains "aucun motif dans la liste des motifs" "$err" "cause retransmise"
 }
 
+# Le garde-fou tourne sur la forge : ce qu'il laisse derrière lui s'y accumule. Ces deux cas
+# comptent le disque, dans un TMPDIR **qui n'appartient qu'au cas** — « ${TMPDIR:-/tmp} » est
+# partagé avec le reste de la machine, et y compter reviendrait à supposer son environnement
+# (piège connu de docs/procedures/shell-scripts.md). Tout ce qui s'y trouve vient du garde-fou.
+bare_with_hook_tmpdir() { # $1 = liste des motifs, $2 = TMPDIR à imposer au hook
+  git init -q --bare "$work/nu.git"
+  git -C "$work/nu.git" config core.hooksPath "$work/nu.git/hooks"
+  printf "#!/bin/sh\nTMPDIR='%s' PRIVATE_PATTERNS_FILE='%s' exec bash '%s' pre-receive\n" \
+    "$2" "$1" "$root/scripts/check-private.sh" > "$work/nu.git/hooks/pre-receive"
+  chmod +x "$work/nu.git/hooks/pre-receive"
+  new_repo
+  git -C "$work/depot" remote add origin "$work/nu.git"
+}
+
+case_pre_receive_liste_sans_motif_ne_laisse_rien() {
+  # Le chemin qui fuyait. « patterns » désignait le fichier temporaire **et** signalait « la liste
+  # porte-t-elle un motif » ; la vider pour dire « aucun motif » effaçait l'adresse du fichier à
+  # supprimer, et deux temporaires restaient à chaque push refusé (constat B1, rétrospective de
+  # l'epic 7). Le cas voisin, « liste sans motif », exerçait déjà ce chemin — sans regarder le
+  # disque. Le cas des quatre commits regardait le disque — sur le chemin nominal. Voici le
+  # croisement qui manquait aux deux.
+  local tmp=$work/tmp-du-hook
+  rm -rf "$tmp"; mkdir -p "$tmp"
+  printf '# commentaire\n\n   \n' > "$work/vide.txt"
+  bare_with_hook_tmpdir "$work/vide.txt" "$tmp"
+  printf 'rien\n' > "$work/depot/a.txt"
+  commit_all "essai" > /dev/null
+  refused_push "liste sans motif"
+  assert_eq 0 "$(find "$tmp" -mindepth 1 | wc -l)" \
+    "le garde-fou ne laisse aucun fichier temporaire quand la liste ne porte aucun motif"
+}
+
+case_pre_receive_push_admis_ne_laisse_rien() {
+  # La contre-épreuve, sur le chemin nominal : un garde-fou qui ne créerait jamais de temporaire
+  # passerait sinon pour un garde-fou qui nettoie bien.
+  local tmp=$work/tmp-du-hook
+  rm -rf "$tmp"; mkdir -p "$tmp"
+  motifs
+  bare_with_hook_tmpdir "$work/motifs.txt" "$tmp"
+  printf 'rien\n' > "$work/depot/a.txt"
+  commit_all "essai" > /dev/null
+  push_branch
+  assert_eq 0 "$rc" "le push propre est admis (messages : $err)"
+  assert_eq 0 "$(find "$tmp" -mindepth 1 | wc -l)" \
+    "le garde-fou ne laisse aucun fichier temporaire après un push admis"
+}
+
 # Un commit de base admis, puis chaque ajout interdit repart de cette base.
 base_pushed() {
   motifs

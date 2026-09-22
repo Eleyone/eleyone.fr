@@ -174,25 +174,61 @@ case_links_lien_externe_ignore() {
   assert_eq 0 "$rc" "les liens externes et mailto sortent du périmètre (messages : $err)"
 }
 
+# Les fixtures écrivent sous « /cv/ », **là où Hugo publie réellement** une ressource de
+# « assets/cv/ ». Elles écrivaient sous « /assets/cv/ », comme la clause qu'elles vérifiaient : les
+# deux se trompaient du même côté, les cas passaient au vert, et le contrôle ne pouvait rien voir
+# sur le vrai site (constat B2, rétrospective de l'epic 7 — point 16 d'AGENTS.md).
 case_links_cv_incoherents() {
   site; config
-  sed -i 's#<h1>Accueil</h1>#<h1>Accueil</h1><p><a href="/assets/cv/cv-fr.pdf">CV</a></p>#' "$work/public/index.html"
+  sed -i 's#<h1>Accueil</h1>#<h1>Accueil</h1><p><a href="/cv/cv-fr.pdf">CV</a></p>#' "$work/public/index.html"
   liens
   assert_eq 1 "$rc" "un lien de CV sans les deux PDF fait échouer"
   assert_contains "mènent à un CV alors que les deux PDF ne sont pas publiés" "$err" "le signalement renvoie à AD-21"
-  mkdir -p "$work/public/assets/cv"
-  : > "$work/public/assets/cv/cv-fr.pdf"; : > "$work/public/assets/cv/cv-en.pdf"
+  mkdir -p "$work/public/cv"
+  : > "$work/public/cv/cv-fr.pdf"; : > "$work/public/cv/cv-en.pdf"
   liens
   assert_eq 0 "$rc" "avec les deux PDF publiés, le lien passe (messages : $err)"
 }
 
 case_links_cv_publies_sans_lien() {
   site; config
-  mkdir -p "$work/public/assets/cv"
-  : > "$work/public/assets/cv/cv-fr.pdf"; : > "$work/public/assets/cv/cv-en.pdf"
+  mkdir -p "$work/public/cv"
+  : > "$work/public/cv/cv-fr.pdf"; : > "$work/public/cv/cv-en.pdf"
   liens
   assert_eq 1 "$rc" "deux CV publiés sans lien font échouer"
   assert_contains "aucune page n'y mène" "$err" "le signalement le dit"
+}
+
+case_links_cv_html_minifie() {
+  # Le rendu de production est **minifié** : Hugo y écrit « href=/cv/cv-fr.pdf », sans guillemets.
+  # Une fixture qui n'écrit que la forme guillemetée laisse passer un motif qui exige le guillemet
+  # fermant — ce qui est arrivé au premier jet du correctif de B2, vu en mesurant « public/ » et
+  # non en relisant. La fixture déclare donc ce que la vraie page déclare (point 16 d'AGENTS.md).
+  site; config
+  sed -i 's#<h1>Accueil</h1>#<h1>Accueil</h1><p><a href=/cv/cv-fr.pdf type=application/pdf>CV</a></p>#' \
+    "$work/public/index.html"
+  liens
+  assert_eq 1 "$rc" "un lien de CV non guillemeté sans les deux PDF fait échouer"
+  assert_contains "mènent à un CV alors que les deux PDF ne sont pas publiés" "$err" "la forme minifiée est vue"
+  mkdir -p "$work/public/cv"
+  : > "$work/public/cv/cv-fr.pdf"; : > "$work/public/cv/cv-en.pdf"
+  liens
+  assert_eq 0 "$rc" "avec les deux PDF publiés, le lien minifié passe (messages : $err)"
+}
+
+case_links_cv_le_chemin_publie_et_non_la_source() {
+  # Le cas qui manquait, et sans lequel les deux précédents passaient au vert sur un contrôle
+  # inerte : une page qui mène au **chemin source** « /assets/cv/ » n'est pas un lien de CV
+  # valide, et deux PDF déposés là ne sont pas des PDF publiés. Si la clause reprend le chemin
+  # source, ce cas la rattrape.
+  site; config
+  mkdir -p "$work/public/assets/cv"
+  : > "$work/public/assets/cv/cv-fr.pdf"; : > "$work/public/assets/cv/cv-en.pdf"
+  mkdir -p "$work/public/cv"
+  : > "$work/public/cv/cv-fr.pdf"; : > "$work/public/cv/cv-en.pdf"
+  liens
+  assert_eq 1 "$rc" "deux CV publiés sans lien font échouer, même si le dossier source traîne"
+  assert_contains "aucune page n'y mène" "$err" "c'est bien la clause des CV qui parle"
 }
 
 case_links_depot_sans_lien() {
