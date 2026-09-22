@@ -130,6 +130,44 @@ Le hook exécute sa propre copie du script : la story 1.5 l'a étendu, la copie 
 2. `git add -A` ne fabrique pas le commit interdit, `.gitignore` couvrant déjà `docs/private/` et `.env` : il faut `git add -f` ;
 3. **mes consignes demandaient un motif réel dans le message de commit**, alors que la procédure impose une ligne factice, jamais un motif réel. C'était une erreur de ma part : le miroir publie à chaque push, donc un hook qui aurait manqué son refus aurait rendu le motif public et accessible par son SHA. L'agent a limité le risque (vérification locale hors forge d'abord, essais 1 et 1 bis passés avant, clone et branche détruits ensuite) et le motif n'a jamais été accepté. La procédure décrit désormais l'essai de message avec une ligne factice, comme l'essai 2.
 
+### Redéploiement après la story 5.4 (21/09/2026)
+
+La story 5.4 a fait entrer C20 dans le hook : `check-private.sh` charge désormais `scripts/lib/image.sh`, et l'interdiction des extensions d'images est levée sous `assets/`. Trois fichiers copiés, dont le sous-dossier `lib/` pour la première fois. Gitea 1.27.3, image Docker normale.
+
+Consigné après coup, le 22/09/2026, à partir du compte rendu de l'agent du homelab transmis par Arnaud : les empreintes et l'essai 1 sont attestés, le détail des autres essais ne l'est pas et n'est donc pas reproduit ici.
+
+- Copie du serveur remplacée au commit `600e9e5`, tête de `dev` : les **trois empreintes sha256** (garde-fou, `lib/image.sh`, lanceur) identiques à celles du dépôt.
+- Droits finaux conformes à la procédure ; un seul dépôt nu porte `check-private`.
+- Essai 1 (`docs/private/`) : refusé, commit et chemin nommés.
+
+### Redéploiement après la rétrospective de l'epic 5 (22/09/2026)
+
+Les trois actions bloquantes de la rétrospective (PR n° 74) et la factorisation de la liste d'extensions (PR n° 75) ont modifié `check-private.sh` et `lib/image.sh` ; le lanceur, inchangé, n'a pas été réextrait, seulement vérifié. Gitea 1.27.3, image Docker normale.
+
+**Ce que ce redéploiement fermait.** Le garde-fou listait les chemins avec les réglages git par défaut, qui citent et échappent en octal tout chemin non-ASCII : une image nommée `café.webp` était listée `"assets/images/caf\303\251.webp"`, les motifs de chemin ne collaient plus, et l'image **n'était même pas sélectionnée pour C20** — elle passait avec ses métadonnées. Tant que la copie du serveur n'était pas remplacée, le trou restait ouvert du côté qui fait autorité, puisque le miroir public pousse depuis la forge.
+
+- Copie du serveur remplacée au commit `34138c3` : trois empreintes sha256 identiques à celles du dépôt, y compris celle du lanceur non réextrait.
+- Liste des motifs **non réextraite et jamais ouverte** : elle n'avait pas changé.
+
+| Essai | Opération | Résultat |
+|---|---|---|
+| 1 | push d'un fichier sous `docs/private/`, sous `docs/context/`, d'un `.env`, d'un PDF sous `assets/cv/` | refusé à chaque fois, commit et chemin nommés |
+| 3 ter | fichier anodin dans un dossier nommé d'après la ligne factice | refusé : « chemin qui reprend un motif dans `<commit>` (chemin masqué) », puis un numéro de ligne de motif ; ni le motif ni le chemin affichés |
+| C20-a | image porteuse de métadonnées sous `assets/`, nom ASCII | refusé : « C20 : métadonnées dans une image de `<commit>` : `assets/images/simple.webp` (Exif VP8X) » |
+| C20-b | **la même image sous un nom non-ASCII** | refusé, même message, chemin affiché en clair (`café été.webp`, pas `caf\303\251`) |
+| C20-b | rejoué après le `chmod 0700` sur `lib/` | refusé à l'identique : le garde-fou charge encore `image.sh` à travers le dossier resserré |
+
+C20-a et C20-b portent la **même charge utile** et ne diffèrent que par le nom du fichier : C20-a passait déjà avant le correctif et sert de témoin, C20-b est l'essai qui échouait. Témoin relevé par l'agent du homelab : `git show --stat`, dans son clone, affichait encore le chemin échappé — c'est donc bien le hook qui force `core.quotePath=false`, et non un hasard d'encodage.
+
+Le rejeu de C20-b après le changement de droits n'était pas demandé : un `lib/` devenu illisible aurait fait échouer le hook d'une façon qui ressemble à un refus, et rien n'aurait distingué le contrôle de la panne.
+
+**Deux défauts de la procédure, relevés à cette occasion, tous deux corrigés dans `docs/procedures/gitea-pre-receive-hook.md` :**
+
+1. relevé par l'agent du homelab : `mkdir -p $D/lib && umask 077 && …` applique l'umask **après** le `mkdir`, donc `lib/` naissait en `0755` quand l'étape 4 annonçait `drwx------`. Rien n'était exposé — le parent est en `0700` et les fichiers en `0600` — mais l'attendu écrit était faux, et le défaut serait revenu à chaque installation neuve. La procédure pose désormais un `chmod 0700` explicite, et l'attendu du `ls -l` nomme `lib/`.
+2. relevé à la lecture du compte rendu : la procédure disait de garder l'ancienne copie du script le temps des essais et **ne disait jamais de la supprimer ensuite**. Deux copies du 21/09 étaient encore là le 22. La procédure demande maintenant leur suppression une fois les essais verts, et sa mention dans le compte rendu.
+
+**Un troisième point, qui n'appartenait à personne.** La ligne factice des essais 2, 3 bis, 3 ter et 5 est posée par Arnaud et retirée par Arnaud ; ni lui ni l'agent ne la voit dans son propre bilan, et elle est restée dans la liste du serveur après les essais. Inoffensive — un motif factice ne refuse que ce qu'on pousse exprès — mais la liste du serveur diverge alors de celle du dépôt privé, et cet écart ne se remarque qu'à la prochaine extraction. La section « Essayer » impose désormais que le compte rendu se termine par l'état de la liste, taille en octets à l'appui, et donne la commande qui retire la ligne sans l'afficher.
+
 ## Revue du code
 
 ### 16/09/2026 — `3d72ac0` — `gemini-3.1-pro-high` — verdict `pass`

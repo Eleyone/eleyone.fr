@@ -46,12 +46,15 @@ Variables : `C=<conteneur>`, `R=/data/git/repositories/eleyone/eleyone.fr.git`, 
    docker exec -u git "$C" sh -c "mkdir -p $D && chmod 0700 $D"
    docker exec -u git "$C" sh -c "umask 077 && git -C $P show main:forbidden-patterns.txt > $D/forbidden-patterns.txt"
    docker exec -u git "$C" sh -c "umask 077 && git -C $R show $COMMIT:scripts/check-private.sh > $D/check-private.sh"
-   docker exec -u git "$C" sh -c "mkdir -p $D/lib && umask 077 && git -C $R show $COMMIT:scripts/lib/image.sh > $D/lib/image.sh"
+   docker exec -u git "$C" sh -c "mkdir -p $D/lib && chmod 0700 $D/lib"
+   docker exec -u git "$C" sh -c "umask 077 && git -C $R show $COMMIT:scripts/lib/image.sh > $D/lib/image.sh"
    docker exec -u git "$C" sha256sum $D/check-private.sh $D/lib/image.sh
    docker exec -u git "$C" sh -c "test -r $D/forbidden-patterns.txt && test -s $D/forbidden-patterns.txt && echo 'liste lisible par git, non vide'"
    ```
 
    Attendu : les empreintes de `scripts/check-private.sh` et de `scripts/lib/image.sh` au commit installé (`git show $COMMIT:<chemin> | sha256sum` sur le poste), puis « liste lisible par git, non vide ». Sinon, s'arrêter sans poser le hook.
+
+   Le `chmod 0700` sur `lib/` est explicite parce qu'un `umask` posé dans la même commande ne s'appliquerait qu'aux créations qui le suivent : `mkdir -p $D/lib && umask 077` laissait le dossier en `0755` alors que l'étape 4 annonçait `drwx------` (constaté par l'agent du homelab au redéploiement du 22/09/2026).
 
    **Le sous-dossier `lib/` est obligatoire depuis la story 5.4** : `check-private.sh` y charge `image.sh`, qui porte C20. Le garde-fou refuse de s'exécuter sans elle, et le lanceur refuse le push en la nommant — un contrôle qui s'ignorerait en silence ne garderait rien. Le chemin relatif est le même dans le dépôt et sur la forge, pour que le script n'ait pas à deviner où il tourne.
 
@@ -68,10 +71,10 @@ Variables : `C=<conteneur>`, `R=/data/git/repositories/eleyone/eleyone.fr.git`, 
 
    ```bash
    docker exec -u git "$C" sh -c "mv $H/check-private.tmp $H/check-private && chmod 0755 $H/check-private"
-   docker exec -u git "$C" ls -l $D $H
+   docker exec -u git "$C" ls -l $D $D/lib $H
    ```
 
-   Attendu : `check-private.sh` et `forbidden-patterns.txt` en `-rw-------`, propriétaire `git` ; `check-private` en `-rwxr-xr-x`, à côté du hook `gitea`.
+   Attendu : `check-private.sh` et `forbidden-patterns.txt` en `-rw-------`, propriétaire `git` ; le dossier `lib` en `drwx------` et `lib/image.sh` en `-rw-------` ; `check-private` en `-rwxr-xr-x`, à côté du hook `gitea`.
 
 5. **Seul le dépôt du site a le hook**, sans lister de nom de dépôt :
 
@@ -104,9 +107,18 @@ Trois règles qu'un essai rate sans elles (constatées le 16/09/2026, au redépl
 7. **Édition des hooks** : Arnaud ouvre les réglages du dépôt dans l'interface. Attendu : aucune page d'édition des hooks.
 8. **Dépôt privé** : Arnaud vérifie que le dossier `hooks/pre-receive.d/` du dépôt nu privé ne contient que le hook `gitea`.
 
+**Le compte rendu se termine par l'état de la liste**, taille en octets à l'appui : la ligne factice des essais 2, 3 bis, 3 ter et 5 est posée par Arnaud et retirée par Arnaud, donc aucun des deux ne la voit dans son propre bilan et elle reste en place. Elle y est restée après le redéploiement du 22/09/2026. Elle est inoffensive — un motif factice ne refuse que ce qu'on pousse exprès — mais la liste du serveur diverge alors de celle du dépôt privé, et cet écart-là ne se remarque qu'à la prochaine extraction. La retirer sans l'afficher :
+
+```bash
+docker exec -u git "$C" sh -c "cd $D && umask 077 && grep -vxF '<ligne factice>' forbidden-patterns.txt > .liste.tmp && test -s .liste.tmp && mv .liste.tmp forbidden-patterns.txt"
+docker exec -u git "$C" sh -c "wc -c < $D/forbidden-patterns.txt"
+```
+
+Le `test -s` avant le `mv` est là pour qu'une liste vidée par accident ne remplace jamais la vraie : une liste vide refuse tous les pushs, ce qui est bruyant mais sûr, alors qu'une liste perdue ne se retrouve qu'en la réextrayant. Le `wc -c` compte sans afficher, avant et après.
+
 ## Entretenir
 
-- **À chaque modification de `scripts/check-private.sh`, de `scripts/lib/image.sh` ou de `scripts/gitea/pre-receive-check-private`** fusionnée dans `dev` : réextraire le fichier au nouveau commit (étapes 2 ou 3 et 4 d'« Installer », avec vérification d'empreinte : le sha256 de la copie du serveur doit être celui du fichier dans `dev`), puis refaire les essais 1 et 3, plus l'essai de chaque surface que la modification touche (3 bis pour les messages de commit, 3 ter pour les chemins). Garder l'ancienne copie du script le temps des essais : elle permet de revenir en arrière sans attendre un correctif.
+- **À chaque modification de `scripts/check-private.sh`, de `scripts/lib/image.sh` ou de `scripts/gitea/pre-receive-check-private`** fusionnée dans `dev` : réextraire le fichier au nouveau commit (étapes 2 ou 3 et 4 d'« Installer », avec vérification d'empreinte : le sha256 de la copie du serveur doit être celui du fichier dans `dev`), puis refaire les essais 1 et 3, plus l'essai de chaque surface que la modification touche (3 bis pour les messages de commit, 3 ter pour les chemins). Garder l'ancienne copie du script le temps des essais : elle permet de revenir en arrière sans attendre un correctif. **La supprimer une fois tous les essais verts**, et le dire dans le compte rendu : deux copies laissées le 21/09/2026 étaient encore là le 22, et à la troisième mise à jour plus rien ne dit laquelle est laquelle.
 - **À chaque modification de la liste des motifs**, poussée sur `main` du dépôt privé : réextraire la liste (étape 2, deuxième commande), puis refaire l'essai 3. Tant que ce n'est pas fait, le serveur applique l'ancienne liste.
 - **À chaque mise à jour de Gitea ou régénération des hooks** : vérifier que `check-private` est toujours dans `hooks/pre-receive.d/`, puis refaire les essais 1 et 3. La régénération réécrit `pre-receive` et `pre-receive.d/gitea` sans supprimer les autres fichiers du dossier.
 
