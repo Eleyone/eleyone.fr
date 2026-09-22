@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-22-2026 22:30'
+last_updated: '09-22-2026 23:55'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -612,7 +612,7 @@ action_items:
       variables, dans scripts/checks/pdf.sh et scripts/check-private.sh (B1), avec
       un cas de test qui compte le disque sur le chemin liste sans motif"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-7-retro-2026-09-22.md"
   - id: "epic-7-retro-item-43-bloquant-faire-viser-cv-à-la-clause-cv-d"
     epic: 7
@@ -620,28 +620,28 @@ action_items:
       de test-links.sh, et ajouter le cas deux CV publiés aucun lien qui doit échouer
       sans le correctif"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-7-retro-2026-09-22.md"
   - id: "epic-7-retro-item-44-une-seule-liste-des-noms-de-cv-dans-scri"
     epic: 7
     action: "Une seule liste des noms de CV dans scripts/lib/pdf.sh, lue par C21,
       le garde-fou et links.sh (A1)"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-7-retro-2026-09-22.md"
   - id: "epic-7-retro-item-45-descendre-la-confrontation-aux-motifs-da"
     epic: 7
     action: "Descendre la confrontation aux motifs dans une écriture unique (A2),
       et fabriquer les PDF d essai depuis scripts/tests/lib.sh (A3)"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-7-retro-2026-09-22.md"
   - id: "epic-7-retro-item-46-retirer-le-sed-de-test-pdf-sh-les-cinq-c"
     epic: 7
     action: "Retirer le sed de test-pdf.sh : les cinq cas doivent exercer le garde-fou
       tel qu il est livré (A4)"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-7-retro-2026-09-22.md"
   - id: "epic-7-retro-item-47-corriger-le-paragraphe-contradictoire-de"
     epic: 7
@@ -649,7 +649,7 @@ action_items:
       préfixer C21 le message PDF du garde-fou (A6), compléter En cas d échec des
       deux refus PDF du lanceur"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-7-retro-2026-09-22.md"
   - id: "epic-7-retro-item-48-corriger-agents-md-sur-la-machine-de-dév"
     epic: 7
@@ -657,14 +657,14 @@ action_items:
       symbolique, Docker natif ; et passer au présent les trois phrases périmées de
       la spec de l epic 7 et le commentaire de site-footer.html (A9)"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-7-retro-2026-09-22.md"
   - id: "epic-7-retro-item-49-agents-md-écrire-la-convention-de-nommag"
     epic: 7
     action: "AGENTS.md : écrire la convention de nommage des branches, préfixe, numéro
       de story, libellé (A8)"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-7-retro-2026-09-22.md"
   - id: "epic-7-retro-item-50-agents-md-quand-une-revue-trouve-une-err"
     epic: 7
@@ -673,7 +673,7 @@ action_items:
       ; un constat sur une condition de déclenchement se traite en réénumérant tout
       ce qu elle laisse passer"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-7-retro-2026-09-22.md"
   - id: "epic-7-retro-item-51-agents-md-une-leçon-écrite-ne-se-reporte"
     epic: 7
@@ -681,12 +681,12 @@ action_items:
       jumeau ; quand une bibliothèque est écrite comme une autre, la symétrie se vérifie
       garde par garde (A1, A7)"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-7-retro-2026-09-22.md"
   - id: "epic-7-retro-item-52-deux-cas-de-test-pour-les-branches-aucun"
     epic: 7
     action: "Deux cas de test pour les branches aucune page et pdfinfo illisible de
       C21 (A10)"
     owner: "agent de développement"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-7-retro-2026-09-22.md"
