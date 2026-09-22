@@ -158,27 +158,27 @@ check_pdfs() { # $1 = libellé, $2 = révision (« --cached » pour l'index), $3
   local label=$1 rev=$2 listing=$3 fichiers chemin prc=0 blob manquant source extrait
   [[ -n $patterns ]] || return 0
   fichiers=$(printf '%s\n' "$listing" | grep -E -i "$pdf_paths") || prc=$?
-  ((prc <= 1)) || { fail "recherche des PDF impossible dans $label"; return 0; }
+  ((prc <= 1)) || { fail "C21 : recherche des PDF impossible dans $label"; return 0; }
   [[ -n $fichiers ]] || return 0
   if manquant=$(pdf_missing_tool); then
-    fail "$manquant absent (paquet poppler-utils) : un PDF de $label ne peut pas être lu"
+    fail "C21 : $manquant absent (paquet poppler-utils) : un PDF de $label ne peut pas être lu"
     return 0
   fi
   blob=$blob_temporaire
   while IFS= read -r chemin; do
     [[ -n $chemin ]] || continue
     if [[ $rev == --cached ]]; then
-      git cat-file blob ":$chemin" > "$blob" 2>/dev/null || { fail "lecture impossible d'un PDF de $label"; continue; }
+      git cat-file blob ":$chemin" > "$blob" 2>/dev/null || { fail "C21 : lecture impossible d'un PDF de $label"; continue; }
     else
-      git cat-file blob "$rev:$chemin" > "$blob" 2>/dev/null || { fail "lecture impossible d'un PDF de $label"; continue; }
+      git cat-file blob "$rev:$chemin" > "$blob" 2>/dev/null || { fail "C21 : lecture impossible d'un PDF de $label"; continue; }
     fi
-    pdf_has_header "$blob" || { fail "ce n'est pas un PDF dans $label : $chemin"; continue; }
+    pdf_has_header "$blob" || { fail "C21 : ce n'est pas un PDF dans $label : $chemin"; continue; }
     # Les trois sources, parce qu'un téléphone se cache plus souvent dans les métadonnées d'un
     # export que dans le texte que le lecteur voit (FR-38).
     for source in texte métadonnées XMP; do
       case $source in
-        texte) extrait=$(pdf_text "$blob") || { fail "pdftotext ne sait pas lire un PDF de $label : $chemin"; continue 2; } ;;
-        métadonnées) extrait=$(pdf_metadata "$blob") || { fail "pdfinfo ne sait pas lire un PDF de $label : $chemin"; continue 2; } ;;
+        texte) extrait=$(pdf_text "$blob") || { fail "C21 : pdftotext ne sait pas lire un PDF de $label : $chemin"; continue 2; } ;;
+        métadonnées) extrait=$(pdf_metadata "$blob") || { fail "C21 : pdfinfo ne sait pas lire un PDF de $label : $chemin"; continue 2; } ;;
         XMP) extrait=$(pdf_xmp "$blob") ;;
       esac
       check_extract "$label" "$chemin" "$source" "$extrait"
@@ -192,31 +192,31 @@ check_extract() { # $1 = libellé, $2 = chemin, $3 = source, $4 = extrait
   local label=$1 chemin=$2 source=$3 extrait=$4 rc=0 entry lignes="" trouve
   [[ -n $extrait ]] || return 0
   printf '%s\n' "$extrait" | grep -q -i -F -f "$patterns_text" || rc=$?
-  ((rc <= 1)) || { fail "recherche des motifs impossible dans $source d'un PDF de $label"; return 0; }
+  ((rc <= 1)) || { fail "C21 : recherche des motifs impossible dans $source d'un PDF de $label"; return 0; }
   ((rc == 0)) || return 0
   while IFS= read -r entry; do
     trouve=0
     printf '%s\n' "$extrait" | grep -q -i -F -e "${entry#*:}" || trouve=$?
-    ((trouve <= 1)) || { fail "recherche d'un motif impossible dans $source d'un PDF de $label"; return 0; }
+    ((trouve <= 1)) || { fail "C21 : recherche d'un motif impossible dans $source d'un PDF de $label"; return 0; }
     ((trouve == 0)) && lignes+=" ${entry%%:*}"
   done < "$patterns"
-  fail "contenu privé dans $source d'un PDF de $label (contenu masqué) : $chemin ; motif ligne${lignes}"
+  fail "C21 : contenu privé dans $source d'un PDF de $label (contenu masqué) : $chemin ; motif ligne${lignes}"
 }
 
 check_images() { # $1 = libellé, $2 = révision (« --cached » pour l'index), $3 = liste des chemins
   local label=$1 rev=$2 listing=$3 images chemin marqueurs prc=0 blob
   images=$(printf '%s\n' "$listing" | grep -E -i "$image_paths") || prc=$?
-  ((prc <= 1)) || { fail "recherche des images impossible dans $label"; return 0; }
+  ((prc <= 1)) || { fail "C20 : recherche des images impossible dans $label"; return 0; }
   [[ -n $images ]] || return 0
   blob=$blob_temporaire
   while IFS= read -r chemin; do
     [[ -n $chemin ]] || continue
     if [[ $rev == --cached ]]; then
-      git cat-file blob ":$chemin" > "$blob" 2>/dev/null || { fail "lecture impossible d'une image de $label"; continue; }
+      git cat-file blob ":$chemin" > "$blob" 2>/dev/null || { fail "C20 : lecture impossible d'une image de $label"; continue; }
     else
-      git cat-file blob "$rev:$chemin" > "$blob" 2>/dev/null || { fail "lecture impossible d'une image de $label"; continue; }
+      git cat-file blob "$rev:$chemin" > "$blob" 2>/dev/null || { fail "C20 : lecture impossible d'une image de $label"; continue; }
     fi
-    marqueurs=$(image_metadata_markers "$blob") || { fail "lecture impossible d'une image de $label"; continue; }
+    marqueurs=$(image_metadata_markers "$blob") || { fail "C20 : lecture impossible d'une image de $label"; continue; }
     # Le chemin est affiché, pas le contenu : un marqueur de métadonnée n'est pas un motif privé,
     # et l'auteur doit savoir quel fichier reprendre.
     [[ -z $marqueurs ]] \

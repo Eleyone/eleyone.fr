@@ -154,7 +154,7 @@ case_cv_pdf_avec_un_motif_refuse() {
   ecrire_pdf "$work/depot/assets/cv/cv-fr.pdf" motif-interdit-essai
   ecrire_pdf "$work/depot/assets/cv/cv-en.pdf"
   commit_all "ajout des CV" > /dev/null
-  refused "CV avec un motif dans les métadonnées" "contenu privé dans métadonnées d'un PDF"
+  refused "CV avec un motif dans les métadonnées" "C21 : contenu privé dans métadonnées d'un PDF"
   assert_contains "assets/cv/cv-fr.pdf" "$err" "le fichier fautif est nommé"
   # Le PDF fabriqué ici est du texte, donc « git grep -I » le voit aussi : ses deux signalements
   # se superposent. Sur un vrai PDF compressé, git l'ignorerait et seule la lecture par poppler

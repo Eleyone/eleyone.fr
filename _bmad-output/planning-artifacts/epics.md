@@ -2387,7 +2387,7 @@ afin qu'un PDF contenant un téléphone ou une ville de résidence soit refusé 
 **Quand** un fichier de `assets/cv/` est indexé
 **Alors** il lance **`pdf.sh` d'abord**, puis `check-private.sh staged` (arbitrage d'Arnaud, 22/09/2026). Les deux refusent aujourd'hui, et l'ordre décide de ce qu'on lit en premier : le jour où l'interdiction de chemin tombera, un PDF qui contient vraiment un téléphone doit se voir reprocher son téléphone, pas son chemin.
 
-- [ ] `assets/cv/*.pdf` reste un chemin interdit à l'issue de la story (AD-21) : sa levée est liée à C21 **dans le hook pre-receive**, qui vient plus tard.
+- [ ] `assets/cv/*.pdf` restait un chemin interdit à l'issue de la story (AD-21) ; la story 7.3 a levé l'interdiction pour les deux seuls noms qu'AD-21 nomme, en même temps qu'elle a fait entrer C21 dans le hook pre-receive.
 - [ ] Le pre-commit se démontre sur un **dépôt jetable** où la règle de chemin est retirée, comme les essais du hook pre-receive. Aucun PDF n'est commité.
 - [ ] `poppler-utils` entre dans les prérequis du poste (`AGENTS.md`).
 
@@ -2400,7 +2400,7 @@ afin d'en garder un sans chercher.
 **Couvre :** FR-38, UJ-1 · AD-21 · C12, C21 · UX-DR6, UX-DR14
 **Dépendances :** 5.1, 7.1
 **Bloquée par :** —
-**Prérequis de contenu :** — (démonstration avec des PDF de test non commités)
+**Prérequis de contenu :** — (démonstration avec des PDF de test non commités ; les CV réels sont entrés à la story 7.4)
 **Opération manuelle (Arnaud) :** non
 
 **Critères d'acceptation :**
@@ -2423,7 +2423,7 @@ afin d'en garder un sans chercher.
 **Alors** le partial n'émet rien : ni ligne, ni étiquette, ni mention. C'est la règle « ensemble ou rien » d'AD-21, la même que C21 applique aux fichiers : la story ne redéfinit pas ce contrôle, elle en est le pendant visible — d'où C21 dans la ligne « Couvre », sans critère propre.
 
 - [ ] Aucun lien vers un CV dans l'en-tête ; C12 passe dans les trois cas.
-- [ ] Les PDF d'essai ne sont pas commités ; `assets/cv/` reste vide dans l'historique.
+- [ ] Les PDF d'essai ne sont pas commités : `assets/cv/` est resté vide dans l'historique jusqu'à la story 7.4, qui y fait entrer les deux CV réels.
 
 ### Story 7.3 : PDF extraction in pre-receive hook
 

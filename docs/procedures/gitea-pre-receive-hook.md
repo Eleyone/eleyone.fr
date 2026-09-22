@@ -158,7 +158,7 @@ L'essai est sûr parce que le PDF est **fabriqué** et le motif **factice** : si
    ecrire_pdf assets/cv/cv-en.pdf
    ```
 
-3. Il pousse les deux sur une branche jetable. Attendu : **refusé**, message « contenu privé dans métadonnées d'un PDF de `<commit>` (contenu masqué) : assets/cv/cv-fr.pdf ; motif ligne N », sans le motif.
+3. Il pousse les deux sur une branche jetable. Attendu : **refusé**, message « C21 : contenu privé dans métadonnées d'un PDF de `<commit>` (contenu masqué) : assets/cv/cv-fr.pdf ; motif ligne N », sans le motif.
 4. Contre-épreuve, depuis `origin/dev` frais : les deux PDF **sans** motif. Attendu : **admis**, branche supprimée ensuite. Sans elle, un hook qui refuse tout passerait pour un hook qui marche.
 5. Un PDF nommé autrement, `assets/cv/cv-ancien.pdf`. Attendu : **refusé pour son chemin** — l'interdiction n'est levée que pour les deux noms d'AD-21.
 6. Arnaud retire la ligne factice.
@@ -185,12 +185,14 @@ Le `test -s` avant le `mv` est là pour qu'une liste vidée par accident ne remp
 
 Cinq surfaces : le contenu des fichiers, leur chemin, le chemin confronté aux motifs, le **message des commits** (tous les commits nouveaux de la plage poussée, pas seulement la tête), et depuis la story 7.3 le **texte, les métadonnées et le XMP des CV PDF**, que `git grep -I` ne sait pas lire.
 
-**L'interdiction de chemin des CV est levée**, et seulement pour `assets/cv/cv-fr.pdf` et `assets/cv/cv-en.pdf`, les deux noms qu'AD-21 connaît. Tout autre PDF sous `assets/cv/` reste refusé : ce que le hook ne sait pas nommer, il le refuse. **Celle des extensions d'images est levée sous `assets/` depuis la story 5.4** : C20 y lit les métadonnées de chaque image avant publication (AD-19, AD-12). Ailleurs elle tient — C20 sait dire qu'une image ne porte pas de données de prise de vue, pas ce qu'elle montre. Trois exceptions nommées : `.env.example`, `design/<branche>/screenshots/` et les images d'`assets/`. Aucune alerte n'affiche le motif, le contenu trouvé, le chemin fautif d'un motif ni le message de commit.
+**L'interdiction de chemin des CV est levée**, et seulement pour `assets/cv/cv-fr.pdf` et `assets/cv/cv-en.pdf`, les deux noms qu'AD-21 connaît. Tout autre PDF sous `assets/cv/` reste refusé : ce que le hook ne sait pas nommer, il le refuse. **Celle des extensions d'images est levée sous `assets/` depuis la story 5.4** : C20 y lit les métadonnées de chaque image avant publication (AD-19, AD-12). Ailleurs elle tient — C20 sait dire qu'une image ne porte pas de données de prise de vue, pas ce qu'elle montre. **Quatre** exceptions nommées : `.env.example`, `design/<branche>/screenshots/`, les images d'`assets/` et les deux CV PDF ci-dessus. Aucune alerte n'affiche le motif, le contenu trouvé, le chemin fautif d'un motif ni le message de commit.
 
 ## En cas d'échec
 
 - **Un push propre est refusé avec « GITEA_CUSTOM non définie »** : Gitea ne transmet pas cette variable au hook dans cette installation. S'arrêter et décider avec Arnaud d'un autre moyen de trouver le dossier ; ne jamais écrire de chemin du serveur dans le dépôt.
 - **« bibliothèque de lecture d'images absente ou illisible »** : le sous-dossier `lib/` n'a pas été créé, ou `image.sh` n'a pas été extrait (étape 2). Le refuser est voulu : sans elle, C20 ne s'exécute pas.
+- **« bibliothèque de lecture des PDF absente ou illisible »** : même cause, pour `lib/pdf.sh` (story 7.3). Même raison de refuser : sans elle, le texte et les métadonnées d'un CV ne seraient lus par personne, et le miroir publierait dans la seconde.
+- **« pdftotext absent » ou « pdfinfo absent » (paquet `poppler-utils`)** : le conteneur tourne sur l'image officielle de Gitea et non sur l'image dérivée. Reconstruire `gitea-poppler:<version>` et recréer le conteneur (section « Image dérivée ») ; c'est le cas qu'une montée de version ramène si on l'oublie.
 - **« script du garde-fou absent ou illisible » ou « liste des motifs absente ou illisible »** : vérifier les copies, le propriétaire `git` et les droits (`docker exec -u git <conteneur> ls -l …`).
 - **Un push interdit est admis** : le hook ne s'exécute pas. Retirer tout de suite la branche admise de la forge, ne pas activer le miroir, et vérifier que `check-private` est exécutable et appartient à `git`.
 - **La fusion depuis l'interface est admise malgré le motif factice** : la story s'arrête et Arnaud décide ; le miroir reste désactivé.
