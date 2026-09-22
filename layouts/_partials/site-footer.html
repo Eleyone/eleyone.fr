@@ -1,21 +1,26 @@
 {{/*
   Pied de page (DESIGN.md § site-footer). Ne porte que ce qui existe, dans l'ordre prévu :
 
-  1. les liens vers les CV PDF, quand ils existeront (epic 7) ;
+  1. les liens vers les CV PDF, ensemble ou rien (story 7.2) ;
   2. « Mentions légales » · « Confidentialité » (epic 9), puis « Code source du site », affiché
      seulement si params.source_url est renseigné (FR-29, impact I-2 d'AD-3).
 
-  Aujourd'hui seule la dernière entrée existe. Une ligne absente n'est pas remplacée par un tiret
+  Aujourd'hui les CV n'existent pas encore dans le dépôt : leur partial n'émet rien, et seule la
+  dernière entrée s'affiche. Le pied de page est donc rendu dès qu'**une** de ses entrées existe,
+  et non plus seulement sur « source_url ». Une ligne absente n'est pas remplacée par un tiret
   ni par « à venir » : ce qui n'existe pas reste vide (DESIGN.md § Do's and Don'ts).
 
   Le pied de page entier disparaît quand il n'a rien à dire : un filet surmontant du vide n'apprend
   rien, et le HTML porterait un repère de navigation sans contenu.
 */}}
-{{ with .Site.Params.source_url }}
+{{- $cv := partial "cv-links.html" . -}}
+{{- $source := .Site.Params.source_url -}}
+{{- if or (trim $cv " \n\t") $source }}
   <footer class="site-footer">
     <div class="frame">
       <ul class="site-footer__list">
-        <li><a href="{{ . }}">{{ i18n "footer_source" }}</a></li>
+        {{ $cv }}
+        {{ with $source }}<li><a href="{{ . }}">{{ i18n "footer_source" }}</a></li>{{ end }}
       </ul>
     </div>
   </footer>

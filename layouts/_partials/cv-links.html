@@ -1,0 +1,40 @@
+{{/*
+  Liens vers les CV PDF (AD-21, FR-38, DESIGN.md § cv-links). **Ensemble ou rien** : si l'un des
+  deux fichiers manque, le partial n'émet rien — ni ligne, ni étiquette, ni « bientôt ». C'est la
+  même règle que C21 applique aux fichiers ; ce partial en est le pendant visible.
+
+  Le CV de la **langue de la page** vient en premier : c'est celui que le lecteur veut, et l'autre
+  reste à portée sans qu'il ait à changer de page.
+
+  Chaque libellé est **autonome** : lu seul par un lecteur d'écran, il dit le format, la langue du
+  fichier et son poids. Les deux langues emploient la même construction, « CV (PDF, langue, poids) »
+  (arbitrage d'Arnaud, 22/09/2026).
+
+  La cible vient de « .RelPermalink » de la ressource, jamais d'un chemin écrit à la main : Hugo
+  publie « assets/cv/cv-fr.pdf » à « /cv/cv-fr.pdf », et une ressource dérivée suivrait une empreinte
+  future sans qu'on y pense.
+
+  Le « with » porte sur l'obtention, pas sur le résultat d'une chaîne : « resources.Get … | … » sur
+  une ressource absente fait **paniquer** le build au lieu de rendre nil (constat de la story 5.1).
+
+  Paramètre : la page. Retour : les deux éléments de liste, ou rien.
+*/}}
+{{- $page := . -}}
+{{- $fr := resources.Get "cv/cv-fr.pdf" -}}
+{{- $en := resources.Get "cv/cv-en.pdf" -}}
+{{- if and $fr $en -}}
+  {{- $ordre := slice (dict "res" $fr "lang" "fr") (dict "res" $en "lang" "en") -}}
+  {{- if ne $page.Site.Language.Lang "fr" -}}
+    {{- $ordre = slice (dict "res" $en "lang" "en") (dict "res" $fr "lang" "fr") -}}
+  {{- end -}}
+  {{- range $ordre -}}
+    {{/* Ko entiers, jamais « 0 Ko » : un fichier de 405 octets s'annonce « 1 Ko ». Une seule unité,
+         C21 bornant déjà les fichiers à 500 Ko. */}}
+    {{- $ko := math.Max 1 (math.Round (div (len .res.Content) 1000.0)) -}}
+    <li class="cv-links__item">
+      <a href="{{ .res.RelPermalink }}" type="application/pdf">
+        {{- i18n "cv_pdf" (dict "Language" (i18n (printf "cv_language_%s" .lang)) "Size" $ko) -}}
+      </a>
+    </li>
+  {{- end -}}
+{{- end -}}

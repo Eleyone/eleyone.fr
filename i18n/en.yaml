@@ -56,3 +56,8 @@ via_label: "via {{ . }}"
 education_kind_education: Education
 education_kind_certification: Certification
 education_kind_language: Languages
+
+# Liens vers les CV PDF (AD-21, story 7.2).
+cv_pdf: "CV (PDF, {{ .Language }}, {{ .Size }} KB)"
+cv_language_fr: French
+cv_language_en: English

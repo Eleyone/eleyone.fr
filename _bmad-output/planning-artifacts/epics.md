@@ -2407,16 +2407,23 @@ afin d'en garder un sans chercher.
 
 **Étant donné** `_partials/cv-links.html` et les deux PDF de test en local
 **Quand** on construit le site
-**Alors** le pied de page de chaque page, accueil compris, porte deux liens (le CV de la langue de la page en premier), avec `type="application/pdf"`, la taille lue au build et le libellé i18n `cv_pdf`, vers `/cv/cv-fr.pdf` et `/cv/cv-en.pdf`.
+**Alors** le pied de page de chaque page, accueil compris, porte deux liens :
+
+- **le CV de la langue de la page en premier**, l'autre ensuite ;
+- chacun avec `type="application/pdf"` ;
+- chacun avec un **libellé autonome** — lu seul par un lecteur d'écran, il dit la langue du fichier et son poids — de la forme « CV (PDF, français, 312 Ko) » en FR et « CV (PDF, English, 298 KB) » en EN. Les deux langues emploient **la même construction**, harmonisée sur la forme anglaise (arbitrage d'Arnaud, 22/09/2026) ; `DESIGN.md` portait une forme française différente, corrigée dans la même PR ;
+- la cible venant de `.RelPermalink` de la ressource, jamais d'un chemin écrit à la main : Hugo publie `assets/cv/cv-fr.pdf` à `/cv/cv-fr.pdf` (vérifié), et une ressource dérivée suivrait une empreinte future sans qu'on y pense.
+
+**Étant donné** le poids lu au build (`len .Content`)
+**Quand** il est affiché
+**Alors** c'est un nombre entier de Ko (division par 1 000, arrondi), **jamais « 0 Ko »** — un fichier de 405 octets s'annonce « 1 Ko » —, séparé de son unité par une espace insécable. Une seule unité : C21 borne déjà les fichiers à 500 Ko, donc une branche « Mo » serait du code qu'aucun contenu n'atteint.
 
 **Étant donné** un seul PDF, puis aucun
 **Quand** on construit le site
-**Alors** le partial n'émet rien : ni ligne, ni étiquette, ni mention.
+**Alors** le partial n'émet rien : ni ligne, ni étiquette, ni mention. C'est la règle « ensemble ou rien » d'AD-21, la même que C21 applique aux fichiers : la story ne redéfinit pas ce contrôle, elle en est le pendant visible — d'où C21 dans la ligne « Couvre », sans critère propre.
 
 - [ ] Aucun lien vers un CV dans l'en-tête ; C12 passe dans les trois cas.
-
-**Questions à poser avant de commencer :**
-- Libellés `cv_pdf` (« à valider » dans `EXPERIENCE.md`) ?
+- [ ] Les PDF d'essai ne sont pas commités ; `assets/cv/` reste vide dans l'historique.
 
 ### Story 7.3 : PDF extraction in pre-receive hook
 

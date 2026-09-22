@@ -41,8 +41,16 @@ signaler() { checks_report "$1" "$2"; fail=1; }
 # La liste des motifs, sous la forme « numéro:motif », et les motifs seuls pour un premier passage.
 # Même variable que le garde-fou : PRIVATE_PATTERNS_FILE. Sans elle — GitHub, clone sans
 # docs/private/ — seules présence, en-tête, pages et taille s'appliquent, et le script le dit.
+# Le repli sur le chemin du dépôt est **volontaire** : sans lui, « scripts/check.sh » lancé sur le
+# poste ne confrontait rien, et se contentait de la forme alors que la liste était là, à deux pas
+# (constaté à la story 7.2, en lançant les contrôles avec les deux PDF en place). AD-21 veut la
+# confrontation « quand la liste est disponible » — sur le poste, elle l'est. Sur GitHub le fichier
+# n'existe pas, le repli ne trouve rien, et le script dit ce qu'il n'a pas vérifié.
+#
+# La racine vient de l'emplacement du script, pas de git : un contrôle tourne sans dossier .git.
 patterns="" patterns_text=""
-patterns_file=${PRIVATE_PATTERNS_FILE:-}
+racine_depot=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+patterns_file=${PRIVATE_PATTERNS_FILE:-$racine_depot/docs/private/forbidden-patterns.txt}
 if [[ -n $patterns_file && -f $patterns_file ]]; then
   patterns=$(mktemp) && patterns_text=$(mktemp) || checks_die "fichier temporaire impossible."
   trap 'rm -f "$patterns" "$patterns_text"' EXIT

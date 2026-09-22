@@ -39,9 +39,12 @@ liste() { # écrit une liste de motifs et rend son chemin
   printf '%s' "$work/motifs.txt"
 }
 
+# Le contrôle se replie sur « docs/private/forbidden-patterns.txt » du dépôt quand la variable
+# n'est pas posée : les cas passent donc toujours une valeur, et « aucune liste » vaut un chemin
+# inexistant, comme sur GitHub — jamais une valeur vide, qui ferait chercher la vraie liste.
 controle() { # $1 = chemin de la liste des motifs, vide pour aucune
-  rm -f "$work/sortie"
-  run env CHECK_CV_DIR="$work/cv" PRIVATE_PATTERNS_FILE="${1:-}" bash "$root/scripts/checks/pdf.sh"
+  run env CHECK_CV_DIR="$work/cv" PRIVATE_PATTERNS_FILE="${1:-$work/liste-absente.txt}" \
+    bash "$root/scripts/checks/pdf.sh"
 }
 
 vide() { rm -rf "$work/cv"; mkdir -p "$work/cv"; }
@@ -354,6 +357,20 @@ case_pdf_le_pre_commit_lit_lindex_et_non_larbre() {
   run env PRIVATE_PATTERNS_FILE="$depot/motifs.txt" git -C "$depot" commit -q -m "index sale, arbre propre"
   assert_eq 1 "$rc" "c est la version indexée qui est contrôlée, pas celle du disque"
   assert_contains "contenu privé dans les métadonnées" "$err" "C21 a lu l index"
+}
+
+case_pdf_repli_sur_la_liste_du_depot() {
+  # Sans variable, le contrôle doit trouver la liste du dépôt : « scripts/check.sh » ne la lui
+  # passe pas, et sans ce repli il se contentait de la forme alors que la liste était là
+  # (constaté à la story 7.2).
+  vide; pdf "$work/cv/cv-fr.pdf"; pdf "$work/cv/cv-en.pdf"
+  if [[ ! -f $root/docs/private/forbidden-patterns.txt ]]; then
+    skip_case "pas de docs/private/ dans ce clone"
+    return
+  fi
+  run env CHECK_CV_DIR="$work/cv" bash "$root/scripts/checks/pdf.sh"
+  assert_eq 0 "$rc" "deux CV propres passent (messages : $err)"
+  assert_contains "aucun motif privé" "$out" "la liste du dépôt a été trouvée et le contenu confronté"
 }
 
 run_case "$@"

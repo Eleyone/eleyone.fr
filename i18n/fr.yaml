@@ -58,3 +58,10 @@ via_label: "prestation {{ . }}"
 education_kind_education: Formation
 education_kind_certification: Certification
 education_kind_language: Langues
+
+# Liens vers les CV PDF (AD-21, story 7.2). Même construction dans les deux langues, harmonisée
+# sur la forme anglaise (arbitrage d'Arnaud du 22/09/2026). L'espace avant l'unité est insécable :
+# un poids ne se coupe pas en fin de ligne.
+cv_pdf: "CV (PDF, {{ .Language }}, {{ .Size }} Ko)"
+cv_language_fr: français
+cv_language_en: anglais

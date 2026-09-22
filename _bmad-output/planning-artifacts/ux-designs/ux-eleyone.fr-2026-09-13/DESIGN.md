@@ -613,7 +613,7 @@ Encart neutre qui ne résume pas un cas : bloc CV d'« À propos » et encart th
 
 Liens vers les CV PDF. Emplacements décidés par Arnaud le 13/09/2026 : **pied de page de toutes les pages, et en évidence sur « À propos »**, jamais dans l'en-tête.
 
-- Un lien par fichier, avec un texte autonome : « CV en PDF, français (NNN Ko) » et « CV en PDF, anglais (NNN Ko) » ; en EN, *CV (PDF, English, NNN KB)* et *CV (PDF, French, NNN KB)*. La taille est lue au build. Le CV de la langue de la page vient en premier.
+- Un lien par fichier, avec un texte autonome, **de même construction dans les deux langues** : « CV (PDF, français, NNN Ko) » et « CV (PDF, anglais, NNN Ko) » ; en EN, *CV (PDF, English, NNN KB)* et *CV (PDF, French, NNN KB)*. Le français employait une autre forme — « CV en PDF, français » — harmonisée sur l'anglaise (arbitrage d'Arnaud, 22/09/2026, story 7.2). La taille est lue au build, en Ko entiers, jamais « 0 Ko », séparée de son unité par une espace insécable. Le CV de la langue de la page vient en premier.
 - **Pied de page** : sur sa propre ligne, en `body-sm`.
 - **À propos** : dans un `note-block` placé juste sous le titre, avec l'étiquette « CV » en `label` et les deux liens en `body`, chacun sur sa ligne.
 - **Fichiers absents ou refusés par le contrôle** : le composant n'est pas rendu. Rien ne le remplace : ni ligne vide, ni étiquette seule, ni mention « bientôt ».
