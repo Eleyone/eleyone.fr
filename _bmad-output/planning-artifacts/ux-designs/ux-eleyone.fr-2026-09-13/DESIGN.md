@@ -622,8 +622,9 @@ Liens vers les CV PDF. Emplacements décidés par Arnaud le 13/09/2026 : **pied 
 
 Sommaire d'une page cas ou de la page Chiliz.
 
-- **Sous md** : élément `<details>` fermé, avec un résumé d'une ligne en `label` (« Sommaire · 6 rubriques ») et le marqueur natif du navigateur. Ouvert, il affiche la liste en `body-sm`. Il occupe environ 2,75 rem fermé, contre environ 230 px dans la maquette (validé par Arnaud le 13/09/2026).
+- **Sous md** : élément `<details>` fermé, avec un résumé d'une ligne en `label`. Une page de cas seul annonce ses rubriques (« Sommaire · 6 rubriques ») ; une page de groupe annonce **les deux nombres**, accordés séparément (« Sommaire · 3 cas, 19 rubriques ») — le comptage des seules rubriques, tranché le 17/09/2026, n'annonçait plus rien que le lecteur voie dès que la page a porté trois cas (arbitrage d'Arnaud du 22/09/2026). Le résumé est une cible de navigation comme une autre : au moins 24 px et le marqueur natif du navigateur. Ouvert, il affiche la liste en `body-sm`. Il occupe environ 2,75 rem fermé, contre environ 230 px dans la maquette (validé par Arnaud le 13/09/2026).
 - **Dès md** : dans la colonne de marge, collant, liste visible. Le résumé est masqué et le contenu forcé visible par `::details-content`. Un navigateur qui ne prend pas en charge ce pseudo-élément garde le sommaire repliable dans la marge : la page reste utilisable.
+- **Plus haut que la fenêtre** : sa hauteur est bornée par celle de la fenêtre et il défile sur lui-même (arbitrage d'Arnaud du 22/09/2026). Mesuré à 1 088 px pour les 22 entrées des trois cas Chiliz dans une colonne de 13,5 rem, contre 368 px pour le seul cas 02 : sans cette borne, la disposition ne tient que tant qu'un cas est publié.
 - **Entrées** : numéro en `ink-muted` (« 02.3 »), texte `ink`, soulignement `accent`. Page Chiliz : un niveau par section publiée (« Cas 02 — titre »), rubriques en retrait de 2,5 ch.
 - **Entrée courante** : pas de mise en évidence de défilement (il faudrait du JavaScript). La cible d'une ancre est marquée dans le texte (voir `rubric-heading`).
 

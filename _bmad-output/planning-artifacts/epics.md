@@ -2250,20 +2250,30 @@ afin de trouver en quelques secondes le contexte, le résumé et la décision.
 
 **Critères d'acceptation :**
 
-**Étant donné** la page Chiliz en rendu de travail
+**Étant donné** la page Chiliz en rendu de travail, qui porte **trois cas réels** depuis les PR n° 72 et 73 (02, 03, 04, en brouillon)
 **Quand** on l'affiche sous md, en md, puis en lg
 **Alors** « Contexte mission », « En bref », le sommaire, les numéros de rubrique et le lien « Retour au parcours » suivent la disposition de `DESIGN.md` pour chaque point de rupture
+**Et** chaque section commence par un filet `rule` plein cadre, puis « Cas 02 » en `meta` et le titre en `case-title`
 **Et** « Contexte mission » reste avant « En bref » dans le DOM quelle que soit sa place visuelle.
+
+**Étant donné** le lien « Retour au parcours », rendu par `career-url.html`
+**Quand** on lit son `href`
+**Alors** c'est l'accueil de la langue du cas **suivi de l'ancre de son poste** (`/#position-chiliz`, `/en/#position-chiliz`), jamais l'accueil seul : c'est l'ancre qui ramène Claire au poste qu'elle lisait.
+
+**Étant donné** le `_index.md` de la page de groupe
+**Quand** la page est rendue
+**Alors** rien de son corps n'est affiché : la page porte le titre « Chiliz » puis les sections, sans introduction (Q9, tranchée le 13/09/2026).
 
 **Étant donné** une ancre `#case-02` ou de rubrique
 **Quand** Claire la suit
-**Alors** la cible est marquée par `:target` et ne colle pas au bord de la fenêtre.
+**Alors** la cible est marquée par une barre `accent` de 2 px à sa gauche, dans la gouttière, sans animation, et `scroll-margin-top` l'empêche de coller au bord de la fenêtre.
 
 **Étant donné** l'arrivée sur `#case-02` à 390 × 844
 **Quand** la page s'ouvre
-**Alors** on voit le titre du cas, « Contexte mission » et le début de « En bref » (objectif de conception d'`EXPERIENCE.md`, check-list).
+**Alors** le titre du cas, « Contexte mission » et le début de « En bref » sont visibles sans défiler. Cette vérification est manuelle et se consigne dans `docs/accessibility.md` ; aucun contrôle ne la rend.
 
-- [ ] Sous md, le sommaire est un `<details>` fermé ; dès md, visible et collant dans la marge, sans recouvrir le texte.
+- [ ] Sous md, le sommaire est un `<details>` fermé dont le résumé annonce **le nombre de cas et le nombre de rubriques** (« Sommaire · 3 cas, 19 rubriques »), chacun accordé en nombre dans les deux langues. La page d'un cas seul n'annonce que ses rubriques (story 6.2).
+- [ ] Dès md, le sommaire est visible et collant dans la marge, sans recouvrir le texte, et **sa hauteur est bornée par celle de la fenêtre : au-delà, il défile sur lui-même** (arbitrage d'Arnaud, 22/09/2026). Mesuré à 1 088 px pour 22 entrées dans une colonne de 13,5 rem, contre 368 px pour le seul cas 02 : la disposition ne tient que tant qu'un cas est publié.
 - [ ] Check-list d'AD-17 sur la page de groupe, en clair et en sombre.
 
 ### Story 6.2 : Ungrouped case page

@@ -3,11 +3,16 @@
   aucun JavaScript. Un niveau par cas publié, dans l'ordre reçu, puis ses rubriques. « Contexte
   mission », « En bref » et les titres libres n'y figurent pas : seules les rubriques ont un numéro.
 
-  Le résumé compte les rubriques de tous les cas listés (décidé par Arnaud le 17/09/2026). Les
-  brouillons sont déjà absents de la liste en production. La page d'un cas sans groupe viendra avec
-  la story 6.2.
+  Le résumé d'une page de groupe annonce **le nombre de cas et le nombre de rubriques** (arbitrage
+  d'Arnaud du 22/09/2026). Le comptage des seules rubriques avait été tranché le 17/09/2026, quand
+  la page ne portait qu'un cas ; avec trois, il n'annonçait plus rien que le lecteur voie. Les deux
+  nombres s'accordent séparément : « cas » est invariable en français et ne l'est pas en anglais,
+  donc chaque langue porte ses deux formes. La page d'un cas seul garde le comptage des rubriques
+  seules (story 6.2).
 
-  Paramètre : « pages », les cas de la page, triés.
+  Les brouillons sont déjà absents de la liste en production.
+
+  Paramètres : « pages », les cas de la page, triés ; « group », vrai sur une page de groupe.
 */}}
 {{- $cases := slice -}}
 {{- $count := 0 -}}
@@ -16,10 +21,16 @@
   {{- $cases = $cases | append (dict "page" . "rubrics" $rubrics) -}}
   {{- $count = add $count (len $rubrics) -}}
 {{- end -}}
+{{- $summary := i18n "toc" $count -}}
+{{- if .group -}}
+  {{- $summary = i18n "toc_group" (dict
+      "Cases" (i18n "toc_cases" (dict "Count" (len $cases)))
+      "Rubrics" (i18n "toc_rubrics" (dict "Count" $count))) -}}
+{{- end -}}
 {{- with $cases }}
-  <nav class="toc" aria-label="{{ i18n "toc_label" }}">
+  <nav class="toc in-margin" aria-label="{{ i18n "toc_label" }}">
     <details>
-      <summary>{{ i18n "toc" $count }}</summary>
+      <summary class="label">{{ $summary }}</summary>
       <ol>
         {{- range . }}
           {{- $page := .page }}

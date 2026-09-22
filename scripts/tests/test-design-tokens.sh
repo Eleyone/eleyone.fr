@@ -108,6 +108,33 @@ case_la_grille_marge_texte_nest_ecrite_quune_fois() {
   ((nb <= 1)) || { printf 'l alignement d un titre sur la colonne de texte est écrit %s fois ; une seule suffit.\n' "$nb" >&2; exit 1; }
 }
 
+case_les_cibles_de_navigation_portent_la_regle_des_24_px() {
+  # Chaque élément listé ici a été mesuré au navigateur sous le seuil de 24 px (WCAG 2.5.8, AD-17)
+  # avant d'entrer dans la règle. Le résumé du sommaire est le dernier trouvé : 18 px avec un
+  # libellé court, mais 36 px avec celui de la page Chiliz, qui se replie sur deux lignes à 320 px
+  # — le contenu du jour masquait le défaut, comme pour le lien de cas rattaché avant lui
+  # (constat B8 de la rétrospective de l'epic 5, point 11 d'AGENTS.md).
+  #
+  # Ce cas garde la liste contre une suppression, pas contre un oubli : une cible nouvelle n'y
+  # entre que si quelqu'un l'y met. La mesure, elle, se consigne dans docs/accessibility.md.
+  local nu cibles=(
+    '.site-header__brand' '.site-header__nav a' '.site-footer__list a'
+    '.nav-links a' '.toc a' '.toc summary' '.attached-case a'
+  )
+  nu=$(css_nu "$css")
+  css_equilibre "$nu"
+  local regle
+  regle=$(awk '/^\.site-header__brand,/, /padding-block/' <<< "$nu")
+  [[ -n $regle ]] || { echo "la règle des cibles de navigation est introuvable." >&2; exit 1; }
+  local cible
+  for cible in "${cibles[@]}"; do
+    shell_grep -qF "$cible" <<< "$regle" \
+      || { printf 'la cible « %s » ne porte pas la règle des 24 px (WCAG 2.5.8, AD-17).\n' "$cible" >&2; exit 1; }
+  done
+  shell_grep -q 'display: inline-block' <<< "$regle" \
+    || { echo "la règle n agrandit pas la boîte : un line-height ne suffit pas." >&2; exit 1; }
+}
+
 case_les_huit_roles_de_couleur_sont_la() {
   # Les deux modes, huit rôles chacun (DESIGN.md § Colors). Un rôle oublié en sombre laisserait la
   # valeur claire s'appliquer, sans que rien n'échoue.
@@ -159,12 +186,21 @@ case_aucune_police_chargee() {
 }
 
 case_la_feuille_tient_dans_le_budget() {
-  # AD-8 : 20 Ko au plus pour la CSS totale. La mesure porte sur la source non minifiée, qui est
-  # toujours la plus grosse : si elle passe, la feuille servie passe.
-  local octets
-  octets=$(wc -c < "$css")
+  # AD-8 : 20 Ko au plus pour la CSS totale. **La mesure d'AD-8 est celle de C13**, qui pèse tous
+  # les fichiers CSS de public/ après minification (`scripts/checks/budget.sh`) ; ce cas-ci n'est
+  # qu'un garde-fou hors ligne, pour voir un dépassement sans construire le site.
+  #
+  # Il mesurait la source telle quelle, en supposant qu'elle majore toujours la feuille servie.
+  # C'est vrai, mais la marge a fini par se refermer sur les **commentaires** : à la story 6.1, la
+  # source dépassait 20 Ko avec 11 Ko de règles et 8,7 Ko servis. Le cas aurait fait couper des
+  # explications que le projet tient pour du contenu, sans qu'un octet servi soit en cause. La
+  # mesure porte donc sur la feuille dépouillée, qui majore la minifiée sans compter la prose.
+  local nu octets
+  nu=$(css_nu "$css")
+  css_equilibre "$nu"
+  octets=$(wc -c <<< "$nu")
   ((octets <= 20480)) \
-    || { printf 'la feuille fait %s octets, au-delà des 20 Ko d’AD-8\n' "$octets" >&2; exit 1; }
+    || { printf 'les règles font %s octets hors commentaires, au-delà des 20 Ko d’AD-8\n' "$octets" >&2; exit 1; }
 }
 
 case_le_lien_devitement_et_lancre() {

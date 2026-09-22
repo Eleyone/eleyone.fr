@@ -29,6 +29,15 @@ toc:
   one: "Sommaire · {{ .Count }} rubrique"
   other: "Sommaire · {{ .Count }} rubriques"
 toc_case: "Cas {{ .Number }} — {{ .Title }}"
+# Résumé d'une page de groupe (story 6.1) : les deux nombres, accordés séparément. « cas » est
+# invariable en français et ne l'est pas en anglais : chaque langue porte donc ses deux formes.
+toc_group: "Sommaire · {{ .Cases }}, {{ .Rubrics }}"
+toc_cases:
+  one: "{{ .Count }} cas"
+  other: "{{ .Count }} cas"
+toc_rubrics:
+  one: "{{ .Count }} rubrique"
+  other: "{{ .Count }} rubriques"
 
 # Parcours et brouillons (AD-5, AD-18, story 2.7)
 block_career: Parcours

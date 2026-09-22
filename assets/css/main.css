@@ -265,9 +265,25 @@ main {
  * seul cas existant est long et se replie, ce qui portait sa boîte à 44 px et masquait le défaut —
  * la mesure faite sur le contenu du jour ne disait rien du contenu à venir (constat B8 de la
  * rétrospective de l'epic 5). */
+/* Le résumé du sommaire est une commande, pas un lien, mais la règle de taille de cible vaut de
+ * la même façon — et il n'existe que sous md, là où le pointeur est un doigt. Mesuré à 18 px avec
+ * un libellé court (« Sommaire · 6 rubriques ») ; le libellé actuel de la page Chiliz, « Sommaire ·
+ * 3 cas, 19 rubriques », tient sur deux lignes à 320 px et passait donc à 36 px, ce qui masquait
+ * le défaut. Le même piège que le lien de cas rattaché, sur un élément que la règle avait oublié. */
+.toc summary,
 .attached-case a {
   display: inline-block;
   padding-block: var(--space-1);
+}
+
+/* « display: inline-block » retire le marqueur natif du <details> : il est reposé explicitement,
+ * sinon le résumé ne se distingue plus d'un titre. */
+.toc summary::before {
+  content: "▸ ";
+}
+
+.toc details[open] > summary::before {
+  content: "▾ ";
 }
 
 .nav-links {
@@ -402,6 +418,133 @@ main {
   content: " · ";
 }
 
+/* ------------------------------------------- page de cas et page de groupe (story 6.1)
+ *
+ * Sous md, tout est en une colonne : les encarts sont des blocs « surface » sous le titre, le
+ * sommaire est un <details> fermé, et le numéro de rubrique précède son titre.
+ */
+
+/* Chaque cas d'une page de groupe commence par un filet plein cadre (DESIGN.md § Page Chiliz).
+ * Le filet est posé sur la section et non entre elles : le premier cas en porte un aussi, ce qui
+ * sépare le sommaire du premier titre. */
+.case-section {
+  border-top: 1px solid var(--rule);
+  padding-top: var(--space-5);
+  margin-top: var(--space-6);
+}
+
+.case-number {
+  margin-bottom: var(--space-1);
+}
+
+/* Encart « Contexte mission » (DESIGN.md § context-box). Les termes tiennent dans une colonne
+ * fixe pour que les valeurs s'alignent, et l'encart garde sa hauteur quand un rôle est long. */
+.engagement-context {
+  background: var(--surface);
+  padding: var(--space-4);
+  margin-block: var(--space-4);
+}
+
+.engagement-context dl {
+  display: grid;
+  grid-template-columns: 6rem minmax(0, 1fr);
+  column-gap: var(--space-3);
+  row-gap: var(--space-2);
+  margin: 0;
+}
+
+.engagement-context dt {
+  font-size: var(--meta);
+  color: var(--ink-muted);
+}
+
+.engagement-context dd {
+  font-size: var(--body-sm);
+  margin: 0;
+}
+
+/* La stack : des virgules posées par la feuille de style, jamais dans le gabarit. Chaque nom est
+ * insécable, pour qu'« Symfony UX » ne se coupe pas au milieu dans une colonne étroite. */
+.stack {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--meta);
+}
+
+.stack > li {
+  display: inline;
+  white-space: nowrap;
+}
+
+.stack > li + li::before {
+  content: ", ";
+  white-space: normal;
+}
+
+/* Encart « En bref » (DESIGN.md § summary-box). Sa hauteur est bornée par le format lui-même —
+ * trois phrases, 400 caractères (C18) — donc aucun « Lire la suite » et aucune troncature. */
+.at-a-glance {
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  padding: var(--space-4);
+  margin-block: var(--space-4);
+}
+
+.at-a-glance p:last-child {
+  margin-bottom: 0;
+}
+
+/* Sommaire. Sous md, un <details> fermé : environ 2,75 rem au lieu des 230 px de la maquette
+ * (validé par Arnaud le 13/09/2026). */
+.toc {
+  margin-block: var(--space-4);
+}
+
+.toc ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: var(--body-sm);
+}
+
+.toc ol ol {
+  padding-left: 2.5ch;
+}
+
+.toc li {
+  margin-top: var(--space-1);
+}
+
+/* Titre de rubrique : le numéro précède le titre sous md, séparé par une espace de largeur fixe.
+ * Il est déjà masqué aux lecteurs d'écran par aria-hidden dans le gabarit. */
+.rubric-heading {
+  position: relative;
+}
+
+/* Une cible d'ancre est marquée par une barre « accent » dans la gouttière, sans animation
+ * (DESIGN.md § rubric-heading). La marge de défilement empêche la cible de coller au bord
+ * supérieur de la fenêtre, où elle passerait sous l'en-tête. */
+.rubric-heading,
+.case-section {
+  scroll-margin-top: var(--space-5);
+}
+
+.rubric-heading:target::before,
+.case-section:target > .case-number::before {
+  content: "";
+  position: absolute;
+  left: calc(-1 * var(--space-3));
+  top: 0;
+  bottom: 0;
+  width: var(--revision-bar);
+  background: var(--accent);
+}
+
+.case-section:target > .case-number {
+  position: relative;
+}
+
 /* -------------------------------------------------------------- rôles de texte */
 
 .identity-name {
@@ -509,7 +652,8 @@ main {
   .frame--columns,
   .identity-block,
   .cv-position,
-  .education-entry {
+  .education-entry,
+  .case-section {
     display: grid;
     grid-template-columns: var(--margin-column) minmax(0, var(--measure));
     column-gap: var(--column-gap);
@@ -603,6 +747,63 @@ main {
   .attached-case__number {
     display: inline;
   }
+
+  /* --------------------------------------------- page de cas, dès md (story 6.1) */
+
+  /* Une section de cas pose des éléments dans la colonne de marge **de la page** alors qu'elle y
+   * est imbriquée : elle prend donc toute la largeur du cadre et redéclare la grille, comme un
+   * poste du CV. Les largeurs venant des mêmes tokens, les colonnes tombent au même endroit. */
+  .case-section {
+    grid-column: 1 / -1;
+    row-gap: 0;
+  }
+
+  /* Tout ce qui n'est pas explicitement dans la marge ou la note occupe la colonne de texte. */
+  .case-section > * {
+    grid-column: 2;
+  }
+
+  /* Le sommaire passe dans la colonne de marge, collant, liste dépliée : le résumé est masqué et
+   * le contenu du <details> forcé visible. Un navigateur qui ne connaît pas ::details-content
+   * garde un sommaire repliable dans la marge — la page reste utilisable.
+   *
+   * Sa hauteur est bornée par celle de la fenêtre et il défile sur lui-même au-delà (arbitrage
+   * d'Arnaud du 22/09/2026). Mesuré à 1 088 px pour les 22 entrées des trois cas Chiliz dans une
+   * colonne de 13,5 rem, contre 368 px pour le seul cas 02 : sans cette borne, la disposition ne
+   * tient que tant qu'un seul cas est publié. */
+  .toc {
+    grid-column: 1;
+    position: sticky;
+    top: var(--space-4);
+    max-height: calc(100vh - 2 * var(--space-4));
+    overflow-y: auto;
+    text-align: left;
+  }
+
+  .toc summary {
+    display: none;
+  }
+
+  .toc details::details-content {
+    content-visibility: visible;
+    block-size: auto;
+  }
+
+  /* Le numéro de rubrique est suspendu dans la colonne de marge, aligné à droite contre le texte.
+   * Une rubrique est imbriquée dans le contenu Markdown, hors d'atteinte de la grille : le numéro
+   * est donc posé hors flux, relativement à son propre titre. */
+  .rubric-heading > .rubric-number {
+    position: absolute;
+    right: calc(100% + var(--column-gap));
+    width: var(--margin-column);
+    text-align: right;
+  }
+
+  /* La barre de cible se place dans la gouttière entre marge et texte, pas contre le texte. */
+  .rubric-heading:target::before,
+  .case-section:target > .case-number::before {
+    left: calc(-1 * var(--space-4));
+  }
 }
 
 /* ------------------------------------------------------- lg : dès 80 rem */
@@ -612,13 +813,44 @@ main {
     max-width: var(--frame-lg);
   }
 
-  .frame--columns {
-    /* marge | texte | note. La colonne de note est vide hors des pages cas : la colonne de texte
-     * ne bouge donc pas d'une page à l'autre (décision d'Arnaud du 13/09/2026). */
+  /* marge | texte | note. La colonne de note est vide hors des pages cas : la colonne de texte
+   * ne bouge donc pas d'une page à l'autre (décision d'Arnaud du 13/09/2026).
+   *
+   * Une section de cas redéclare la grille de la page (voir le bloc md) : elle doit donc recevoir
+   * la troisième colonne ici aussi. Sans elle, l'encart posé en « grid-column: 3 » créait une
+   * colonne implicite qui rognait la mesure de 640 à 405 px — la colonne de texte n'était plus
+   * au même endroit que sur les autres pages, ce que cette grille existe précisément pour tenir. */
+  .frame--columns,
+  .case-section {
     grid-template-columns: var(--margin-column) minmax(0, var(--measure)) var(--aside-column);
   }
 
   .frame--columns > .in-aside {
     grid-column: 3;
+  }
+
+  /* Dès lg, « Contexte mission » passe dans la colonne de note, à hauteur de sa propre section :
+   * sans fond, un filet vert de 2 px en haut, et les termes au-dessus des valeurs plutôt qu'en
+   * regard — 15 rem ne suffisent pas pour deux colonnes (DESIGN.md § context-box). */
+  /* L'encart occupe toute la hauteur de la grille et se cale en haut : il se place ainsi « à
+   * hauteur de sa propre section » (DESIGN.md § Page Chiliz) sans dépendre du nombre de lignes,
+   * donc sans casser sur un cas qui n'aurait pas d'« En bref » ou pas de numéro. */
+  .case-section > .in-aside {
+    grid-column: 3;
+    grid-row: 1 / -1;
+    align-self: start;
+    background: none;
+    border-top: var(--revision-bar) solid var(--accent);
+    padding: var(--space-3) 0 0;
+    margin-block: 0;
+  }
+
+  .engagement-context dl {
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: var(--space-1);
+  }
+
+  .engagement-context dd + dt {
+    margin-top: var(--space-2);
   }
 }

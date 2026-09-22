@@ -15,8 +15,8 @@ site() {
   mkdir -p "$work/public"
   page index.html '<h1>Accueil</h1><p><a href="/cas/chiliz/#case-02">Cas 02</a></p>'
   page en/index.html '<h1>Home</h1><p><a href="/en/cases/chiliz/#case-02">Case 02</a></p>'
-  page cas/chiliz/index.html '<h1>Chiliz</h1><p><a href="/#position-chiliz">Retour</a></p><section id=case-02><h2 id=case-02-contexte>Contexte</h2></section>'
-  page en/cases/chiliz/index.html '<h1>Chiliz</h1><p><a href="/en/#position-chiliz">Back</a></p><section id=case-02><h2 id=case-02-context>Context</h2></section>'
+  page cas/chiliz/index.html '<h1>Chiliz</h1><p class="nav-links"><a href="/#position-chiliz">Retour</a></p><section id=case-02><h2 id=case-02-contexte>Contexte</h2></section>'
+  page en/cases/chiliz/index.html '<h1>Chiliz</h1><p class="nav-links"><a href="/en/#position-chiliz">Back</a></p><section id=case-02><h2 id=case-02-context>Context</h2></section>'
   # L'accueil porte l'ancre du poste, cible du « Retour au parcours ».
   sed -i 's#<h1>Accueil</h1>#<h1>Accueil</h1><div id=position-chiliz>Poste</div>#' "$work/public/index.html"
   sed -i 's#<h1>Home</h1>#<h1>Home</h1><div id=position-chiliz>Poste</div>#' "$work/public/en/index.html"
@@ -66,6 +66,49 @@ case_links_ancre_de_poste() {
   liens
   assert_eq 1 "$rc" "un retour au parcours sans sa cible fait échouer"
   assert_contains "ancre « #position-chiliz » absente de index.html" "$err" "le signalement le dit"
+}
+
+case_links_retour_sans_ancre_de_poste() {
+  # « career-url.html » est la seule construction de ce lien, mais un lien vers l'accueil **sans
+  # ancre** résout parfaitement : les règles de lien et d'ancre l'acceptaient toutes les deux, et
+  # rien ne gardait donc ce que le gabarit produit (revue de spec de la story 6.1).
+  site; config
+  sed -i 's#href="/\#position-chiliz"#href="/"#' "$work/public/cas/chiliz/index.html"
+  liens
+  assert_eq 1 "$rc" "un retour vers l'accueil sans ancre fait échouer"
+  assert_contains "ne vise pas l ancre de son poste sur" "${err//\'/ }" "le signalement nomme la règle"
+}
+
+case_links_page_de_cas_sans_retour() {
+  # L'absence du bloc entier ne doit pas rendre la règle muette : c'est un manquement à AD-18.
+  site; config
+  sed -i 's#<p class="nav-links">.*</p>##' "$work/public/cas/chiliz/index.html"
+  liens
+  assert_eq 1 "$rc" "une page de cas sans lien de retour fait échouer"
+  assert_contains "sans lien de retour au parcours" "$err" "le signalement le dit"
+}
+
+case_links_retour_vers_une_autre_page_que_laccueil() {
+  # L'ancre seule ne prouve rien : une page quelconque peut la porter. C'est l'accueil qui tient le
+  # parcours (AD-18), et le critère s'y perdait (revue du code de la PR n° 79).
+  site; config
+  page ailleurs/index.html '<h1>Ailleurs</h1><div id=position-chiliz>Poste</div>'
+  sed -i 's#href="/\#position-chiliz"#href="/ailleurs/\#position-chiliz"#' "$work/public/cas/chiliz/index.html"
+  sed -i 's#<a href="/cas/chiliz/\#case-02">Cas 02</a>#<a href="/cas/chiliz/\#case-02">Cas 02</a> <a href="/ailleurs/">Ailleurs</a>#' "$work/public/index.html"
+  liens
+  assert_eq 1 "$rc" "un retour vers une page qui n est pas un accueil fait échouer"
+  assert_contains "ne vise pas l ancre de son poste sur" "${err//\'/ }" "le signalement le dit"
+}
+
+case_links_retour_vers_laccueil_de_lautre_langue() {
+  # Un accueil quelconque ne suffit pas : c'est celui de **la langue de la page**. Une page
+  # française qui renvoie vers « /en/#position-chiliz » ramène Claire sur un CV qu'elle ne lisait
+  # pas (deuxième revue du code de la PR n° 79).
+  site; config
+  sed -i 's#href="/\#position-chiliz"#href="/en/\#position-chiliz"#' "$work/public/cas/chiliz/index.html"
+  liens
+  assert_eq 1 "$rc" "un retour vers l accueil de l autre langue fait échouer"
+  assert_contains "sur index.html" "$err" "le signalement nomme l accueil attendu"
 }
 
 case_links_page_orpheline() {

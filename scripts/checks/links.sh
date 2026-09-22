@@ -108,6 +108,44 @@ for page in "${pages[@]}"; do
   signaler "$page" "C12 : page orpheline, aucun chemin de liens depuis l'accueil de sa langue (FR-15)"
 done
 
+# --- retour au parcours : l'ancre du poste, pas l'accueil seul (AD-18) ----------------------------
+#
+# « career-url.html » est la seule construction de ce lien, mais rien ne gardait ce qu'il produit :
+# un lien vers « / » sans ancre résout parfaitement, et les règles ci-dessus l'auraient accepté.
+# C'est pourtant l'ancre qui ramène Claire au poste qu'elle lisait ; sans elle, elle retombe en haut
+# du CV et doit retrouver sa place (constat de la revue de spec de la story 6.1).
+for page in "${pages[@]}"; do
+  [[ $page == cas/*/index.html || $page == en/cases/*/index.html ]] || continue
+  retours=$(checks_attributes "$public/$page" '//p[contains(@class,"nav-links")]/a/@href' href) || exit $?
+  # Une liste vide n'est jamais passée sous silence : sans lien de retour, la page manque à AD-18,
+  # et un « continue » ici rendrait la règle muette au lieu de la faire échouer.
+  if [[ -z $retours ]]; then
+    signaler "$page" "C12 : page de cas sans lien de retour au parcours (AD-18)"
+    continue
+  fi
+  # L'ancre ne suffit pas : « /ailleurs#position-chiliz » la porte aussi. La cible doit être
+  # **l'accueil d'une langue**, seul endroit où vit le parcours (AD-18). Les règles de lien et
+  # d'ancre ci-dessus rendaient déjà ce cas improbable — elles exigent que la page visée existe et
+  # porte l'identifiant — mais elles ne disent pas *quelle* page, et l'intention du critère se
+  # perdait là (constat de la revue du code de la PR n° 79).
+  # L'accueil attendu est celui de **la langue de la page**, déduit de son propre chemin : la
+  # langue par défaut est à la racine, les autres sous leur préfixe. Un accueil quelconque ne
+  # suffit pas — une page française qui renverrait vers « /en/#position-chiliz » ramènerait Claire
+  # sur un CV qu'elle ne lisait pas (constat de la deuxième revue du code de la PR n° 79).
+  if [[ $page =~ ^([a-z]{2})/ ]]; then attendu="${BASH_REMATCH[1]}/index.html"; else attendu=index.html; fi
+  conforme=0
+  while IFS= read -r href; do
+    [[ -n $href ]] || continue
+    [[ $href == *"#position-"* ]] || continue
+    visee=$(page_visee "$page" "${href%%#*}")
+    [[ $visee == "$attendu" ]] || continue
+    conforme=1
+    break
+  done <<< "$retours"
+  ((conforme == 1)) \
+    || signaler "$page" "C12 : le retour au parcours ne vise pas l'ancre de son poste sur $attendu (AD-18)"
+done
+
 # --- liens conditionnels : CV et dépôt --------------------------------------------------------------
 cv_publies=0
 [[ ! -f $public/assets/cv/cv-fr.pdf || ! -f $public/assets/cv/cv-en.pdf ]] || cv_publies=1

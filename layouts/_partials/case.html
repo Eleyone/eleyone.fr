@@ -1,29 +1,33 @@
 {{/*
-  Un cas, rendu par ce seul partial (AD-3, FR-5) : titre, encart « Contexte mission », encart
-  « En bref », puis le cas complet, dans cet ordre. Il reçoit le niveau de titre, 1 sur une page de
-  cas, 2 dans une section de groupe. Aucun mot de contenu ici : les libellés viennent d'i18n/.
+  Un cas, rendu par ce seul partial (AD-3, FR-5) : numéro et titre, encart « Contexte mission »,
+  encart « En bref », puis le cas complet, dans cet ordre. Il reçoit le niveau de titre, 1 sur une
+  page de cas, 2 dans une section de groupe. Aucun mot de contenu ici : les libellés viennent d'i18n/.
+
+  L'ordre du DOM est fixe — « Contexte mission » avant « En bref » — quelle que soit la place
+  visuelle de l'encart, qui passe dans la colonne de note dès lg par la seule feuille de style.
 
   Paramètres : « page » (le cas), « level » (entier).
 */}}
 {{- $page := .page -}}
 {{- $level := .level | default 2 -}}
 {{- $context := $page.Params.context -}}
-<h{{ $level }}>{{ partial "draft-marker.html" $page }}{{ $page.Title }}</h{{ $level }}>
+{{- with $page.Params.number }}<p class="case-number meta">{{ i18n "case_number" . }}</p>{{ end }}
+<h{{ $level }} class="case-title">{{ partial "draft-marker.html" $page }}{{ $page.Title }}</h{{ $level }}>
 {{- with $context }}
-  <aside class="engagement-context">
-    <h{{ add $level 1 }}>{{ i18n "engagement_context" }}</h{{ add $level 1 }}>
+  <aside class="engagement-context in-aside">
+    <h{{ add $level 1 }} class="label">{{ i18n "engagement_context" }}</h{{ add $level 1 }}>
     <dl>
       {{ with .company }}<dt>{{ i18n "company" }}</dt><dd>{{ . }}</dd>{{ end }}
       {{ with .setup }}<dt>{{ i18n "engagement" }}</dt><dd>{{ i18n (printf "setup_%s" (replace . "-" "_")) }}</dd>{{ end }}
       {{ with .role }}<dt>{{ i18n "role" }}</dt><dd>{{ . }}</dd>{{ end }}
       {{ with .period }}<dt>{{ i18n "period" }}</dt><dd>{{ . }}</dd>{{ end }}
-      {{ with .stack }}<dt>{{ i18n "stack" }}</dt><dd>{{ delimit . ", " }}</dd>{{ end }}
+      {{ with .stack }}<dt>{{ i18n "stack" }}</dt><dd><ul class="stack">{{ range . }}<li>{{ . }}</li>{{ end }}</ul></dd>{{ end }}
     </dl>
   </aside>
 {{- end }}
 {{- with $page.Params.summary }}
   <aside class="at-a-glance">
-    <h{{ add $level 1 }}>{{ i18n "at_a_glance" }}</h{{ add $level 1 }}>
+    <h{{ add $level 1 }} class="label">{{ i18n "at_a_glance" }}</h{{ add $level 1 }}>
     <p>{{ . }}</p>
   </aside>
 {{- end }}
