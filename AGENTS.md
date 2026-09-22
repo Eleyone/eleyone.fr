@@ -79,6 +79,8 @@ Arnaud's stated preference: before each story, restate your understanding and as
 
 **An arbitration offers the full range of options, not the comfortable one.** Story 4.1 asked him where the release legal-values file should live and offered only locations outside the repository, never `docs/private/` — which satisfies the same constraint while versioning and backing the file up. He found it himself by asking a question, and it cost a PR. The options an agent has already discarded belong in the question, with the reason they were discarded, so he arbitrates on the real field (epic 4 retrospective, 21/09/2026).
 
+**A retrospective action whose deadline is a future story is written into that story.** Three epic 0 actions were deferred "to their deadlines" and nothing but the retrospective document tracked them. One deadline passed unnoticed — seven days of spec reviews ran without the ranking the story 0.5 criterion demands. One was met by accident: the spec review of story 3.16 independently rediscovered the same finding. Only the third is now somewhere it will be read, in the text of the story it conditions. The list tracks *that* the action is in the story, not what it says (epic 0 actions reviewed, 22/09/2026).
+
 ### Configuration
 
 Config is a four-layer TOML merge. `_bmad/config.toml` and `_bmad/config.user.toml` are installer-managed and regenerated on every install — never edit them. Durable overrides go in `_bmad/custom/config.toml` (team) or `_bmad/custom/config.user.toml` (personal, gitignored); per-skill overrides go in `_bmad/custom/<skill-name>.toml`. The installer never touches those.

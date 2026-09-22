@@ -2902,6 +2902,8 @@ afin que chaque mise en ligne suive le flux linéaire sans merge commit.
 **Prérequis de contenu :** —
 **Opération manuelle (Arnaud) :** non (les tags réels sont poussés aux stories 11.9 et 11.11)
 
+**À trancher par Arnaud avant de commencer cette story (D-13, action 3 de la rétrospective de l'epic 0) :** le marqueur `(#N)` ne prouve rien. Gitea l'ajoute à **tout** squash, y compris aux huit fusionnés à la main sous la règle d'amorçage (`c2c789e` à `6cdb7b2`), dont celui de la PR n° 2, qui n'a eu aucune revue au titre de l'exception documentaire. Ces huit commits seront dans la première publication. Le verrou de revue de la publication doit donc reconnaître autrement les commits déjà vérifiés : liste explicite de SHAs dans le dépôt, interrogation de la forge PR par PR, ou acceptation assumée de la plage d'amorçage. L'échéance est cette story, et elle est écrite ici parce qu'elle n'était écrite que dans un document de rétrospective — l'action 5 de la même liste a vu son échéance passer sans que personne la relise.
+
 **Critères d'acceptation :**
 
 **Étant donné** `scripts/release.sh`
