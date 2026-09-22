@@ -19,6 +19,10 @@ set -euo pipefail
 
 script_name=links
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+# Les deux noms de CV et leur dossier de publication viennent de lib/pdf.sh : la clause des liens
+# conditionnels cherchait « /assets/cv/ », le dossier **source**, quand Hugo publie sous « /cv/ »,
+# et elle ne pouvait donc jamais se déclencher (constat B2, rétrospective de l'epic 7).
+. "$(dirname "${BASH_SOURCE[0]}")/../lib/pdf.sh"
 
 public=${CHECK_PUBLIC_ROOT:-public}
 config=${CHECK_CONFIG_FILE:-config/_default/hugo.yaml}
@@ -176,18 +180,21 @@ done <<< "$pages_retour"
 # mesurant sur « public/ » plutôt qu'en le relisant.
 # « ?# » y figure aussi : « /cv/cv-fr.pdf#page=2 » est un lien de CV valide, et l'exclure
 # recréerait un compteur aveugle à une forme légitime.
-cv_publies=0
-[[ ! -f $public/cv/cv-fr.pdf || ! -f $public/cv/cv-en.pdf ]] || cv_publies=1
+cv_publies=1
+for cv_nom in "${pdf_cv_names[@]}"; do
+  [[ -f $public/$pdf_cv_published_dir/$cv_nom ]] || cv_publies=0
+done
 # Le comptage passe par une variable, jamais par « shell_grep … | wc -l » : un « exit » en tête de
 # pipeline ne quitte que son sous-shell, et un répertoire illisible se compterait pour zéro lien
 # (constat de la première revue de plage, 21/09/2026).
-shell_grep_into fichiers_cv -rlE 'href="?/cv/cv-(fr|en)\.pdf([?#]|"|[[:space:]]|>)' "$public" --include='*.html'
+shell_grep_into fichiers_cv -rlE \
+  "href=\"?/$pdf_cv_published_dir/$(pdf_cv_names_regex)([?#]|\"|[[:space:]]|>)" "$public" --include='*.html'
 liens_cv=0
 [[ -z $fichiers_cv ]] || liens_cv=$(wc -l <<< "$fichiers_cv")
 if ((cv_publies == 1 && liens_cv == 0)); then
-  signaler "cv/" "C12 : les deux CV sont publiés mais aucune page n'y mène (AD-21)"
+  signaler "$pdf_cv_published_dir/" "C12 : les deux CV sont publiés mais aucune page n'y mène (AD-21)"
 elif ((cv_publies == 0 && liens_cv > 0)); then
-  signaler "cv/" "C12 : $liens_cv page(s) mènent à un CV alors que les deux PDF ne sont pas publiés (AD-21)"
+  signaler "$pdf_cv_published_dir/" "C12 : $liens_cv page(s) mènent à un CV alors que les deux PDF ne sont pas publiés (AD-21)"
 fi
 
 source_url=""

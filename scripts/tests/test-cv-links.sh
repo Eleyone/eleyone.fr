@@ -13,21 +13,8 @@ script_name=test-cv-links
 
 readonly insecable=$' '
 
-# $1 = chemin, $2 = nombre d'octets de bourrage pour peser le fichier
-pdf() {
-  local chemin=$1 bourrage=${2:-0} flux="BT /F1 12 Tf 20 150 Td (CV) Tj ET"
-  mkdir -p "$(dirname "$chemin")"
-  {
-    printf '%%PDF-1.4\n'
-    printf '1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n'
-    printf '2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n'
-    printf '3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 300]/Contents 4 0 R>>endobj\n'
-    printf '4 0 obj<</Length %s>>stream\n%s\nendstream endobj\n' "${#flux}" "$flux"
-    ((bourrage == 0)) || { printf '%%'; head -c "$bourrage" /dev/zero | tr '\0' 'A'; printf '\n'; }
-    printf 'trailer<</Root 1 0 R/Size 10>>\n%%%%EOF\n'
-  } > "$chemin"
-}
-
+# Le PDF d'essai vient de « tests_pdf » (scripts/tests/lib.sh) : son cinquième paramètre est le
+# bourrage, qui pèse le fichier pour vérifier le poids annoncé dans le libellé.
 # $1… : les noms de CV à poser dans assets/cv/ ; aucun argument pour un dossier vide.
 construire() {
   load_tools_env "$root/tools.env"
@@ -42,7 +29,7 @@ construire() {
   printf -- '---\ntitle: "Accueil"\n---\n' > "$work/site/content/_index.fr.md"
   printf -- '---\ntitle: "Home"\n---\n' > "$work/site/content/_index.en.md"
   local nom
-  for nom in "$@"; do pdf "$work/site/assets/cv/$nom" 311000; done
+  for nom in "$@"; do tests_pdf "$work/site/assets/cv/$nom" "" "" "" 311000; done
   (cd "$work/site" && hugo --environment work --buildDrafts --panicOnWarning --destination sortie) \
     > "$work/hugo.out" 2>&1
 }
@@ -111,8 +98,8 @@ case_cv_un_petit_fichier_ne_sannonce_jamais_a_zero() {
   run construire cv-fr.pdf cv-en.pdf
   assert_eq 0 "$rc" "le build réussit"
   # Reconstruit avec des fichiers minuscules, sans bourrage.
-  pdf "$work/site/assets/cv/cv-fr.pdf"
-  pdf "$work/site/assets/cv/cv-en.pdf"
+  tests_pdf "$work/site/assets/cv/cv-fr.pdf"
+  tests_pdf "$work/site/assets/cv/cv-en.pdf"
   (cd "$work/site" && hugo --environment work --buildDrafts --panicOnWarning --destination sortie) \
     > "$work/hugo.out" 2>&1
   local fr

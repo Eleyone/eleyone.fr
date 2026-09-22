@@ -50,12 +50,16 @@ else
   exit 1
 fi
 images_ext=$(image_extensions_regex)
-forbidden_paths="^docs/(private|context)/|(^|/)\.env($|\.)|^assets/cv/.*\.pdf$|\.$images_ext\$"
-allowed_paths="(^|/)\.env\.example\$|^design/[^/]+/screenshots/|^assets/.*\.$images_ext\$|^assets/cv/cv-(fr|en)\.pdf\$"
+# Les deux noms de CV viennent de lib/pdf.sh, chargée juste au-dessus : ils vivaient ici sous deux
+# formes et dans trois autres fichiers sous deux autres encore (constat A1, rétrospective de
+# l'epic 7). Une liste, lue par le garde-fou, par C21 et par C12.
+cv_regex=$(pdf_cv_names_regex)
+forbidden_paths="^docs/(private|context)/|(^|/)\.env($|\.)|^$pdf_cv_assets_dir/.*\.pdf$|\.$images_ext\$"
+allowed_paths="(^|/)\.env\.example\$|^design/[^/]+/screenshots/|^assets/.*\.$images_ext\$|^$pdf_cv_assets_dir/$cv_regex\$"
 # Les chemins que C20 doit lire : les images admises ci-dessus.
 image_paths="^assets/.*\.$images_ext\$"
 # Ceux que la lecture des PDF doit lire : les deux CV admis, et eux seuls.
-pdf_paths="^assets/cv/cv-(fr|en)\.pdf\$"
+pdf_paths="^$pdf_cv_assets_dir/$cv_regex\$"
 patterns_file="${PRIVATE_PATTERNS_FILE:-$(git rev-parse --show-toplevel 2>/dev/null || true)/docs/private/forbidden-patterns.txt}"
 [[ $patterns_file == /* ]] || patterns_file="$PWD/$patterns_file"
 # depuis un sous-dossier, git ls-files, git ls-tree et git grep ne verraient que ce sous-dossier :

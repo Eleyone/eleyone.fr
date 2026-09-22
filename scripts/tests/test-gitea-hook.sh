@@ -38,22 +38,8 @@ EOF
   git -C "$work/depot" remote add origin "$work/nu.git"
 }
 
-# Un PDF minimal, fabriqué octet par octet : aucun PDF n'entre dans le dépôt, et le motif éventuel
-# va dans les **métadonnées**, là où il se cache dans un vrai export.
-ecrire_pdf() { # $1 = chemin, $2 = motif à poser en auteur, ou rien
-  local chemin=$1 auteur=${2:-} flux="BT /F1 12 Tf 20 150 Td (CV) Tj ET" info="" objets=""
-  mkdir -p "$(dirname "$chemin")"
-  objets+="1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj"$'\n'
-  objets+="2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj"$'\n'
-  objets+="3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 300]/Contents 4 0 R>>endobj"$'\n'
-  objets+="4 0 obj<</Length ${#flux}>>stream"$'\n'"$flux"$'\n'"endstream endobj"$'\n'
-  if [[ -n $auteur ]]; then
-    objets+="98 0 obj<</Author ($auteur)>>endobj"$'\n'
-    info="/Info 98 0 R"
-  fi
-  printf '%%PDF-1.4\n%s\ntrailer<</Root 1 0 R%s/Size 100>>\n%%%%EOF\n' "$objets" "$info" > "$chemin"
-}
-
+# Le PDF d'essai vient de « tests_pdf » (scripts/tests/lib.sh) : le motif éventuel va dans les
+# **métadonnées**, là où il se cache dans un vrai export.
 commit_file() { # $1 chemin, $2 contenu
   mkdir -p "$(dirname "$work/depot/$1")"
   printf '%s\n' "$2" > "$work/depot/$1"
@@ -151,8 +137,8 @@ case_cv_pdf_avec_un_motif_refuse() {
   # contrôle du seul texte manquerait.
   install_hook
   mkdir -p "$work/depot/assets/cv"
-  ecrire_pdf "$work/depot/assets/cv/cv-fr.pdf" motif-interdit-essai
-  ecrire_pdf "$work/depot/assets/cv/cv-en.pdf"
+  tests_pdf "$work/depot/assets/cv/cv-fr.pdf" "" motif-interdit-essai
+  tests_pdf "$work/depot/assets/cv/cv-en.pdf"
   commit_all "ajout des CV" > /dev/null
   refused "CV avec un motif dans les métadonnées" "C21 : contenu privé dans métadonnées d'un PDF"
   assert_contains "assets/cv/cv-fr.pdf" "$err" "le fichier fautif est nommé"
@@ -166,8 +152,8 @@ case_cv_pdf_propre_admis() {
   # La contre-épreuve : sans quoi un hook qui refuse tout passerait pour un hook qui marche.
   install_hook
   mkdir -p "$work/depot/assets/cv"
-  ecrire_pdf "$work/depot/assets/cv/cv-fr.pdf"
-  ecrire_pdf "$work/depot/assets/cv/cv-en.pdf"
+  tests_pdf "$work/depot/assets/cv/cv-fr.pdf"
+  tests_pdf "$work/depot/assets/cv/cv-en.pdf"
   commit_all "ajout des CV" > /dev/null
   push_branch
   assert_eq 0 "$rc" "deux CV propres sont admis (messages : $err)"
@@ -178,7 +164,7 @@ case_pdf_inattendu_sous_assets_cv_refuse() {
   # un chemin interdit : ce que le hook ne sait pas nommer, il le refuse.
   install_hook
   mkdir -p "$work/depot/assets/cv"
-  ecrire_pdf "$work/depot/assets/cv/cv-ancien.pdf"
+  tests_pdf "$work/depot/assets/cv/cv-ancien.pdf"
   commit_all "ajout d un PDF inattendu" > /dev/null
   refused "PDF inattendu" "assets/cv/cv-ancien.pdf"
 }
@@ -192,13 +178,13 @@ case_plusieurs_commits_avec_des_cv_ne_laissent_rien() {
   local avant apres i
   avant=$(find "${TMPDIR:-/tmp}" -maxdepth 1 -type f -name 'tmp.*' 2>/dev/null | wc -l)
   mkdir -p "$work/depot/assets/cv"
-  ecrire_pdf "$work/depot/assets/cv/cv-fr.pdf"
-  ecrire_pdf "$work/depot/assets/cv/cv-en.pdf"
+  tests_pdf "$work/depot/assets/cv/cv-fr.pdf"
+  tests_pdf "$work/depot/assets/cv/cv-en.pdf"
   commit_all "ajout des CV" > /dev/null
   # Trois commits de plus, chacun retouchant un CV : trois passages dans la lecture des PDF.
   for i in 1 2 3; do
     mkdir -p "$work/depot/publique"
-    ecrire_pdf "$work/depot/assets/cv/cv-fr.pdf"
+    tests_pdf "$work/depot/assets/cv/cv-fr.pdf"
     printf '%s\n' "$i" > "$work/depot/publique/tour.txt"
     commit_all "tour $i" > /dev/null
   done

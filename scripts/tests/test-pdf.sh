@@ -11,29 +11,8 @@
 
 readonly motif=MOTIFFACTICE
 
-# $1 = chemin, $2 = texte de la page, $3 = auteur (métadonnée) ou vide, $4 = XMP ou vide
-pdf() {
-  local chemin=$1 texte=${2:-Bonjour} auteur=${3:-} xmp=${4:-} flux info="" objets=""
-  mkdir -p "$(dirname "$chemin")"
-  flux="BT /F1 12 Tf 20 150 Td ($texte) Tj ET"
-  objets+="1 0 obj<</Type/Catalog/Pages 2 0 R"
-  [[ -z $xmp ]] || objets+="/Metadata 97 0 R"
-  objets+=">>endobj"$'\n'
-  objets+="2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj"$'\n'
-  objets+="3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 300]/Contents 4 0 R/Resources<</Font<</F1 99 0 R>>>>>>endobj"$'\n'
-  objets+="4 0 obj<</Length ${#flux}>>stream"$'\n'"$flux"$'\n'"endstream endobj"$'\n'
-  objets+="99 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj"$'\n'
-  if [[ -n $auteur ]]; then
-    objets+="98 0 obj<</Author ($auteur)>>endobj"$'\n'
-    info="/Info 98 0 R"
-  fi
-  if [[ -n $xmp ]]; then
-    local paquet="<?xpacket begin=\"\" id=\"W5M0MpCehiHzreSzNTczkc9d\"?><x:xmpmeta xmlns:x=\"adobe:ns:meta/\"><rdf:RDF xmlns:rdf=\"http://www.w3.org/1999/02/22-rdf-syntax-ns#\"><rdf:Description dc:description=\"$xmp\" xmlns:dc=\"http://purl.org/dc/elements/1.1/\"/></rdf:RDF></x:xmpmeta><?xpacket end=\"w\"?>"
-    objets+="97 0 obj<</Type/Metadata/Subtype/XML/Length ${#paquet}>>stream"$'\n'"$paquet"$'\n'"endstream endobj"$'\n'
-  fi
-  printf '%%PDF-1.4\n%s\ntrailer<</Root 1 0 R%s/Size 100>>\n%%%%EOF\n' "$objets" "$info" > "$chemin"
-}
-
+# Le PDF d'essai est fabriqué par « tests_pdf » de scripts/tests/lib.sh : une seule écriture
+# pour les trois fichiers de test qui en avaient chacun la sienne (constat A3).
 liste() { # écrit une liste de motifs et rend son chemin
   printf '# commentaire\n%s\n' "$motif" > "$work/motifs.txt"
   printf '%s' "$work/motifs.txt"
@@ -66,6 +45,34 @@ tmpdir_a_soi() {
 
 restes_dans() { find "$1" -mindepth 1 | wc -l; }
 
+case_pdf_aucune_page() {
+  # Branche sans test jusqu'ici (constat A10, rétrospective de l'epic 7). En l'écrivant, on
+  # constate que **la branche « aucune page » de C21 est inatteignable avec poppler** : pdfinfo
+  # refuse un arbre de pages vide avant de compter quoi que ce soit (« Invalid page count 0 »,
+  # code 99), si bien que « pdf_pages » échoue et que le contrôle prend la branche « ne sait pas
+  # lire ». Le test porte donc sur **l'invariant qu'AD-21 veut** — un CV sans page ne passe pas —
+  # et non sur la formulation du message, qui dépend de ce que l'outil accepte de lire.
+  vide
+  tests_pdf "$work/cv/cv-en.pdf"
+  printf '%%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[]/Count 0>>endobj\ntrailer<</Root 1 0 R/Size 10>>\n%%%%EOF\n' \
+    > "$work/cv/cv-fr.pdf"
+  controle "$(liste)"
+  assert_eq 1 "$rc" "un PDF sans page ne passe pas"
+  assert_contains "cv-fr.pdf" "$err" "le fichier fautif est nommé"
+}
+
+case_pdf_illisible_est_un_ecart_pas_une_anomalie() {
+  # L'autre branche sans test. Le fichier commence bien par « %PDF- » — donc il passe l'en-tête —
+  # mais sa structure est inexploitable. L'en-tête de checks/pdf.sh l'annonce : « le fichier est
+  # là, il est simplement mauvais », donc **code 1** et non 2.
+  vide
+  tests_pdf "$work/cv/cv-en.pdf"
+  printf '%%PDF-1.4\nces octets ne sont pas un PDF\n' > "$work/cv/cv-fr.pdf"
+  controle "$(liste)"
+  assert_eq 1 "$rc" "un PDF illisible est un écart, pas une anomalie (code 2)"
+  assert_contains "ne sait pas lire ce fichier" "$err" "le signalement nomme l outil qui a renoncé"
+}
+
 case_pdf_une_liste_sans_motif_ne_laisse_rien() {
   # Le chemin qui fuyait : la liste existe, mais ne porte que des commentaires. Le contrôle créait
   # alors deux fichiers temporaires, puis **vidait les variables qui les désignaient** pour dire
@@ -76,7 +83,7 @@ case_pdf_une_liste_sans_motif_ne_laisse_rien() {
   # motif sans regarder le disque, l'autre regardait le disque sur le chemin nominal. Aucun
   # croisement, et la fuite a vécu deux stories. Ce cas est le croisement.
   vide
-  pdf "$work/cv/cv-fr.pdf"; pdf "$work/cv/cv-en.pdf"
+  tests_pdf "$work/cv/cv-fr.pdf"; tests_pdf "$work/cv/cv-en.pdf"
   printf '# que des commentaires\n\n#\n' > "$work/motifs-sans-motif.txt"
   local tmp; tmp=$(tmpdir_a_soi)
   run env TMPDIR="$tmp" CHECK_CV_DIR="$work/cv" \
@@ -89,7 +96,7 @@ case_pdf_une_liste_normale_ne_laisse_rien() {
   # La contre-épreuve : sans elle, un contrôle qui ne créerait jamais de temporaire passerait pour
   # un contrôle qui nettoie bien.
   vide
-  pdf "$work/cv/cv-fr.pdf"; pdf "$work/cv/cv-en.pdf"
+  tests_pdf "$work/cv/cv-fr.pdf"; tests_pdf "$work/cv/cv-en.pdf"
   local tmp; tmp=$(tmpdir_a_soi)
   run env TMPDIR="$tmp" CHECK_CV_DIR="$work/cv" \
     PRIVATE_PATTERNS_FILE="$(liste)" bash "$root/scripts/checks/pdf.sh"
@@ -105,7 +112,7 @@ case_pdf_aucun_fichier() {
 }
 
 case_pdf_les_deux() {
-  vide; pdf "$work/cv/cv-fr.pdf" "Parcours"; pdf "$work/cv/cv-en.pdf" "Experience"
+  vide; tests_pdf "$work/cv/cv-fr.pdf" "Parcours"; tests_pdf "$work/cv/cv-en.pdf" "Experience"
   controle "$(liste)"
   assert_eq 0 "$rc" "les deux CV passent (messages : $err)"
   assert_contains "aucun motif privé" "$out" "le contrôle dit qu'il a confronté le contenu"
@@ -113,7 +120,7 @@ case_pdf_les_deux() {
 
 case_pdf_un_seul() {
   # « Ensemble ou rien » (AD-21) : la règle vaut pour le contrôle, pas seulement pour les liens.
-  vide; pdf "$work/cv/cv-fr.pdf"
+  vide; tests_pdf "$work/cv/cv-fr.pdf"
   controle "$(liste)"
   assert_eq 1 "$rc" "un seul CV fait échouer"
   assert_contains "ensemble ou rien" "$err" "le signalement nomme la règle"
@@ -121,7 +128,7 @@ case_pdf_un_seul() {
 }
 
 case_pdf_sans_entete() {
-  vide; pdf "$work/cv/cv-en.pdf"
+  vide; tests_pdf "$work/cv/cv-en.pdf"
   printf 'ceci nest pas un pdf\n' > "$work/cv/cv-fr.pdf"
   controle "$(liste)"
   assert_eq 1 "$rc" "un fichier sans en-tête PDF fait échouer"
@@ -129,9 +136,9 @@ case_pdf_sans_entete() {
 }
 
 case_pdf_trop_lourd() {
-  vide; pdf "$work/cv/cv-en.pdf"
+  vide; tests_pdf "$work/cv/cv-en.pdf"
   # 500 Ko est le seuil : on le dépasse par du bourrage dans un commentaire, le PDF restant lisible.
-  pdf "$work/cv/cv-fr.pdf"
+  tests_pdf "$work/cv/cv-fr.pdf"
   { printf '%%'; head -c 500001 /dev/zero | tr '\0' 'A'; printf '\n'; } >> "$work/cv/cv-fr.pdf"
   controle "$(liste)"
   assert_eq 1 "$rc" "un PDF au-delà de 500 Ko fait échouer"
@@ -139,7 +146,7 @@ case_pdf_trop_lourd() {
 }
 
 case_pdf_motif_dans_le_texte() {
-  vide; pdf "$work/cv/cv-en.pdf"; pdf "$work/cv/cv-fr.pdf" "$motif ici"
+  vide; tests_pdf "$work/cv/cv-en.pdf"; tests_pdf "$work/cv/cv-fr.pdf" "$motif ici"
   controle "$(liste)"
   assert_eq 1 "$rc" "un motif dans le texte fait échouer"
   assert_contains "contenu privé dans le texte" "$err" "le signalement nomme la source"
@@ -148,14 +155,14 @@ case_pdf_motif_dans_le_texte() {
 
 case_pdf_motif_dans_les_metadonnees() {
   # Un téléphone ou une ville vit souvent là, et personne ne regarde les métadonnées d'un export.
-  vide; pdf "$work/cv/cv-en.pdf"; pdf "$work/cv/cv-fr.pdf" "Rien" "$motif"
+  vide; tests_pdf "$work/cv/cv-en.pdf"; tests_pdf "$work/cv/cv-fr.pdf" "Rien" "$motif"
   controle "$(liste)"
   assert_eq 1 "$rc" "un motif dans les métadonnées fait échouer"
   assert_contains "contenu privé dans les métadonnées" "$err" "le signalement nomme la source"
 }
 
 case_pdf_motif_dans_le_xmp() {
-  vide; pdf "$work/cv/cv-en.pdf"; pdf "$work/cv/cv-fr.pdf" "Rien" "" "$motif"
+  vide; tests_pdf "$work/cv/cv-en.pdf"; tests_pdf "$work/cv/cv-fr.pdf" "Rien" "" "$motif"
   controle "$(liste)"
   assert_eq 1 "$rc" "un motif dans le XMP fait échouer"
   assert_contains "contenu privé dans le XMP" "$err" "le signalement nomme la source"
@@ -163,7 +170,7 @@ case_pdf_motif_dans_le_xmp() {
 
 case_pdf_le_motif_nest_jamais_affiche() {
   # La règle qui compte : une alerte dit où, jamais quoi.
-  vide; pdf "$work/cv/cv-en.pdf"; pdf "$work/cv/cv-fr.pdf" "$motif ici" "$motif" "$motif"
+  vide; tests_pdf "$work/cv/cv-en.pdf"; tests_pdf "$work/cv/cv-fr.pdf" "$motif ici" "$motif" "$motif"
   controle "$(liste)"
   assert_eq 1 "$rc" "le PDF est refusé"
   [[ $err != *"$motif"* && $out != *"$motif"* ]] \
@@ -173,7 +180,7 @@ case_pdf_le_motif_nest_jamais_affiche() {
 case_pdf_sans_liste_de_motifs() {
   # Sur GitHub, la liste n'existe pas : le contrôle se limite à la forme et le dit, plutôt que de
   # laisser croire que le contenu a été confronté.
-  vide; pdf "$work/cv/cv-en.pdf"; pdf "$work/cv/cv-fr.pdf" "$motif ici"
+  vide; tests_pdf "$work/cv/cv-en.pdf"; tests_pdf "$work/cv/cv-fr.pdf" "$motif ici"
   controle ""
   assert_eq 0 "$rc" "sans liste, un motif dans le texte ne fait pas échouer (messages : $err)"
   assert_contains "liste des motifs absente" "$out" "le contrôle dit ce qu'il n'a pas vérifié"
@@ -181,7 +188,7 @@ case_pdf_sans_liste_de_motifs() {
 
 case_pdf_outil_absent_est_une_anomalie() {
   # Un PDF non lu ne doit pas passer pour un PDF propre : code 2, jamais 0.
-  vide; pdf "$work/cv/cv-fr.pdf"; pdf "$work/cv/cv-en.pdf"
+  vide; tests_pdf "$work/cv/cv-fr.pdf"; tests_pdf "$work/cv/cv-en.pdf"
   # Un PATH qui porte tout **sauf** poppler : les outils sont liés depuis leur emplacement réel,
   # jamais depuis un chemin supposé — « bash » n'est pas au même endroit partout.
   rm -rf "$work/bin-nu"; mkdir -p "$work/bin-nu"
@@ -209,15 +216,15 @@ case_pdf_le_pre_commit_lance_c21_avant_le_garde_fou() {
   cp "$root/scripts/checks/pdf.sh" "$root/scripts/checks/lib.sh" "$depot/scripts/checks/"
   cp "$root"/scripts/lib/*.sh "$depot/scripts/lib/"
   # La seule règle retirée est celle du chemin des PDF ; tout le reste du garde-fou est le vrai.
-  sed 's#|\^assets/cv/\.\*\\\.pdf\$##' "$root/scripts/check-private.sh" > "$depot/scripts/check-private.sh"
+  cp "$root/scripts/check-private.sh" "$depot/scripts/check-private.sh"
   chmod +x "$depot/scripts/check-private.sh"
   cp "$root/.githooks/pre-commit" "$depot/.githooks/"
   git -C "$depot" config core.hooksPath .githooks
   printf '# faux\n%s\n' "$motif" > "$depot/motifs.txt"
 
   # 1. Un PDF porteur du motif dans ses métadonnées : refusé, et c'est C21 qui parle.
-  pdf "$depot/assets/cv/cv-fr.pdf" "Rien" "$motif"
-  pdf "$depot/assets/cv/cv-en.pdf"
+  tests_pdf "$depot/assets/cv/cv-fr.pdf" "Rien" "$motif"
+  tests_pdf "$depot/assets/cv/cv-en.pdf"
   git -C "$depot" add assets >/dev/null
   run env PRIVATE_PATTERNS_FILE="$depot/motifs.txt" git -C "$depot" commit -q -m "essai"
   assert_eq 1 "$rc" "le commit d un PDF porteur d un motif est refusé"
@@ -227,7 +234,7 @@ case_pdf_le_pre_commit_lance_c21_avant_le_garde_fou() {
   assert_eq 128 "$rc" "aucun commit n a été créé"
 
   # 2. Deux PDF propres : C21 passe, le hook laisse le commit se faire.
-  pdf "$depot/assets/cv/cv-fr.pdf" "Parcours"
+  tests_pdf "$depot/assets/cv/cv-fr.pdf" "Parcours"
   git -C "$depot" add assets >/dev/null
   local avant apres
   avant=$(find "${TMPDIR:-/tmp}" -maxdepth 1 -type d -name 'tmp.*' 2>/dev/null | wc -l)
@@ -271,7 +278,7 @@ case_pdf_le_pre_commit_ne_lance_c21_que_pour_assets_cv() {
 case_pdf_fichier_inattendu_dans_le_dossier() {
   # Un « cv-ancien.pdf » oublié là ne serait lu par aucune boucle : il est refusé (revue du code
   # de la PR n° 84).
-  vide; pdf "$work/cv/cv-fr.pdf"; pdf "$work/cv/cv-en.pdf"; pdf "$work/cv/cv-ancien.pdf" "$motif"
+  vide; tests_pdf "$work/cv/cv-fr.pdf"; tests_pdf "$work/cv/cv-en.pdf"; tests_pdf "$work/cv/cv-ancien.pdf" "$motif"
   controle "$(liste)"
   assert_eq 1 "$rc" "un PDF inattendu fait échouer"
   assert_contains "fichier inattendu" "$err" "le signalement le dit"
@@ -290,7 +297,7 @@ case_pdf_le_pre_commit_voit_un_nom_non_ascii() {
   git -C "$depot" config user.name Essai
   cp "$root/scripts/checks/pdf.sh" "$root/scripts/checks/lib.sh" "$depot/scripts/checks/"
   cp "$root"/scripts/lib/*.sh "$depot/scripts/lib/"
-  sed 's#|\^assets/cv/\.\*\\\.pdf\$##' "$root/scripts/check-private.sh" > "$depot/scripts/check-private.sh"
+  cp "$root/scripts/check-private.sh" "$depot/scripts/check-private.sh"
   chmod +x "$depot/scripts/check-private.sh"
   cp "$root/.githooks/pre-commit" "$depot/.githooks/"
   git -C "$depot" config core.hooksPath .githooks
@@ -298,7 +305,7 @@ case_pdf_le_pre_commit_voit_un_nom_non_ascii() {
 
   # Un nom non-ASCII, donc cité par git ; le fichier est par ailleurs un intrus, ce que C21 doit
   # dire — et ne dira que s il a été réveillé.
-  pdf "$depot/assets/cv/cv-café.pdf"
+  tests_pdf "$depot/assets/cv/cv-café.pdf"
   git -C "$depot" add assets >/dev/null
   run env PRIVATE_PATTERNS_FILE="$depot/motifs.txt" git -C "$depot" commit -q -m "nom non ascii"
   assert_eq 1 "$rc" "un PDF au nom non-ASCII réveille bien C21"
@@ -316,14 +323,14 @@ case_pdf_le_pre_commit_voit_une_suppression() {
   git -C "$depot" config user.name Essai
   cp "$root/scripts/checks/pdf.sh" "$root/scripts/checks/lib.sh" "$depot/scripts/checks/"
   cp "$root"/scripts/lib/*.sh "$depot/scripts/lib/"
-  sed 's#|\^assets/cv/\.\*\\\.pdf\$##' "$root/scripts/check-private.sh" > "$depot/scripts/check-private.sh"
+  cp "$root/scripts/check-private.sh" "$depot/scripts/check-private.sh"
   chmod +x "$depot/scripts/check-private.sh"
   cp "$root/.githooks/pre-commit" "$depot/.githooks/"
   git -C "$depot" config core.hooksPath .githooks
   printf '# faux\n%s\n' "$motif" > "$depot/motifs.txt"
 
-  pdf "$depot/assets/cv/cv-fr.pdf" "Parcours"
-  pdf "$depot/assets/cv/cv-en.pdf" "Experience"
+  tests_pdf "$depot/assets/cv/cv-fr.pdf" "Parcours"
+  tests_pdf "$depot/assets/cv/cv-en.pdf" "Experience"
   git -C "$depot" add assets >/dev/null
   run env PRIVATE_PATTERNS_FILE="$depot/motifs.txt" git -C "$depot" commit -q -m "les deux"
   assert_eq 0 "$rc" "les deux CV se commitent (messages : $err)"
@@ -346,33 +353,47 @@ case_pdf_le_pre_commit_voit_un_changement_de_type() {
   git -C "$depot" config user.name Essai
   cp "$root/scripts/checks/pdf.sh" "$root/scripts/checks/lib.sh" "$depot/scripts/checks/"
   cp "$root"/scripts/lib/*.sh "$depot/scripts/lib/"
-  sed 's#|\^assets/cv/\.\*\\\.pdf\$##' "$root/scripts/check-private.sh" > "$depot/scripts/check-private.sh"
+  cp "$root/scripts/check-private.sh" "$depot/scripts/check-private.sh"
   chmod +x "$depot/scripts/check-private.sh"
   cp "$root/.githooks/pre-commit" "$depot/.githooks/"
   git -C "$depot" config core.hooksPath .githooks
   printf '# faux\n%s\n' "$motif" > "$depot/motifs.txt"
 
-  pdf "$depot/assets/cv/cv-fr.pdf" "Parcours"
-  pdf "$depot/assets/cv/cv-en.pdf" "Experience"
+  tests_pdf "$depot/assets/cv/cv-fr.pdf" "Parcours"
+  tests_pdf "$depot/assets/cv/cv-en.pdf" "Experience"
   git -C "$depot" add assets >/dev/null
   run env PRIVATE_PATTERNS_FILE="$depot/motifs.txt" git -C "$depot" commit -q -m "les deux"
   assert_eq 0 "$rc" "les deux CV se commitent (messages : $err)"
 
   # cv-en.pdf devient un lien symbolique vers un PDF porteur du motif : le contenu suivi change de
-  # nature, et C21 doit lire ce que le lien désigne.
-  pdf "$depot/ailleurs.pdf" "Rien" "$motif"
+  # nature, et le commit doit être refusé.
+  #
+  # **Le garde-fou ne suit pas le lien, et c'est voulu.** Git range un lien symbolique comme un blob
+  # contenant le chemin visé ; « git cat-file blob » rend donc ce texte, pas le PDF. C21 constate
+  # l'absence d'en-tête « %PDF- » et refuse. Suivre le lien serait pire : il pointe hors du dépôt,
+  # et le garde-fou lirait un fichier que personne ne commite.
+  #
+  # Le commentaire d'origine annonçait l'inverse — « C21 doit lire ce que le lien désigne » — et
+  # personne ne l'a vu, parce que le lien était mort : le cas échouait par « ensemble ou rien », un
+  # code 1 pour la mauvaise raison (revue de la PR n° 94). D'où l'assertion sur le **message**.
+  tests_pdf "$depot/ailleurs.pdf" "Rien" "$motif"
   rm "$depot/assets/cv/cv-en.pdf"
   ln -s ../../ailleurs.pdf "$depot/assets/cv/cv-en.pdf"
+  [[ -e $depot/assets/cv/cv-en.pdf ]] || { echo "le lien symbolique est mort : le cas ne prouverait rien" >&2; exit 1; }
   git -C "$depot" add assets >/dev/null
   run env PRIVATE_PATTERNS_FILE="$depot/motifs.txt" git -C "$depot" commit -q -m "changement de type"
   assert_eq 1 "$rc" "un changement de type réveille C21 et le commit est refusé"
-  assert_contains "C21" "$err" "C21 a parlé"
+  # Le refus vient de C21 qui refuse de traiter le lien comme un PDF — et **non** de la règle
+  # « ensemble ou rien », qui aurait parlé si le lien était mort. Affirmer le message, et pas
+  # seulement le code, est ce qui distingue les deux.
+  assert_contains "ce n'est pas un PDF" "$err" "C21 refuse le lien plutôt que de le suivre hors du dépôt"
+  [[ $err != *"ensemble ou rien"* ]] || { echo "le refus vient d un CV manquant, pas du changement de type" >&2; exit 1; }
 }
 
 case_pdf_sous_dossier_inattendu() {
   # Borner la recherche à la profondeur 1 était la même faute que borner le filtre du hook :
   # « assets/cv/vieux/cv.pdf » n'était lu par personne.
-  vide; pdf "$work/cv/cv-fr.pdf"; pdf "$work/cv/cv-en.pdf"; pdf "$work/cv/vieux/cv.pdf" "$motif"
+  vide; tests_pdf "$work/cv/cv-fr.pdf"; tests_pdf "$work/cv/cv-en.pdf"; tests_pdf "$work/cv/vieux/cv.pdf" "$motif"
   controle "$(liste)"
   assert_eq 1 "$rc" "un PDF dans un sous-dossier fait échouer"
   assert_contains "vieux/cv.pdf" "$err" "le signalement donne le chemin depuis le dossier des CV"
@@ -389,18 +410,18 @@ case_pdf_le_pre_commit_lit_lindex_et_non_larbre() {
   git -C "$depot" config user.name Essai
   cp "$root/scripts/checks/pdf.sh" "$root/scripts/checks/lib.sh" "$depot/scripts/checks/"
   cp "$root"/scripts/lib/*.sh "$depot/scripts/lib/"
-  sed 's#|\^assets/cv/\.\*\\\.pdf\$##' "$root/scripts/check-private.sh" > "$depot/scripts/check-private.sh"
+  cp "$root/scripts/check-private.sh" "$depot/scripts/check-private.sh"
   chmod +x "$depot/scripts/check-private.sh"
   cp "$root/.githooks/pre-commit" "$depot/.githooks/"
   git -C "$depot" config core.hooksPath .githooks
   printf '# faux\n%s\n' "$motif" > "$depot/motifs.txt"
 
   # La version privée est indexée…
-  pdf "$depot/assets/cv/cv-fr.pdf" "Rien" "$motif"
-  pdf "$depot/assets/cv/cv-en.pdf" "Experience"
+  tests_pdf "$depot/assets/cv/cv-fr.pdf" "Rien" "$motif"
+  tests_pdf "$depot/assets/cv/cv-en.pdf" "Experience"
   git -C "$depot" add assets >/dev/null
   # … puis l'arbre de travail est nettoyé. L'index, lui, garde le PDF porteur du motif.
-  pdf "$depot/assets/cv/cv-fr.pdf" "Parcours"
+  tests_pdf "$depot/assets/cv/cv-fr.pdf" "Parcours"
 
   run env PRIVATE_PATTERNS_FILE="$depot/motifs.txt" git -C "$depot" commit -q -m "index sale, arbre propre"
   assert_eq 1 "$rc" "c est la version indexée qui est contrôlée, pas celle du disque"
@@ -411,7 +432,7 @@ case_pdf_repli_sur_la_liste_du_depot() {
   # Sans variable, le contrôle doit trouver la liste du dépôt : « scripts/check.sh » ne la lui
   # passe pas, et sans ce repli il se contentait de la forme alors que la liste était là
   # (constaté à la story 7.2).
-  vide; pdf "$work/cv/cv-fr.pdf"; pdf "$work/cv/cv-en.pdf"
+  vide; tests_pdf "$work/cv/cv-fr.pdf"; tests_pdf "$work/cv/cv-en.pdf"
   if [[ ! -f $root/docs/private/forbidden-patterns.txt ]]; then
     skip_case "pas de docs/private/ dans ce clone"
     return

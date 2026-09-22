@@ -26,10 +26,11 @@ script_name=pdf
 # charge aussi : une seule écriture de « ce qu'est lire un PDF » pour le contrôle et pour le hook.
 . "$(dirname "${BASH_SOURCE[0]}")/../lib/pdf.sh"
 
-readonly attendus=(cv-fr.pdf cv-en.pdf)
+# Les deux noms et le dossier viennent de lib/pdf.sh, chargée ci-dessus : une seule écriture pour
+# le contrôle, le garde-fou et C12 (constat A1, rétrospective de l'epic 7).
 readonly poids_max=500000
 
-cv_dir=${CHECK_CV_DIR:-assets/cv}
+cv_dir=${CHECK_CV_DIR:-$pdf_cv_assets_dir}
 
 # Les deux outils sont exigés, et leur absence est une **anomalie**, jamais un succès : un PDF non
 # lu passerait sinon pour un PDF propre, ce qui est exactement ce que ce contrôle existe pour
@@ -100,7 +101,7 @@ confronter() { # $1 = nom du fichier, $2 = source (texte, métadonnées, XMP), $
 
 # --- « ensemble ou rien », et rien d'autre --------------------------------------------------------
 presents=() absents=()
-for nom in "${attendus[@]}"; do
+for nom in "${pdf_cv_names[@]}"; do
   if [[ -f $cv_dir/$nom ]]; then presents+=("$nom"); else absents+=("$nom"); fi
 done
 
@@ -111,10 +112,14 @@ done
 if [[ -d $cv_dir ]]; then
   # Sans profondeur limitée : un « assets/cv/vieux/cv.pdf » serait sinon ignoré, ce qui est la
   # même faute que celle du filtre du hook — borner la recherche à ce qu'on imagine.
-  inattendus=$(checks_find "$cv_dir" -type f ! -name 'cv-fr.pdf' ! -name 'cv-en.pdf' -printf '%P\n' | LC_ALL=C sort) || exit $?
+  # Le filtre se construit depuis la liste : ajouter un troisième nom à AD-21 ne demanderait
+  # aucune retouche ici, et n'ouvrirait donc pas le trou d'un filtre resté en arrière.
+  exclusions=()
+  for nom in "${pdf_cv_names[@]}"; do exclusions+=(! -name "$nom"); done
+  inattendus=$(checks_find "$cv_dir" -type f "${exclusions[@]}" -printf '%P\n' | LC_ALL=C sort) || exit $?
   while IFS= read -r intrus; do
     [[ -n $intrus ]] || continue
-    signaler "$intrus" "C21 : fichier inattendu dans $cv_dir ; AD-21 n'y nomme que ${attendus[*]}"
+    signaler "$intrus" "C21 : fichier inattendu dans $cv_dir ; AD-21 n'y nomme que ${pdf_cv_names[*]}"
   done <<< "$inattendus"
 fi
 
@@ -138,6 +143,12 @@ for nom in "${presents[@]}"; do
   # — le fichier est là, il est simplement mauvais.
   infos=$(pdf_metadata "$fichier") || { signaler "$nom" "C21 : pdfinfo ne sait pas lire ce fichier"; continue; }
   pages=$(pdf_pages "$fichier") || { signaler "$nom" "C21 : pdfinfo ne sait pas lire ce fichier"; continue; }
+  # Ceinture : poppler refuse lui-même un arbre de pages vide (« Invalid page count 0 ») et
+  # « pdf_pages » échoue avant d'arriver ici, si bien que cette branche ne se déclenche avec
+  # poppler sur aucun fichier connu — vérifié en écrivant son test (constat A10, rétrospective de
+  # l'epic 7). Elle est gardée parce qu'elle ne coûte rien et qu'un lecteur plus tolérant rendrait
+  # « 0 » au lieu d'échouer ; l'invariant « un CV sans page ne passe pas » est tenu dans les deux
+  # cas, et c'est lui que le test exerce.
   [[ -n $pages ]] && ((pages >= 1)) \
     || signaler "$nom" "C21 : aucune page"
 
