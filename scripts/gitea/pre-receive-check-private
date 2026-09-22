@@ -19,8 +19,18 @@ list="$dir/forbidden-patterns.txt"
 # Elle est vérifiée ici pour que le refus nomme ce qui manque, plutôt que de laisser le garde-fou
 # échouer sur un « source: fichier introuvable ».
 lib="$dir/lib/image.sh"
+# Même règle pour la lecture des PDF depuis la story 7.3 : sans elle, le texte et les métadonnées
+# d'un CV ne seraient lus par personne, et le miroir publierait dans la seconde.
+lib_pdf="$dir/lib/pdf.sh"
 [[ -f $script && -r $script ]] || refuse "script du garde-fou absent ou illisible"
 [[ -f $lib && -r $lib ]] || refuse "bibliothèque de lecture d'images absente ou illisible"
+[[ -f $lib_pdf && -r $lib_pdf ]] || refuse "bibliothèque de lecture des PDF absente ou illisible"
 [[ -f $list && -r $list ]] || refuse "liste des motifs absente ou illisible"
+# poppler est vérifié ici pour que le refus nomme le paquet, plutôt que de laisser le garde-fou
+# échouer sur une commande introuvable au milieu d'un push.
+for outil in pdftotext pdfinfo; do
+  command -v "$outil" > /dev/null 2>&1 \
+    || refuse "$outil absent (paquet poppler-utils) : un CV PDF ne pourrait pas être lu"
+done
 
 PRIVATE_PATTERNS_FILE=$list exec bash "$script" pre-receive

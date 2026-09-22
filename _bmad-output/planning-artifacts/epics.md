@@ -2435,23 +2435,39 @@ afin de pouvoir commiter des CV PDF sans risque pour le dépôt public.
 **Dépendances :** 1.2, 7.1
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, Gitea tourne en Docker : construire une image dérivée de l'image Gitea en service (`apk add --no-cache poppler-utils`), la faire tourner à la place de l'officielle, et la reconstruire à chaque montée de version ; recopier le hook mis à jour. Le développeur prépare la modification de `check-private` et la liste de vérification.
+**Opération manuelle (Arnaud) :** **oui**. Ce que fait l'opérateur du homelab :
+
+- construire une image dérivée de l'image Gitea en service (`apk add --no-cache poppler-utils`) ;
+- la faire tourner à la place de l'officielle, et la reconstruire à chaque montée de version ;
+- recopier sur la forge le garde-fou, ses bibliothèques et le lanceur.
+
+Ce que fait le développeur, avant : la modification de `check-private.sh`, la bibliothèque de lecture des PDF, la liste de vérification et la procédure.
 
 **Critères d'acceptation :**
 
 **Étant donné** le conteneur Gitea recréé depuis l'image dérivée
 **Quand** l'utilisateur système de Gitea lance `pdftotext` et `pdfinfo`
-**Alors** les deux commandes répondent.
+**Alors** les deux commandes répondent. Sans elles, le garde-fou **refuse le push** en nommant le paquet : un PDF non lu ne passe pas pour un PDF propre.
 
-**Étant donné** le hook qui extrait chaque PDF ajouté ou modifié (`git cat-file` vers un fichier temporaire) et lance `pdf.sh`
-**Quand** Arnaud pousse sur une branche jetable un PDF factice contenant un motif de test ajouté temporairement à la liste
-**Alors** le push est refusé, puis le motif de test est retiré.
+**Étant donné** `check-private.sh`, qui extrait chaque PDF ajouté ou modifié par les commits poussés (`git cat-file` vers un fichier temporaire) et confronte son **texte, ses métadonnées et son XMP** à la liste des motifs, par `scripts/lib/pdf.sh`
+**Quand** le fichier temporaire a servi
+**Alors** il est **supprimé**, y compris si le script s'arrête en chemin : un PDF extrait qui survit sur le serveur est une fuite, et le disque finirait par saturer.
 
-**Étant donné** le test précédent réussi
-**Quand** `assets/cv/*.pdf` est retiré des chemins interdits de `check-private.sh`
-**Alors** le script est recopié sur le serveur et les tests de la story 1.2 repassent.
+**Étant donné** l'ordre des opérations, qui ne peut pas être celui qu'énonçait cette story
+**Quand** on veut éprouver le refus côté serveur
+**Alors** l'interdiction de chemin doit **précéder** l'essai, et non le suivre : tant que `assets/cv/cv-{fr,en}.pdf` est un chemin interdit, un PDF poussé est refusé pour son chemin et l'essai ne prouve rien de C21. La séquence est donc : le garde-fou est modifié **et** l'interdiction levée dans la même version, les deux sont déployés, puis l'essai a lieu. Il est sûr parce que le PDF d'essai est **fabriqué** et le motif **factice** : si le refus manquait, ce qui serait publié n'est rien.
 
+**Étant donné** un PDF d'essai fabriqué dont le **motif factice est dans les métadonnées**, poussé sur une branche jetable
+**Quand** le hook s'exécute
+**Alors** le push est refusé en nommant le fichier et la source, **sans recopier le motif**. Le motif dans les métadonnées plutôt que dans le texte : c'est là qu'un téléphone se cache dans un export, et c'est la moitié de FR-38 qu'un contrôle du seul texte manquerait.
+
+**Étant donné** l'essai réussi
+**Quand** les essais 1 et 3 de la story 1.2 sont rejoués
+**Alors** ils passent, et le motif factice est retiré de la liste.
+
+- [ ] L'interdiction levée ne porte que sur **`assets/cv/cv-fr.pdf` et `assets/cv/cv-en.pdf`**, nommés, et non sur `assets/cv/*.pdf` : AD-21 ne connaît que ces deux fichiers, et tout autre PDF à cet endroit reste un chemin interdit.
 - [ ] L'image dérivée et sa reconstruction à chaque montée de version sont notées dans la procédure d'Arnaud, sans nom d'hôte.
+- [ ] Le retour arrière est écrit : si l'essai échoue, la branche est supprimée de la forge et la version précédente du garde-fou est remise, l'interdiction de chemin avec.
 
 ### Story 7.4 : Publish CV PDFs
 

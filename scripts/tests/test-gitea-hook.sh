@@ -10,9 +10,11 @@ install_hook() {
   cp "$root/scripts/check-private.sh" "$work/custom/eleyone-check-private/check-private.sh"
   # La bibliothèque de lecture d'images est copiée sous le même chemin relatif que dans le dépôt,
   # comme la procédure du hook le prescrit depuis la story 5.4 : check-private.sh la charge par
-  # « dirname $0 »/lib/image.sh, et ce chemin doit valoir des deux côtés.
+  # « dirname $0 »/lib/image.sh, et ce chemin doit valoir des deux côtés. Depuis la story 7.3,
+  # lib/pdf.sh l'accompagne : le garde-fou lit aussi le texte et les métadonnées des CV PDF.
   mkdir -p "$work/custom/eleyone-check-private/lib"
   cp "$root/scripts/lib/image.sh" "$work/custom/eleyone-check-private/lib/image.sh"
+  cp "$root/scripts/lib/pdf.sh" "$work/custom/eleyone-check-private/lib/pdf.sh"
   printf '# motifs d essai\nmotif-interdit-essai\n' > "$work/custom/eleyone-check-private/forbidden-patterns.txt"
   git init -q --bare "$work/nu.git"
   git -C "$work/nu.git" config core.hooksPath "$work/nu.git/hooks"
@@ -34,6 +36,22 @@ EOF
   chmod +x "$work/nu.git/hooks/pre-receive"
   new_repo
   git -C "$work/depot" remote add origin "$work/nu.git"
+}
+
+# Un PDF minimal, fabriqué octet par octet : aucun PDF n'entre dans le dépôt, et le motif éventuel
+# va dans les **métadonnées**, là où il se cache dans un vrai export.
+ecrire_pdf() { # $1 = chemin, $2 = motif à poser en auteur, ou rien
+  local chemin=$1 auteur=${2:-} flux="BT /F1 12 Tf 20 150 Td (CV) Tj ET" info="" objets=""
+  mkdir -p "$(dirname "$chemin")"
+  objets+="1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj"$'\n'
+  objets+="2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj"$'\n'
+  objets+="3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 300]/Contents 4 0 R>>endobj"$'\n'
+  objets+="4 0 obj<</Length ${#flux}>>stream"$'\n'"$flux"$'\n'"endstream endobj"$'\n'
+  if [[ -n $auteur ]]; then
+    objets+="98 0 obj<</Author ($auteur)>>endobj"$'\n'
+    info="/Info 98 0 R"
+  fi
+  printf '%%PDF-1.4\n%s\ntrailer<</Root 1 0 R%s/Size 100>>\n%%%%EOF\n' "$objets" "$info" > "$chemin"
 }
 
 commit_file() { # $1 chemin, $2 contenu
@@ -116,6 +134,82 @@ case_liste_illisible() {
   chmod 000 "$work/custom/eleyone-check-private/forbidden-patterns.txt"
   commit_file publique/a.txt "page publique"
   refused "liste illisible" "liste des motifs absente ou illisible"
+}
+
+case_bibliotheque_de_pdf_absente() {
+  # Sans elle, le texte et les métadonnées d'un CV ne seraient lus par personne : le hook refuse
+  # plutôt que de laisser passer (story 7.3, même règle que pour les images).
+  install_hook
+  rm "$work/custom/eleyone-check-private/lib/pdf.sh"
+  commit_file publique/a.txt "page publique"
+  refused "bibliothèque de PDF absente" "bibliothèque de lecture des PDF absente ou illisible"
+}
+
+case_cv_pdf_avec_un_motif_refuse() {
+  # Le cœur de la story 7.3 : un CV dont le **motif est dans les métadonnées** est refusé côté
+  # serveur. C'est là qu'un téléphone se cache dans un export, et c'est la moitié de FR-38 qu'un
+  # contrôle du seul texte manquerait.
+  install_hook
+  mkdir -p "$work/depot/assets/cv"
+  ecrire_pdf "$work/depot/assets/cv/cv-fr.pdf" motif-interdit-essai
+  ecrire_pdf "$work/depot/assets/cv/cv-en.pdf"
+  commit_all "ajout des CV" > /dev/null
+  refused "CV avec un motif dans les métadonnées" "contenu privé dans métadonnées d'un PDF"
+  assert_contains "assets/cv/cv-fr.pdf" "$err" "le fichier fautif est nommé"
+  # Le PDF fabriqué ici est du texte, donc « git grep -I » le voit aussi : ses deux signalements
+  # se superposent. Sur un vrai PDF compressé, git l'ignorerait et seule la lecture par poppler
+  # le trouverait — c'est précisément le trou que cette story ferme.
+  [[ $err != *"motif-interdit-essai"* ]] || { echo "le motif apparaît dans les messages" >&2; exit 1; }
+}
+
+case_cv_pdf_propre_admis() {
+  # La contre-épreuve : sans quoi un hook qui refuse tout passerait pour un hook qui marche.
+  install_hook
+  mkdir -p "$work/depot/assets/cv"
+  ecrire_pdf "$work/depot/assets/cv/cv-fr.pdf"
+  ecrire_pdf "$work/depot/assets/cv/cv-en.pdf"
+  commit_all "ajout des CV" > /dev/null
+  push_branch
+  assert_eq 0 "$rc" "deux CV propres sont admis (messages : $err)"
+}
+
+case_pdf_inattendu_sous_assets_cv_refuse() {
+  # L'interdiction n'est levée que pour les deux noms d'AD-21. Tout autre PDF à cet endroit reste
+  # un chemin interdit : ce que le hook ne sait pas nommer, il le refuse.
+  install_hook
+  mkdir -p "$work/depot/assets/cv"
+  ecrire_pdf "$work/depot/assets/cv/cv-ancien.pdf"
+  commit_all "ajout d un PDF inattendu" > /dev/null
+  refused "PDF inattendu" "assets/cv/cv-ancien.pdf"
+}
+
+case_plusieurs_commits_avec_des_cv_ne_laissent_rien() {
+  # Le mode pre-receive contrôle **un commit à la fois** : un « mktemp » par appel écrasait la
+  # variable, et le nettoyage n'emportait que le dernier — un push de dix commits laissait neuf CV
+  # extraits sur la forge (revue du code de la PR n° 86). Un seul cas à un commit ne pouvait pas
+  # le voir : c'est la pluralité qui le révèle.
+  install_hook
+  local avant apres i
+  avant=$(find "${TMPDIR:-/tmp}" -maxdepth 1 -type f -name 'tmp.*' 2>/dev/null | wc -l)
+  mkdir -p "$work/depot/assets/cv"
+  ecrire_pdf "$work/depot/assets/cv/cv-fr.pdf"
+  ecrire_pdf "$work/depot/assets/cv/cv-en.pdf"
+  commit_all "ajout des CV" > /dev/null
+  # Trois commits de plus, chacun retouchant un CV : trois passages dans la lecture des PDF.
+  for i in 1 2 3; do
+    mkdir -p "$work/depot/publique"
+    ecrire_pdf "$work/depot/assets/cv/cv-fr.pdf"
+    printf '%s\n' "$i" > "$work/depot/publique/tour.txt"
+    commit_all "tour $i" > /dev/null
+  done
+  push_branch
+  assert_eq 0 "$rc" "quatre commits avec des CV propres sont admis (messages : $err)"
+  apres=$(find "${TMPDIR:-/tmp}" -maxdepth 1 -type f -name 'tmp.*' 2>/dev/null | wc -l)
+  ((apres <= avant)) || {
+    printf 'le garde-fou laisse %s fichier(s) temporaire(s) après un push de plusieurs commits.\n' \
+      "$((apres - avant))" >&2
+    exit 1
+  }
 }
 
 run_case "$@"

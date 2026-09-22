@@ -9,8 +9,9 @@
 #     (pdfinfo) et le **XMP** (pdfinfo -meta) lui sont confrontés. Un téléphone ou une ville de
 #     résidence vit souvent dans les métadonnées d'un PDF exporté, que personne ne regarde.
 #
-# Le garde-fou ne peut pas faire ce travail : il ignore les binaires (« git grep -I »). C'est
-# pourquoi ce contrôle tourne aussi au pre-commit et dans le hook pre-receive (AD-21).
+# Le garde-fou ne peut pas chercher dans un binaire (« git grep -I ») : il charge donc la même
+# bibliothèque, scripts/lib/pdf.sh, et confronte lui-même chaque PDF poussé ou indexé (story 7.3).
+# Ce contrôle, lui, juge la paire publiée : présence, forme, poids, et contenu.
 #
 # **Aucun message n'affiche le motif ni le texte trouvé** : un motif est cité par son numéro de
 # ligne dans la liste, comme le fait check-private.sh. Le seuil de 500 Ko est propre à cette story :
@@ -21,6 +22,9 @@ set -euo pipefail
 
 script_name=pdf
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+# La lecture d'un PDF vit dans scripts/lib/pdf.sh, copiée à côté du garde-fou sur la forge, qui la
+# charge aussi : une seule écriture de « ce qu'est lire un PDF » pour le contrôle et pour le hook.
+. "$(dirname "${BASH_SOURCE[0]}")/../lib/pdf.sh"
 
 readonly attendus=(cv-fr.pdf cv-en.pdf)
 readonly poids_max=500000
@@ -30,10 +34,9 @@ cv_dir=${CHECK_CV_DIR:-assets/cv}
 # Les deux outils sont exigés, et leur absence est une **anomalie**, jamais un succès : un PDF non
 # lu passerait sinon pour un PDF propre, ce qui est exactement ce que ce contrôle existe pour
 # empêcher. Même règle que xmllint dans html.sh.
-for outil in pdftotext pdfinfo; do
-  command -v "$outil" > /dev/null 2>&1 \
-    || checks_die "$outil est introuvable (paquet poppler-utils) : prérequis du poste, présent dans CHECK_IMAGE (AD-1, AD-21)."
-done
+if manquant=$(pdf_missing_tool); then
+  checks_die "$manquant est introuvable (paquet poppler-utils) : prérequis du poste, présent dans CHECK_IMAGE (AD-1, AD-21)."
+fi
 
 fail=0
 signaler() { checks_report "$1" "$2"; fail=1; }
@@ -112,8 +115,7 @@ for nom in "${presents[@]}"; do
   fichier=$cv_dir/$nom
 
   # L'en-tête est lu sur les cinq premiers octets, jamais par grep : un binaire n'est pas du texte.
-  entete=$(head -c 5 "$fichier") || { signaler "$nom" "C21 : lecture impossible"; continue; }
-  [[ $entete == '%PDF-' ]] \
+  pdf_has_header "$fichier" \
     || { signaler "$nom" "C21 : ce n'est pas un PDF (en-tête « %PDF- » absent)"; continue; }
 
   octets=$(wc -c < "$fichier")
@@ -122,13 +124,13 @@ for nom in "${presents[@]}"; do
 
   # pdfinfo échoue sur un PDF corrompu : son code est lu, et l'échec est un écart, pas une anomalie
   # — le fichier est là, il est simplement mauvais.
-  infos=$(pdfinfo "$fichier" 2>/dev/null) || { signaler "$nom" "C21 : pdfinfo ne sait pas lire ce fichier"; continue; }
-  pages=$(sed -n 's/^Pages:[[:space:]]*\([0-9]\+\).*/\1/p' <<< "$infos" | head -1)
+  infos=$(pdf_metadata "$fichier") || { signaler "$nom" "C21 : pdfinfo ne sait pas lire ce fichier"; continue; }
+  pages=$(pdf_pages "$fichier") || { signaler "$nom" "C21 : pdfinfo ne sait pas lire ce fichier"; continue; }
   [[ -n $pages ]] && ((pages >= 1)) \
     || signaler "$nom" "C21 : aucune page"
 
-  texte=$(pdftotext "$fichier" - 2>/dev/null) || { signaler "$nom" "C21 : pdftotext ne sait pas lire ce fichier"; continue; }
-  xmp=$(pdfinfo -meta "$fichier" 2>/dev/null) || xmp=""
+  texte=$(pdf_text "$fichier") || { signaler "$nom" "C21 : pdftotext ne sait pas lire ce fichier"; continue; }
+  xmp=$(pdf_xmp "$fichier")
 
   confronter "$nom" "le texte" "$texte"
   confronter "$nom" "les métadonnées" "$infos"

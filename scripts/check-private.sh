@@ -18,8 +18,10 @@
 set -euo pipefail
 
 # Les chemins sont comparés sans tenir compte de la casse : « Docs/Private/ » est aussi refusé.
-# Une interdiction reste temporaire, le temps que le hook sache lire ce binaire :
-#   assets/cv/*.pdf tant que C21 n'est pas dans le hook (AD-21, story 7.x)
+# **L'interdiction des CV PDF est levée depuis la story 7.3**, et seulement pour les **deux noms
+# qu'AD-21 connaît** : le garde-fou lit désormais le texte, les métadonnées et le XMP de chaque PDF
+# poussé ou indexé, par scripts/lib/pdf.sh. Tout autre PDF sous assets/cv/ reste un chemin interdit
+# — AD-21 n'en prévoit pas, et ce que le hook ne sait pas nommer, il le refuse.
 # L'interdiction des extensions d'images est **levée sous assets/** depuis la story 5.4 : C20 y lit
 # désormais les métadonnées de chaque image, dans le hook comme en CI (AD-19, AD-12). Ailleurs elle
 # tient : C20 sait dire qu'une image ne porte pas de données de prise de vue, pas ce qu'elle montre.
@@ -38,11 +40,22 @@ else
   echo "check-private: scripts/lib/image.sh absent ou illisible ($image_lib) : C20 ne peut pas s'exécuter." >&2
   exit 1
 fi
+# Même règle pour la lecture des PDF (story 7.3) : son absence refuse, plutôt que de laisser passer
+# un CV dont personne n'aurait lu les métadonnées.
+pdf_lib="$(dirname "${BASH_SOURCE[0]}")/lib/pdf.sh"
+if [[ -r $pdf_lib ]]; then
+  . "$pdf_lib"
+else
+  echo "check-private: scripts/lib/pdf.sh absent ou illisible ($pdf_lib) : les PDF ne peuvent pas être lus." >&2
+  exit 1
+fi
 images_ext=$(image_extensions_regex)
 forbidden_paths="^docs/(private|context)/|(^|/)\.env($|\.)|^assets/cv/.*\.pdf$|\.$images_ext\$"
-allowed_paths="(^|/)\.env\.example\$|^design/[^/]+/screenshots/|^assets/.*\.$images_ext\$"
+allowed_paths="(^|/)\.env\.example\$|^design/[^/]+/screenshots/|^assets/.*\.$images_ext\$|^assets/cv/cv-(fr|en)\.pdf\$"
 # Les chemins que C20 doit lire : les images admises ci-dessus.
 image_paths="^assets/.*\.$images_ext\$"
+# Ceux que la lecture des PDF doit lire : les deux CV admis, et eux seuls.
+pdf_paths="^assets/cv/cv-(fr|en)\.pdf\$"
 patterns_file="${PRIVATE_PATTERNS_FILE:-$(git rev-parse --show-toplevel 2>/dev/null || true)/docs/private/forbidden-patterns.txt}"
 [[ $patterns_file == /* ]] || patterns_file="$PWD/$patterns_file"
 # depuis un sous-dossier, git ls-files, git ls-tree et git grep ne verraient que ce sous-dossier :
@@ -57,6 +70,29 @@ if [[ $mode == pre-receive && -z ${PRIVATE_PATTERNS_FILE:-} ]]; then
   exit 1
 fi
 status=0
+# **Un seul fichier temporaire pour tout le script**, réutilisé, nettoyé une fois à la sortie.
+#
+# Trois écritures ont été nécessaires pour arriver là, et les trois ratées se ressemblent : un
+# « rm » final ne couvre pas un arrêt en chemin ; un « trap … RETURN » posé dans une fonction se
+# déclenche au retour de la **suivante** ; et un « mktemp » par appel écrase la variable, si bien
+# que le nettoyage n'emporte que le dernier — or le mode pre-receive appelle une fois **par
+# commit poussé**, donc un push de dix commits laissait neuf CV extraits sur la forge (constats de
+# la story 7.1, de l'essai sur un vrai dépôt, et de la revue du code de la PR n° 86).
+#
+# La quatrième écriture est la bonne parce qu'elle n'est plus astucieuse : le fichier est créé
+# **une fois, tout de suite**, et nettoyé une fois. Une variante « à la demande » par fonction
+# paraissait plus économe ; appelée en « $(…) », elle tournait dans un sous-shell et son
+# affectation était perdue, si bien que chaque appel créait un fichier que plus personne ne
+# connaissait. Mesuré : un fichier de 297 octets — le PDF extrait — laissé par un seul push.
+#
+# Le coût est un fichier vide quand il n'y a ni image ni PDF à lire. C'est le prix de n'avoir
+# plus rien à compter.
+blob_temporaire=$(mktemp) || { echo "check-private: fichier temporaire impossible." >&2; exit 2; }
+nettoyer() {
+  rm -f "$blob_temporaire"
+  [[ -z $patterns ]] || rm -f "$patterns" "$patterns_text"
+}
+trap nettoyer EXIT
 sep=$'\001' # séparateur des champs de git grep -z : absent des noms de fichier, contrairement à la tabulation
 
 fail() { printf 'check-private: %b\n' "$*" >&2; status=1; }
@@ -65,7 +101,6 @@ patterns=""
 if [[ -f $patterns_file ]]; then
   patterns=$(mktemp)
   patterns_text=$(mktemp)
-  trap 'rm -f "$patterns" "$patterns_text"' EXIT
   # "numéro de ligne:motif", pour citer un motif par son numéro sans l'afficher
   rc=0
   grep -nvE '^[[:space:]]*(#|$)' "$patterns_file" > "$patterns" 2>/dev/null || rc=$?
@@ -96,12 +131,73 @@ fi
 #
 # Le contenu passe par un fichier temporaire : un blob binaire ne tient pas dans une variable
 # shell, que le premier octet nul tronque — l'image paraîtrait vide, donc propre.
+# Les PDF poussés ou indexés, confrontés à la liste (AD-21, story 7.3). Le garde-fou ne peut pas
+# chercher dans un binaire — « git grep -I » les ignore —, donc chaque CV est extrait dans un
+# fichier temporaire et lu par poppler.
+#
+# **Le fichier temporaire est supprimé quoi qu'il arrive** : un PDF extrait qui survit sur la forge
+# est une fuite, et le disque finirait par saturer. Le nettoyage est posé à la sortie du script,
+# pas au retour de cette fonction, et couvre donc aussi un arrêt en chemin — ce qu'un « rm » final
+# ne ferait pas (constat de la revue de spec, et leçon de la story 7.1 où un « exec » avait annulé
+# un nettoyage).
+#
+# L'absence de poppler **refuse le push** plutôt que de le laisser passer : un PDF non lu ne vaut
+# pas un PDF propre.
+check_pdfs() { # $1 = libellé, $2 = révision (« --cached » pour l'index), $3 = liste des chemins
+  local label=$1 rev=$2 listing=$3 fichiers chemin prc=0 blob manquant source extrait
+  [[ -n $patterns ]] || return 0
+  fichiers=$(printf '%s\n' "$listing" | grep -E -i "$pdf_paths") || prc=$?
+  ((prc <= 1)) || { fail "recherche des PDF impossible dans $label"; return 0; }
+  [[ -n $fichiers ]] || return 0
+  if manquant=$(pdf_missing_tool); then
+    fail "$manquant absent (paquet poppler-utils) : un PDF de $label ne peut pas être lu"
+    return 0
+  fi
+  blob=$blob_temporaire
+  while IFS= read -r chemin; do
+    [[ -n $chemin ]] || continue
+    if [[ $rev == --cached ]]; then
+      git cat-file blob ":$chemin" > "$blob" 2>/dev/null || { fail "lecture impossible d'un PDF de $label"; continue; }
+    else
+      git cat-file blob "$rev:$chemin" > "$blob" 2>/dev/null || { fail "lecture impossible d'un PDF de $label"; continue; }
+    fi
+    pdf_has_header "$blob" || { fail "ce n'est pas un PDF dans $label : $chemin"; continue; }
+    # Les trois sources, parce qu'un téléphone se cache plus souvent dans les métadonnées d'un
+    # export que dans le texte que le lecteur voit (FR-38).
+    for source in texte métadonnées XMP; do
+      case $source in
+        texte) extrait=$(pdf_text "$blob") || { fail "pdftotext ne sait pas lire un PDF de $label : $chemin"; continue 2; } ;;
+        métadonnées) extrait=$(pdf_metadata "$blob") || { fail "pdfinfo ne sait pas lire un PDF de $label : $chemin"; continue 2; } ;;
+        XMP) extrait=$(pdf_xmp "$blob") ;;
+      esac
+      check_extract "$label" "$chemin" "$source" "$extrait"
+    done
+  done <<< "$fichiers"
+}
+
+# Un extrait confronté à la liste, sans que rien de ce qu'il contient ne soit affiché : le fichier
+# et la source sont nommés, le motif cité par son numéro de ligne.
+check_extract() { # $1 = libellé, $2 = chemin, $3 = source, $4 = extrait
+  local label=$1 chemin=$2 source=$3 extrait=$4 rc=0 entry lignes="" trouve
+  [[ -n $extrait ]] || return 0
+  printf '%s\n' "$extrait" | grep -q -i -F -f "$patterns_text" || rc=$?
+  ((rc <= 1)) || { fail "recherche des motifs impossible dans $source d'un PDF de $label"; return 0; }
+  ((rc == 0)) || return 0
+  while IFS= read -r entry; do
+    trouve=0
+    printf '%s\n' "$extrait" | grep -q -i -F -e "${entry#*:}" || trouve=$?
+    ((trouve <= 1)) || { fail "recherche d'un motif impossible dans $source d'un PDF de $label"; return 0; }
+    ((trouve == 0)) && lignes+=" ${entry%%:*}"
+  done < "$patterns"
+  fail "contenu privé dans $source d'un PDF de $label (contenu masqué) : $chemin ; motif ligne${lignes}"
+}
+
 check_images() { # $1 = libellé, $2 = révision (« --cached » pour l'index), $3 = liste des chemins
   local label=$1 rev=$2 listing=$3 images chemin marqueurs prc=0 blob
   images=$(printf '%s\n' "$listing" | grep -E -i "$image_paths") || prc=$?
   ((prc <= 1)) || { fail "recherche des images impossible dans $label"; return 0; }
   [[ -n $images ]] || return 0
-  blob=$(mktemp) || { fail "fichier temporaire impossible pour $label"; return 0; }
+  blob=$blob_temporaire
   while IFS= read -r chemin; do
     [[ -n $chemin ]] || continue
     if [[ $rev == --cached ]]; then
@@ -115,7 +211,6 @@ check_images() { # $1 = libellé, $2 = révision (« --cached » pour l'index), 
     [[ -z $marqueurs ]] \
       || fail "C20 : métadonnées dans une image de $label : $chemin ($(tr '\n' ' ' <<< "$marqueurs" | sed 's/ $//'))"
   done <<< "$images"
-  rm -f "$blob"
 }
 
 check_tree() { # $1 = libellé, reste = arguments git (commit ou --cached)
@@ -154,6 +249,7 @@ check_tree() { # $1 = libellé, reste = arguments git (commit ou --cached)
   ((prc_cite <= 1)) || { fail "comptage des chemins cités impossible dans $label"; return 0; }
   ((cites == 0)) || fail "chemin illisible dans $label : $cites fichier(s) dont le nom porte un saut de ligne ou un caractère de contrôle ; les renommer"
   check_images "$label" "$1" "$listing"
+  check_pdfs "$label" "$1" "$listing"
   [[ -n $patterns ]] || return 0
   # les chemins eux-mêmes, confrontés aux motifs : un dossier ou un fichier nommé d'après un client fuit
   # autant que son contenu. Le chemin fautif n'est jamais affiché, il contient le motif.

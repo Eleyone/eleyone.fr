@@ -107,7 +107,7 @@ development_status:
   epic-7: in-progress
   7-1-cv-pdf-check-and-pre-commit: done
   7-2-conditional-cv-links-in-footer: done
-  7-3-pdf-extraction-in-pre-receive-hook: backlog
+  7-3-pdf-extraction-in-pre-receive-hook: done
   7-4-publish-cv-pdfs: backlog
   epic-7-retrospective: optional
 
