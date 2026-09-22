@@ -168,6 +168,29 @@ Le rejeu de C20-b après le changement de droits n'était pas demandé : un `lib
 
 **Un troisième point, qui n'appartenait à personne.** La ligne factice des essais 2, 3 bis, 3 ter et 5 est posée par Arnaud et retirée par Arnaud ; ni lui ni l'agent ne la voit dans son propre bilan, et elle est restée dans la liste du serveur après les essais. Inoffensive — un motif factice ne refuse que ce qu'on pousse exprès — mais la liste du serveur diverge alors de celle du dépôt privé, et cet écart ne se remarque qu'à la prochaine extraction. La section « Essayer » impose désormais que le compte rendu se termine par l'état de la liste, taille en octets à l'appui, et donne la commande qui retire la ligne sans l'afficher.
 
+### Déploiement de la story 7.3 (22/09/2026) — le conteneur change, pas seulement les fichiers
+
+Le garde-fou lit désormais le texte, les métadonnées et le XMP des CV PDF, ce que `git grep -I` ne sait pas faire. Cela demande `poppler-utils` **dans le conteneur** : l'image officielle de Gitea ne le porte pas. Premier déploiement de cet epic à toucher l'image et non les seuls fichiers.
+
+- **Image dérivée** `gitea-poppler:1.27.3` (`FROM gitea/gitea:1.27.3` + `apk add --no-cache poppler-utils`) construite et mise en service ; conteneur recréé, `healthy`. `pdftotext` et `pdfinfo` répondent en **25.12.0**. À reconstruire à chaque montée de version, sans quoi la montée ramène l'image officielle et tout push de CV est refusé.
+- **Garde-fou redéployé au commit `1253216`** : les **quatre** empreintes sha256 conformes (`check-private.sh`, `lib/image.sh`, `lib/pdf.sh` — nouveau —, et le lanceur, modifié pour exiger la bibliothèque et poppler).
+- **Liste des motifs non réextraite et jamais ouverte** : elle n'avait pas changé.
+
+| Essai | Opération | Résultat |
+|---|---|---|
+| 1 | chemins interdits (`docs/private/`, `docs/context/`, `.env`) | refusé à chaque fois, commit et chemin nommés |
+| 3 | push propre | admis ; branche supprimée |
+| CV-3 | CV fabriqué dont le **motif factice est dans les métadonnées** | refusé : « contenu privé dans métadonnées d'un PDF de `<commit>` (contenu masqué) », sans le motif |
+| CV-4 | deux CV fabriqués **sans** motif | admis ; branche supprimée |
+| CV-5 | `assets/cv/cv-ancien.pdf` | refusé **pour son chemin** : la levée ne vaut que pour `cv-fr.pdf` et `cv-en.pdf` |
+| CV-6 | quatre commits d'affilée, trois retouchant un CV | admis, et **zéro fichier temporaire** avant comme après |
+
+L'essai CV-6 est celui qui vaut d'être noté : le mode pre-receive contrôle un commit à la fois, et **quatre écritures successives du nettoyage laissaient un CV extrait par commit sur le disque du serveur** — un `rm` final qui ne couvre pas un arrêt en chemin, un `trap … RETURN` qui se déclenche au retour de la fonction suivante, un `mktemp` par appel qui écrase la variable, une fonction « à la demande » dont l'affectation se perd dans un sous-shell. La cinquième écriture crée le fichier une fois et le nettoie une fois. Le compte à zéro sur la forge le confirme là où aucun test local ne pouvait le faire.
+
+**Constat de l'agent du homelab, retenu et porté dans la procédure** (`05f1b73`) : le répartiteur de Gitea lance **tout** fichier exécutable de `pre-receive.d/`, pas seulement celui qui porte le bon nom. Une sauvegarde du lanceur faite par `cp -p` y garde son bit d'exécution, et l'ancienne version aurait tourné **en plus** de la nouvelle à chaque push — deux garde-fous concurrents, dont un périmé qui ignore `lib/pdf.sh` et aurait refusé tous les pushs de CV. Il l'a neutralisée en `0644` plutôt que supprimée : elle restait utilisable pour un repli, inactive. L'erreur venait de mes consignes de déploiement, pas de la procédure, qui passe déjà par un `.tmp` en `0644` — mais la procédure ne portait pas le corollaire, et le porte désormais.
+
+**Liste des motifs, état vérifié sans l'ouvrir** : 562 octets avant, 583 avec la ligne factice, 562 après son retrait, `-rw-------` propriétaire `git`. Les deux lignes factices employées ce jour-là mesuraient 23 et 21 octets, et les deux tailles relevées — 585 le matin, 583 le soir — correspondent exactement à ces longueurs ajoutées à 562. La ligne du matin avait donc bien été retirée. Une taille se compare sans jamais afficher un contenu ; un `grep -cxF`, qui rend un compte et non une ligne, le confirmerait de même.
+
 ## Revue du code
 
 ### 16/09/2026 — `3d72ac0` — `gemini-3.1-pro-high` — verdict `pass`
