@@ -14,13 +14,20 @@ ENV
   cat > "$work/ci/placeholder.env" <<'ENV'
 HUGO_LEGAL_PUBLISHER_NAME=VALEUR-FACTICE-editeur-nom
 HUGO_LEGAL_PUBLISHER_ADDRESS=VALEUR-FACTICE-editeur-adresse
-HUGO_LEGAL_PUBLISHER_CONTACT=VALEUR-FACTICE-editeur-contact
+HUGO_LEGAL_PUBLISHER_EMAIL=VALEUR-FACTICE-editeur-courriel
+HUGO_LEGAL_PUBLISHER_PHONE=VALEUR-FACTICE-editeur-telephone
 HUGO_LEGAL_PUBLISHER_REGISTRATION=VALEUR-FACTICE-editeur-immatriculation
 HUGO_LEGAL_HOST_NAME=VALEUR-FACTICE-hebergeur-nom
 HUGO_LEGAL_HOST_ADDRESS=VALEUR-FACTICE-hebergeur-adresse
-HUGO_LEGAL_HOST_CONTACT=VALEUR-FACTICE-hebergeur-contact
+HUGO_LEGAL_HOST_PHONE=VALEUR-FACTICE-hebergeur-telephone
 ENV
 }
+
+# Le nombre attendu est **lu dans le chargeur**, jamais écrit ici : AD-9 est passé de sept variables
+# à huit le 23/09/2026, et deux cas comptaient « 7 » en dur. Un test qui recopie un nombre devient
+# faux le jour où la source change, et il le devient en silence jusqu'à ce qu'il échoue pour une
+# raison qui n'est pas la sienne (constat de la story 9.1).
+attendues() { grep -cE '^  HUGO_LEGAL_[A-Z_]+$' "$root/scripts/env.sh"; }
 
 charge() { # $1… commande passée au chargeur ; les fichiers d'essai remplacent ceux du dépôt
   run env ENV_FILE="$work/env-essai" LEGAL_PLACEHOLDER_FILE="$work/ci/placeholder.env" \
@@ -34,10 +41,36 @@ case_env_jetons_isoles() {
   assert_contains "0" "$out" "aucune variable GITEA_ dans l environnement de la commande"
 }
 
-case_env_sept_valeurs_presentes() {
+case_env_toutes_les_valeurs_presentes() {
   fichiers
   charge sh -c 'env | grep -c "^HUGO_LEGAL_"'
-  assert_contains "7" "$out" "les sept variables légales sont définies"
+  assert_contains "$(attendues)" "$out" "toutes les variables légales d AD-9 sont définies"
+}
+
+case_env_variable_definie_vide_reste_prioritaire() {
+  # Une variable **définie mais vide** est déjà définie : le critère de la story 2.4 lui donne la
+  # priorité sur le fichier. Elle n'a donc pas à être remplacée par une valeur factice — et le
+  # build s'arrêtera plus loin, ce que l'opérateur a demandé en la vidant. Avec « -n » au lieu de
+  # « -v », elle était écrasée en silence (constat de la revue de la PR n° 98).
+  fichiers
+  run env HUGO_LEGAL_PUBLISHER_NAME= ENV_FILE="$work/env-essai" \
+    LEGAL_PLACEHOLDER_FILE="$work/ci/placeholder.env" "$root/scripts/env.sh" \
+    sh -c 'printf "[%s]" "${HUGO_LEGAL_PUBLISHER_NAME-absente}"'
+  assert_eq 0 "$rc" "le chargeur passe la main (messages : $err)"
+  assert_eq "[]" "$out" "la variable vide de l environnement survit au repli"
+}
+
+case_env_entree_vide_dun_fichier_nempeche_pas_le_repli() {
+  # Le pendant du cas précédent, et la frontière entre les deux : **pour un fichier, une valeur
+  # vide vaut absence.** Un .env obtenu en copiant .env.example et en remplissant ce qu'on sait
+  # porte des entrées vides ; le critère de la story 2.4 exige qu'il ne fasse pas échouer le build.
+  # Une première écriture confondait les deux vides et cassait le build du poste (constat fait en
+  # lançant les contrôles après la revue de la PR n° 98).
+  fichiers
+  printf 'HUGO_LEGAL_PUBLISHER_NAME=\n' > "$work/env-essai"
+  charge sh -c 'printf "[%s]" "$HUGO_LEGAL_PUBLISHER_NAME"'
+  assert_eq 0 "$rc" "le chargeur passe la main (messages : $err)"
+  assert_contains "VALEUR-FACTICE" "$out" "l entrée vide du fichier laisse le repli opérer"
 }
 
 case_env_valeur_avec_espaces() {
@@ -117,7 +150,7 @@ case_release_fichier_dedie_complet() {
     LEGAL_PLACEHOLDER_FILE="$work/ci/placeholder.env" "$root/scripts/env.sh" \
     sh -c 'env | grep -c "^HUGO_LEGAL_"; env | grep -c VALEUR-FACTICE || true'
   assert_eq 0 "$rc" "mise en ligne acceptée (messages : $err)"
-  assert_contains "7" "$out" "les sept valeurs viennent du fichier dédié"
+  assert_contains "$(attendues)" "$out" "toutes les valeurs viennent du fichier dédié"
   assert_contains "0" "$out" "aucune valeur factice ne subsiste"
 }
 

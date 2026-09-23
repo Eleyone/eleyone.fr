@@ -1,0 +1,20 @@
+{{/*
+  Pont entre le Markdown des mentions légales et « _partials/legal-value.html » (AD-9).
+
+  Emploi dans le contenu :  {{< legal "publisher_name" >}}
+
+  L'argument est le suffixe en minuscules de la variable d'environnement, sans « HUGO_LEGAL_ ».
+  Tout le refus vit dans le partial : nom inconnu, page qui n'est pas une page de mentions légales,
+  valeur vide. Ce fichier ne fait que passer la page courante, que le partial ne peut pas deviner.
+
+  Un shortcode plutôt qu'un appel direct au partial : le Markdown n'appelle pas un partial, et
+  AD-9 veut « deux mécanismes de lecture différents » écartés — celui-ci est le seul.
+*/}}
+{{- if not (.IsNamedParams | not) -}}
+  {{- errorf "legal : ce shortcode prend un argument positionnel, pas un paramètre nommé (%s)." .Position -}}
+{{- end -}}
+{{- $name := .Get 0 -}}
+{{- if not $name -}}
+  {{- errorf "legal : argument manquant ; emploi « {{< legal \"publisher_name\" >}} » (%s)." .Position -}}
+{{- end -}}
+{{- partial "legal-value.html" (dict "page" .Page "name" $name) -}}

@@ -9,6 +9,13 @@ faux_depot() { # prépare $work/faux : check.sh réel, build.sh bouchonné, doss
   cp "$root/scripts/check.sh" "$work/faux/scripts/"
   cp "$root/scripts/checks/lib.sh" "$work/faux/scripts/checks/"
   cp "$root/scripts/lib/shell.sh" "$work/faux/scripts/lib/"
+  # Le chargeur unique et sa bibliothèque : check.sh lance chaque contrôle par lui depuis la story
+  # 9.1, sans quoi aucun contrôle ne verrait un HUGO_LEGAL_* (AD-9). Une fixture qui ne le porte pas
+  # ne ressemble plus au dépôt qu'elle imite (point 16 d'AGENTS.md).
+  cp "$root/scripts/env.sh" "$work/faux/scripts/"
+  cp "$root/scripts/lib/dotenv.sh" "$work/faux/scripts/lib/"
+  mkdir -p "$work/faux/ci"
+  cp "$root/ci/legal-placeholder.env" "$work/faux/ci/"
   : > "$work/faux/build.log"
   printf '#!/usr/bin/env bash\necho "$1" >> "%s/faux/build.log"\n[ "${BUILD_FAIL:-}" != "$1" ] || { echo "hugo: avertissement" >&2; exit 1; }\n' "$work" \
     > "$work/faux/scripts/build.sh"

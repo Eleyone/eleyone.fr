@@ -10,9 +10,18 @@
 {{ define "_partials/inline/main-page.html" }}
 
   {{/* AD-3 : gabarit générique minimal, sans un mot de contenu. Le gabarit d'un cas sans groupe vient
-       de la story 6.2, ceux des pages simples de l'epic 9. */}}
-  <article>
-    <h1>{{ .Title }}</h1>
+       de la story 6.2 ; celui-ci sert les pages simples de l'epic 9, à commencer par les mentions
+       légales (story 9.1).
+
+       « main id="content" » n'est pas décoratif : c'est la cible du lien d'évitement que baseof.html
+       pose sur chaque page, et C12 refuse une page dont l'ancre manque. Ce gabarit n'avait jamais
+       servi, donc personne ne l'avait constaté — le contrôle l'a dit dès la première page rendue.
+       « frame frame--columns » donne la colonne de marge que DESIGN.md demande pour les termes. */}}
+  {{/* Pas de « article » entre « main » et le contenu : « .frame--columns > * » ne vise que les
+       enfants directs, et un élément intercalé mettrait toute la page hors de la grille — les
+       termes de la liste légale ne pourraient plus rejoindre la colonne de marge. */}}
+  <main id="content" class="frame frame--columns">
+    <h1 class="page-title">{{ .Title }}</h1>
     {{ .Content }}
-  </article>
+  </main>
 {{ end }}

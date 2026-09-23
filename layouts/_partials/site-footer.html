@@ -8,20 +8,29 @@
   Les deux CV sont dans le dépôt depuis la story 7.4, et leurs liens ouvrent le pied de page. Ils
   n'y étaient pas quand ce partial a été écrit, et leur partial n'émettait rien : c'est pourquoi le
   pied de page est rendu dès qu'**une** de ses entrées existe, et non plus seulement sur
-  « source_url ». La règle vaut toujours — l'epic 9 ajoutera les pages légales, et rien ne garantit
-  que les trois existent ensemble. Une ligne absente n'est pas remplacée par un tiret
-  ni par « à venir » : ce qui n'existe pas reste vide (DESIGN.md § Do's and Don'ts).
+  « source_url ». La règle vaut toujours : les mentions légales sont arrivées avec la story 9.1,
+  la page de confidentialité viendra avec la 9.2, et rien ne garantit qu'elles existent toutes
+  ensemble. Une ligne absente n'est pas remplacée par un tiret ni par « à venir » : ce qui n'existe
+  pas reste vide (DESIGN.md § Do's and Don'ts).
 
   Le pied de page entier disparaît quand il n'a rien à dire : un filet surmontant du vide n'apprend
   rien, et le HTML porterait un repère de navigation sans contenu.
 */}}
 {{- $cv := partial "cv-links.html" . -}}
 {{- $source := .Site.Params.source_url -}}
-{{- if or (trim $cv " \n\t") $source }}
+{{/* La page des mentions légales de **la langue courante**, obtenue par son chemin logique et non
+     par une URL écrite à la main : les deux langues ont des slugs différents (« /mentions-legales/ »
+     et « /en/legal-notice/ »), et « site.GetPage » rend celle du site courant. Un chemin en dur
+     cesserait d'être vrai au premier changement de slug, sans que rien ne le dise (AD-2).
+     Le « with » porte sur l'obtention : tant que la page n'existe pas dans une langue, la ligne
+     n'apparaît pas — ce qui n'existe pas reste vide. */}}
+{{- $legal := site.GetPage "/legal-notice" -}}
+{{- if or (trim $cv " \n\t") $source $legal }}
   <footer class="site-footer">
     <div class="frame">
       <ul class="site-footer__list">
         {{ $cv }}
+        {{ with $legal }}<li><a href="{{ .RelPermalink }}">{{ i18n "footer_legal_notice" }}</a></li>{{ end }}
         {{ with $source }}<li><a href="{{ . }}">{{ i18n "footer_source" }}</a></li>{{ end }}
       </ul>
     </div>

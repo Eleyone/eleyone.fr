@@ -24,11 +24,12 @@ root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 readonly legal_variables=(
   HUGO_LEGAL_PUBLISHER_NAME
   HUGO_LEGAL_PUBLISHER_ADDRESS
-  HUGO_LEGAL_PUBLISHER_CONTACT
+  HUGO_LEGAL_PUBLISHER_EMAIL
+  HUGO_LEGAL_PUBLISHER_PHONE
   HUGO_LEGAL_PUBLISHER_REGISTRATION
   HUGO_LEGAL_HOST_NAME
   HUGO_LEGAL_HOST_ADDRESS
-  HUGO_LEGAL_HOST_CONTACT
+  HUGO_LEGAL_HOST_PHONE
 )
 
 env_file="${ENV_FILE:-$root/.env}"
@@ -37,6 +38,23 @@ mode="${ENV_MODE:-local}"
 
 # chemin canonique, pour qu'un « ./.env » ou un « ../ailleurs/.env » ne se fasse pas passer pour autre chose
 canonical() { local path=$1; [[ -e $path ]] || { printf '%s' "$path"; return 0; }; readlink -f -- "$path"; }
+
+# Les variables **posées par l'appelant**, relevées avant toute lecture de fichier. Une variable
+# définie par l'appelant, fût-elle vide, est intouchable : le critère de la story 2.4 lui donne la
+# priorité, et la vider est une consigne — le build s'arrêtera plus loin, ce que l'opérateur a
+# demandé. Avec un simple « -n », elle était remplacée par une valeur factice, l'inverse de ce
+# qu'il avait écrit (constat de la revue de la PR n° 98).
+#
+# Le relevé est pris **maintenant**, et pas testé au fil de l'eau : sans lui, une variable que ce
+# script vient lui-même d'exporter depuis .env paraîtrait « posée par l'appelant ». Une entrée
+# vide de .env aurait alors bloqué le repli sur le fichier factice, et un .env partiel — celui
+# qu'on obtient en copiant .env.example et en remplissant ce qu'on sait — aurait fait échouer le
+# build. Or le même critère exige l'inverse : « un .env qui n'en porte qu'une partie ne fait pas
+# échouer le build ». **Pour un fichier, une valeur vide vaut absence ; pour l'appelant, non.**
+declare -A posees_par_l_appelant=()
+for name in "${legal_variables[@]}"; do
+  [[ ! -v $name ]] || posees_par_l_appelant[$name]=1
+done
 
 # $1 fichier ; charge les variables légales absentes de l'environnement, sans écraser ce qui est défini
 charger_absentes() {
@@ -47,7 +65,13 @@ charger_absentes() {
     key=${line%%=*}
     for name in "${legal_variables[@]}"; do
       [[ $key == "$name" ]] || continue
-      [[ -n ${!name:-} ]] && break   # déjà définie : priorité à l'environnement
+      [[ -z ${posees_par_l_appelant[$name]:-} ]] || break   # consigne de l'appelant : intouchable
+      # Une seule garde, et elle suffit : la variable n'est écrite que si elle est encore vide.
+      # Cela couvre les deux cas d'un coup — une entrée vide d'un fichier laisse le repli
+      # continuer, et un fichier plus prioritaire n'est pas écrasé. Une garde « valeur non vide »
+      # avait été ajoutée à côté : aucun test ne savait les distinguer, parce qu'elle ne gardait
+      # rien de plus. Une parade s'écrit une fois (docs/procedures/shell-scripts.md).
+      [[ -z ${!name:-} ]] || break
       export "$name=${line#*=}"
       break
     done

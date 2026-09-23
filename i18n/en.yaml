@@ -61,3 +61,19 @@ education_kind_language: Languages
 cv_pdf: "CV (PDF, {{ .Language }}, {{ .Size }} KB)"
 cv_language_fr: French
 cv_language_en: English
+
+# Legal notice (AD-9, FR-18, story 9.1). Les formes anglaises sont **attestées** sur des pages
+# institutionnelles françaises en anglais (lafrenchtech.gouv.fr/en/legal-notices/,
+# france-science.com/en/legal-notice/), et non traduites au jugé.
+# Deux pièges évités : « Legal mentions » est un calque très répandu qui n'est pas de l'anglais
+# juridique, et « Editor » est un faux ami — en anglais c'est le rédacteur en chef, quand l'éditeur
+# au sens de la LCEN est le « publisher ».
+# Headings of the three groups (DESIGN.md, legal-list).
+legal_publication_director: Publication Director
+# Terms of the definition list, in the margin from md up.
+legal_term_name: Name
+legal_term_address: Address
+legal_term_email: Contact
+legal_term_phone: Phone
+legal_term_registration: Registration number
+footer_legal_notice: Legal notice

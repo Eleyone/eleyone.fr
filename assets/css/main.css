@@ -271,7 +271,12 @@ main {
  * 3 cas, 19 rubriques », tient sur deux lignes à 320 px et passait donc à 36 px, ce qui masquait
  * le défaut. Le même piège que le lien de cas rattaché, sur un élément que la règle avait oublié. */
 .toc summary,
-.attached-case a {
+.attached-case a,
+/* Le courriel et le téléphone des mentions légales : mesurés à 23 px, sous le seuil. Ils ne sont
+ * pas « dans le texte courant » — ce sont des valeurs seules dans leur définition —, donc
+ * l'exemption d'AD-17 ne les couvre pas. Les liens vers Légifrance, eux, sont dans une phrase et
+ * en restent exemptés (story 9.1, mesuré au navigateur en mode sombre à 360 px). */
+.legal-list a {
   display: inline-block;
   padding-block: var(--space-1);
 }
@@ -416,6 +421,37 @@ main {
  * quelque chose devant et derrière, donc jamais en ponctuation orpheline. */
 .education-entry__details::before {
   content: " · ";
+}
+
+/* ------------------------------------------------------- mentions légales (story 9.1)
+ *
+ * Liste de définitions : terme puis valeur, empilés en étroit, terme dans la colonne de marge
+ * dès md (DESIGN.md § legal-list). Les valeurs ne sont jamais écrites dans le dépôt — elles
+ * viennent de l'environnement au build (AD-9) —, donc la mise en forme ne peut compter sur
+ * aucune longueur connue : un nom court et une adresse sur trois lignes traversent la même règle.
+ *
+ * L'adresse est dans un « address », dont les navigateurs italicisent le contenu par défaut :
+ * l'italique dirait une emphase que le texte n'a pas. */
+.legal-list {
+  margin-block: var(--space-2);
+}
+
+.legal-list__term {
+  color: var(--ink-muted);
+  font-family: var(--font-mono);
+  font-size: var(--meta);
+}
+
+.legal-list__value {
+  margin-inline-start: 0;
+}
+
+.legal-list__value + .legal-list__term {
+  margin-block-start: var(--space-1);
+}
+
+.legal-list address {
+  font-style: normal;
 }
 
 /* ------------------------------------------- page de cas et page de groupe (story 6.1)
@@ -652,7 +688,8 @@ main {
   .frame--columns,
   .identity-block,
   .cv-position,
-  .education-entry {
+  .education-entry,
+  .legal-list {
     display: grid;
     grid-template-columns: var(--margin-column) minmax(0, var(--measure));
     column-gap: var(--column-gap);
@@ -680,8 +717,34 @@ main {
    * Un poste reste **un seul élément de grille** : ses deux morceaux ne peuvent pas se désolidariser
    * quand les postes s'empilent, ce qu'un « display: contents » aurait risqué. */
   .cv-block,
-  .identity-block {
+  .identity-block,
+  .legal-list {
     grid-column: 1 / -1;
+  }
+
+  /* Dès md, le terme rejoint la colonne de marge, aligné à droite contre sa valeur, comme la
+   * période d'un poste. La liste reprend la grille de la page — mêmes tokens, donc mêmes colonnes —
+   * parce qu'imbriquée, elle ne peut pas atteindre celle de la page. */
+  .legal-list__term {
+    grid-column: 1;
+    text-align: right;
+  }
+
+  .legal-list__value {
+    grid-column: 2;
+  }
+
+  /* L'espacement entre entrées passe par la **gouttière de ligne**, jamais par une marge : une
+   * marge posée sur la valeur seule décalait celle-ci de 4 px sous son terme, mesuré au navigateur.
+   * En grille, le terme et sa valeur sont deux éléments d'une même ligne ; ce qui les sépare de la
+   * ligne suivante appartient à la grille, pas à l'un des deux. */
+  .legal-list {
+    row-gap: var(--space-1);
+  }
+
+  .legal-list__value + .legal-list__term,
+  .legal-list__value:not(:first-of-type) {
+    margin-block-start: 0;
   }
 
   /* Dès md, la photo passe dans la colonne de marge, alignée à droite contre le texte, et les

@@ -65,3 +65,17 @@ education_kind_language: Langues
 cv_pdf: "CV (PDF, {{ .Language }}, {{ .Size }} Ko)"
 cv_language_fr: français
 cv_language_en: anglais
+
+# Mentions légales (AD-9, FR-18, story 9.1). Les intitulés viennent des formulations usuelles des
+# pages françaises ; aucun n'est imposé par la loi, qui ne régit que le contenu.
+# « Directeur de la publication » est en revanche le vocabulaire de l'article 93-2 de la loi
+# n° 82-652, auquel l'article 1-1 I 3° de la LCEN renvoie : s'en écarter serait s'écarter du texte.
+# Titres des trois groupes (DESIGN.md § legal-list : « trois groupes en section-heading »).
+legal_publication_director: Directeur de la publication
+# Termes de la liste de définitions, dans la marge dès md.
+legal_term_name: Nom
+legal_term_address: Adresse
+legal_term_email: Contact
+legal_term_phone: Téléphone
+legal_term_registration: Immatriculation
+footer_legal_notice: Mentions légales

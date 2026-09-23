@@ -144,7 +144,7 @@ Pas de gabarit de démarrage ; le dépôt part de la structure initiale de l'arc
 - **AD-6** : shortcode `live-material` ; résolution par type ; schéma large sans `style` en ligne.
 - **AD-7** : pipeline D2, thème clair et sombre venant de `DESIGN.md`, **spike D2 à double thème avant toute story du pipeline**, avec repli.
 - **AD-8** : zéro script exécutable (exception AD-20), une CSS, mode sombre en CSS pur, budget chiffré.
-- **AD-9** : sept `HUGO_LEGAL_*` ; lecture refusée hors pages `legal-notice` ; chargeur `env.sh` (`ENV_MODE=release` + `LEGAL_ENV_FILE`), qui ne transmet à Hugo que les `HUGO_LEGAL_*` ; secret BuildKit ; C22 sur la sortie.
+- **AD-9** : huit `HUGO_LEGAL_*`, une par donnée (révision du 23/09/2026) ; lecture refusée hors pages `legal-notice` ; chargeur `env.sh` (`ENV_MODE=release` + `LEGAL_ENV_FILE`), qui ne transmet à Hugo que les `HUGO_LEGAL_*` ; secret BuildKit ; C22 sur la sortie.
 - **AD-10** : `check.sh` unique ; manifeste (rôles `home`, `case`, `group`, `position`, `education`, `page`) ; règles de forme tolérantes aux `[TODO` des brouillons.
 - **AD-11** : workflows minces ; runners Gitea en **mode hôte** pour les jobs Docker ; tags `vX.Y.Z` et `vX.Y.Z-rc.N`.
 - **AD-12** : garde-fou en trois couches ; `pre-receive` fermé sans liste des motifs ; chemins interdits `docs/private/`, `docs/context/`, `.env`, `assets/cv/*.pdf` (ce dernier tant que le hook ne lit pas les PDF) ; miroir après hook et audit ; ruleset GitHub qui ne laisse écrire que l'identité du miroir.
@@ -328,7 +328,7 @@ afin que les skills appellent l'API de la forge sans qu'aucun identifiant n'entr
 
 **Étant donné** `.env.example`, commité
 **Quand** on le lit
-**Alors** il liste, sans aucune valeur, `GITEA_URL`, `GITEA_USER`, `GITEA_TOKEN` et les sept variables `HUGO_LEGAL_*` d'AD-9.
+**Alors** il liste, sans aucune valeur, `GITEA_URL`, `GITEA_USER`, `GITEA_TOKEN` et les variables `HUGO_LEGAL_*` d'AD-9 (sept à la story 0.1, huit depuis la révision du 23/09/2026).
 
 **Étant donné** `.env` renseigné par Arnaud
 **Quand** on lance `git status` puis `scripts/check-private.sh staged` après un `git add -f .env` dans un clone jetable
@@ -1183,12 +1183,12 @@ afin qu'aucune coordonnée réelle ne soit commitée et qu'une mise en ligne n'u
 
 **Étant donné** `.env.example` (story 0.1) et `ci/legal-placeholder.env`
 **Quand** on les lit
-**Alors** le premier liste exactement, sans valeur, les sept variables d'AD-9 et les trois `GITEA_*` d'AD-24 (C18), et le second exactement les sept noms légaux avec des valeurs `VALEUR-FACTICE-…`.
+**Alors** le premier liste exactement, sans valeur, les variables d'AD-9 et les trois `GITEA_*` d'AD-24 (C18), et le second exactement les noms légaux avec des valeurs `VALEUR-FACTICE-…`. Elles étaient sept à cette story, huit depuis la révision d'AD-9 du 23/09/2026 ; le critère porte sur « exactement celles d'AD-9 », jamais sur un nombre écrit ici.
 
 **Étant donné** `scripts/env.sh` hors mise en ligne, et une variable donnée
 **Quand** elle est déjà définie dans l'environnement, puis seulement dans `.env`, puis dans aucun des deux
 **Alors** la valeur retenue suit cet ordre de priorité décroissant : la variable déjà définie, sinon celle de `.env`, sinon celle du fichier factice
-**Et** le repli se fait **variable par variable** : un `.env` qui n'en porte que trois sur sept ne fait pas échouer le build.
+**Et** le repli se fait **variable par variable** : un `.env` qui n'en porte qu'une partie ne fait pas échouer le build.
 
 **Étant donné** une valeur entre guillemets ou contenant des espaces (`HUGO_LEGAL_PUBLISHER_NAME="Arnaud Grousset"`)
 **Quand** le chargeur lit `.env`
@@ -1584,7 +1584,7 @@ afin de saisir l'enjeu et le résultat d'un coup d'œil.
 **Quand** on lance les contrôles
 **Alors** C18 échoue en nommant la clé ; un brouillon peut les porter en `[TODO`.
 
-**Étant donné** `ci/legal-placeholder.env` qui ne liste pas exactement les sept variables d'AD-9, ou `.env.example` qui ne liste pas exactement ces sept `HUGO_LEGAL_*` et les trois `GITEA_*` d'AD-24
+**Étant donné** `ci/legal-placeholder.env` qui ne liste pas exactement les variables d'AD-9, ou `.env.example` qui ne liste pas exactement ces `HUGO_LEGAL_*` et les trois `GITEA_*` d'AD-24
 **Quand** on lance les contrôles
 **Alors** C18 échoue en affichant les **noms** trouvés et attendus ; aucune valeur n'est lue ni affichée.
 
@@ -2843,7 +2843,7 @@ afin qu'aucune valeur n'apparaisse dans le dépôt, l'image ou une page périmé
 
 **Critères d'acceptation :**
 
-**Étant donné** les sept `HUGO_LEGAL_*` et `PRIVATE_PATTERNS` dans l'environnement
+**Étant donné** les `HUGO_LEGAL_*` d'AD-9 et `PRIVATE_PATTERNS` dans l'environnement
 **Quand** on lance `scripts/release/build-image.sh <tag>`
 **Alors** il écrit des fichiers temporaires, construit `eleyone-site:<tag>` avec `--secret id=legal_env,src=<fichier>`, `CHECK_LEVEL=release` et `--no-cache-filter build`, lance C21 et C22 avec la liste des motifs, puis supprime les fichiers même en cas d'échec.
 
@@ -2932,7 +2932,7 @@ afin que le workflow `release` puisse livrer sans accès plus large.
 **Dépendances :** 11.5
 **Bloquée par :** —
 **Prérequis de contenu :** —
-**Opération manuelle (Arnaud) :** **oui**, serveur de production et administration Gitea : utilisateur dédié du groupe `docker`, `deploy-site` installé, clé restreinte (`restrict,command=`) ; copie de `compose.yaml` et `compose.rehearsal.yaml` avec le nom du réseau de NPM ; secrets `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_KNOWN_HOSTS`, `PRIVATE_PATTERNS` et les sept `HUGO_LEGAL_*`.
+**Opération manuelle (Arnaud) :** **oui**, serveur de production et administration Gitea : utilisateur dédié du groupe `docker`, `deploy-site` installé, clé restreinte (`restrict,command=`) ; copie de `compose.yaml` et `compose.rehearsal.yaml` avec le nom du réseau de NPM ; secrets `DEPLOY_SSH_KEY`, `DEPLOY_HOST`, `DEPLOY_KNOWN_HOSTS`, `PRIVATE_PATTERNS` et les `HUGO_LEGAL_*` d'AD-9 (huit depuis la révision du 23/09/2026).
 
 **Critères d'acceptation :**
 

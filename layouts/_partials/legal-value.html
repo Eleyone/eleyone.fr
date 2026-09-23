@@ -1,0 +1,52 @@
+{{/*
+  Lecture d'une valeur légale (AD-9, FR-18, FR-33). **Seul endroit du site qui lit un `HUGO_LEGAL_*`.**
+
+  Les valeurs — nom, adresse, contact et immatriculation de l'éditeur, nom, adresse et contact de
+  l'hébergeur — ne sont pas dans le dépôt : elles viennent de l'environnement, préparé par
+  `scripts/env.sh`, qui charge `.env` sur le poste et `ci/legal-placeholder.env` partout ailleurs.
+  Elles sont publiques une fois le site en ligne ; le but est de les tenir hors de l'historique
+  git, qui est public et où rien ne s'efface.
+
+  Trois refus, et chacun fait **échouer le build** plutôt que de rendre une page approximative :
+
+  1. un nom de valeur hors des sept qu'AD-9 fixe — une faute de frappe rendrait une page vide ;
+  2. une lecture depuis une page dont le `translationKey` n'est pas `legal-notice` — l'adresse de
+     l'éditeur porte une commune, et elle ne doit apparaître que sur ces deux pages-là ;
+  3. une valeur vide. `os.Getenv` ne distingue pas « vide » de « non définie » : les deux sont un
+     build mal configuré, et les deux s'arrêtent ici.
+
+  Ce que ce partial **ne peut pas** faire : distinguer, sur la page légale elle-même, un appel
+  depuis le corps d'un appel depuis le `<title>` ou une meta. Un gabarit ne sait pas qui l'appelle,
+  seulement sur quelle page il tourne. C'est le contrôle C21bis — `scripts/checks/legal-address.sh`,
+  C23 — qui lit la sortie et refuse l'adresse ailleurs que dans le corps des deux pages légales.
+  AD-9 répartit ainsi : le partial prévient, C23 constate (constat de la revue de spec, 23/09/2026).
+
+  Paramètres : `page` (la page courante), `name` (le suffixe en minuscules, sans `HUGO_LEGAL_`).
+  Retour : la valeur, sans mise en forme.
+*/}}
+{{- $page := .page -}}
+{{- $name := .name -}}
+{{/* Les huit noms d'AD-9, une variable par donnée. Les deux « contact » d'origine ont été
+     remplacées le 23/09/2026 : une valeur composée « courriel et téléphone » interdisait de
+     traiter chaque donnée pour ce qu'elle est, et empêchait de dire laquelle manque. */}}
+{{- $connus := slice
+      "publisher_name" "publisher_address" "publisher_email" "publisher_phone" "publisher_registration"
+      "host_name" "host_address" "host_phone" -}}
+{{- if not (in $connus $name) -}}
+  {{/* Le message ne compte pas : il énumère. Il disait « les sept sont » après le passage à huit —
+     la troisième fois qu'un nombre écrit en dur devient faux dans cette story (constat de la revue
+     de la PR n° 98). */}}
+{{- errorf "legal-value : « %s » n'est pas une valeur légale d'AD-9 ; les valeurs connues sont %s." $name (delimit $connus ", ") -}}
+{{- end -}}
+{{/* « TranslationKey » et non « File.TranslationBaseName » : la clé est déclarée en front matter
+     comme partout ailleurs dans ce dépôt, elle vaut pour les deux langues, et elle existe encore
+     quand la page n'a pas de fichier — un gabarit lu depuis une sortie générée n'a pas de « File ». */}}
+{{- if ne $page.TranslationKey "legal-notice" -}}
+  {{- errorf "legal-value : lecture de « %s » depuis %s ; les valeurs légales n'appartiennent qu'aux pages de mentions légales (AD-9)." $name $page.Path -}}
+{{- end -}}
+{{- $variable := printf "HUGO_LEGAL_%s" (upper $name) -}}
+{{- $valeur := os.Getenv $variable -}}
+{{- if not $valeur -}}
+  {{- errorf "legal-value : %s est vide ou non définie ; le build est mal configuré (AD-9, scripts/env.sh)." $variable -}}
+{{- end -}}
+{{- $valeur -}}

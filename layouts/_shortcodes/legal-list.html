@@ -1,0 +1,93 @@
+{{/*
+  Une des trois listes des mentions légales (DESIGN.md § legal-list, AD-9, FR-18).
+
+  Emploi dans le contenu :  {{< legal-list "publisher" >}}
+  Groupes : « publisher », « director », « host ».
+
+  **Le balisage vit ici, pas dans le Markdown.** Le HTML brut est refusé dans le contenu
+  (`markup.goldmark.renderer.unsafe` est faux), et c'est une posture à garder : l'affaiblir pour une
+  page l'affaiblirait pour toutes. Le contenu ne déclare donc qu'une rubrique, et le balisage,
+  écrit une fois, sert les deux langues — les intitulés viennent de `i18n/`, jamais du Markdown,
+  ce qui interdit à la version française et à l'anglaise de diverger sans qu'on le voie.
+
+  Une **liste de définitions**, comme DESIGN.md la décrit : termes dans la marge dès md, valeurs en
+  corps. L'adresse est dans un élément `address`, rendue telle qu'elle est injectée, sans lien vers
+  une carte et sans microdonnée.
+
+  Le courriel et le téléphone deviennent des liens **d'après ce que la valeur est**, pas d'après ce
+  qu'on a décidé qu'elle serait (arbitrage d'Arnaud, 22/09/2026) : une valeur qui ne ressemble pas
+  à une adresse ou à un numéro s'affiche en clair plutôt que de produire un lien mort. Le « tel: »
+  est débarrassé des espaces, que la norme n'y admet pas.
+
+  Aucune valeur n'est écrite ici : chacune passe par « legal-value.html », seul lecteur des
+  variables, qui refuse une lecture hors d'une page de mentions légales et arrête le build sur une
+  valeur vide.
+*/}}
+{{- $page := .Page -}}
+{{- $groupe := .Get 0 -}}
+{{/* Le terme du groupe « directeur » est « legal_publication_director », que le critère
+     d'acceptation de la story nomme explicitement — et non « Nom », qui aurait laissé la clé
+     inemployée et vidé le critère de son intention (constat de la revue de la PR n° 98). AD-9 :
+     le directeur de la publication est l'éditeur, sans variable dédiée.
+
+     Aucun commentaire ne descend dans le « dict » qui suit : Go refuse un commentaire au milieu
+     d'un opérande, et le build s'arrête sur « unexpected "{" in operand ».
+
+     Et ce commentaire-ci ne cite pas la syntaxe d'un commentaire : la séquence qui le ferme,
+     écrite à l'intérieur, le termine sur place, et tout ce qui suit part dans le HTML rendu.
+     Constaté en lisant la sortie d'un cas de test, où la fin de cette phrase s'affichait sur la
+     page. */}}
+{{- $groupes := dict
+      "publisher" (slice
+        (dict "terme" "legal_term_name"         "valeur" "publisher_name"         "type" "texte")
+        (dict "terme" "legal_term_address"      "valeur" "publisher_address"      "type" "adresse")
+        (dict "terme" "legal_term_email"        "valeur" "publisher_email"        "type" "courriel")
+        (dict "terme" "legal_term_phone"        "valeur" "publisher_phone"        "type" "telephone")
+        (dict "terme" "legal_term_registration" "valeur" "publisher_registration" "type" "texte"))
+      "director" (slice
+        (dict "terme" "legal_publication_director" "valeur" "publisher_name" "type" "texte"))
+      "host" (slice
+        (dict "terme" "legal_term_name"    "valeur" "host_name"    "type" "texte")
+        (dict "terme" "legal_term_address" "valeur" "host_address" "type" "adresse")
+        (dict "terme" "legal_term_phone"   "valeur" "host_phone"   "type" "telephone"))
+-}}
+{{- $entrees := index $groupes $groupe -}}
+{{- if not $entrees -}}
+  {{- errorf "legal-list : groupe « %s » inconnu ; les trois sont publisher, director, host (%s)." $groupe .Position -}}
+{{- end -}}
+<dl class="legal-list">
+{{- range $entrees -}}
+  {{/* « htmlUnescape » n'est pas une coquetterie : la sortie d'un partial est du « template.HTML »
+       où Go a déjà échappé le « + » d'un numéro international en « &#43; ». Replacée dans un
+       attribut, elle voyait son « & » échappé à son tour, et l'attribut portait « tel:&amp;#43;… »
+       — un lien mort. Constaté par un cas de test sur un vrai build ; une vérification à la main
+       l'avait manqué, parce qu'elle cherchait « &#43; », qui ne correspond pas à « &amp;#43; ».
+
+       Le schéma « tel: » et « mailto: » reste **écrit littéralement** dans le gabarit, et aucun
+       « safeURL » n'est posé : le filtre d'URL de Go continue donc de protéger contre une valeur
+       qui porterait un schéma dangereux, ce que « safeURL » aurait désactivé pour rien — la forme
+       sans lui rend exactement le même HTML, mesuré. */}}
+  {{- $valeur := htmlUnescape (partial "legal-value.html" (dict "page" $page "name" .valeur)) -}}
+  <dt class="legal-list__term">{{ i18n .terme }}</dt>
+  <dd class="legal-list__value">
+    {{- if eq .type "adresse" -}}
+      <address>{{ $valeur }}</address>
+    {{- else if and (eq .type "courriel") (strings.Contains $valeur "@") -}}
+      <a href="mailto:{{ $valeur }}">{{ $valeur }}</a>
+    {{- else if and (eq .type "telephone") (findRE `[0-9]` $valeur) -}}
+      {{/* La RFC 3966 n'admet dans un « tel: » que des chiffres et un « + » de tête : ni espace,
+           ni point, ni tiret, ni parenthèse. Retirer les seuls espaces laissait passer
+           « 01.23.45.67.89 » tel quel, et un lien qu'un navigateur peut refuser (constat de la
+           revue de la PR n° 98). Le texte affiché, lui, garde la ponctuation de la valeur : c'est
+           elle qui se lit. */}}
+      {{/* Le « + » est rendu dès que la valeur en porte un, où qu'il soit : « (+33) 1-23-45-67-89 »
+           est un numéro international, et n'émettre que « 33123456789 » en ferait un numéro
+           national faux. Le tester en tête seulement laissait passer ce cas. */}}
+      {{- $numero := printf "%s%s" (cond (strings.Contains $valeur "+") "+" "") (replaceRE `[^0-9]` "" $valeur) -}}
+      <a href="tel:{{ $numero }}">{{ $valeur }}</a>
+    {{- else -}}
+      {{ $valeur }}
+    {{- end -}}
+  </dd>
+{{- end -}}
+</dl>
