@@ -88,3 +88,7 @@ contact_cta: Get in touch
 contact_term_email: Email
 contact_term_linkedin: LinkedIn
 contact_term_github: GitHub
+
+# About page (FR-16, story 9.4).
+nav_about: About
+cv_block_label: CV

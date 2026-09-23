@@ -334,6 +334,44 @@ main {
   object-fit: cover;
 }
 
+/* La variante « À propos » : 120 × 150 sous md, sous le titre ; 160 × 200 dans la colonne de marge
+ * dès md (DESIGN.md § portrait, validé par Arnaud le 13/09/2026). L'image rendue est la même —
+ * srcset 1x/2x — et seule la taille d'affichage change : pas de cinquième fichier. */
+.portrait--about {
+  width: 7.5rem;
+  height: 9.375rem;
+  object-fit: cover;
+}
+
+/* ----------------------------------------------------------------- page « À propos » (story 9.4)
+ *
+ * Le bloc CV est un « note-block » : fond « surface », filet « border-strong » de 3 px à gauche,
+ * étiquette en « label » (DESIGN.md § note-block). Il n'existe que si les deux CV existent —
+ * « ensemble ou rien » vient du partial, et l'encart disparaît avec son contenu, étiquette
+ * comprise : une étiquette « CV » au-dessus de rien annonce ce qui n'existe pas. */
+.note-block {
+  background: var(--surface);
+  border-left: 3px solid var(--border-strong);
+  padding: var(--space-3) var(--space-4);
+  margin-block: var(--space-4);
+}
+
+.note-block > .label {
+  margin: 0 0 var(--space-1);
+}
+
+/* Les liens du bloc CV sont « chacun sur sa ligne » (DESIGN.md § cv-links), en corps et non en
+ * « body-sm » comme au pied de page : ici ils sont mis en évidence, pas relégués. */
+.cv-links {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cv-links > li + li {
+  margin-top: var(--space-1);
+}
+
 .cv-block {
   margin-top: var(--space-6);
 }
@@ -767,6 +805,25 @@ main {
     justify-self: end;
     width: 7.5rem;
     height: 9.375rem;
+  }
+
+  /* Dès md, le portrait d'« À propos » rejoint la colonne de marge, **à hauteur du titre**. Le
+   * conteneur porte « in-margin », que « .frame--columns » place déjà en colonne 1 et aligne à
+   * droite — mais la colonne ne suffit pas : en placement automatique, le portrait suivait le
+   * titre dans l'ordre du DOM et tombait donc à la rangée d'après, 67 px plus bas. Mesuré au
+   * navigateur ; une position a deux axes (point 14 d'AGENTS.md).
+   *
+   * « grid-row: 1 » le ramène sur la rangée du titre, qui est le premier enfant. Un numéro positif
+   * suffit ici, et se suffit à lui-même : les lignes négatives comptent depuis la grille
+   * **explicite**, qui n'existe pas — la faute de la story 6.1. */
+  .about-page__portrait {
+    grid-row: 1 / span 2;
+    align-self: start;
+  }
+
+  .portrait--about {
+    width: 10rem;
+    height: 12.5rem;
   }
 
   /* Un titre porté par un bloc qui occupe toute la largeur du cadre s'aligne sur la colonne de

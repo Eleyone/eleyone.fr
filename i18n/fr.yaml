@@ -90,3 +90,7 @@ contact_cta: Me contacter
 contact_term_email: Courriel
 contact_term_linkedin: LinkedIn
 contact_term_github: GitHub
+
+# Page « À propos » (FR-16, story 9.4).
+nav_about: À propos
+cv_block_label: CV

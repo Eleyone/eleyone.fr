@@ -4,3 +4,4 @@ home
 legal-notice
 privacy
 contact
+about

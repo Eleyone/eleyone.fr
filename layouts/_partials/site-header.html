@@ -2,7 +2,8 @@
   En-tête (DESIGN.md § site-header). Ne porte que ce qui existe : la marque, les liens des pages
   qui existent, puis le sélecteur de langue, qui est **toujours** le dernier élément.
 
-  « Contact » est arrivé avec sa page (story 9.3) ; « À propos » suivra avec la sienne (story 9.4).
+  « Contact » est arrivé avec sa page (story 9.3), « À propos » avec la sienne (story 9.4). L'ordre
+  est celui de DESIGN.md : « À propos », « Contact », puis le sélecteur de langue.
   Chaque lien passe par « site.GetPage » et n'est rendu que si la page existe : un lien vers une
   page absente ferait échouer C12, et c'est la même règle que le pied de page applique.
 
@@ -16,6 +17,10 @@
   <div class="site-header__inner frame">
     <a class="site-header__brand brand" href="{{ .Site.Home.RelPermalink }}">{{ .Site.Home.Params.identity }}</a>
     <nav class="site-header__nav" aria-label="{{ i18n "nav_site" }}">
+      {{- with site.GetPage "/about" }}
+        <a href="{{ .RelPermalink }}"
+           {{- if eq .RelPermalink $.RelPermalink }} aria-current="page"{{ end }}>{{ i18n "nav_about" }}</a>
+      {{- end }}
       {{- with site.GetPage "/contact" }}
         <a href="{{ .RelPermalink }}"
            {{- if eq .RelPermalink $.RelPermalink }} aria-current="page"{{ end }}>{{ i18n "nav_contact" }}</a>

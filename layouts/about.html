@@ -1,0 +1,43 @@
+{{/*
+  Page « À propos » (FR-16, FR-34, FR-38, DESIGN.md § À propos).
+
+  L'ordre est celui que DESIGN.md fixe, et il n'est pas indifférent : titre, portrait, bloc CV,
+  puis le texte. Une personne qui arrive ici veut savoir **qui** avant de lire **quoi** ; le CV
+  vient ensuite parce qu'il est l'objet qu'on emporte.
+
+  Le portrait est la variante « À propos » — 160 × 200 dès md, dans la colonne de marge à hauteur
+  du titre ; 120 × 150 sous md, sous le titre. La bascule est en CSS : le gabarit ne rend qu'une
+  fois, avec la même image.
+
+  Le bloc CV réutilise `cv-links.html`, d'où lui vient la règle **« ensemble ou rien »** : un seul
+  fichier n'émet rien. Le `note-block` qui l'entoure disparaît donc avec lui — étiquette comprise,
+  parce qu'une étiquette « CV » au-dessus de rien annonce ce qui n'existe pas (DESIGN.md § cv-links :
+  « ni ligne vide, ni étiquette seule, ni mention “bientôt” »).
+
+  La typographie française s'applique au corps rendu, comme partout (AD-23).
+*/}}
+{{ define "main" }}{{ partial "typo-fr.html" (dict "page" . "html" (partial "inline/main-about.html" .)) }}{{ end }}
+
+{{ define "_partials/inline/main-about.html" }}
+
+  <main id="content" class="frame frame--columns about-page">
+    <h1 class="page-title">{{ .Title }}</h1>
+
+    {{/* « in-margin » place l'élément dans la colonne de marge dès md ; sous md il suit le flux,
+         donc sous le titre, ce que DESIGN.md demande. */}}
+    <div class="in-margin about-page__portrait">{{ partial "portrait.html" (dict "place" "about") }}</div>
+
+    {{/* Le rendu du partial est capturé pour savoir s'il a émis quelque chose : « trim » écarte
+         les blancs que les délimiteurs du gabarit laissent. Sans cette capture, le note-block
+         serait rendu vide quand les CV manquent — l'étiquette annoncerait ce qui n'existe pas. */}}
+    {{- $cv := partial "cv-links.html" . -}}
+    {{- if trim $cv " \n\t" }}
+      <aside class="note-block about-page__cv" aria-labelledby="cv-label">
+        <p class="label" id="cv-label">{{ i18n "cv_block_label" }}</p>
+        <ul class="cv-links">{{ $cv }}</ul>
+      </aside>
+    {{- end }}
+
+    {{ .Content }}
+  </main>
+{{ end }}
