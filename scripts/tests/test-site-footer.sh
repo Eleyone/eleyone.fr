@@ -35,8 +35,8 @@ construire() {
   # veulent, pour que le défaut soit « pas de CV ».
   mkdir -p "$work/site/assets"
   cp -r "$root/assets/css" "$work/site/assets/"
-  printf -- '---\ntitle: "Accueil"\nidentity: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
-  printf -- '---\ntitle: "Home"\nidentity: "Essai"\n---\n' > "$work/site/content/_index.en.md"
+  printf -- '---\ntitle: "Accueil"\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
+  printf -- '---\ntitle: "Home"\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
   # La valeur de « source_url » est réécrite dans la copie de la configuration : le cas décide,
   # jamais le dépôt.
   local config=$work/site/config/_default/hugo.yaml

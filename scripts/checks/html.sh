@@ -168,6 +168,12 @@ while IFS= read -r page; do
   # libxml2 (parade de la troisième revue de la PR n° 43 ; le cas ne se produit pas ici).
   nombre=$(checks_xpath "$page" 'count(//script[@type="application/ld+json"])')
   nombre=${nombre:-0}; nombre=${nombre%%.*}; nombre=${nombre:-0}
+  # **Exactement un sur chaque accueil**, et zéro ailleurs (FR-35, story 9.6). La règle était
+  # jusqu'ici « au plus un, et seulement sur l'accueil » : un accueil qui n'en portait aucun passait
+  # sans un mot, et le site aurait perdu ses données structurées sans que rien ne le dise.
+  if ((nombre == 0)) && est_accueil "$relative"; then
+    signaler "$relative" "C10 : aucun bloc JSON-LD sur l'accueil ; exactement un est attendu (FR-35, AD-20)"
+  fi
   if ((nombre > 0)); then
     if ! est_accueil "$relative"; then
       signaler "$relative" "C10 : bloc JSON-LD hors de l'accueil ; il n'appartient qu'à l'accueil (AD-20)"
@@ -192,6 +198,65 @@ while IFS= read -r page; do
             [[ -n $cle ]] || continue
             signaler "$relative" "C10 : clé « $cle » dans le bloc JSON-LD ; seules les clés de FR-35 sont permises"
           done <<< "$liste_5"
+          # Les clés permises devaient aussi être **présentes** : le contrôle ne refusait que le
+          # superflu, si bien qu'un bloc réduit à « @type: Person » passait pour conforme. Un bloc
+          # de données incomplet est pire qu'absent — il annonce une identité qu'il ne décrit pas.
+          # Le code de « jq » est **lu**, jamais remplacé par une valeur vide : un bloc mal typé —
+          # « address » qui serait une chaîne, « sameAs » qui ne serait pas un tableau — fait
+          # échouer jq, et « || liste="" » aurait fait passer ce bloc pour conforme. C'est la
+          # classe d'erreur que ce dépôt traque, et j'en avais écrit deux nouvelles instances
+          # (constat bloquant de la revue de la PR n° 102).
+          rc_jq=0
+          liste_6=$(jq -r --argjson requises '["@context","name","alternateName","jobTitle","address","url"]' \
+            '$requises[] | select(. as $k | ($k | in($ARGS.named.bloc)) | not)' \
+            --argjson bloc "$contenu" <<< "$contenu") || rc_jq=$?
+          ((rc_jq == 0)) \
+            || checks_die "lecture du bloc JSON-LD impossible sur $relative (jq, code $rc_jq) : rien n'est affirmé."
+          while IFS= read -r cle; do
+            [[ -n $cle ]] || continue
+            signaler "$relative" "C10 : clé « $cle » absente du bloc JSON-LD (FR-35)"
+          done <<< "$liste_6"
+          # Le pays est la **seule** granularité publique de résidence (FR-33). Dès que « address »
+          # existe, ses deux clés sont exigées telles quelles.
+          #
+          # Une première écriture tolérait la valeur vide — « [[ -z $type || $type == … ]] » — et
+          # excusait donc exactement le cas qu'elle devait refuser : une adresse sans « @type »
+          # passait, alors qu'elle n'est plus une PostalAddress pour un moteur. Constaté en
+          # dégradant le contrôle, pas en le relisant. L'absence d'« address » est déjà signalée
+          # plus haut, comme clé requise : il n'y a donc rien à excuser ici.
+          # Le **type** d'« address » est vérifié avant d'y descendre : une chaîne ferait échouer
+          # jq sur « .address.addressCountry », et l'objet est ce que schema.org attend.
+          type_bloc_adresse=$(jq -r 'if has("address") then (.address | type) else "absent" end' <<< "$contenu") \
+            || checks_die "lecture du bloc JSON-LD impossible sur $relative : rien n'est affirmé."
+          if [[ $type_bloc_adresse != absent && $type_bloc_adresse != object ]]; then
+            signaler "$relative" "C10 : address de type « $type_bloc_adresse » ; un objet PostalAddress est attendu (FR-35)"
+          elif [[ $type_bloc_adresse == object ]]; then
+            pays=$(jq -r '.address.addressCountry // ""' <<< "$contenu")
+            [[ $pays == FR ]] \
+              || signaler "$relative" "C10 : addressCountry « $pays » ; seul FR est publié (FR-33)"
+            type_adresse=$(jq -r '.address."@type" // ""' <<< "$contenu")
+            [[ $type_adresse == PostalAddress ]] \
+              || signaler "$relative" "C10 : address de @type « $type_adresse » ; PostalAddress attendu (FR-35)"
+          fi
+          # Un lien vide dans « sameAs » est **omis**, jamais rendu : le vérifier ici, parce qu'un
+          # tableau porteur d'une chaîne vide reste un JSON valide et passerait tout le reste.
+          # Le **type** de « sameAs » est vérifié avant de le parcourir, comme celui d'« address » :
+          # une chaîne y ferait échouer jq, et un bloc mal formé produit par notre propre build est
+          # un **écart** (code 1), pas une panne d'outil (code 2). Réserver « checks_die » aux
+          # vraies pannes garde au code 2 son sens.
+          type_sameas=$(jq -r 'if has("sameAs") then (.sameAs | type) else "absent" end' <<< "$contenu") \
+            || checks_die "lecture du bloc JSON-LD impossible sur $relative : rien n'est affirmé."
+          vides=0
+          if [[ $type_sameas != absent && $type_sameas != array ]]; then
+            signaler "$relative" "C10 : sameAs de type « $type_sameas » ; un tableau est attendu (AD-20)"
+          elif [[ $type_sameas == array ]]; then
+            rc_jq=0
+            vides=$(jq -r '[.sameAs[] | select(type != "string" or . == "")] | length' <<< "$contenu") || rc_jq=$?
+            ((rc_jq == 0)) \
+              || checks_die "lecture de sameAs impossible sur $relative (jq, code $rc_jq) : rien n'est affirmé."
+          fi
+          ((vides == 0)) \
+            || signaler "$relative" "C10 : $vides entrée(s) vide(s) ou mal typée(s) dans sameAs ; un lien vide est omis (AD-20)"
         fi
       fi
     fi

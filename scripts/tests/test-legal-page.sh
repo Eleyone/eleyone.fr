@@ -35,8 +35,8 @@ construire() {
   mkdir -p "$work/site/content"
   cp -r "$root/layouts" "$root/config" "$root/data" "$root/i18n" "$work/site/"
   cp -r "$root/assets" "$work/site/"
-  printf -- '---\ntitle: "Accueil"\n---\n%s\n' "$hors_page" > "$work/site/content/_index.fr.md"
-  printf -- '---\ntitle: "Home"\n---\n' > "$work/site/content/_index.en.md"
+  printf -- '---\ntitle: "Accueil"\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n%s\n' "$hors_page" > "$work/site/content/_index.fr.md"
+  printf -- '---\ntitle: "Home"\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
   [[ -n $corps ]] || corps=$'## Éditeur\n\n{{< legal-list "publisher" >}}\n\n## Hébergeur\n\n{{< legal-list "host" >}}\n'
   printf -- '---\ntitle: "Mentions légales"\ntranslationKey: legal-notice\nslug: mentions-legales\n---\n\n%s\n' \
     "$corps" > "$work/site/content/legal-notice.fr.md"

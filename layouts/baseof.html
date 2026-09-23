@@ -51,6 +51,11 @@
         <link rel="stylesheet" href="{{ .RelPermalink }}">
       {{ end }}
     {{ end }}
+  {{/* Données structurées « Person » : **sur les seuls accueils** (FR-35, AD-20). Ailleurs, C10
+       refuse tout bloc JSON-LD — un profil répété sur chaque page dirait à un moteur que chaque
+       page est la personne. Le test de la page est fait ici, dans le seul gabarit que toutes les
+       pages traversent, plutôt que dans le partial : celui-ci n'a pas à savoir où il est appelé. */}}
+  {{- if .IsHome }}{{ partial "jsonld-person.html" . }}{{ end }}
   </head>
   <body>
     {{/* Premier élément focalisable de la page (EXPERIENCE.md § skip-link). */}}

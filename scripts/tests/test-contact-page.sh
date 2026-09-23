@@ -26,8 +26,8 @@ construire() {
   rm -rf "$work/site"
   mkdir -p "$work/site/content"
   cp -r "$root/layouts" "$root/config" "$root/data" "$root/i18n" "$root/assets" "$work/site/"
-  printf -- '---\ntitle: "Accueil"\nidentity: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
-  printf -- '---\ntitle: "Home"\nidentity: "Essai"\n---\n' > "$work/site/content/_index.en.md"
+  printf -- '---\ntitle: "Accueil"\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
+  printf -- '---\ntitle: "Home"\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
   local cles=("$@")
   if (( ${#cles[@]} )); then
     local avant="" nom

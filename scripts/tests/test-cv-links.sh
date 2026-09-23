@@ -26,8 +26,8 @@ construire() {
   mkdir -p "$work/site/content" "$work/site/assets/cv"
   cp -r "$root/layouts" "$root/config" "$root/data" "$root/i18n" "$work/site/"
   cp -r "$root/assets/css" "$work/site/assets/"
-  printf -- '---\ntitle: "Accueil"\n---\n' > "$work/site/content/_index.fr.md"
-  printf -- '---\ntitle: "Home"\n---\n' > "$work/site/content/_index.en.md"
+  printf -- '---\ntitle: "Accueil"\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
+  printf -- '---\ntitle: "Home"\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
   local nom
   for nom in "$@"; do tests_pdf "$work/site/assets/cv/$nom" "" "" "" 311000; done
   (cd "$work/site" && hugo --environment work --buildDrafts --panicOnWarning --destination sortie) \

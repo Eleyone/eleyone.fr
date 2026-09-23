@@ -1,0 +1,90 @@
+{{/*
+  Données structurées « Person » de l'accueil (FR-35, AD-20, D-7).
+
+  **La seule exception à NFR-12** : le site ne porte aucun JavaScript, et ce bloc n'en est pas — un
+  `script type="application/ld+json"` est lu, jamais exécuté. C'est pourquoi il est toléré, et
+  pourquoi C10 refuse tout autre type de `script` sur toute page.
+
+  **Des données, et rien d'autre.** Ni ville, ni téléphone, ni photo : la commune de résidence est
+  une donnée privée, et un bloc de données est exactement l'endroit où elle fuirait sans qu'on la
+  voie. Les clés permises sont fixées par FR-35 et vérifiées par C10, qui refuse toute autre.
+
+  Chaque valeur vient du **contenu**, jamais d'une chaîne écrite ici :
+
+    name, alternateName ← « identity » de l'accueil, découpée sur son séparateur
+    jobTitle            ← « job_title » de l'accueil, dans la langue du fichier
+    address             ← le pays, seul niveau public (FR-33)
+    url                 ← le permalien de **cette** page
+    sameAs              ← « linkedin » et « github » de content/contact (AD-3)
+
+  Trois refus, et chacun arrête le build :
+
+  1. « identity » qui ne porte pas exactement un séparateur « · ». La spec veut « name » **et**
+     « alternateName » de cette seule clé, sans dire comment les tirer : le découpage est donc
+     explicite, et deviner en silence produirait un JSON-LD faux le jour où la ligne change
+     (constat de la revue de spec, 23/09/2026) ;
+  2. « job_title » vide — un bloc qui prétend décrire une identité ne s'écrit pas à trous ;
+  3. la page de contact absente, dont « sameAs » dépend.
+
+  « url » est le permalien de la page, **pas** « baseURL » : les deux accueils annonceraient sinon
+  la même adresse, et l'anglais désignerait la page française comme sienne (même constat).
+
+  Un lien vide est **omis** de « sameAs », jamais remplacé par une valeur factice ; et « sameAs »
+  disparaît entièrement s'il n'en reste aucun, plutôt que de rendre un tableau vide.
+*/}}
+{{- $page := . -}}
+{{/* Les deux refus sur « identity » s'excluent : « errorf » **n'interrompt pas** le rendu, il
+     journalise et laisse le gabarit continuer. Une identity absente produisait donc trois messages
+     en cascade — absente, puis « zéro séparateur », puis le reste. Un seul est utile. */}}
+{{- $identity := $page.Params.identity -}}
+{{- $parts := slice -}}
+{{- if not $identity -}}
+  {{- errorf "jsonld-person : « identity » absente de %s (AD-19)." $page.Path -}}
+{{- else -}}
+  {{- $parts = split $identity "·" -}}
+  {{- if ne (len $parts) 2 -}}
+    {{- errorf "jsonld-person : « identity » de %s doit porter exactement un séparateur « · » pour donner name et alternateName ; elle en porte %d (AD-20)." $page.Path (sub (len $parts) 1) -}}
+    {{- $parts = slice "" "" -}}
+  {{- end -}}
+{{- end -}}
+{{- if lt (len $parts) 2 }}{{ $parts = slice "" "" }}{{ end -}}
+{{/* « strings.TrimSpace » et non « trim … " " » : le séparateur de la ligne d'identité est précédé
+     d'une **espace insécable** (U+00A0), que DESIGN.md prescrit et qu'un « trim » sur l'espace
+     ordinaire laisse en place. « name » sortait alors avec une espace finale invisible, dans un
+     bloc destiné aux moteurs de recherche. TrimSpace couvre les séparateurs Unicode (catégorie Zs),
+     vérifié dans la documentation de Hugo. */}}
+{{- $nom := strings.TrimSpace (index $parts 0) -}}
+{{- $pseudonyme := strings.TrimSpace (index $parts 1) -}}
+{{- $titre := $page.Params.job_title -}}
+{{- if not $titre -}}
+  {{- errorf "jsonld-person : « job_title » absente de %s (D-7)." $page.Path -}}
+{{- end -}}
+
+{{/* La page de contact **de la même langue** : « site.GetPage » la rend dans le site courant.
+     Son absence n'est **pas** une erreur : « sameAs » est la seule clé qui en dépende, et la règle
+     est déjà « un lien vide est omis ». Une page de contact absente n'est que ce cas à plus gros
+     grain, et l'exiger aurait forcé une page de contact dans toute fixture qui construit un site
+     — sans rien garder de plus, C10 n'attendant pas « sameAs ». */}}
+{{- $sameAs := slice -}}
+{{- with site.GetPage "/contact" -}}
+  {{- range slice .Params.linkedin .Params.github -}}
+    {{- with . }}{{ $sameAs = $sameAs | append . }}{{ end -}}
+  {{- end -}}
+{{- end -}}
+
+{{- $donnees := dict
+      "@context" "https://schema.org"
+      "@type" "Person"
+      "name" $nom
+      "alternateName" $pseudonyme
+      "jobTitle" $titre
+      "address" (dict "@type" "PostalAddress" "addressCountry" "FR")
+      "url" $page.Permalink
+-}}
+{{- if $sameAs }}{{ $donnees = merge $donnees (dict "sameAs" $sameAs) }}{{ end -}}
+{{/* « safeJS » : dans un « script », Go traite la sortie comme du JavaScript et encode le JSON
+     en **chaîne** JS échappée — le bloc devenait une chaîne entre guillemets au lieu d'un objet,
+     et aucun moteur ne l'aurait lu. Constaté sur le rendu. Le contenu vient du front matter de ce
+     dépôt, donc d'une source sûre : c'est la condition que la documentation de Hugo pose à
+     l'emploi de safeJS. */}}
+<script type="application/ld+json">{{ $donnees | jsonify | safeJS }}</script>
