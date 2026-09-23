@@ -42,6 +42,12 @@ construire() {
     "$corps" > "$work/site/content/legal-notice.fr.md"
   printf -- '---\ntitle: "Legal notice"\ntranslationKey: legal-notice\nslug: legal-notice\n---\n\n%s\n' \
     "$corps" > "$work/site/content/legal-notice.en.md"
+  # La page de confidentialité (story 9.2) : le pied de page doit porter son lien au bon slug dans
+  # chaque langue, comme celui des mentions légales. Elle ne lit aucune valeur légale.
+  printf -- '---\ntitle: "Confidentialité"\ntranslationKey: privacy\nslug: confidentialite\n---\n\nTexte.\n' \
+    > "$work/site/content/privacy.fr.md"
+  printf -- '---\ntitle: "Privacy"\ntranslationKey: privacy\nslug: privacy\n---\n\nText.\n' \
+    > "$work/site/content/privacy.en.md"
   # « env -i » n'est pas employé : hugo a besoin de PATH et de HOME. Les valeurs légales sont
   # posées une à une, et aucune ne vient du poste.
   local -a env_args=()
@@ -61,6 +67,31 @@ construire_sans() { # $1 = nom complet de la variable à vider
 }
 
 page() { cat "$work/site/sortie/$1"; }
+
+# Vérifie que deux entrées sont présentes dans le pied de page d'une page, **dans cet ordre**.
+#
+# Trois précautions, chacune pour une faute que la revue de la PR n° 99 a trouvée dans une première
+# écriture :
+#
+#   - le pied de page est extrait par « shell_grep_into » et son absence est dite : un « grep » nu
+#     dans une affectation fait sortir le script **sans un mot** sous « set -e », et le cas échouait
+#     alors pour une raison qu'il n'affichait pas ;
+#   - la **présence** de chaque entrée est affirmée avant de comparer leurs positions : sans cela,
+#     une entrée absente donnait un préfixe égal à toute la chaîne, donc « très loin », et l'ordre
+#     paraissait bon. Le cas passait au vert sur un pied de page amputé ;
+#   - les deux langues sont vérifiées, et non la seule française.
+ordre_du_pied() { # $1 = page, $2 = entrée attendue en premier, $3 = entrée attendue ensuite
+  local page_lue=$1 premier=$2 second=$3 pied
+  pied=$(page "$page_lue") || { echo "$page_lue : page illisible" >&2; exit 1; }
+  pied=${pied#*<ul class=site-footer__list>}
+  [[ $pied != "$(page "$page_lue")" ]] || { echo "$page_lue : aucun pied de page" >&2; exit 1; }
+  pied=${pied%%</ul>*}
+  [[ $pied == *"$premier"* ]] || { echo "$page_lue : « $premier » absent du pied de page" >&2; exit 1; }
+  [[ $pied == *"$second"* ]] || { echo "$page_lue : « $second » absent du pied de page" >&2; exit 1; }
+  local avant_premier=${pied%%"$premier"*} avant_second=${pied%%"$second"*}
+  ((${#avant_premier} < ${#avant_second})) \
+    || { echo "$page_lue : « $second » précède « $premier » dans le pied de page" >&2; exit 1; }
+}
 
 case_legal_page_rendue() {
   run construire
@@ -92,6 +123,20 @@ case_legal_lien_du_pied_de_page() {
   assert_eq 0 "$rc" "le build réussit"
   assert_contains 'href=/mentions-legales/>Mentions légales' "$(page index.html)" "l accueil FR mène aux mentions FR"
   assert_contains 'href=/en/legal-notice/>Legal notice' "$(page en/index.html)" "l accueil EN mène aux mentions EN"
+}
+
+case_legal_lien_de_confidentialite_dans_le_pied_de_page() {
+  # Chaque page simple de l'epic 9 ajoute une entrée au pied de page, et chacune porte le slug de
+  # **sa** langue : « /confidentialite/ » et « /en/privacy/ ». Un chemin écrit à la main n'en aurait
+  # mis qu'un. Le mécanisme est celui de la story 9.1, « site.GetPage » (story 9.2).
+  run construire
+  assert_eq 0 "$rc" "le build réussit (messages : $err)"
+  assert_contains 'href=/confidentialite/>Confidentialité' "$(page index.html)" "l accueil FR mène à la page FR"
+  assert_contains 'href=/en/privacy/>Privacy' "$(page en/index.html)" "l accueil EN mène à la page EN"
+  # Et les deux entrées coexistent, **dans les deux langues**, dans l'ordre prévu par DESIGN.md :
+  # « Mentions légales » avant « Confidentialité ».
+  ordre_du_pied index.html mentions-legales confidentialite
+  ordre_du_pied en/index.html en/legal-notice en/privacy
 }
 
 case_legal_valeur_absente_arrete_le_build() {

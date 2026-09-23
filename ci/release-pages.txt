@@ -2,3 +2,4 @@
 # Une story qui publie une page ajoute sa clé ici ; le contrôle C15 compare cette liste au site produit.
 home
 legal-notice
+privacy
