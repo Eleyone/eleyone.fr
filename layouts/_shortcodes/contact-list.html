@@ -1,0 +1,51 @@
+{{/*
+  La liste des moyens de contact (FR-3, FR-17, AD-3, DESIGN.md § Contact).
+
+  Emploi dans le contenu :  {{< contact-list >}}
+
+  Les trois valeurs — `email`, `linkedin`, `github` — sont du **contenu commité**, dans le front
+  matter de la page, et non des variables d'environnement (décidé le 13/09/2026, AD-3). Elles sont
+  identiques en français et en anglais, et **C3 vérifie cette parité sur les trois clés** : en
+  oublier une ferait échouer le contrôle, ce qui est voulu.
+
+  Une **liste de définitions**, comme la page des mentions légales : termes dans la marge dès md,
+  valeurs en corps. Le balisage réutilise la classe `legal-list`, dont DESIGN.md décrit exactement
+  cette disposition, plutôt que d'en déclarer une jumelle — le dépôt a déjà payé quatre fois la
+  copie d'une même grille (constat A1 de la rétrospective de l'epic 5). `contact-list` s'y ajoute
+  comme un nom, pas comme une seconde règle.
+
+  Une valeur absente n'affiche **rien** : ni terme, ni ligne vide, ni « à venir ». Ce qui n'existe
+  pas reste vide (DESIGN.md § Do's and Don'ts). Le JSON-LD de la story 9.6 applique la même règle
+  à `sameAs`.
+
+  Aucun formulaire, jamais : C10 le refuse, et FR-17 le dit.
+*/}}
+{{- $page := .Page -}}
+{{- $entrees := slice
+      (dict "terme" "contact_term_email"    "valeur" $page.Params.email    "type" "courriel")
+      (dict "terme" "contact_term_linkedin" "valeur" $page.Params.linkedin "type" "url")
+      (dict "terme" "contact_term_github"   "valeur" $page.Params.github   "type" "url")
+-}}
+{{- $presentes := 0 -}}
+{{- range $entrees }}{{ if .valeur }}{{ $presentes = add $presentes 1 }}{{ end }}{{ end -}}
+{{- if eq $presentes 0 -}}
+  {{- errorf "contact-list : %s ne porte aucune des clés email, linkedin, github (AD-3)." $page.Path -}}
+{{- end -}}
+<dl class="legal-list contact-list">
+{{- range $entrees -}}
+  {{/* Le terme et le type sont capturés **avant** le « with » : celui-ci remplace le contexte par
+       la valeur, et « .terme » n'y désignerait plus rien. */}}
+  {{- $terme := .terme -}}
+  {{- $type := .type -}}
+  {{- with .valeur -}}
+    <dt class="legal-list__term">{{ i18n $terme }}</dt>
+    <dd class="legal-list__value">
+      {{- if eq $type "courriel" -}}
+        <a href="mailto:{{ . }}">{{ . }}</a>
+      {{- else -}}
+        <a href="{{ . }}">{{ . }}</a>
+      {{- end -}}
+    </dd>
+  {{- end -}}
+{{- end -}}
+</dl>

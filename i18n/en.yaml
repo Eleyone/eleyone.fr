@@ -78,3 +78,13 @@ legal_term_phone: Phone
 legal_term_registration: Registration number
 footer_legal_notice: Legal notice
 footer_privacy: Privacy
+
+# Contact page and call to contact on the home page (FR-3, FR-17, story 9.3).
+# Labels validated by Arnaud on 23/09/2026; EXPERIENCE.md had carried them as "to validate" since
+# 13/09. "Get in touch" is the established English form, not a calque of "Me contacter".
+nav_contact: Contact
+block_contact: Contact
+contact_cta: Get in touch
+contact_term_email: Email
+contact_term_linkedin: LinkedIn
+contact_term_github: GitHub

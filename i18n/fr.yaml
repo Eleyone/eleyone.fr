@@ -80,3 +80,13 @@ legal_term_phone: Téléphone
 legal_term_registration: Immatriculation
 footer_legal_notice: Mentions légales
 footer_privacy: Confidentialité
+
+# Page Contact et appel à contact sur l'accueil (FR-3, FR-17, story 9.3).
+# « Me contacter » / « Get in touch » : libellés validés par Arnaud le 23/09/2026, qu'EXPERIENCE.md
+# portait « à valider » depuis le 13/09. « Courriel » suit DESIGN.md § Contact.
+nav_contact: Contact
+block_contact: Contact
+contact_cta: Me contacter
+contact_term_email: Courriel
+contact_term_linkedin: LinkedIn
+contact_term_github: GitHub

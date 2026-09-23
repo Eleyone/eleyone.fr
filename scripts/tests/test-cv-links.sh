@@ -55,14 +55,25 @@ case_cv_les_deux_pdf() {
 case_cv_le_cv_de_la_langue_vient_en_premier() {
   run construire cv-fr.pdf cv-en.pdf
   assert_eq 0 "$rc" "le build réussit (sortie : $(cat "$work/hugo.out"))"
-  local fr en pos_fr pos_en
+  local fr en
   fr=$(pied index.html)
   en=$(pied en/index.html)
   # La position du premier lien de chaque CV, dans la chaîne : c'est l'ordre du DOM.
-  pos_fr=${fr%%cv-fr.pdf*}; pos_en=${fr%%cv-en.pdf*}
-  ((${#pos_fr} < ${#pos_en})) || { echo "sur une page FR, le CV français ne vient pas en premier" >&2; exit 1; }
-  pos_fr=${en%%cv-fr.pdf*}; pos_en=${en%%cv-en.pdf*}
-  ((${#pos_en} < ${#pos_fr})) || { echo "sur une page EN, le CV anglais ne vient pas en premier" >&2; exit 1; }
+  #
+  # La **présence** des deux est affirmée d'abord : « ${x%%motif*} » rend la chaîne inchangée quand
+  # le motif manque, donc « très loin », et un lien absent passait pour un lien venant en dernier.
+  # Le cas validait alors un pied de page amputé. Trouvé en balayant cette classe d'erreur après un
+  # constat de la revue de la PR n° 100 sur un autre fichier — le constat ne visait pas celui-ci.
+  premier_des_deux "$fr" cv-fr.pdf cv-en.pdf "sur une page FR, le CV français ne vient pas en premier"
+  premier_des_deux "$en" cv-en.pdf cv-fr.pdf "sur une page EN, le CV anglais ne vient pas en premier"
+}
+
+premier_des_deux() { # $1 = texte, $2 = attendu en premier, $3 = attendu ensuite, $4 = message
+  local texte=$1 premier=$2 second=$3 message=$4
+  [[ $texte == *"$premier"* ]] || { echo "$message (« $premier » absent)" >&2; exit 1; }
+  [[ $texte == *"$second"* ]] || { echo "$message (« $second » absent)" >&2; exit 1; }
+  local avant_premier=${texte%%"$premier"*} avant_second=${texte%%"$second"*}
+  ((${#avant_premier} < ${#avant_second})) || { echo "$message" >&2; exit 1; }
 }
 
 case_cv_un_seul_pdf_nemet_rien() {

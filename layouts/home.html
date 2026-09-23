@@ -47,8 +47,23 @@
       </section>
     {{ end }}
 
-    {{/* « Formation, certification, langues » (AD-18, FR-36). L'appel à contact (FR-3) vient avec
-         la page Contact, story 9.3 : un lien vers une page absente ferait échouer C12. */}}
+    {{/* « Formation, certification, langues » (AD-18, FR-36). */}}
     {{ partial "education.html" . }}
+
+    {{/* L'appel à contact (FR-3, story 9.3) : dernier bloc avant le pied de page, « titre de bloc,
+         puis un lien », identique de sm à lg (DESIGN.md, tableau des zones de l'accueil).
+
+         Le bloc n'existe que si la page Contact existe : un lien vers une page absente ferait
+         échouer C12, et la règle vaut pour l'accueil comme pour l'en-tête et le pied de page.
+
+         Le libellé du lien n'est pas celui du bloc — « Me contacter » contre « Contact » (validé
+         par Arnaud le 23/09/2026) : un lien qui répète son titre n'ajoute rien, et lu seul par un
+         lecteur d'écran il ne dirait pas ce qu'il fait. */}}
+    {{ with site.GetPage "/contact" }}
+      <section class="cv-block" aria-labelledby="block-contact">
+        <h2 class="section-heading" id="block-contact">{{ i18n "block_contact" }}</h2>
+        <p class="contact-cta"><a href="{{ .RelPermalink }}">{{ i18n "contact_cta" }}</a></p>
+      </section>
+    {{ end }}
   </main>
 {{ end }}

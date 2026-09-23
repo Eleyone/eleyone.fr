@@ -444,6 +444,14 @@ main {
 
 .legal-list__value {
   margin-inline-start: 0;
+  /* Une URL est **un seul mot insécable**. Mesuré à 360 px : le lien LinkedIn de la page Contact
+   * faisait 367 px dans une boîte de 328 et débordait de sa colonne. « overflow-wrap » ne coupe
+   * qu'en dernier recours, quand le mot ne tient pas — ce n'est pas de la césure, et il n'ajoute
+   * aucun tiret : C24 et l'interdiction de « hyphens: auto » (UX-DR17) restent satisfaites.
+   *
+   * La règle est posée sur la valeur, donc elle protège aussi l'adresse de l'éditeur sur les
+   * mentions légales, et toute valeur longue à venir. */
+  overflow-wrap: anywhere;
 }
 
 .legal-list__value + .legal-list__term {
