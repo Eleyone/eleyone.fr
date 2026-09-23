@@ -89,7 +89,7 @@ Microcopie de l'interface (libellés i18n, AD-3). La voix du contenu est celle d
 | `cv_pdf` | CV en PDF, français (NNN Ko) · CV en PDF, anglais (NNN Ko) | CV (PDF, English, NNN KB) · CV (PDF, French, NNN KB) | emplacement décidé, libellé à valider |
 | `diagram_full_size` | Ouvrir en taille réelle | Open full size | à valider par Arnaud |
 | `video_suffix` | (vidéo sur YouTube) | (video on YouTube) | à valider par Arnaud |
-| `footer_legal` · `footer_privacy` · `footer_source` | Mentions légales · Confidentialité · Code source du site | Legal notice · Privacy · Site source code | à valider par Arnaud |
+| `footer_legal_notice` · `footer_privacy` · `footer_source` | Mentions légales · Confidentialité · Code source du site | Legal notice · Privacy · Site source code | **décidé** : en service depuis les stories 5.1 (source) et 9.1-9.2 (pages simples), sans réserve d'Arnaud. La clé s'appelle `footer_legal_notice`, non `footer_legal` (stories 9.1, 9.2, 9.5) |
 | `not_found_title` | Page introuvable | Page not found | décidé (17/09/2026, story 2.3) |
 | `not_found_message` | Cette page n'existe pas, ou elle a changé d'adresse. | This page doesn't exist, or it has moved. | décidé (17/09/2026, story 2.3) |
 | `home_link` | Accueil | Home | décidé (17/09/2026, story 2.3) |
