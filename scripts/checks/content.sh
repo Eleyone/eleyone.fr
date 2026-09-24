@@ -256,11 +256,21 @@ def todo_value: (. // "") | tostring | gsub("^\\s+"; "") | startswith("[TODO");
          ,
          # Une clé **présente mais vide** est une faute de saisie, pas un choix : le gabarit retombe
          # en silence sur l'autre, et le poste s'affiche juste — si bien que rien ne la signale. Le
-         # même tamis a déjà servi ce matin pour « state: "" » dans les questions ouvertes du suivi :
-         # deux caractères qui paraissent renseignés. La règle ci-dessus juge le couple ; celle-ci
-         # juge chaque clé écrite (constat de la revue de la PR n° 109, dont la conclusion était
-         # fausse — un label vide n'écrase rien — mais dont l'intuition désignait ce trou).
-         ((["company", "label"][] as $key
+         # même tamis a déjà servi pour « state: "" » dans les questions ouvertes du suivi : deux
+         # caractères qui paraissent renseignés. La règle ci-dessus juge le couple ; celle-ci juge
+         # chaque clé écrite (constat de la revue de la PR n° 109, dont la conclusion était fausse —
+         # un label vide n'écrase rien — mais dont l'intuition désignait ce trou).
+         #
+         # **La liste couvre toutes les clés facultatives que « position.html » lit par « with »**,
+         # et non les deux qui ont motivé la règle. La story 10.2 n'en avait tamisé que deux, et la
+         # rétrospective de l'epic 10 l'a relevé : un « location: "" » passait sans un mot, alors que
+         # c'est la même faute et le même silence. Le point 18 d'AGENTS.md demande de réénumérer ce
+         # que la condition laisse passer, pas d'ajouter le cas cité ; il avait été cité dans le
+         # triage de la 10.2, puis enfreint au paragraphe suivant.
+         #
+         # « period » et « role » n'y sont pas : elles sont **exigées** plus haut, donc déjà refusées
+         # vides. « company_url » non plus : elle a sa propre règle, qui exige une adresse https.
+         ((["company", "label", "location", "setup", "via"][] as $key
            | select($f.front_matter | has($key))
            | ($f.front_matter[$key] // "") as $value
            | select($value | blank)
@@ -298,6 +308,16 @@ def todo_value: (. // "") | tostring | gsub("^\\s+"; "") | startswith("[TODO");
     ,
     (select($f.role == "education")
      | (
+         # Le même tamis que pour un poste, sur les clés facultatives qu'« education.html » lit par
+         # « with » : une entrée s'affiche juste avec « institution: "" », et rien ne le dit. La
+         # story 10.3 ne l'avait pas, parce que la règle de la 10.2 s'était arrêtée aux postes
+         # (rétrospective de l'epic 10). « period » n'y est pas : elle a sa propre règle plus bas.
+         ((["institution", "level"][] as $key
+           | select($f.front_matter | has($key))
+           | ($f.front_matter[$key] // "") as $value
+           | select($value | blank)
+           | [$f.file, "C19 : « \($key) » présente mais vide ; la retirer ou l'écrire"]))
+         ,
          (($f.front_matter.title // "") as $title
           | select(($title | blank) or (($f.draft != true) and ($title | todo_value)))
           | [$f.file, "C19 : title \(if ($title | blank) then "absent ou vide" else "encore en [TODO dans une entrée publiée" end) (AD-18)"])

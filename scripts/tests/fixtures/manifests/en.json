@@ -113,6 +113,26 @@
           "source_found": false
         }
       ]
+    },
+    {
+      "file": "education/education-essai.en.md",
+      "lang": "en",
+      "kind": "page",
+      "role": "education",
+      "translationKey": "education-essai",
+      "draft": false,
+      "front_matter": {
+        "translationKey": "education-essai",
+        "title": "Test education",
+        "kind": "education",
+        "institution": "Test institution",
+        "period": "2008",
+        "order": 1,
+        "draft": false
+      },
+      "placed": [],
+      "todo": false,
+      "headings": []
     }
   ]
 }

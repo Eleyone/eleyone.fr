@@ -192,3 +192,23 @@ porte sur **l'état du fichier**, pas sur ce que le diff modifie. La ligne exist
 
 C'est une forme voisine de « le relecteur ne voit pas le dépôt », qui a coûté onze constats réfutés
 dans l'epic 9 : ici il voit le dépôt, mais il juge le diff comme s'il était l'état.
+
+### Décisions sur les constats laissés sans réponse, 24/09/2026
+
+Les deux revues de code portaient deux constats de lentille — rendus non classés la première fois,
+« NON BLOQUANT » la seconde — qu'aucun triage n'a tranchés. Même cause qu'à la story 10.2 : le
+verdict a servi de filtre là où le point 20 dit « tout constat ». Relevé par la rétrospective de
+l'epic 10 (F3), tranché ici.
+
+**« Un `translationKey` vide produirait `id=""` »** dans `layouts/cases/page.html:37` et
+`section.html:27`. **Inatteignable, mesuré** : un `translationKey` vide fait échouer **trois**
+contrôles d'un coup — `content`, `links` et `parity`. La page ne se construit donc jamais dans cet
+état, et le gabarit n'a pas à s'en défendre. Aucune action.
+
+**« Aucun test ne couvre la ligne de contexte FR-22 du cas. »** Fondé, et c'est le seul des quatre
+qui désigne un vrai manque. Rien ne vérifie qu'un cas publié dont la version anglaise devrait porter
+une ligne de contexte la porte effectivement — ni pour Orange, ni pour Systeme.io, ni pour Ton Pote
+le Geek. La faute s'est d'ailleurs produite : la story 10.6 a découvert **à la main**, en relisant
+FR-22, que le cas 01 n'avait pas la sienne. **Reporté dans `deferred-work.md`** : le contrôle
+demande de savoir quel repère appartient à quel cas, ce que FR-22 sait et qu'aucun fichier de
+données ne porte aujourd'hui.

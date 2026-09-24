@@ -511,3 +511,19 @@ Le pas 6 du cas de test **affirmait le contraire** — il constatait le repli du
 concluait que tout allait bien. Il est retourné, avec sa raison écrite, et un pas 7 couvre `company`
 pour qu'aucune des deux clés n'hérite d'une tolérance que l'autre n'a pas. Lancée sans la garde, la
 paire échoue.
+
+### Décisions sur les constats laissés sans réponse, 24/09/2026
+
+Le cinquième rapport de code (`f63584d`, verdict `pass`) portait deux constats de lentille qu'aucun
+triage n'a tranchés : le point 20 d'AGENTS.md l'exige pour **tout** constat, et le verdict `pass`
+avait servi de filtre. Relevé par la rétrospective de l'epic 10 (F3), tranché ici.
+
+**« C19 ne signale pas un `label` resté en `[TODO…]` isolé. »** Vrai de C19, **sans conséquence** :
+c'est **C5** qui l'attrape. Mesuré — `label: "[TODO: libellé]"` sur un poste publié donne
+« C5 : le fichier est publié et contient « [TODO » ; le marqueur impose draft: true ». Le trou
+n'existe pas ; il est tenu par un autre contrôle. Aucune action.
+
+**« Le pas 5 du test supprime `company` avant de tester. »** Délibéré, et c'est ce que le pas
+vérifie : il éprouve `label` **seule**, donc il faut retirer l'autre clé du couple, sinon `company`
+nommerait le poste et le cas ne dirait rien de `label`. Le pas 3 fait l'inverse — `company` seule —
+et le pas 7 les éprouve ensemble. Aucune action.

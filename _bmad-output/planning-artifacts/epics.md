@@ -3229,7 +3229,7 @@ En tant que Claire, CTO (UJ-1),
 je veux que le cas 02 soit prêt à être mis en ligne sous le poste Chiliz,
 afin de trouver en un clic la preuve « Chiliz, source de vérité ».
 
-**Couvre :** FR-2, FR-5 à FR-9, FR-12, FR-20, FR-22 (NCS/CS), FR-25, FR-26, SM-7
+**Couvre :** FR-22 (NCS/CS), FR-25, SM-7 — **exactement ce que la carte de couverture attribue à cette story**. La ligne revendiquait en outre FR-2, FR-5 à FR-9, FR-12, FR-20 et FR-26, qu'aucune ligne de la carte ne lui donne : publier un cas **emploie** les gabarits de l'epic 6, il ne réalise pas leurs exigences (corrigé le 24/09/2026, rétrospective de l'epic 10 ; le défaut avait été nommé au triage de la story 10.7 sans être corrigé).
 **Dépendances :** 3.17, 10.2 ; livre aussi la story 10.4, dans la même PR
 **Bloquée par :** —
 **Prérequis de contenu :** relecture et accord d'Arnaud.
@@ -3254,7 +3254,7 @@ En tant que Claire, CTO (UJ-1),
 je veux lire le cas 01 (« Calculette de rentabilité ») depuis le bloc « En parallèle »,
 afin de voir un cas mené de bout en bout dans le cadre de Ton Pote le Geek.
 
-**Couvre :** FR-4, FR-5 à FR-8, FR-11, FR-12, FR-20, FR-22 (Systeme.io, Ton Pote le Geek), FR-25, FR-26
+**Couvre :** FR-4, FR-11, FR-22 (Systeme.io, Ton Pote le Geek), FR-25 — **exactement ce que la carte de couverture attribue à cette story**. La ligne revendiquait en outre FR-5 à FR-8, FR-12, FR-20 et FR-26, qu'aucune ligne de la carte ne lui donne (corrigé le 24/09/2026, même cause qu'à la story 10.5).
 **Dépendances :** 3.17, 6.2, 10.2
 **Bloquée par :** **Q2** (période du cas 01)
 **Prérequis de contenu :** cas 01 FR et EN rédigé par Arnaud selon `docs/format-cas.md` v0.4, après les corrections préalables des sources (§9 du PRD).

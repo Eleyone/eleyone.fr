@@ -113,6 +113,26 @@
           "source_found": false
         }
       ]
+    },
+    {
+      "file": "education/education-essai.fr.md",
+      "lang": "fr",
+      "kind": "page",
+      "role": "education",
+      "translationKey": "education-essai",
+      "draft": false,
+      "front_matter": {
+        "translationKey": "education-essai",
+        "title": "Formation d'essai",
+        "kind": "education",
+        "institution": "Établissement d'essai",
+        "period": "2008",
+        "order": 1,
+        "draft": false
+      },
+      "placed": [],
+      "todo": false,
+      "headings": []
     }
   ]
 }

@@ -436,7 +436,7 @@ case_content_c19_formation() {
 }
 
 case_content_c19_cles_obligatoires_du_poste() {
-  # Constat de la revue de la PR n° 42 : ces trois clés n'avaient pas de cas de test.
+  # Constat de la revue de la PR n° 42 : ces clés n'avaient pas de cas de test — elles étaient trois ; « company » en est sortie à la story 10.2, pour son tamis propre.
   local cle
   for cle in role period; do
     rendu "del(.files[1].front_matter.$cle)" "del(.files[1].front_matter.$cle)"
@@ -503,6 +503,36 @@ case_content_c19_company_ou_label() {
   contenu
   assert_eq 1 "$rc" "une company présente mais vide est refusée, même à côté d'un label"
   assert_contains "C19 : « company » présente mais vide" "$err" "et le signalement nomme l'autre clé"
+}
+
+case_content_c19_cles_facultatives_vides() {
+  # **Le balayage que la story 10.2 n'avait pas fait.** Elle a posé le tamis « présente mais vide »
+  # sur « company » et « label », en citant le point 18 d'AGENTS.md — puis a laissé les cinq autres
+  # clés facultatives que « position.html » lit par « with ». Un « location: "" » passait donc sans
+  # un mot, même faute et même silence (rétrospective de l'epic 10).
+  #
+  # Chaque clé a son pas : une liste vérifiée en bloc laisserait passer celle qu'on a oublié
+  # d'ajouter à la règle, puisque le cas échouerait déjà sur les autres.
+  local cle
+  for cle in location setup via; do
+    rendu ".files[1].front_matter.$cle = \"\"" ".files[1].front_matter.$cle = \"\""
+    contenu
+    assert_eq 1 "$rc" "« $cle » présente mais vide est refusée"
+    assert_contains "C19 : « $cle » présente mais vide" "$err" "et le signalement nomme « $cle »"
+  done
+}
+
+case_content_c19_cles_facultatives_vides_formation() {
+  # Le même tamis sur une entrée de « content/education/ », qu'« education.html » lit de la même
+  # façon. La story 10.3 ne l'avait pas non plus, la règle de la 10.2 s'étant arrêtée aux postes :
+  # c'est le point 19 sur son plus petit objet — deux gabarits jumeaux, une seule garde.
+  local cle
+  for cle in institution level; do
+    rendu ".files[3].front_matter.$cle = \"\"" ".files[3].front_matter.$cle = \"\""
+    contenu
+    assert_eq 1 "$rc" "« $cle » présente mais vide est refusée dans une formation"
+    assert_contains "C19 : « $cle » présente mais vide" "$err" "et le signalement nomme « $cle »"
+  done
 }
 
 case_content_c19_order_absent() {

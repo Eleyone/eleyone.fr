@@ -53,6 +53,22 @@ Deux défauts corrigés la veille dans la même session ont servi ici sans rien 
 
 ## Revue de spec
 
+**Aucune revue de spec n'a été lancée pour cette story, et elle n'a aucune excuse.** Contrairement à
+la 10.4, qui voyage dans la PR d'une autre, la 10.6 a sa propre branche, sa propre PR et publie un
+cas. Le point 2 du flux de développement est sans ambiguïté : « every story starts with a spec
+review ».
+
+La cause est la vitesse : la story a été enchaînée en fin de session, après que la 10.7 eut levé
+Q2, et l'étape a sauté sans que rien ne l'arrête — aucun verrou de fusion ne vérifie qu'une revue de
+spec a eu lieu, seul le rapport de **code** est exigé.
+
+Ce que la story a perdu, on ne le saura pas. Ce qu'elle a trouvé sans revue, si : la ligne de
+contexte anglaise de Ton Pote le Geek manquait au cas, alors que FR-22 la demande « cas 01 **et**
+bloc En parallèle » — trouvée en relisant FR-22 à la main, ce qu'une revue de spec aurait
+probablement signalé.
+
+Écrit le 24/09/2026 au titre de l'action 2 de la rétrospective de l'epic 10 (F2).
+
 ## Revue du code
 
 ### 24/09/2026 — `43f5787` — `gemini-3.1-pro-high` — verdict `pass`
