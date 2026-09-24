@@ -438,12 +438,71 @@ case_content_c19_formation() {
 case_content_c19_cles_obligatoires_du_poste() {
   # Constat de la revue de la PR n° 42 : ces trois clés n'avaient pas de cas de test.
   local cle
-  for cle in company role period; do
+  for cle in role period; do
     rendu "del(.files[1].front_matter.$cle)" "del(.files[1].front_matter.$cle)"
     contenu
     assert_eq 1 "$rc" "un poste sans $cle fait échouer"
     assert_contains "C19 : $cle absent ou vide (AD-18)" "$err" "le signalement nomme la clé $cle"
   done
+}
+
+# « company » ou « label » : la clé « label » nomme un poste qui n'est pas une société (AD-18,
+# 24/09/2026). Elle rend « company » facultative, ce qui ouvrirait un poste sans aucun nom : la
+# règle porte donc sur le couple, et ces cas l'éprouvent des deux côtés — ce que le critère de la
+# story exige (point 9 d'AGENTS.md).
+case_content_c19_company_ou_label() {
+  # 1. « label » seule suffit : c'est « Parcours antérieur », qui n'a pas de société.
+  rendu 'del(.files[1].front_matter.company) | .files[1].front_matter.label = "Parcours antérieur"' \
+        'del(.files[1].front_matter.company) | .files[1].front_matter.label = "Earlier career"'
+  contenu
+  assert_eq 0 "$rc" "un poste à label seule passe (messages : $err)"
+
+  # 2. Ni l'une ni l'autre : le poste sortirait avec un titre vide.
+  rendu 'del(.files[1].front_matter.company)' 'del(.files[1].front_matter.company)'
+  contenu
+  assert_eq 1 "$rc" "un poste sans company ni label fait échouer"
+  assert_contains "C19 : ni company ni label ne nomme le poste" "$err" "le signalement nomme les deux clés"
+
+  # 3. « company » seule reste valable : rien n'est demandé aux six postes qui sont des sociétés.
+  rendu 'del(.files[1].front_matter.label)' 'del(.files[1].front_matter.label)'
+  contenu
+  assert_eq 0 "$rc" "un poste à company seule passe toujours (messages : $err)"
+
+  # 4. Une valeur d'espaces ne nomme rien — même tamis que pour les autres clés (report 3.6).
+  rendu 'del(.files[1].front_matter.company) | .files[1].front_matter.label = "   "' \
+        'del(.files[1].front_matter.company) | .files[1].front_matter.label = "   "'
+  contenu
+  assert_eq 1 "$rc" "un label fait d'espaces ne remplace pas company"
+  assert_contains "C19 : ni company ni label ne nomme le poste" "$err" "le signalement est le même"
+
+  # 5. « label » en [TODO : toléré dans un brouillon (AD-10), refusé une fois le poste publié.
+  rendu 'del(.files[1].front_matter.company) | .files[1].front_matter.label = "[TODO: libellé]"' \
+        'del(.files[1].front_matter.company) | .files[1].front_matter.label = "[TODO: libellé]"'
+  contenu
+  assert_eq 0 "$rc" "un label en [TODO passe dans un brouillon (messages : $err)"
+  rendu 'del(.files[1].front_matter.company) | .files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025 – 2026" | .front_matter.label = "[TODO: libellé]")' \
+        'del(.files[1].front_matter.company) | .files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025 – 2026" | .front_matter.label = "[TODO: libellé]")'
+  contenu
+  assert_eq 1 "$rc" "le même label en [TODO ne nomme rien dans un poste publié"
+
+  # 6. Une clé **présente mais vide** est refusée, même quand l'autre nomme le poste. Ce pas
+  #    affirmait le contraire jusqu'au 24/09/2026 : il constatait que le gabarit retombe sur l'autre
+  #    clé (« with » ignore une chaîne vide) et en concluait que tout allait bien. C'est justement
+  #    ce qui rend la faute invisible — la page s'affiche juste, et rien ne dit que la clé est vide.
+  #    Constat de la revue de la PR n° 109, dont la conclusion était fausse (un label vide n'écrase
+  #    aucune company) mais dont l'intuition désignait ce trou.
+  rendu '.files[1].front_matter.label = ""' '.files[1].front_matter.label = ""'
+  contenu
+  assert_eq 1 "$rc" "un label présent mais vide est refusé, même à côté d'une company"
+  assert_contains "C19 : « label » présente mais vide" "$err" "et le signalement nomme la clé"
+
+  # 7. Le même tamis pour « company », pour qu'aucune des deux n'hérite d'une tolérance que
+  #    l'autre n'a pas — c'est la faute que le point 19 d'AGENTS.md décrit sur son plus petit objet.
+  rendu '.files[1].front_matter.label = "Parcours antérieur" | .files[1].front_matter.company = ""' \
+        '.files[1].front_matter.label = "Earlier career" | .files[1].front_matter.company = ""'
+  contenu
+  assert_eq 1 "$rc" "une company présente mais vide est refusée, même à côté d'un label"
+  assert_contains "C19 : « company » présente mais vide" "$err" "et le signalement nomme l'autre clé"
 }
 
 case_content_c19_order_absent() {

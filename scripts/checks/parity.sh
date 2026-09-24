@@ -22,6 +22,12 @@ mapfile -t manifest_files <<< "$manifests"
 # Le programme jq compare les deux manifestes et affiche une ligne « fichier<TAB>écart » par écart.
 # Il ne sort jamais en erreur : le décompte des lignes décide du code de sortie.
 read -r -d '' program <<'JQ' || true
+# Les clés qu'une traduction ne doit pas faire bouger. Ce qui n'y figure **pas** y est absent
+# volontairement : « label » nomme un poste qui n'est pas une société et se traduit — « Parcours
+# antérieur » en français, « Earlier career » en anglais —, donc elle n'entre pas dans cette liste
+# (AD-18, 24/09/2026). « company », elle, y reste, pour que « Mister Auto » ne devienne jamais
+# « MisterAuto » d'un seul côté. Même raison pour « role », « period » et « location », traduites
+# depuis l'origine.
 def untranslated($role):
   {
     case:      ["number", "group", "order", "draft", "position"],

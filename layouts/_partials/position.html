@@ -11,6 +11,12 @@
   Paramètre : la page du poste.
 */}}
 {{- $key := .Params.translationKey -}}
+{{/* Nom affiché du poste. « label » passe devant « company » quand elle est là (AD-18, clé ajoutée
+     le 24/09/2026, story 10.2) : elle nomme un poste qui n'est **pas** une société — « Parcours
+     antérieur » — et, contrairement à « company », elle se traduit. L'une des deux au moins est
+     exigée par C19 ; le gabarit ne choisit pas entre elles, il applique la priorité. */}}
+{{- $name := .Params.company -}}
+{{- with .Params.label }}{{ $name = . }}{{ end -}}
 {{- $cases := sort (where site.RegularPages "Params.position" $key) "Params.number" -}}
 {{/* Ordre imposé par DESIGN.md § cv-position : location, puis le libellé du cadre, puis via. */}}
 {{- $details := slice -}}
@@ -25,7 +31,7 @@
          story 5.2 ; pas « url », que Hugo réserve pour forcer l’adresse d’une page).
          La règle est générale : le gabarit ne connaît aucune société en particulier. */}}
     <h3 class="entry-heading">{{ partial "draft-marker.html" . }}
-      {{- with .Params.company_url }}<a href="{{ . }}">{{ $.Params.company }}</a>{{ else }}{{ .Params.company }}{{ end -}}
+      {{- with .Params.company_url }}<a href="{{ . }}">{{ $name }}</a>{{ else }}{{ $name }}{{ end -}}
     </h3>
     <p class="cv-position__role">{{ .Params.role }}{{ range $details }} · <span class="cv-position__detail">{{ . }}</span>{{ end }}</p>
     {{- with $cases }}

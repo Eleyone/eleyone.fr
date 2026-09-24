@@ -3138,7 +3138,7 @@ afin de reconnaître un CV et d'y trouver les preuves.
 **Prérequis de contenu :** données de parcours FR et EN tirées du CV d'Arnaud (société, intitulé, période, ville de travail ou mode, cadre, société de prestation) ; URL de Ton Pote le Geek ; ligne de contexte EN sur Ton Pote le Geek.
 **Opération manuelle (Arnaud) :** non
 
-Identifiants : exactement la liste figée d'AD-18 (D-8, précisée le 13/09/2026) : `position-chiliz`, `position-synolia`, `position-mister-auto`, `position-april-technologies-2017`, `position-orange`, `position-earlier-career` (« Parcours antérieur », 2008–2014, regroupement et non société) et `position-ton-pote-le-geek`. Aucun autre poste n'est créé. La mission de 2013–2014 chez April pour le compte de CGI est une ligne de détail de `position-earlier-career`.
+Identifiants : exactement la liste figée d'AD-18 (D-8, précisée le 13/09/2026) : `position-chiliz`, `position-synolia`, `position-mister-auto`, `position-april-technologies-2017`, `position-orange`, `position-earlier-career` (« Parcours antérieur », 2008–2014, regroupement et non société) et `position-ton-pote-le-geek`. Aucun autre poste n'est créé. La mission chez CGI, en prestation par l'ESN FHM Solutions sur un projet CGI pour le compte d'April assurance, est une ligne de détail de `position-earlier-career` (sens corrigé le 24/09/2026 : AD-18 l'écrivait à l'envers).
 
 **Critères d'acceptation :**
 
@@ -3148,11 +3148,24 @@ Identifiants : exactement la liste figée d'AD-18 (D-8, précisée le 13/09/2026
 
 **Étant donné** le build de production
 **Quand** on ouvre l'accueil FR puis EN
-**Alors** les mêmes postes apparaissent dans le même ordre ; le poste April Technologies de 2017 indique la prestation Modis, et son corps peut mentionner le même projet chez April pour le compte de CGI en 2013–2014, mission qui figure comme ligne de détail de `position-earlier-career`.
+**Alors** les mêmes postes apparaissent dans le même ordre
+**Et** chaque poste que le CV donne en prestation l'indique — **trois** le sont, Mister Auto, April Technologies 2017 et Orange, et non le seul April que nommait une version antérieure de ce critère.
 
-- [ ] Chaque donnée figure dans le CV d'Arnaud *(relecture)* ; aucune ville de résidence.
-- [ ] Sept fichiers de poste, un par identifiant d'AD-18 ; `position-synolia`, `position-mister-auto` et `position-earlier-career` sans cas rattaché.
-- [ ] La PR ne touche que `content/career/` (FR-25).
+**Étant donné** la mission chez CGI, pour le compte d'April assurance, sans date propre dans le CV
+**Quand** on rédige `position-earlier-career`
+**Alors** elle y figure comme ligne de détail, ce qu'AD-18 impose
+**Et** la mentionner en plus dans le corps de `position-april-technologies-2017` est une **latitude éditoriale, pas un critère** : « peut mentionner » ne se vérifie pas, le test passant que la mention soit là ou non.
+
+- [ ] Chaque donnée figure dans le CV d'Arnaud *(relecture)* ; aucune ville de résidence. Les villes de **travail** du CV sont admises ; si l'une figure dans la liste des motifs, le garde-fou la refuse et la question remonte à Arnaud.
+- [ ] Sept postes, soit **quatorze fichiers** — `position-<id>.fr.md` et `position-<id>.en.md` par identifiant d'AD-18. `position-synolia`, `position-mister-auto` et `position-earlier-career` sont sans cas rattaché.
+**Étant donné** que `company` n'est pas traduite (C3 la compare entre les langues) et que `position-earlier-career` porte un libellé qui, lui, se traduit
+**Quand** on écrit ce poste
+**Alors** il porte la clé `label`, **traduite**, qu'AD-18 fixe le 24/09/2026 sur arbitrage d'Arnaud — le point était explicitement laissé « à fixer à la story 10.2 » par la proposition de changement du 13/09/2026
+**Et** `position.html` affiche `label` à la place de `company` quand elle est là, `company` devenant facultative, l'un des deux au moins restant requis
+**Et** C3 ne compare pas `label` entre les langues, tandis que `company` y reste.
+
+- [ ] La PR touche, **parmi les sources du site**, `content/career/` et le strict nécessaire de la clé `label` : `_partials/position.html`, `scripts/checks/parity.sh` (C3), `scripts/checks/content.sh` (C19) et leurs tests. Rien d'autre — ni CSS, ni autre gabarit (FR-25). Les artefacts de `_bmad-output/` ne comptent pas : toute PR de story y touche, ne serait-ce que pour son statut.
+- [ ] La clé `label` reçoit un test qui échoue sans elle (point 9 d'AGENTS.md), des deux côtés : un poste à `label` seule est accepté et affiche son libellé ; un poste sans `company` **ni** `label` est refusé par C19.
 
 **Questions à poser avant de commencer :**
 - Une ville de travail qui figurerait aussi dans la liste des motifs serait refusée par le garde-fou et par C22 : Arnaud vérifie-t-il ce cas avant la saisie ?

@@ -63,6 +63,19 @@ case_parity_cle_non_traduite_differente() {
   assert_contains 'clé non traduite « order » : 1 en français, 2 en anglais' "$err" "le signalement donne les deux valeurs"
 }
 
+case_parity_label_de_poste_se_traduit() {
+  # « label » nomme un poste qui n'est pas une société et **se traduit** (AD-18, 24/09/2026) :
+  # « Parcours antérieur » d'un côté, « Earlier career » de l'autre. Elle n'entre donc pas dans les
+  # clés que C3 compare. Le cas vaut par sa paire : « company », elle, y reste.
+  rendu '.files[1].front_matter.label = "Parcours antérieur"' '.files[1].front_matter.label = "Earlier career"'
+  parite
+  assert_eq 0 "$rc" "deux écritures d'un même label passent (messages : $err)"
+  rendu '.files[1].front_matter.company = "Société"' '.files[1].front_matter.company = "Societe"'
+  parite
+  assert_eq 1 "$rc" "la même différence sur company fait échouer"
+  assert_contains 'clé non traduite « company »' "$err" "le signalement nomme la clé restée comparée"
+}
+
 case_parity_cle_de_contexte_differente() {
   rendu . '.files[2].front_matter.context.stack = ["PHP", "Redshift"]'
   parite

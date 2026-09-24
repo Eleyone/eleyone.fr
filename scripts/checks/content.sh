@@ -233,10 +233,38 @@ def todo_value: (. // "") | tostring | gsub("^\\s+"; "") | startswith("[TODO");
     ,
     (select($f.role == "position")
      | (
-         (["company", "role", "period"][] as $key
+         (["role", "period"][] as $key
           | ($f.front_matter[$key] // "") as $value
           | select(($value | blank) or (($f.draft != true) and ($value | todo_value)))
           | [$f.file, "C19 : \($key) \(if ($value | blank) then "absent ou vide" else "encore en [TODO dans un poste publié" end) (AD-18)"])
+         ,
+         # Le nom affiché : « company » **ou** « label », au moins l'une des deux (AD-18, clé
+         # « label » ajoutée le 24/09/2026). « company » n'est plus exigée seule, puisque
+         # « Parcours antérieur » n'est pas une société ; mais un poste qui ne porterait ni l'une
+         # ni l'autre sortirait avec un titre vide, que rien d'autre ne verrait.
+         # La règle juge le **couple**, et une clé ne compte que si elle renseigne quelque chose :
+         # absente, vide, faite d'espaces, ou restée en « [TODO » dans un poste publié, elle ne
+         # nomme rien. Les deux clés sont passées au même tamis, pour qu'aucune des deux n'hérite
+         # d'une tolérance que l'autre n'a pas.
+         ((["company", "label"]
+             | map(. as $key
+                   | ($f.front_matter[$key] // "") as $value
+                   | select(($value | blank) or (($f.draft != true) and ($value | todo_value)))
+                   | $key)) as $vides
+          | select(($vides | length) == 2)
+          | [$f.file, "C19 : ni company ni label ne nomme le poste ; l'un des deux au moins est exigé (AD-18)"])
+         ,
+         # Une clé **présente mais vide** est une faute de saisie, pas un choix : le gabarit retombe
+         # en silence sur l'autre, et le poste s'affiche juste — si bien que rien ne la signale. Le
+         # même tamis a déjà servi ce matin pour « state: "" » dans les questions ouvertes du suivi :
+         # deux caractères qui paraissent renseignés. La règle ci-dessus juge le couple ; celle-ci
+         # juge chaque clé écrite (constat de la revue de la PR n° 109, dont la conclusion était
+         # fausse — un label vide n'écrase rien — mais dont l'intuition désignait ce trou).
+         ((["company", "label"][] as $key
+           | select($f.front_matter | has($key))
+           | ($f.front_matter[$key] // "") as $value
+           | select($value | blank)
+           | [$f.file, "C19 : « \($key) » présente mais vide ; la retirer ou l'écrire"]))
          ,
          (($f.front_matter.track // "") as $track
           | select(($f.draft == true and ($track | todo_value)) | not)
