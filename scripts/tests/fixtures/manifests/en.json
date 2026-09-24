@@ -32,7 +32,8 @@
       },
       "placed": [],
       "todo": false,
-      "headings": []
+      "headings": [],
+      "url": "/en/"
     },
     {
       "file": "career/position-essai.en.md",
@@ -53,7 +54,8 @@
       },
       "placed": [],
       "todo": false,
-      "headings": []
+      "headings": [],
+      "url": ""
     },
     {
       "file": "cases/groupe/case-09-essai.en.md",
@@ -112,7 +114,8 @@
           "source": "assets/diagrams/diagram-essai.en.svg",
           "source_found": false
         }
-      ]
+      ],
+      "url": ""
     },
     {
       "file": "education/education-essai.en.md",
@@ -132,7 +135,8 @@
       },
       "placed": [],
       "todo": false,
-      "headings": []
+      "headings": [],
+      "url": ""
     }
   ]
 }

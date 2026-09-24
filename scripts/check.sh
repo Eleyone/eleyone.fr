@@ -2,7 +2,8 @@
 # Point d'entrée unique des contrôles bloquants (AD-10), identique sur le poste, sur Gitea et sur GitHub.
 #
 #   scripts/check.sh              contrôles standard
-#   scripts/check.sh --release    ajoute le niveau « release » (contrôles de mise en ligne, epic 11)
+#   scripts/check.sh --release    ajoute le niveau « release », celui des contrôles de mise en ligne
+#                                 (C15, scripts/checks/release-pages.sh)
 #
 # Il construit le rendu de travail puis le build de production par scripts/build.sh (C14 : un
 # avertissement de Hugo fait échouer le build, donc les contrôles), puis lance tous les scripts de
@@ -62,7 +63,7 @@ anomaly=0
 # dans la story dont c'est l'objet (constat de la revue de spec de la story 9.1).
 #
 # Le chargeur plutôt qu'une lecture propre à C23 : AD-9 veut « un seul chargeur », et une deuxième
-# lecture de .env aurait été une deuxième vérité. Il n'exporte que les sept variables légales ; les
+# lecture de .env aurait été une deuxième vérité. Il n'exporte que les huit variables légales ; les
 # jetons du même .env n'entrent jamais dans l'environnement d'un contrôle.
 chargeur="$root/scripts/env.sh"
 [[ -x $chargeur ]] \

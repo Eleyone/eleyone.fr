@@ -65,6 +65,18 @@ case_manifeste_decrit_le_site_fixture() {
     "le fichier de l'extrait non plus"
   assert_eq "true" "$(jq -r '.material[] | select(.id=="video-fixture") | .source_found' <<< "$cas")" \
     "la vidéo, dont l'url est renseignée, a sa source"
+  # « url » est la RelPermalink de la page. Elle est **vide** pour un cas groupé, dont la cascade dit
+  # « render: never » (AD-4) : c'est par là, et non par une reconstruction depuis le slug, que C15
+  # distingue une page attendue d'une section à retrouver dans la page de son groupe (story 11.1).
+  # Ce cas est le seul à le prouver sur un vrai build : ailleurs, les manifestes sont écrits à la main.
+  assert_eq "/" "$(jq -r '.files[] | select(.file=="_index.fr.md") | .url' "$fr")" \
+    "l'accueil de la langue par défaut est à la racine"
+  assert_eq "/en/" "$(jq -r '.files[] | select(.file=="_index.en.md") | .url' "$en")" \
+    "celui de l'autre langue porte son préfixe"
+  assert_eq "/cas/groupe/" "$(jq -r '.files[] | select(.file=="cases/groupe/_index.fr.md") | .url' "$fr")" \
+    "une page de groupe a son URL"
+  assert_eq "" "$(jq -r .url <<< "$cas")" "un cas groupé n'est rendu à aucune URL (render: never, AD-4)"
+
   assert_eq "true" "$(jq -r .draft <<< "$cas")" "le brouillon est rapporté"
   assert_eq "case-09" "$(jq -r .translationKey <<< "$cas")" "le translationKey est rapporté"
   assert_eq "position-fixture" "$(jq -r .front_matter.position <<< "$cas")" "le front matter garde ses valeurs"

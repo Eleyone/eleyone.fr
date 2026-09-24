@@ -75,9 +75,16 @@
         {{- end -}}
         {{- $material = $material | append (dict "id" (.id | default "") "type" (.type | default "") "status" (.status | default "") "source" $source "source_found" $found) -}}
       {{- end -}}
+      {{/* « url » est la RelPermalink que Hugo donne à la page, **vide** quand la page n'est pas
+           rendue à son URL propre : c'est le cas des cas groupés, dont la cascade porte
+           « render: never » (AD-4). C15 s'en sert pour distinguer, sans le deviner, une page
+           attendue à « public/<url>index.html » d'une simple section à retrouver dans la page de
+           son groupe. Reconstituer cette URL depuis « slug » serait une deuxième vérité, et elle
+           divergerait le jour où la configuration change de schéma d'URL (story 11.1). */}}
       {{- $entry = merge $entry (dict
             "kind" .Kind
             "role" $role
+            "url" .RelPermalink
             "material" $material
             "translationKey" .Params.translationKey
             "draft" .Draft

@@ -37,6 +37,12 @@
 #         "lang":           "fr",
 #         "kind":           "page",         kind de Hugo : home, section, page
 #         "role":           "case",         home, group, case, position, education, section, page
+#         "url":            "/cas/chiliz/", RelPermalink de la page, **vide** quand Hugo ne la rend
+#                                            pas à une URL propre : cas groupé (cascade
+#                                            « render: never », AD-4), poste, formation. C15 s'en
+#                                            sert pour distinguer une page attendue à
+#                                            « public/<url>index.html » d'une simple section à
+#                                            retrouver dans la page de son groupe (story 11.1)
 #         "translationKey": "case-02",
 #         "draft":          true,
 #         "front_matter":   { … },          le front matter tel qu'écrit dans le fichier

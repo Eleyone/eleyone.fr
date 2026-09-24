@@ -36,7 +36,7 @@ Il passe par un **secret BuildKit** : monté le temps d'une instruction, il n'en
 docker history --no-trunc eleyone-site:dev | grep -c "HUGO_LEGAL"   # attendu : 0
 ```
 
-Pour un simple essai de la mécanique, un fichier jetable à valeurs quelconques suffit — sept variables, sans le mot `VALEUR-FACTICE`, que `ENV_MODE=release` refuse. Les pages légales de l'image porteront alors ces valeurs-là : c'est un essai, pas une image à servir.
+Pour un simple essai de la mécanique, un fichier jetable à valeurs quelconques suffit — huit variables, sans le mot `VALEUR-FACTICE`, que `ENV_MODE=release` refuse. Les pages légales de l'image porteront alors ces valeurs-là : c'est un essai, pas une image à servir.
 
 ## Ce que sert nginx
 
