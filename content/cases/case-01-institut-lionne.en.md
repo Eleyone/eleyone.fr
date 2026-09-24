@@ -5,13 +5,13 @@ number: "01"
 slug: "profitability-calculator"
 position: "position-ton-pote-le-geek"
 order: 1
-draft: true
+draft: false
 
 context:
   company: "Institut Lionne"
   setup: "ton-pote-le-geek"
   role: "Design, development and hosting of the application, from V1 to ongoing maintenance"
-  period: "2025–2026"
+  period: "since May 2025"
   stack: ["Symfony", "PostgreSQL", "Docker Compose", "Systeme.io", "Claude Code"]
 
 summary: >-
@@ -40,6 +40,8 @@ live_material:
 ## Context
 
 My client is a business coach for hairdressers in France and runs Institut Lionne: a former hairdresser, former salon owner, then franchise owner. She sells a training programme in which every client has to work out the minimum price of her services so as not to lose money. She came to me through the person who was managing her social media at the time.
+
+I took this on under Ton Pote le Geek, my own automation business for very small and small companies.
 
 ## The problem
 

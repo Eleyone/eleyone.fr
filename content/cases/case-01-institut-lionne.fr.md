@@ -5,13 +5,13 @@ number: "01"
 slug: "calculette-rentabilite"
 position: "position-ton-pote-le-geek"
 order: 1
-draft: true
+draft: false
 
 context:
   company: "Institut Lionne"
   setup: "ton-pote-le-geek"
   role: "Conception, développement et hébergement de l'application, de la V1 à la maintenance"
-  period: "2025–2026"
+  period: "depuis mai 2025"
   stack: ["Symfony", "PostgreSQL", "Docker Compose", "Systeme.io", "Claude Code"]
 
 summary: >-
