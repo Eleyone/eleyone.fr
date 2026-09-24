@@ -5,3 +5,5 @@ legal-notice
 privacy
 contact
 about
+case-02
+group-chiliz

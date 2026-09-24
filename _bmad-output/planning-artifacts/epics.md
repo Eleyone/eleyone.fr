@@ -3242,10 +3242,11 @@ afin de trouver en un clic la preuve « Chiliz, source de vérité ».
 **Alors** tous les contrôles passent et, dans une seule PR, les deux fichiers du cas et `content/cases/chiliz/_index.{fr,en}.md` passent en `draft: false` (story 10.4), et `case-02` et `group-chiliz` sont ajoutés à `ci/release-pages.txt` (D-5).
 
 **Étant donné** le build de production
-**Quand** on ouvre l'accueil puis `/cas/chiliz/#case-02`
-**Alors** le poste Chiliz liste le cas 02, la section est présente, et les trois éléments « prévus » ne laissent aucune trace.
+**Quand** on ouvre l'accueil puis `/cas/chiliz/#case-02` — **et leurs équivalents anglais**, `/en/` puis `/en/cases/chiliz/#case-02`
+**Alors** le poste Chiliz liste le cas 02 **dans chaque langue**, la section est présente des deux côtés, et **aucun** élément « prévu » ne laisse de trace
+**Et** le compte de ces éléments n'est pas écrit ici : le figer à trois rendrait ce critère faux le jour où le cas en déclare un quatrième.
 
-- [ ] La PR ne touche que les fichiers du cas, le `_index` Chiliz et `ci/release-pages.txt` (SM-7).
+- [ ] La PR ne touche, **parmi les sources du site**, que les fichiers du cas, le `_index` Chiliz et `ci/release-pages.txt` (SM-7). Les artefacts de `_bmad-output/` ne comptent pas : toute PR de story y touche, ne serait-ce que pour son statut, et `sprint-consistency` refuserait la fusion sans eux.
 
 ### Story 10.6 : Integrate case 01
 

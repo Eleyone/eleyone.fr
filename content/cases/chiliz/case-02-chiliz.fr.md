@@ -6,7 +6,7 @@ slug: "chiliz-source-de-verite"
 group: "chiliz"
 position: "position-chiliz"
 order: 1
-draft: true
+draft: false
 
 context:
   company: "Chiliz"
