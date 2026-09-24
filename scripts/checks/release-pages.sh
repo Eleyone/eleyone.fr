@@ -51,15 +51,6 @@ command -v jq > /dev/null 2>&1 || checks_die "jq est introuvable."
 fail=0
 signaler() { checks_report "$1" "$2"; fail=1; }
 
-# Chemin d'une page dans le build, à partir de sa RelPermalink. Même résolution que C12 : « / » désigne
-# « index.html », « /cas/chiliz/ » désigne « cas/chiliz/index.html », et une URL qui ne finit pas par
-# « / » (uglyURLs) désigne le fichier lui-même.
-page_de_url() { # $1 = RelPermalink
-  local url=${1#/}
-  [[ $url != */ && -n $url ]] || url="${url}index.html"
-  printf '%s' "$url"
-}
-
 # --- la liste attendue ----------------------------------------------------------------------------
 # Commentaires et lignes vides écartés. Un fichier **présent mais vide** n'est pas une conformité :
 # c'est le piège déjà rencontré avec le fichier de motifs, qui désactivait l'audit sans rien dire
@@ -139,7 +130,7 @@ for cle in "${attendues[@]}"; do
 
     url=${url_de[$index]}
     if [[ -n $url ]]; then
-      page=$(page_de_url "$url")
+      page=$(checks_page_de_url "$url")
       [[ -f $public/$page ]] \
         || signaler "$page" "C15 : page attendue absente du build de production (clé « $cle », $langue)"
       continue
@@ -164,7 +155,7 @@ for cle in "${attendues[@]}"; do
         "C15 : le groupe « $groupe » n'a aucune page rendue en $langue, la section « $cle » n'est donc nulle part"
       continue
     fi
-    page=$(page_de_url "${page_groupe[$langue/$groupe]}")
+    page=$(checks_page_de_url "${page_groupe[$langue/$groupe]}")
     if [[ ! -f $public/$page ]]; then
       signaler "$page" \
         "C15 : page du groupe « $groupe » absente du build de production, la section « $cle » ($langue) n'y est donc pas"
@@ -193,7 +184,7 @@ done
 for index in "${!page_groupe[@]}"; do
   url=${page_groupe[$index]}
   [[ -n $url ]] || continue
-  page=$(page_de_url "$url")
+  page=$(checks_page_de_url "$url")
   [[ -f $public/$page ]] || continue
   # Le prédicat encadre la classe d'espaces : « case-section-titre » n'est pas « case-section », et
   # l'ordre des attributs est celui du minifieur (« <section id=case-02 class=case-section> »).

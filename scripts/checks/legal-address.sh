@@ -52,61 +52,24 @@ est_page_legale() { # $1 = chemin relatif à la racine du rendu
 }
 
 # **Le texte cherché est normalisé, l'adresse ne l'est pas.** Une adresse portant une apostrophe
-# ou une esperluette s'écrit différemment selon qui l'a sérialisée : Hugo rend « L\'adresse » en
+# ou une esperluette s'écrit différemment selon qui l'a sérialisée : Hugo rend « L'adresse » en
 # « L&#39;adresse » ; le minifieur redécode certaines entités ; libxml2, en extrayant un nœud par
 # XPath, laisse l'apostrophe et réécrit l'esperluette en « &amp; ». Trois écritures, et il y en a
 # d'autres.
 #
 # Chercher plusieurs formes fixes est une impasse : leur nombre est combinatoire, et celle qu'on
 # oublie est celle qui fuite. Une seule forme canonique, obtenue en **décodant** le texte avant de
-# le lire, couvre toutes les sérialisations d'un coup.
+# le lire, couvre toutes les sérialisations d'un coup. Sans cela, le contrôle cherchait la chaîne
+# brute dans un HTML échappé, ne trouvait rien, et se déclarait vert — il aurait laissé passer la
+# commune de l'éditeur dans un titre (constat bloquant de la revue de la PR n° 98).
 #
-# Sans cela, le contrôle cherchait la chaîne brute dans un HTML échappé, ne trouvait rien, et se
-# déclarait vert — il aurait laissé passer la commune de l'éditeur dans un titre (constat bloquant
-# de la revue de la PR n° 98).
+# **Les deux filtres vivaient ici** ; depuis la story 11.2 ils vivent dans « scripts/checks/lib.sh »,
+# chargée en tête, parce que C22 (scripts/checks/output-patterns.sh) en a besoin pour les mêmes
+# raisons : une seconde écriture aurait été la faute du point 19 d'AGENTS.md. Leur comportement n'a
+# pas changé, et les cas de scripts/tests/test-legal-address.sh continuent de les éprouver à travers
+# ce contrôle — l'adresse échappée, l'adresse minifiée et l'adresse sérialisée en JSON-LD.
 #
-# « &amp; » se décode **en dernier** : l'inverse transformerait « &amp;lt; », qui désigne le texte
-# « &lt; », en « < ».
-decoder_echappements() {
-  # **Deux familles d'échappement, pas une.** Le HTML écrit des entités ; le JSON-LD, sérialisé par
-  # l'encodeur de Go, écrit des séquences Unicode — « \u0026 » pour l'esperluette, « \u003c » et
-  # « \u003e » pour les chevrons. Une adresse portant un « & » fuyait donc par le JSON-LD sans que
-  # rien ne le dise, le décodeur ne connaissant que les entités (constat de la revue de la PR n° 98,
-  # vérifié en mesurant ce que « jsonify » produit).
-  #
-  # Dans chaque famille, les trois écritures d'un caractère sont couvertes : décimale, hexadécimale
-  # et nommée pour le HTML ; la casse du « x » et des chiffres hexadécimaux varie. Celle qu'on omet
-  # est celle qui fuite.
-  #
-  # Les séquences « \n », « \r » et « \t » du JSON deviennent une **espace**, et non le caractère
-  # qu'elles désignent : « normaliser_blancs » ramènera de toute façon tout blanc à une espace
-  # simple. Une adresse multi-lignes s'écrit « Ligne 1\nLigne 2 » dans un JSON-LD, et sans cette
-  # ligne elle n'y était reconnue sous aucune forme (huitième tour de la revue de la PR n° 98 —
-  # la sixième sérialisation de la même chaîne).
-  #
-  # L'esperluette et la barre oblique inverse se décodent **en dernier** dans leur famille :
-  # l'inverse transformerait « &amp;lt; », qui désigne le texte « &lt; », en « < ».
-  sed -E -e "s/&(#0*39|#[xX]0*27|apos);/'/g" \
-         -e 's/&(#0*34|#[xX]0*22|quot);/"/g' \
-         -e 's/&(#0*43|#[xX]0*2[bB]);/+/g' \
-         -e 's/&(#0*60|#[xX]0*3[cC]|lt);/</g' \
-         -e 's/&(#0*62|#[xX]0*3[eE]|gt);/>/g' \
-         -e 's/&(#0*38|#[xX]0*26|amp);/\&/g' \
-         -e 's/\\u0*3[cC]/</g' \
-         -e 's/\\u0*3[eE]/>/g' \
-         -e "s/\\\\u0*27/'/g" \
-         -e 's/\\"/"/g' \
-         -e 's/\\u0*26/\&/g' \
-         -e 's/\\[nrt]/ /g' \
-         -e 's/\\\\/\\/g'
-}
-
-# Les blancs sont ramenés à une espace simple, des deux côtés. Le rendu de production est
-# **minifié** : une adresse postale écrite sur deux lignes y arrive sur une seule, et la comparer
-# à la chaîne d'origine, sauts de ligne compris, ne trouvait rien — le contrôle passait au vert en
-# laissant fuiter l'adresse (constat de la revue de la PR n° 98). Les fixtures des tests, écrites
-# par « printf » sans passer par Hugo, ne pouvaient pas le montrer.
-normaliser_blancs() { tr '\n\t' '  ' | tr -s ' '; }
+# Le texte est normalisé des **deux** côtés : l'adresse d'AD-9 tient souvent sur deux lignes.
 adresse_normalisee=$(printf '%s' "$adresse" | normaliser_blancs)
 
 # Cherche l'adresse dans un texte, sans jamais l'afficher. Rend 0 si trouvée.

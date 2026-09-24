@@ -8,6 +8,10 @@
 #   shell_grep <arguments…>           grep qui distingue « rien trouvé » (1) d'une erreur (2 et plus)
 #   checks_attributes <fichier> <requête> <attribut>   valeurs d'un attribut, une par ligne
 #   checks_find <arguments…>          find qui s'arrête sur une erreur de parcours
+#   checks_page_de_url <RelPermalink> chemin du fichier rendu, relatif à la racine du rendu
+#   decoder_echappements        filtre : ramène les sérialisations d'une chaîne (entités HTML,
+#                               séquences \uXXXX du JSON) à sa forme brute
+#   normaliser_blancs           filtre : ramène tout blanc à une espace simple, sur **une seule ligne**
 #   checks_is_todo <valeur>     la valeur commence par « [TODO »
 #   checks_tolerated <brouillon> <valeur>
 #                               la valeur est tolérée : fichier en brouillon **et** valeur « [TODO »
@@ -164,3 +168,98 @@ checks_relative() { # $1 = chemin du fichier, $2 = racine de production
   local chemin=${1#"$2"/}
   printf '%s' "${chemin#"${CHECK_WORK_ROOT:-build/work}"/}"
 }
+
+# Chemin du fichier rendu pour une RelPermalink : « / » désigne « index.html », « /cas/chiliz/ »
+# désigne « cas/chiliz/index.html », et une URL qui ne finit pas par « / » (uglyURLs) désigne le
+# fichier lui-même.
+#
+# Écrite ici parce qu'elle avait déjà deux exemplaires — la fin de « page_visee » dans links.sh
+# (C12) et « page_de_url » dans release-pages.sh (C15) —, et qu'un troisième est né avec C22
+# (story 11.2). « Une parade s'écrit une fois » : c'est le mécanisme du constat A1 de la
+# rétrospective de l'epic 3, où le même correctif avait dû être appliqué trois fois. C12 garde la
+# sienne pour l'instant, sa résolution enveloppant aussi les liens relatifs et les fragments
+# (écart consigné dans deferred-work.md).
+checks_page_de_url() { # $1 = RelPermalink
+  local url=${1#/}
+  [[ $url != */ && -n $url ]] || url="${url}index.html"
+  printf '%s' "$url"
+}
+
+# --- lire une chaîne dans une sortie de Hugo -------------------------------------------------------
+#
+# Deux filtres, employés ensemble et dans cet ordre : « decoder_echappements | normaliser_blancs ».
+# Ils viennent de C23 (scripts/checks/legal-address.sh, story 9.1), où huit tours de revue les ont
+# écrits ; C22 (scripts/checks/output-patterns.sh, story 11.2) en a besoin pour les mêmes raisons,
+# et une seconde écriture aurait été la faute du point 19 d'AGENTS.md.
+#
+# **Une même chaîne a six sérialisations constatées dans une sortie de Hugo.** Chercher plusieurs
+# formes fixes est une impasse : leur nombre est combinatoire, et celle qu'on oublie est celle qui
+# fuite. Une seule forme canonique, obtenue en décodant le texte avant de le lire, les couvre d'un
+# coup. Sans cela, un contrôle cherche la chaîne brute dans un HTML échappé, ne trouve rien, et se
+# déclare vert (constat bloquant de la revue de la PR n° 98).
+decoder_echappements() {
+  # **Deux familles d'échappement, pas une.** Le HTML écrit des entités ; le JSON-LD, sérialisé par
+  # l'encodeur de Go, écrit des séquences Unicode — « & » pour l'esperluette, « < » et
+  # « > » pour les chevrons. Une adresse portant un « & » fuyait donc par le JSON-LD sans que
+  # rien ne le dise, le décodeur ne connaissant que les entités (constat de la revue de la PR n° 98,
+  # vérifié en mesurant ce que « jsonify » produit).
+  #
+  # Dans chaque famille, les trois écritures d'un caractère sont couvertes : décimale, hexadécimale
+  # et nommée pour le HTML ; la casse du « x » et des chiffres hexadécimaux varie. Celle qu'on omet
+  # est celle qui fuite.
+  #
+  # Les séquences « \n », « \r » et « \t » du JSON deviennent une **espace**, et non le caractère
+  # qu'elles désignent : « normaliser_blancs » ramènera de toute façon tout blanc à une espace
+  # simple. Une adresse multi-lignes s'écrit « Ligne 1\nLigne 2 » dans un JSON-LD, et sans cette
+  # ligne elle n'y était reconnue sous aucune forme (huitième tour de la revue de la PR n° 98 —
+  # la sixième sérialisation de la même chaîne).
+  #
+  # L'esperluette et la barre oblique inverse se décodent **en dernier** dans leur famille :
+  # l'inverse transformerait « &amp;lt; », qui désigne le texte « &lt; », en « < ».
+  #
+  # **« &rsquo; » est la seule entité que la sortie de production de ce site émet**, et elle y
+  # apparaît 236 fois — Hugo convertit l'apostrophe droite du Markdown en apostrophe typographique,
+  # que le minifieur écrit en entité (mesuré sur public/ le 25/09/2026, story 11.2). Un motif
+  # portant une apostrophe typographique n'était donc reconnu dans aucune page : la seule
+  # sérialisation que le rendu produit vraiment était celle qui manquait. Ce qui reste, et que le
+  # décodage ne peut pas régler, est une différence de **caractère** et non d'écriture : un motif
+  # écrit avec l'apostrophe droite ne correspond pas à un texte qui porte la typographique, comme
+  # un motif écrit sans accent ne correspond pas à un texte accentué (consigné dans
+  # deferred-work.md).
+  sed -E -e "s/&(#0*39|#[xX]0*27|apos);/'/g" \
+         -e 's/&(#0*8217|#[xX]0*2019|rsquo);/’/g' \
+         -e 's/&(#0*8216|#[xX]0*2018|lsquo);/‘/g' \
+         -e 's/&(#0*34|#[xX]0*22|quot);/"/g' \
+         -e 's/&(#0*43|#[xX]0*2[bB]);/+/g' \
+         -e 's/&(#0*60|#[xX]0*3[cC]|lt);/</g' \
+         -e 's/&(#0*62|#[xX]0*3[eE]|gt);/>/g' \
+         -e 's/&(#0*38|#[xX]0*26|amp);/\&/g' \
+         -e 's/\\u0*3[cC]/</g' \
+         -e 's/\\u0*3[eE]/>/g' \
+         -e "s/\\\\u0*27/'/g" \
+         -e 's/\\"/"/g' \
+         -e 's/\\u0*26/\&/g' \
+         -e 's/\\[nrt]/ /g' \
+         -e 's/\\\\/\\/g'
+}
+
+# Les blancs sont ramenés à une espace simple. Le rendu de production est **minifié** : une adresse
+# postale écrite sur deux lignes y arrive sur une seule, et la comparer à la chaîne d'origine, sauts
+# de ligne compris, ne trouvait rien — le contrôle passait au vert en laissant fuiter l'adresse
+# (constat de la revue de la PR n° 98). Les fixtures des tests, écrites par « printf » sans passer
+# par Hugo, ne pouvaient pas le montrer.
+#
+# **Le résultat tient sur une seule ligne** : les sauts de ligne deviennent des espaces, et un
+# fichier entier passé à ce filtre en sort en une ligne. C'est ce qui rend sûre une recherche par
+# « grep », qui travaille ligne par ligne et ne verrait jamais une chaîne à cheval sur deux lignes
+# (pdf_confront, employée par C21 et par C22).
+#
+# **Le retour chariot en fait partie**, et l'oublier était un faux négatif mesuré : un fichier de
+# static/ copié tel quel depuis un poste Windows porte des fins de ligne « \r\n », et « \r »
+# survivait au filtre. Un motif à cheval sur deux lignes y devenait « Ville\r Cedex », que la
+# recherche d'« Ville Cedex » ne trouve pas — même contenu, même motif, code 0 en CRLF contre code 1
+# en LF (constat de la revue du code de la PR n° 117, reproduit avant d'être corrigé). C'est la même
+# classe que l'entité « &rsquo; » ci-dessus : une écriture non couverte, et le garde-fou passe au
+# vert sur une fuite. Le dépôt en porte la trace — les fichiers « *:Zone.Identifier » de
+# docs/private/context/ viennent d'un téléchargement Windows.
+normaliser_blancs() { tr '\r\n\t' '   ' | tr -s ' '; }
