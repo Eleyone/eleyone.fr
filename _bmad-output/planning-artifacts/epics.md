@@ -3184,11 +3184,23 @@ afin de compléter la lecture du CV.
 
 **Critères d'acceptation :**
 
+**Étant donné** le contrat de front matter d'AD-18 pour une entrée de `content/education/` — `kind` (`education`, `certification` ou `language`), `title`, `institution`, `period`, `level`, `order` et `draft`, dont seuls `kind`, `title`, `order` et `draft` sont requis
+**Quand** on écrit une entrée
+**Alors** elle s'y conforme, et `order` est **unique dans son `kind`** — ce que C19 refuse déjà, en nommant les deux fichiers en conflit
+**Et** la spec n'énumère pas ces clés une seconde fois : AD-18 fait foi, et une liste recopiée diverge (le point 19 d'AGENTS.md sur son plus petit objet).
+
 **Étant donné** les fichiers `content/education/education-<id>.{fr,en}.md`
 **Quand** on lance les contrôles puis le build de production
-**Alors** C3 et C19 passent, et le bloc s'affiche après « En parallèle » dans les deux langues.
+**Alors** **tous** les contrôles bloquants de `scripts/check.sh` passent — C3 et C19 nommément, mais aussi C5 (aucun marqueur `[TODO` publié) et C24 (typographie française), que du texte intégré met en jeu autant que les deux premiers
+**Et** le bloc s'affiche après « En parallèle » dans les deux langues.
 
-- [ ] Chaque donnée figure dans le CV *(relecture)* ; identifiants proposés par le développeur et confirmés par Arnaud.
+**Étant donné** le CV d'Arnaud, `assets/cv/cv-{fr,en}.pdf`, seule source de ces données (NFR-10)
+**Quand** le développeur les extrait
+**Alors** il les lit dans le PDF lui-même — aucun texte n'est fourni à part — et n'écrit que ce qui s'y trouve
+**Et** il lance `scripts/check-private.sh staged` avant de conclure : le nom ou la ville d'un établissement peut coïncider avec un motif interdit, et c'est le garde-fou qui le dira, jamais une relecture à l'œil.
+
+- [ ] Chaque donnée figure dans le CV *(relecture)*.
+- [ ] Les identifiants sont proposés par le développeur et **soumis à Arnaud dans la PR** ; ils ne bloquent pas la fusion, un identifiant se renommant tant qu'aucun contenu n'y renvoie — contrairement à ceux des postes, qu'AD-18 fige parce qu'un cas les cite.
 
 ### Story 10.4 : Chiliz page title and introduction
 
