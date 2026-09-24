@@ -2777,6 +2777,46 @@ afin d'être trouvé sous mon nom sans ajouter de JavaScript.
 
 - [ ] Ni ville, ni téléphone, ni photo dans le bloc ; la CSP d'AD-13 est inchangée.
 
+### Story 9.7 : Host identification without a phone number
+
+En tant que lectrice ou lecteur,
+je veux savoir comment joindre l'hébergeur du site,
+afin de pouvoir le saisir au sujet d'un contenu, même s'il ne publie aucun numéro de téléphone.
+
+**Couvre :** FR-18 · AD-9 · C3, C18
+**Dépendances :** 9.1
+**Bloquée par :** —
+**Prérequis de contenu :** dénomination, adresse et courriel de l'hébergeur. Recherche du 24/09/2026 : l'hébergeur ne publie **aucun** numéro de téléphone, et l'écrit sur sa propre page d'aide ; la seule adresse qu'il désigne pour les autorités de l'Union européenne est son adresse « abuse ».
+**Opération manuelle (Arnaud) :** oui — `.env` du poste, fait le 24/09/2026 ; les secrets de mise en ligne suivent en 11.6.
+
+**Critères d'acceptation :**
+
+**Étant donné** AD-9 révisé et `_partials/legal-value.html`
+**Quand** un gabarit demande `host_phone`
+**Alors** le build échoue sur un nom inconnu, et `host_email` est accepté à sa place
+**Et** la liste reste à huit noms, `HUGO_LEGAL_HOST_PHONE` étant **remplacée** par `HUGO_LEGAL_HOST_EMAIL`, non ajoutée à côté.
+
+**Étant donné** `.env.example`, `ci/legal-placeholder.env` et `scripts/env.sh`
+**Quand** on lance C18
+**Alors** les trois portent exactement les mêmes huit noms, et C18 échoue si l'un d'eux garde l'ancien nom.
+
+**Étant donné** `{{< legal-list "host" >}}`
+**Quand** on ouvre `/mentions-legales/` et `/en/legal-notice/`
+**Alors** la rubrique de l'hébergeur porte son nom, son adresse dans un élément `address` et son courriel en lien `mailto:`
+**Et** elle ne porte plus de ligne « Téléphone ».
+
+**Étant donné** `content/legal-notice.{fr,en}.md`
+**Quand** on lit la rubrique de l'hébergeur
+**Alors** une phrase, dans chaque langue, dit que l'hébergeur ne publie pas de numéro de téléphone et renvoie au courriel
+**Et** C3 la voit présente des deux côtés.
+
+- [ ] Aucun numéro non sourcé n'entre dans le dépôt ni dans un `.env` : un numéro circule pour cette entité sur des pages tierces sans qu'elle le publie nulle part, et le reprendre aurait publié un faux.
+- [ ] La cible de 24 px des liens de `legal-list` couvre le `mailto:` de l'hébergeur comme les autres.
+- [ ] Les commentaires de `legal-value.html` qui énumèrent « les sept » sont relus : le compte y est faux depuis le 23/09/2026 (point 8 d'AGENTS.md).
+
+**Questions à poser avant de commencer :**
+- La phrase sur l'absence de téléphone cite-t-elle l'hébergeur, ou reste-t-elle un constat neutre du site ?
+
 ## Epic 11 : Mise en ligne, répétition générale et socle
 
 La chaîne de mise en ligne est construite et répétée tôt sur le serveur de production, sans DNS : stories 11.1 à 11.9, placées avant l'Epic 10, dont elles ne dépendent pas (décision D-5). Après le contenu du socle, le test des trente secondes est passé, puis le socle est mis en ligne par le flux linéaire, derrière un proxy sans journal d'IP : stories 11.10 à 11.13, dans la section « Mise en ligne du socle » qui suit l'Epic 10.

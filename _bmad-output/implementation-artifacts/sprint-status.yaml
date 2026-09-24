@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-23-2026 13:20'
+last_updated: '09-24-2026 10:19'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -117,13 +117,14 @@ development_status:
   8-3-svg-sync-check: backlog
   epic-8-retrospective: optional
 
-  epic-9: done
+  epic-9: in-progress
   9-1-legal-notice-and-confined-address: done
   9-2-privacy-policy: done
   9-3-contact-page-and-call-to-contact: done
   9-4-about-page: done
   9-5-conditional-public-repository-link: done
   9-6-person-structured-data: done
+  9-7-host-identification-without-phone: backlog
   epic-9-retrospective: optional
 
   epic-10: backlog
@@ -233,6 +234,7 @@ work_order:
   - 9-4-about-page
   - 9-5-conditional-public-repository-link
   - 9-6-person-structured-data
+  - 9-7-host-identification-without-phone
   - 11-1-release-checks-and-expected-pages
   - 11-2-forbidden-patterns-on-production-output
   - 11-3-release-image-build
@@ -291,6 +293,7 @@ content_prerequisites:
   9-3-contact-page-and-call-to-contact: "Adresse mail et URL LinkedIn"
   9-4-about-page: "Texte de la page « À propos », FR et EN"
   9-6-person-structured-data: "URL du profil GitHub ; job_title"
+  9-7-host-identification-without-phone: "Dénomination, adresse et courriel de l'hébergeur"
   10-1-home-page-pitch: "Pitch FR et EN"
   10-2-career-positions: "Parcours tiré du CV ; Ton Pote le Geek"
   10-3-education-certification-and-languages-content: "Formation et langues tirées
