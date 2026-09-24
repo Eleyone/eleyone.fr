@@ -49,7 +49,7 @@ Ce message prouve que `GITEA_URL`, `GITEA_USER` et `GITEA_TOKEN` sont bons : san
 
 ## Pièges connus
 
-- **Docker dans WSL** : si l'utilisateur vient d'être ajouté au groupe `docker`, la session shell ne le sait pas encore ; `sg docker -c '…'` évite d'avoir à rouvrir la session.
+- **Le groupe `docker` et la session en cours** : si l'utilisateur vient d'être ajouté au groupe `docker`, la session shell ne le sait pas encore ; `sg docker -c '…'` évite d'avoir à rouvrir la session. Ce piège s'appelait « Docker dans WSL » ; le poste est un Linux natif (point 17 d'AGENTS.md, vérifié à la rétrospective de l'epic 7), et le conseil vaut pour n'importe quel Linux.
 - **`agy` sans `--dangerously-skip-permissions`** : la revue tourne en `--mode plan`, et le relecteur doit se voir refuser toute commande shell. Avec ce drapeau, un simple `grep` a déjà lu un `.env` (story 0.5).
 - **`.tools/` n'est pas à sauvegarder** : il se régénère, et les empreintes de `tools.env` garantissent qu'on réinstalle exactement les mêmes binaires.
 - **Le dépôt privé se commite à la main** (`git -C docs/private commit`), jamais par un hook : vérifier qu'il n'a rien en attente **avant** d'abandonner une machine.

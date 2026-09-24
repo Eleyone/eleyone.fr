@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-24-2026 14:05'
+last_updated: '09-24-2026 12:06'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -309,6 +309,91 @@ content_prerequisites:
     EN"
   13-5-ready-snippets-and-thematic-boxes: "Fichiers de matériel vivant"
   13-6-ready-video-as-plain-link: "URL YouTube non répertoriée"
+# Questions ouvertes des rétrospectives, suivies comme les actions (AGENTS.md, note de la
+# rétrospective de l'epic 9). Une question vit ici jusqu'à ce qu'une preuve la tranche.
+# « lands_in » dit où sa réponse atterrira : une story, une entrée de deferred-work.md, ou un
+# arbitrage d'Arnaud. La valeur « rien » est un aveu, pas un oubli : c'est le cas à traiter.
+open_questions:
+  - id: "epic-3-oq-substitut-d-amorcage"
+    epic: 3
+    question: "Le substitut d'amorçage de verify-and-merge-pr.sh a-t-il encore un
+      rôle une fois la CI en place ?"
+    state: "Décrit comme « régime révolu mais pas mort » (docs/procedures/verify-and-merge-pr.md:44)
+      ; le code vit toujours (scripts/verify-and-merge-pr.sh:188-206)."
+    lands_in: "story 11.7 — epics.md:3011 porte « À trancher par Arnaud avant de commencer
+      cette story (D-13) »"
+  - id: "epic-4-oq-cause-des-insertions-pures"
+    epic: 4
+    question: "Comment les deux insertions pures d'epics.md se sont-elles produites
+      ? L'absence de journaux de session empêche de trancher."
+    state: "La cause n'est écrite nulle part. La garde attrape le résultat, pas la
+      cause (scripts/tests/test-docs-headings.sh)."
+    lands_in: "rien — la rétrospective de l'epic 4 la déclare elle-même secondaire
+      ; à fermer explicitement ou à laisser morte"
+  - id: "epic-5-oq-photo-provisoire"
+    epic: 5
+    question: "La photo publiée est provisoire : son registre et celui du site ne
+      coïncident pas."
+    state: "Inchangée ; content/_index.fr.md décrit toujours la même image."
+    lands_in: "deferred-work.md décrit la marche à suivre mais précise qu'aucune story
+      n'est requise — donc rien ne la déclenchera : arbitrage d'Arnaud seul"
+  - id: "epic-5-oq-seuil-de-duplication"
+    epic: 5
+    question: "Faut-il une règle explicite « à la deuxième écriture, on extrait »,
+      ou continuer à compter sur la rétrospective pour voir la duplication ?"
+    state: "Aucune règle générale. Le plus proche est borné aux parades shell (docs/procedures/shell-scripts.md:13)
+      ; le point 19 d'AGENTS.md traite du fichier jumeau, pas du seuil. L'epic 9 a
+      produit neuf construire() dupliqués."
+    lands_in: "rien — candidate à devenir un point d'AGENTS.md ; liée à epic-9-retro-item-57"
+  - id: "epic-5-oq-lentille-de-verification-technique"
+    epic: 5
+    question: "Manque-t-il une lentille de revue « cette affirmation technique est-elle
+      vérifiée ? » ? Les erreurs d'AD-19 ont traversé deux revues de spec."
+    state: "Aucune lentille ajoutée : bmad-review n'a toujours que adversarial, edge-case-hunter,
+      prose, structure, verification-gap. Le point 10 d'AGENTS.md vise l'auteur, pas
+      le relecteur."
+    lands_in: "rien — voisine de epic-9-retro-item-58 (passer --context), qui traite
+      une autre cause"
+  - id: "epic-6-oq-typographie-des-metadonnees"
+    epic: 6
+    question: "La typographie française ne compose ni <title>, ni <meta name=\"description\"\
+      >, ni les cartes sociales. (Reposée à la rétrospective de l'epic 9, même question.)"
+    state: "Vérifié le 24/09/2026 : aucune meta description ni carte sociale n'existe,
+      ni dans layouts/ ni dans la sortie construite. La story 6.3 la porte dans sa
+      section « Reporté » — « à reprendre le jour où elles seront écrites » — mais
+      aucune story du backlog ne les crée, et aucun contrôle ne les attend."
+    lands_in: "la story qui créera ces métadonnées, qui n'existe pas encore au backlog
+      — à créer ou à fermer explicitement"
+  - id: "epic-7-oq-traces-wsl"
+    epic: 7
+    question: "Reste-t-il des traces de l'ancien poste WSL ailleurs que dans AGENTS.md
+      ?"
+    state: "Oui, et le balayage n'avait porté que sur AGENTS.md. Corrigé le 24/09/2026
+      : docs/procedures/poste-de-developpement.md, seule procédure vivante concernée.
+      Subsistent dans les artefacts de planification : ARCHITECTURE-SPINE.md (3 occurrences),
+      implementation-readiness.md (3), epics.md (3), sprint-change-proposal-2026-09-13.md
+      (4). Les fichiers de story et les rétrospectives sont des relevés datés et gardent
+      leur texte."
+    lands_in: "arbitrage d'Arnaud — un artefact de planification validé se corrige-t-il,
+      ou garde-t-il son texte avec une note de révision comme les relevés datés ?"
+  - id: "epic-9-oq-mise-en-commun-des-construire"
+    epic: 9
+    question: "Mettre en commun les neuf construire() des tests vaut-il une story
+      ? Neuf fichiers touchés, aucune fonction apportée."
+    state: "Les neuf sont toujours dupliqués, avec trois réponses différentes à «
+      quels assets copier »."
+    lands_in: "epic-9-retro-item-57 (open) ; l'arbitrage d'Arnaud décide si ça devient
+      une story"
+  - id: "epic-9-oq-controle-contre-une-liste-recopiee"
+    epic: 9
+    question: "Faut-il un contrôle qui refuse une énumération de noms HUGO_LEGAL_*
+      hors de scripts/env.sh ?"
+    state: "La liste recopiée est toujours en place (scripts/checks/content.sh:297).
+      epic-9-retro-item-55 corrige cette instance mais ne tranche pas la question
+      du contrôle."
+    lands_in: "arbitrage d'Arnaud — un contrôle de plus contre une classe de faute
+      déjà vue trois fois, ou la règle seule ?"
+
 action_items:
   - id: "epic-1-retro-item-1-story-1-5-couverture-du-garde-fou-g1-env"
     epic: 1
@@ -752,7 +837,7 @@ action_items:
       CHANGELOG, aucune décision consignée ; un autre constat signalé trois fois sans
       décision)."
     owner: "Arnaud"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
   - id: "epic-9-retro-item-61-porter-les-questions-ouvertes-des-rétros"
     epic: 9
@@ -760,7 +845,7 @@ action_items:
       au même titre que les actions : six recensées, aucune tracée, une échéance déjà
       passée sans point de contrôle."
     owner: "Arnaud"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
   - id: "epic-9-retro-item-62-agents-md-rendre-le-point-19-exécutable"
     epic: 9
@@ -769,5 +854,5 @@ action_items:
       dit, pour chacune, si le cadet en a besoin. La 9.3 a énoncé la règle, la 9.4
       l'a enfreinte sur le fichier jumeau."
     owner: "Arnaud"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
