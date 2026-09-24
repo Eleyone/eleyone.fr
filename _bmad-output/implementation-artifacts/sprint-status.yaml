@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-24-2026 22:15'
+last_updated: '09-24-2026 23:31'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -135,7 +135,7 @@ development_status:
   10-5-publish-pilot-case-02: done
   10-6-integrate-case-01: done
   10-7-integrate-case-05: done
-  epic-10-retrospective: optional
+  epic-10-retrospective: done
 
   epic-11: backlog
   11-1-release-checks-and-expected-pages: backlog
@@ -854,3 +854,71 @@ action_items:
     owner: "Arnaud"
     status: done
     ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
+  - id: "epic-10-retro-item-63-étendre-le-tamis-clé-présente-mais-vide"
+    epic: 10
+    action: "Étendre le tamis « clé présente mais vide » de C19 à toutes les clés
+      facultatives lues par « with » — location, via, company_url, institution, level
+      — avec un cas de test par clé (F1, point 18)."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-10-retro-2026-09-24.md"
+  - id: "epic-10-retro-item-64-lancer-rétroactivement-la-revue-de-spec"
+    epic: 10
+    action: "Lancer rétroactivement la revue de spec de la story 10.6, ou écrire dans
+      son fichier pourquoi elle n en a pas ; faire de même pour la 10.4 (F2)."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-10-retro-2026-09-24.md"
+  - id: "epic-10-retro-item-65-trancher-par-écrit-les-quatre-constats-d"
+    epic: 10
+    action: "Trancher par écrit les quatre constats de lentille laissés sans décision
+      aux stories 10.2 et 10.7, dans leur fichier de story ou dans deferred-work.md
+      (F3, point 20)."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-10-retro-2026-09-24.md"
+  - id: "epic-10-retro-item-66-corriger-les-lignes-couvre-des-stories-1"
+    epic: 10
+    action: "Corriger les lignes « Couvre » des stories 10.5 et 10.6 d après la carte
+      de couverture d epics.md (F4)."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-10-retro-2026-09-24.md"
+  - id: "epic-10-retro-item-67-agents-md-un-rapport-de-revue-au-verdict"
+    epic: 10
+    action: "AGENTS.md — un rapport de revue au verdict « pass » reçoit un triage
+      comme un rapport « block » : le point 20 dit « tout constat », et c est le verdict
+      qui a servi de filtre (F3)."
+    owner: "Arnaud"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-10-retro-2026-09-24.md"
+  - id: "epic-10-retro-item-68-agents-md-une-story-commence-par-lire-l"
+    epic: 10
+    action: "AGENTS.md — une story commence par lire l en-tête de son epic, pas seulement
+      sa propre spec : la première phrase de l epic 10 répondait à une question posée
+      à Arnaud (F7)."
+    owner: "Arnaud"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-10-retro-2026-09-24.md"
+  - id: "epic-10-retro-item-69-passer-context-à-chaque-revue-de-spec-co"
+    epic: 10
+    action: "Passer --context à chaque revue de spec, comme la rétrospective de l
+      epic 9 le demandait déjà : deux epics, dix-neuf constats bloquants réfutés pour
+      la même cause (F6)."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-10-retro-2026-09-24.md"
+  - id: "epic-10-retro-item-70-mutualiser-l-échafaudage-des-dix-constru"
+    epic: 10
+    action: "Mutualiser l échafaudage des dix construire()/preparer() dans scripts/tests/lib.sh
+      — action 57 de l epic 9, ouverte et désormais aggravée d une copie (F5)."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-10-retro-2026-09-24.md"
+  - id: "epic-10-retro-item-71-corriger-le-commentaire-ces-trois-clés-d"
+    epic: 10
+    action: "Corriger le commentaire « ces trois clés » de scripts/tests/test-content.sh:439,
+      dont la boucle n en lit plus que deux (F8, point 8)."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-10-retro-2026-09-24.md"
