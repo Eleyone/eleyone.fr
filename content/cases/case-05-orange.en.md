@@ -2,16 +2,16 @@
 title: "From seconds to milliseconds without touching the database"
 translationKey: "case-05"
 number: "05"
-slug: "orange-crv-performance"
+slug: "orange-visit-reports-performance"
 position: "position-orange"
 order: 5
-draft: true
+draft: false
 
 context:
   company: "Orange"
-  setup: "[TODO: cadre]"
+  setup: "agency"
   role: "Zend Framework expert, de facto technical decision-maker in the absence of a tech lead"
-  period: "[TODO: période]"
+  period: "July 2014 – January 2016"
   stack: ["PHP", "Zend Framework", "Oracle", "Xdebug"]
 
 summary: >-
@@ -70,7 +70,6 @@ In practice, I went back over nearly every file, and reformatted some templates 
 
 - Pages that loaded in seconds now loaded in milliseconds, on the read side.
 - The rest — writes through the other application in the IT system — remained dependent on a system we did not control, and that was stated clearly to users.
-- [TODO: number of sales-rep users, if known; otherwise remove this line]
 
 ## What it shows
 

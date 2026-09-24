@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-24-2026 16:27'
+last_updated: '09-24-2026 21:26'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -134,7 +134,7 @@ development_status:
   10-4-chiliz-page-title-and-introduction: done
   10-5-publish-pilot-case-02: done
   10-6-integrate-case-01: backlog
-  10-7-integrate-case-05: backlog
+  10-7-integrate-case-05: done
   epic-10-retrospective: optional
 
   epic-11: backlog
@@ -276,7 +276,6 @@ single_pr_groups:
 # Q13 (v1.1) ne bloque rien en v1.
 blocked_by_open_questions:
   10-6-integrate-case-01: [Q2]
-  10-7-integrate-case-05: [Q2]
   11-10-thirty-second-test: [Q2]
   11-11-first-base-deployment-and-ip-free-proxy: [Q2]
   13-1-integrate-and-release-case-03: [Q2, Q4, Q5]

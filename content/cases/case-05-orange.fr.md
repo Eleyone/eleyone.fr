@@ -5,13 +5,13 @@ number: "05"
 slug: "orange-crv-performance"
 position: "position-orange"
 order: 5
-draft: true
+draft: false
 
 context:
   company: "Orange"
-  setup: "[TODO: cadre]"
+  setup: "agency"
   role: "Expert Zend Framework, décisionnaire technique en l'absence de tech lead"
-  period: "[TODO: période]"
+  period: "juillet 2014 – janvier 2016"
   stack: ["PHP", "Zend Framework", "Oracle", "Xdebug"]
 
 summary: >-
@@ -70,7 +70,6 @@ En pratique, je suis repassé sur à peu près tous les fichiers, et j'ai reform
 
 - Des pages qui chargeaient en secondes passées à des chargements en millisecondes, côté lecture.
 - Le reste — l'écriture via l'autre application du SI — restait tributaire d'un système sur lequel nous n'avions pas la main, et c'était dit clairement aux utilisateurs.
-- [TODO: nombre de commerciaux utilisateurs, si connu ; sinon retirer la ligne]
 
 ## Ce que ça montre
 

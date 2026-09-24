@@ -130,6 +130,25 @@ case_cas_sans_groupe_a_sa_page() {
   done
 }
 
+case_cas_seul_porte_lancre_de_son_cas() {
+  # Le sommaire de la page d'un cas seul émet un lien vers l'ancre du cas — « #case-08 » ici. Sur une
+  # page de groupe, c'est la « section » enveloppante qui la porte ; sur la page d'un cas seul, elle
+  # manquait, et le lien du sommaire ne menait nulle part. C12 le refuse, mais **seulement une fois un
+  # cas non groupé publié** : le cas 05 a été le premier, à la story 10.7 (24/09/2026), et le défaut
+  # venait de la story 6.2.
+  #
+  # Les deux langues sont vérifiées : le gabarit est le même, mais rien ne le garantit à l'avenir.
+  run construire "" seul
+  assert_eq 0 "$rc" "le build du site fixture réussit (sortie : $(cat "$work/hugo.out"))"
+  local page html
+  for page in "$(page_seule)" "$work/site/sortie/en/cases/cas-seul/index.html"; do
+    html=$(cat "$page")
+    assert_contains 'id="case-08"' "$html" "la page du cas seul porte l ancre de son cas ($page)"
+    # La contre-épreuve : le sommaire y renvoie bien, sinon l'ancre serait posée pour personne.
+    assert_contains 'href="#case-08"' "$html" "et le sommaire y renvoie ($page)"
+  done
+}
+
 case_cas_sans_groupe_garde_ses_niveaux_de_titre() {
   # Le hook ne descend d un niveau que les cas groupés (AD-4, FR-8) : ici les « ## » restent des h2,
   # numérotés « 08.r ». Le même cas, dans un groupe, sort en h3 — c est ce que garde ce cas.

@@ -3276,21 +3276,30 @@ En tant que Claire, CTO (UJ-1),
 je veux lire le cas 05 (« Orange, performance ») sous son poste,
 afin de voir comment Arnaud mesure une performance et en nomme les limites.
 
-**Couvre :** FR-2, FR-5 à FR-8, FR-10, FR-12, FR-20, FR-22 (Orange), FR-25, FR-26
+**Couvre :** FR-10, FR-22 (Orange), FR-25 — **exactement ce que la carte de couverture ci-dessus attribue à cette story**. La ligne revendiquait en outre FR-2, FR-5 à FR-8, FR-12, FR-20 et FR-26, qu'aucune ligne de la carte ne lui donne : intégrer un cas **emploie** les gabarits de l'epic 6, il ne réalise pas leurs exigences (constat de la revue de spec, 24/09/2026). Les stories 10.5 et 10.6 portent le même sur-affichage.
 **Dépendances :** 3.17, 6.2, 10.2
-**Bloquée par :** **Q2** (période et cadre du cas 05)
-**Prérequis de contenu :** cas 05 FR et EN rédigé par Arnaud.
+**Bloquée par :** — (**Q2 tranchée le 24/09/2026** : l'encart porte la période du poste Orange, « juillet 2014 – décembre 2016 », arbitrage d'Arnaud ; le cadre vient du poste, prestation Modis)
+**Prérequis de contenu :** `docs/private/context/cas-client-05-orange-crv-performance.md`, dont la page publiée est une reformulation minimale — comme le cas 02 l'a été de sa source. Le passage entre crochets sur le nombre de commerciaux reste **non publié** : la source dit elle-même « sinon on retire la ligne ».
 **Opération manuelle (Arnaud) :** non
 
 **Critères d'acceptation :**
 
 **Étant donné** `content/cases/case-05-<nom-court>.{fr,en}.md` avec `position: "position-orange"` (AD-18)
-**Quand** `publish-case` s'exécute
+**Quand** `scripts/publish-case.sh case-05` s'exécute — la clé du cas, que le script exige
 **Alors** tous les contrôles passent et le cas passe en `draft: false` dans une PR.
 
 **Étant donné** le build de production
-**Quand** on ouvre l'accueil puis la page du cas
-**Alors** le cas est lié sous son poste, nomme les limites de sa mesure *(relecture)*, et la version EN porte la ligne de contexte sur Orange.
+**Quand** on ouvre l'accueil puis la page du cas, **en français puis en anglais**
+**Alors** le cas est lié sous son poste dans chaque langue, et nomme les limites de sa mesure *(relecture)*.
+
+**Étant donné** FR-22, qui place la ligne de contexte Orange dans « le cas concerné ou l'accueil » et nomme « Orange (cas 05) »
+**Quand** on lit la version anglaise
+**Alors** la ligne est **dans le fichier du cas**, `case-05-<nom-court>.en.md`, et non dans `content/career/position-orange.en.md` : le poste ne porte aucune ligne de contexte.
+
+**Étant donné** le matériel vivant que la source déclare
+**Quand** on ouvre la page en production
+**Alors** aucun élément « prévu » ne laisse de trace, comme pour le cas 02
+**Et** cela ne fait pas de cette story une réalisation de FR-12, que la carte attribue aux stories qui construisent le mécanisme et publient du matériel « prêt ».
 
 ## Mise en ligne du socle (stories 11.10 à 11.13)
 
