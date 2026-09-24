@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-24-2026 10:51'
+last_updated: '09-24-2026 14:05'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -125,7 +125,7 @@ development_status:
   9-5-conditional-public-repository-link: done
   9-6-person-structured-data: done
   9-7-host-identification-without-phone: done
-  epic-9-retrospective: optional
+  epic-9-retrospective: done
 
   epic-10: backlog
   10-1-home-page-pitch: backlog
@@ -693,3 +693,81 @@ action_items:
     owner: "agent de développement"
     status: done
     ref: "_bmad-output/implementation-artifacts/epic-7-retro-2026-09-22.md"
+  - id: "epic-9-retro-item-53-story-9-4-ajouter-à-test-about-page-sh-l"
+    epic: 9
+    action: "Story 9.4 — ajouter à test-about-page.sh le cas « sans page » qu'a test-contact-page.sh:137,
+      et le lancer une fois sans la garde de l'en-tête pour le voir échouer (F1)."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
+  - id: "epic-9-retro-item-54-story-9-4-compléter-case_about_lordre_de"
+    epic: 9
+    action: "Story 9.4 — compléter case_about_lordre_de_len_tete : calculer p_contact
+      et affirmer les deux inégalités que son propre commentaire annonce (F2)."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
+  - id: "epic-9-retro-item-55-faire-dériver-legal_names-de-scripts-env"
+    epic: 9
+    action: "Faire dériver legal_names de scripts/env.sh dans scripts/checks/content.sh,
+      comme le font déjà test-env.sh et test-legal-page.sh (F3)."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
+  - id: "epic-9-retro-item-56-mettre-au-présent-la-phrase-au-futur-de"
+    epic: 9
+    action: "Mettre au présent la phrase au futur de site-footer.html:12, et balayer
+      les autres commentaires de gabarit au futur écrits pendant l'epic 9 (F5)."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
+  - id: "epic-9-retro-item-57-sortir-dans-scripts-tests-lib-sh-l-échaf"
+    epic: 9
+    action: "Sortir dans scripts/tests/lib.sh l'échafaudage commun des neuf construire()
+      et la logique de position, et trancher une fois quels assets un site de test
+      copie (F4)."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
+  - id: "epic-9-retro-item-58-passer-systématiquement-context-à-la-rev"
+    epic: 9
+    action: "Passer systématiquement --context à la revue de spec avec l'état du dépôt
+      pertinent : 11 constats bloquants de l'epic 9 ont été réfutés parce que le relecteur
+      ne voit pas le dépôt."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
+  - id: "epic-9-retro-item-59-permettre-à-la-revue-de-spec-de-relire-u"
+    epic: 9
+    action: "Permettre à la revue de spec de relire une story absente d'origin/dev,
+      ou au minimum écrire la sortie à deux PR dans docs/procedures/llm-review.md
+      (F6)."
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
+  - id: "epic-9-retro-item-60-agents-md-tout-constat-de-revue-reçoit-u"
+    epic: 9
+    action: "AGENTS.md — tout constat de revue reçoit une décision écrite, y compris
+      un constat réfuté et un constat invalide (un relecteur a inventé une règle de
+      CHANGELOG, aucune décision consignée ; un autre constat signalé trois fois sans
+      décision)."
+    owner: "Arnaud"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
+  - id: "epic-9-retro-item-61-porter-les-questions-ouvertes-des-rétros"
+    epic: 9
+    action: "Porter les questions ouvertes des rétrospectives dans le suivi de sprint,
+      au même titre que les actions : six recensées, aucune tracée, une échéance déjà
+      passée sans point de contrôle."
+    owner: "Arnaud"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
+  - id: "epic-9-retro-item-62-agents-md-rendre-le-point-19-exécutable"
+    epic: 9
+    action: "AGENTS.md — rendre le point 19 exécutable : une story qui écrit un fichier
+      jumeau d'un existant liste les gardes de l'aîné dans son fichier de story et
+      dit, pour chacune, si le cadet en a besoin. La 9.3 a énoncé la règle, la 9.4
+      l'a enfreinte sur le fichier jumeau."
+    owner: "Arnaud"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-9-retro-2026-09-24.md"
