@@ -3109,13 +3109,22 @@ afin de comprendre en trente secondes ce qu'Arnaud fait bien.
 
 **Étant donné** le pitch ajouté à `content/_index.{fr,en}.md`
 **Quand** on ouvre `/` et `/en/`
-**Alors** il suit le titre du site et « Basé en France », en trois phrases, et les deux versions disent la même chose *(relecture)*.
+**Alors** il suit le titre du site et la mention `based_in` **de sa langue** — « Basé en France » en FR, « Based in France » en EN —, en trois phrases, et les deux versions disent la même chose *(relecture)*.
 
 **Étant donné** l'accueil sur 390 × 844 px, photo comprise, en FR et en EN
 **Quand** la page s'ouvre sans défilement
-**Alors** on voit la ligne d'identité, le titre, le pitch et le début du premier poste avec le lien de son premier cas (vérifié de nouveau à la story 11.11).
+**Alors** on voit la ligne d'identité, le titre, la mention `based_in` et **le pitch entier**.
 
-- [ ] La PR ne touche que les deux fichiers de contenu (FR-25).
+**Étant donné** qu'aucun poste n'est publié à cette story — le seul qui existe, `position-chiliz`, reste `draft: true` jusqu'à ce que la story 10.2 lui donne sa période (AD-18) — et qu'aucun cas n'est publié avant la 10.5
+**Quand** on cherche à vérifier « le début du premier poste avec le lien de son premier cas »
+**Alors** cette part du premier écran **n'est pas vérifiable ici** : elle est portée par la story 10.2, qui publie le premier poste, puis revérifiée à la 11.11
+**Et** la mesurer sur le rendu de travail ne vaudrait rien, le marqueur « Brouillon » d'AD-5 changeant la hauteur du bloc.
+
+**Étant donné** un pitch qui ferait déborder le premier écran
+**Quand** le développeur constate le dépassement
+**Alors** **c'est le pitch qui est raccourci, jamais la mise en forme** : la contrainte est éditoriale, et la case ci-dessous existe pour interdire de traiter un problème de contenu par un correctif de gabarit.
+
+- [ ] La PR ne touche, **parmi les sources du site**, que les deux fichiers de contenu (FR-25) : ni gabarit, ni CSS, ni contrôle, ni traduction. Les artefacts de `_bmad-output/` ne comptent pas — toute PR de story y touche, ne serait-ce que pour son statut.
 
 ### Story 10.2 : Career positions
 
