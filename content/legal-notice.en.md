@@ -21,6 +21,8 @@ The publication director is the publisher: where the service is provided by a na
 
 {{< legal-list "host" >}}
 
+The hosting provider publishes no telephone number: its support documentation states that it does not offer phone support. It is therefore reached at the email address above, the one it designates for reports and for European Union authorities.
+
 No data processed in the course of publishing this site is stored by a third party: the site is made of static pages, with no form, no analytics and no JavaScript.
 
 ## Personal data

@@ -294,7 +294,7 @@ done <<< "$manifests"
 
 # C18 — les deux fichiers d'environnement portent exactement les noms attendus (AD-9, AD-24). Seuls
 # les noms sont lus et affichés : une valeur ne sort jamais d'ici.
-legal_names="HUGO_LEGAL_HOST_ADDRESS HUGO_LEGAL_HOST_NAME HUGO_LEGAL_HOST_PHONE HUGO_LEGAL_PUBLISHER_ADDRESS HUGO_LEGAL_PUBLISHER_EMAIL HUGO_LEGAL_PUBLISHER_NAME HUGO_LEGAL_PUBLISHER_PHONE HUGO_LEGAL_PUBLISHER_REGISTRATION"
+legal_names="HUGO_LEGAL_HOST_ADDRESS HUGO_LEGAL_HOST_EMAIL HUGO_LEGAL_HOST_NAME HUGO_LEGAL_PUBLISHER_ADDRESS HUGO_LEGAL_PUBLISHER_EMAIL HUGO_LEGAL_PUBLISHER_NAME HUGO_LEGAL_PUBLISHER_PHONE HUGO_LEGAL_PUBLISHER_REGISTRATION"
 env_names() { # $1 = fichier ; les noms de variables, triés
   grep -oE '^[A-Z][A-Z0-9_]*=' "$1" | tr -d '=' | LC_ALL=C sort | tr '\n' ' ' | sed 's/ *$//'
 }

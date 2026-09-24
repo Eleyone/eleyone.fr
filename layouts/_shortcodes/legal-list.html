@@ -14,6 +14,10 @@
   corps. L'adresse est dans un élément `address`, rendue telle qu'elle est injectée, sans lien vers
   une carte et sans microdonnée.
 
+  Le groupe « host » porte un courriel là où il portait un téléphone : l'hébergeur retenu n'en
+  publie aucun (story 9.7). Le fait lui-même est dit dans le corps Markdown des deux pages, jamais
+  ici — AD-3 interdit à un gabarit de porter du texte de contenu, et cette phrase-là en est.
+
   Le courriel et le téléphone deviennent des liens **d'après ce que la valeur est**, pas d'après ce
   qu'on a décidé qu'elle serait (arbitrage d'Arnaud, 22/09/2026) : une valeur qui ne ressemble pas
   à une adresse ou à un numéro s'affiche en clair plutôt que de produire un lien mort. Le « tel: »
@@ -49,7 +53,7 @@
       "host" (slice
         (dict "terme" "legal_term_name"    "valeur" "host_name"    "type" "texte")
         (dict "terme" "legal_term_address" "valeur" "host_address" "type" "adresse")
-        (dict "terme" "legal_term_phone"   "valeur" "host_phone"   "type" "telephone"))
+        (dict "terme" "legal_term_email"   "valeur" "host_email"   "type" "courriel"))
 -}}
 {{- $entrees := index $groupes $groupe -}}
 {{- if not $entrees -}}

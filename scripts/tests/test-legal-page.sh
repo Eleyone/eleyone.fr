@@ -212,7 +212,11 @@ case_legal_le_tel_ne_garde_que_les_chiffres() {
   construire
   local -a env_args=()
   while IFS= read -r ligne; do env_args+=("$ligne"); done < <(valeurs_essai)
-  env_args+=("HUGO_LEGAL_PUBLISHER_PHONE=01.23.45.67.89" "HUGO_LEGAL_HOST_PHONE=(+33) 1-23-45-67-89")
+  # Les deux formes passaient autrefois dans un seul build, l'une par le téléphone de l'éditeur et
+  # l'autre par celui de l'hébergeur. Ce dernier a disparu le 24/09/2026 (story 9.7), et supprimer
+  # la variable aurait emporté la couverture des parenthèses et des tirets sans que rien ne le
+  # dise : le cas fait donc deux builds au lieu d'un, et garde exactement ce qu'il vérifiait.
+  env_args+=("HUGO_LEGAL_PUBLISHER_PHONE=01.23.45.67.89")
   run bash -c 'cd "$1" && env "${@:3}" hugo --environment production --minify --destination sortie' \
     _ "$work/site" _ "${env_args[@]}"
   assert_eq 0 "$rc" "le build réussit (messages : $err)"
@@ -220,7 +224,74 @@ case_legal_le_tel_ne_garde_que_les_chiffres() {
   fr=$(page mentions-legales/index.html)
   assert_contains 'href=tel:0123456789' "$fr" "les points disparaissent du lien"
   assert_contains '>01.23.45.67.89<' "$fr" "mais le texte affiché les garde"
+
+  env_args=()
+  while IFS= read -r ligne; do env_args+=("$ligne"); done < <(valeurs_essai)
+  env_args+=("HUGO_LEGAL_PUBLISHER_PHONE=(+33) 1-23-45-67-89")
+  run bash -c 'cd "$1" && env "${@:3}" hugo --environment production --minify --destination sortie' \
+    _ "$work/site" _ "${env_args[@]}"
+  assert_eq 0 "$rc" "le second build réussit (messages : $err)"
+  fr=$(page mentions-legales/index.html)
   assert_contains 'href=tel:+33123456789' "$fr" "tirets et parenthèses aussi, le + de tête reste"
+  assert_contains '>(+33) 1-23-45-67-89<' "$fr" "et le texte affiché garde sa ponctuation"
+}
+
+# --- l'hébergeur, depuis la story 9.7 : un courriel, et aucun téléphone -------------------------
+
+case_legal_host_phone_est_un_nom_refuse() {
+  # **Le cas qui exerce l'entrée refusée**, et non seulement celle qui passe (point 9 d'AGENTS.md).
+  # « host_phone » a existé jusqu'au 24/09/2026 : un gabarit ou une page laissée en arrière la
+  # demanderait encore, et sans ce refus elle aurait rendu une page muette au lieu d'échouer.
+  #
+  # **L'assertion qui compte est celle du message**, pas celle du code de retour. Lancé une fois
+  # avec « host_phone » remis dans la liste des noms connus, le build échoue quand même — sur
+  # « est vide ou non définie », puisque plus rien ne définit la variable. Le code de retour vaut
+  # donc 1 dans les deux cas, et seul le message distingue « nom refusé » de « valeur manquante ».
+  run construire "" '{{< legal "host_phone" >}}'
+  assert_eq 1 "$rc" "l ancien nom host_phone arrête le build"
+  assert_contains "n'est pas une valeur légale" "$(cat "$work/hugo.out")" "et le message le dit"
+  assert_contains "host_email" "$(cat "$work/hugo.out")" "en énumérant les noms connus, dont le nouveau"
+}
+
+case_legal_host_email_est_accepte() {
+  # L'autre moitié : le nom qui remplace est bien lu. Sans ce cas, le précédent passerait aussi
+  # avec une liste où **aucun** des deux noms n'existe.
+  run construire "" '{{< legal "host_email" >}}'
+  assert_eq 0 "$rc" "host_email est un nom connu (sortie : $(cat "$work/hugo.out"))"
+  assert_contains 'ESSAI-HOST_EMAIL' "$(page mentions-legales/index.html)" "et sa valeur est rendue"
+}
+
+case_legal_hebergeur_courriel_sans_ligne_telephone() {
+  # La rubrique de l'hébergeur ne porte plus de téléphone, et son courriel devient un lien.
+  construire
+  local -a env_args=()
+  while IFS= read -r ligne; do env_args+=("$ligne"); done < <(valeurs_essai)
+  env_args+=("HUGO_LEGAL_HOST_EMAIL=abuse@exemple.invalide")
+  run bash -c 'cd "$1" && env "${@:3}" hugo --environment production --minify --destination sortie' \
+    _ "$work/site" _ "${env_args[@]}"
+  assert_eq 0 "$rc" "le build réussit (messages : $err)"
+  # **Les deux langues.** Une première écriture ne regardait que la page française (constat de la
+  # revue de la PR n° 105). Le terme vient de « i18n/ », où « Téléphone » et « Phone » sont deux
+  # entrées distinctes : une régression peut n'atteindre qu'un des deux fichiers, et le cas
+  # français ne l'aurait jamais vue.
+  verifier_rubrique_hebergeur "$(page mentions-legales/index.html)" FR "Téléphone"
+  verifier_rubrique_hebergeur "$(page en/legal-notice/index.html)" EN "Phone"
+}
+
+# $1 = la page rendue, $2 = son étiquette de langue, $3 = le terme « téléphone » de cette langue.
+verifier_rubrique_hebergeur() {
+  local rendu=$1 langue=$2 terme=$3 rubrique
+  assert_contains 'href=mailto:abuse@exemple.invalide' "$rendu" \
+    "$langue : le courriel de l hébergeur est un lien mailto:"
+  # La rubrique est la dernière « dl » de la page : le corps d'essai pose éditeur puis hébergeur.
+  rubrique=${rendu##*<dl }
+  [[ $rubrique != "$rendu" ]] || { echo "$langue : aucune liste de définitions dans la page" >&2; exit 1; }
+  [[ $rubrique == *"abuse@exemple.invalide"* ]] \
+    || { echo "$langue : la dernière dl n est pas celle de l hébergeur" >&2; exit 1; }
+  # Le terme est cherché **dans la rubrique**, pas dans la page : il y reste par l'éditeur, et
+  # chercher dans la page entière aurait rendu le cas vert quoi qu'il arrive.
+  [[ $rubrique != *"$terme"* ]] \
+    || { echo "$langue : la rubrique de l hébergeur porte encore une ligne « $terme »" >&2; exit 1; }
 }
 
 run_case "$@"

@@ -2791,10 +2791,22 @@ afin de pouvoir le saisir au sujet d'un contenu, même s'il ne publie aucun num�
 
 **Critères d'acceptation :**
 
-**Étant donné** AD-9 révisé et `_partials/legal-value.html`
+**Étant donné** AD-9, qui pose aujourd'hui que le téléphone de l'hébergeur est obligatoire et que « la loi n'attend de l'hébergeur qu'un téléphone, pas un courriel »
+**Quand** la story est livrée
+**Alors** AD-9 est révisé **dans cette PR** : l'obligation de l'article 1-1 I 4° est maintenue telle quelle, le constat du 24/09/2026 est écrit avec sa source, et la décision est consignée comme un **écart assumé et documenté**
+**Et** publier le courriel n'y est **pas** présenté comme satisfaisant l'obligation : le site comble ce qu'il peut, il ne requalifie pas le texte
+**Et** la liste des huit noms y est corrigée, ainsi que la phrase citée ci-dessus
+**Et** le relevé daté du 13/09/2026 garde son texte, avec une note de révision ajoutée — un relevé daté n'est pas réécrit.
+
+**Étant donné** le balayage de `HUGO_LEGAL_HOST_PHONE` et de `host_phone` dans tout le dépôt
+**Quand** la story est livrée
+**Alors** aucune occurrence ne subsiste hors des relevés historiques datés
+**Et** les neuf fichiers vivants sont traités : `ARCHITECTURE-SPINE.md`, `scripts/env.sh`, `.env.example`, `ci/legal-placeholder.env`, `scripts/checks/content.sh`, `_partials/legal-value.html`, `_shortcodes/legal-list.html`, `scripts/tests/test-env.sh`, `scripts/tests/test-legal-page.sh`.
+
+**Étant donné** `_partials/legal-value.html`
 **Quand** un gabarit demande `host_phone`
 **Alors** le build échoue sur un nom inconnu, et `host_email` est accepté à sa place
-**Et** la liste reste à huit noms, `HUGO_LEGAL_HOST_PHONE` étant **remplacée** par `HUGO_LEGAL_HOST_EMAIL`, non ajoutée à côté.
+**Et** un test exerce `host_phone`, l'entrée que le garde-fou doit refuser, et non seulement `host_email` (point 9 d'AGENTS.md).
 
 **Étant donné** `.env.example`, `ci/legal-placeholder.env` et `scripts/env.sh`
 **Quand** on lance C18
@@ -2805,17 +2817,15 @@ afin de pouvoir le saisir au sujet d'un contenu, même s'il ne publie aucun num�
 **Alors** la rubrique de l'hébergeur porte son nom, son adresse dans un élément `address` et son courriel en lien `mailto:`
 **Et** elle ne porte plus de ligne « Téléphone ».
 
-**Étant donné** `content/legal-notice.{fr,en}.md`
-**Quand** on lit la rubrique de l'hébergeur
-**Alors** une phrase, dans chaque langue, dit que l'hébergeur ne publie pas de numéro de téléphone et renvoie au courriel
+**Étant donné** AD-3, qui interdit tout texte de contenu dans un gabarit
+**Quand** on ajoute la phrase sur l'absence de numéro
+**Alors** elle est écrite **exclusivement** dans le corps Markdown de `content/legal-notice.{fr,en}.md`, jamais dans le shortcode ni dans `i18n/`
+**Et** elle **attribue le fait à l'hébergeur** plutôt que de l'énoncer au nom du site, pour qu'un lecteur sache qui l'affirme et puisse le vérifier
 **Et** C3 la voit présente des deux côtés.
 
 - [ ] Aucun numéro non sourcé n'entre dans le dépôt ni dans un `.env` : un numéro circule pour cette entité sur des pages tierces sans qu'elle le publie nulle part, et le reprendre aurait publié un faux.
 - [ ] La cible de 24 px des liens de `legal-list` couvre le `mailto:` de l'hébergeur comme les autres.
 - [ ] Les commentaires de `legal-value.html` qui énumèrent « les sept » sont relus : le compte y est faux depuis le 23/09/2026 (point 8 d'AGENTS.md).
-
-**Questions à poser avant de commencer :**
-- La phrase sur l'absence de téléphone cite-t-elle l'hébergeur, ou reste-t-elle un constat neutre du site ?
 
 ## Epic 11 : Mise en ligne, répétition générale et socle
 

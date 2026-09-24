@@ -1,15 +1,17 @@
 {{/*
   Lecture d'une valeur légale (AD-9, FR-18, FR-33). **Seul endroit du site qui lit un `HUGO_LEGAL_*`.**
 
-  Les valeurs — nom, adresse, contact et immatriculation de l'éditeur, nom, adresse et contact de
-  l'hébergeur — ne sont pas dans le dépôt : elles viennent de l'environnement, préparé par
+  Les valeurs — nom, adresse, courriel, téléphone et immatriculation de l'éditeur, nom, adresse et
+  courriel de l'hébergeur — ne sont pas dans le dépôt : elles viennent de l'environnement, préparé par
   `scripts/env.sh`, qui charge `.env` sur le poste et `ci/legal-placeholder.env` partout ailleurs.
   Elles sont publiques une fois le site en ligne ; le but est de les tenir hors de l'historique
   git, qui est public et où rien ne s'efface.
 
   Trois refus, et chacun fait **échouer le build** plutôt que de rendre une page approximative :
 
-  1. un nom de valeur hors des sept qu'AD-9 fixe — une faute de frappe rendrait une page vide ;
+  1. un nom de valeur hors de ceux qu'AD-9 fixe — une faute de frappe rendrait une page vide.
+     Le nombre n'est pas écrit ici : il l'a été, il est devenu faux deux fois, et la liste
+     ci-dessous se compte toute seule ;
   2. une lecture depuis une page dont le `translationKey` n'est pas `legal-notice` — l'adresse de
      l'éditeur porte une commune, et elle ne doit apparaître que sur ces deux pages-là ;
   3. une valeur vide. `os.Getenv` ne distingue pas « vide » de « non définie » : les deux sont un
@@ -26,12 +28,18 @@
 */}}
 {{- $page := .page -}}
 {{- $name := .name -}}
-{{/* Les huit noms d'AD-9, une variable par donnée. Les deux « contact » d'origine ont été
-     remplacées le 23/09/2026 : une valeur composée « courriel et téléphone » interdisait de
-     traiter chaque donnée pour ce qu'elle est, et empêchait de dire laquelle manque. */}}
+{{/* Les noms d'AD-9, une variable par donnée. Les deux « contact » d'origine ont été remplacées le
+     23/09/2026 : une valeur composée « courriel et téléphone » interdisait de traiter chaque donnée
+     pour ce qu'elle est, et empêchait de dire laquelle manque.
+
+     « host_phone » a été remplacée par « host_email » le 24/09/2026. Le téléphone de l'hébergeur
+     reste exigé par l'article 1-1 I 4°, mais l'hébergeur retenu n'en publie aucun et l'écrit sur sa
+     propre page d'aide : la variable n'aurait jamais pu être remplie autrement qu'avec un numéro
+     inventé. La page dit l'absence ; le courriel est ce que le site peut offrir à sa place, sans
+     prétendre que cela satisfasse le texte (AD-9, story 9.7). */}}
 {{- $connus := slice
       "publisher_name" "publisher_address" "publisher_email" "publisher_phone" "publisher_registration"
-      "host_name" "host_address" "host_phone" -}}
+      "host_name" "host_address" "host_email" -}}
 {{- if not (in $connus $name) -}}
   {{/* Le message ne compte pas : il énumère. Il disait « les sept sont » après le passage à huit —
      la troisième fois qu'un nombre écrit en dur devient faux dans cette story (constat de la revue

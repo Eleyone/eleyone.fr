@@ -21,6 +21,8 @@ Le directeur de la publication est l'éditeur lui-même : lorsque le service est
 
 {{< legal-list "host" >}}
 
+L'hébergeur ne publie pas de numéro de téléphone : il indique, sur sa documentation d'assistance, ne pas proposer de support téléphonique. Il se joint donc à l'adresse électronique ci-dessus, celle qu'il désigne pour les signalements et pour les autorités de l'Union européenne.
+
 Aucune donnée traitée dans le cadre de l'édition de ce site n'est stockée par un tiers : le site est composé de pages statiques, sans formulaire, sans mesure d'audience et sans JavaScript.
 
 ## Données personnelles
