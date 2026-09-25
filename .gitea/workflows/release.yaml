@@ -1,0 +1,49 @@
+# Mise en ligne et répétition générale sur la forge principale (AD-11, AD-14, AD-22). Le workflow ne
+# contient que son déclencheur, le checkout et l'appel d'un seul script : toute la logique — nom du
+# tag, branche dont il descend, répétition générale, contrôles, construction, livraison — vit dans
+# scripts/ci/release-job.sh. Aucune vérification ne s'écrit ici, et le tag n'est pas même calculé :
+# le script le lit dans GITHUB_REF, que Gitea pose pour un push de tag.
+#
+# Le déclencheur est un **tag** et rien d'autre : un push sur dev ou sur main ne met rien en ligne.
+#
+# Le runner doit être en **mode hôte** : en mode conteneur, il monte l'espace de travail dans un
+# volume Docker, et le « docker run » du job de contrôles monterait un chemin absent de l'hôte. Son
+# label est déclaré « linux_amd64:host » côté runner ; « runs-on » ne porte que le nom, sans le schéma.
+#
+# Les secrets sont mappés dans l'environnement du **seul** pas qui lance le script : les huit valeurs
+# légales d'AD-9, la liste des motifs interdits d'AD-12, et les trois secrets de déploiement d'AD-14.
+# DEPLOY_HOST porte « utilisateur@hôte » : il n'y a pas de secret DEPLOY_USER
+# (docs/procedures/release-workflow.md). Aucune valeur n'est écrite ici ni affichée par le job.
+# Procédures : docs/procedures/release-workflow.md, docs/procedures/gitea-actions.md
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: linux_amd64
+    steps:
+      # URL absolue épinglée par SHA, le même que .gitea/workflows/checks.yaml : la source et le
+      # commit sont fixés, sans dépendre du réglage DEFAULT_ACTIONS_URL de la forge.
+      - uses: https://gitea.com/actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # tout l'historique, les branches distantes et les tags : le job demande à git si le tag
+          # descend de origin/main ou de origin/dev, et cherche un tag -rc de même arbre (AD-22)
+          fetch-depth: 0
+      - run: bash scripts/ci/release-job.sh
+        env:
+          HUGO_LEGAL_PUBLISHER_NAME: ${{ secrets.HUGO_LEGAL_PUBLISHER_NAME }}
+          HUGO_LEGAL_PUBLISHER_ADDRESS: ${{ secrets.HUGO_LEGAL_PUBLISHER_ADDRESS }}
+          HUGO_LEGAL_PUBLISHER_EMAIL: ${{ secrets.HUGO_LEGAL_PUBLISHER_EMAIL }}
+          HUGO_LEGAL_PUBLISHER_PHONE: ${{ secrets.HUGO_LEGAL_PUBLISHER_PHONE }}
+          HUGO_LEGAL_PUBLISHER_REGISTRATION: ${{ secrets.HUGO_LEGAL_PUBLISHER_REGISTRATION }}
+          HUGO_LEGAL_HOST_NAME: ${{ secrets.HUGO_LEGAL_HOST_NAME }}
+          HUGO_LEGAL_HOST_ADDRESS: ${{ secrets.HUGO_LEGAL_HOST_ADDRESS }}
+          HUGO_LEGAL_HOST_EMAIL: ${{ secrets.HUGO_LEGAL_HOST_EMAIL }}
+          PRIVATE_PATTERNS: ${{ secrets.PRIVATE_PATTERNS }}
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}

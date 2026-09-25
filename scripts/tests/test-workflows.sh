@@ -6,6 +6,7 @@
 
 gitea_workflow="$root/.gitea/workflows/checks.yaml"
 github_workflow="$root/.github/workflows/checks.yaml"
+release_workflow="$root/.gitea/workflows/release.yaml"
 
 case_workflow_gitea_existe() {
   [[ -f $gitea_workflow ]] || { echo "workflow absent : $gitea_workflow" >&2; exit 1; }
@@ -129,6 +130,110 @@ case_workflow_meme_sha_des_deux_cotes() {
   lignes brut '^\s*- uses:' "$github_workflow"
   sha_github=$(sed -E 's/.*@([0-9a-f]{40}).*/\1/' <<< "$brut")
   assert_eq "$sha_gitea" "$sha_github" "le checkout est épinglé au même commit des deux côtés"
+}
+
+# --- le workflow de mise en ligne (story 11.5, AD-11, AD-14, AD-22) -----------------------------------
+# Même règle que pour les contrôles, et elle est ici la conclusion d'un constat bloquant de la revue
+# de spec (S1) : le YAML ne contient que son déclencheur, le checkout et **un seul** appel de script.
+# Toute la logique — nom du tag, branche, répétition générale, enchaînement — vit dans
+# scripts/ci/release-job.sh, que scripts/tests/test-release-job.sh éprouve hors ligne.
+
+case_workflow_release_existe() {
+  [[ -f $release_workflow ]] || { echo "workflow absent : $release_workflow" >&2; exit 1; }
+}
+
+case_workflow_release_declencheur() {
+  local contenu
+  contenu=$(cat "$release_workflow")
+  assert_contains "tags:" "$contenu" "le déclencheur est un tag"
+  assert_contains '- "v*"' "$contenu" "les tags v* (AD-11)"
+  assert_contains "  release:" "$contenu" "le job s'appelle release"
+  assert_contains "runs-on: linux_amd64" "$contenu" "le label du runner en mode hôte, sans son schéma"
+  # **Un push sur dev ou sur main ne met rien en ligne** : ni filtre de branches, ni pull_request,
+  # ni lancement à la main ne doivent ouvrir une seconde porte vers ce job.
+  local autres
+  lignes autres '^\s*(branches|pull_request|workflow_dispatch|schedule):' "$release_workflow"
+  assert_eq "" "$autres" "aucun déclencheur autre que le tag"
+}
+
+case_workflow_release_une_seule_commande() {
+  # Aucune logique dans le YAML : une seule étape « run », et c'est l'appel du job.
+  local commandes brut
+  lignes brut '^\s*- run:|^\s*run:' "$release_workflow"
+  commandes=$(sed -E 's/^\s*- ?run:\s*//' <<< "$brut")
+  assert_eq "bash scripts/ci/release-job.sh" "$commandes" "une seule commande, celle du job de mise en ligne"
+}
+
+case_workflow_release_checkout_epingle() {
+  local uses brut reference
+  lignes brut '^\s*- uses:' "$release_workflow"
+  uses=$(sed -E 's/^\s*- uses:\s*//' <<< "$brut")
+  [[ -n $uses ]] || { echo "aucune action utilisée : le checkout a disparu" >&2; exit 1; }
+  while IFS= read -r ligne; do
+    reference=${ligne%%#*}
+    reference=${reference%"${reference##*[![:space:]]}"}
+    assert_contains "https://gitea.com/actions/" "$reference" "l'action vient des actions officielles, par une URL absolue : $ligne"
+    [[ $reference =~ @[0-9a-f]{40}$ ]] \
+      || { printf 'action non épinglée par SHA : %s\n' "$ligne" >&2; exit 1; }
+    assert_contains "#" "$ligne" "le SHA est suivi du commentaire de version : $ligne"
+  done <<< "$uses"
+  # Tout l'historique, les branches distantes et les tags : sans lui, « git merge-base --is-ancestor »
+  # et la recherche d'un tag -rc de même arbre n'auraient rien à lire.
+  assert_contains "fetch-depth: 0" "$(cat "$release_workflow")" "tout l'historique, pour la vérification du tag"
+}
+
+case_workflow_release_meme_checkout_que_les_controles() {
+  # Les deux workflows de la forge lancent le même code de checkout : un SHA qui dériverait d'un
+  # fichier à l'autre ferait tourner deux versions de l'action sans que rien ne le dise.
+  local brut sha_release sha_checks
+  lignes brut '^\s*- uses:' "$release_workflow"
+  sha_release=$(sed -E 's/.*@([0-9a-f]{40}).*/\1/' <<< "$brut")
+  lignes brut '^\s*- uses:'
+  sha_checks=$(sed -E 's/.*@([0-9a-f]{40}).*/\1/' <<< "$brut")
+  assert_eq "$sha_checks" "$sha_release" "le checkout est épinglé au même commit que celui des contrôles"
+}
+
+# Les noms des secrets sont **recopiés** dans le YAML : un fichier YAML ne sait pas lire
+# ci/legal-placeholder.env. C'est donc ce cas qui tient la copie égale à sa source, comme le point 19
+# d'AGENTS.md l'exige d'une liste qui ne peut pas vivre à un seul endroit. Une neuvième valeur légale
+# ajoutée à AD-9 fait échouer ce cas tant qu'elle n'est pas dans le workflow.
+case_workflow_release_secrets_exactement_ceux_attendus() {
+  local brut obtenus attendus legaux
+  lignes brut '^[[:space:]]+[A-Z_]+: \$\{\{ secrets\.[A-Z_]+ \}\}$' "$release_workflow"
+  [[ -n $brut ]] || { echo "aucun secret mappé dans le workflow de mise en ligne" >&2; exit 1; }
+  obtenus=$(sed -E 's/^[[:space:]]*([A-Z_]+):.*/\1/' <<< "$brut" | LC_ALL=C sort)
+  shell_grep_into legaux -oE '^HUGO_LEGAL_[A-Z0-9_]+=' "$root/ci/legal-placeholder.env"
+  attendus=$(
+    sed 's/=$//' <<< "$legaux"
+    printf 'PRIVATE_PATTERNS\nDEPLOY_SSH_KEY\nDEPLOY_HOST\nDEPLOY_KNOWN_HOSTS\n'
+  )
+  attendus=$(LC_ALL=C sort <<< "$attendus")
+  assert_eq "$attendus" "$obtenus" "les secrets mappés sont exactement ceux d'AD-9, d'AD-12 et d'AD-14"
+  # Et chaque clé porte le secret **de même nom** : une ligne croisée livrerait la mauvaise valeur.
+  local ligne cle
+  while IFS= read -r ligne; do
+    [[ -n $ligne ]] || continue
+    cle=${ligne%%:*}
+    cle=${cle##* }
+    assert_contains "secrets.$cle }}" "$ligne" "la clé $cle porte le secret de même nom"
+  done <<< "$brut"
+}
+
+case_workflow_release_aucune_autre_interpolation() {
+  # Le YAML ne calcule rien : pas même le tag, que scripts/ci/release-job.sh lit dans GITHUB_REF.
+  # Toutes les « ${{ … }} » du fichier sont donc des secrets, et rien d'autre.
+  local toutes secrets
+  lignes toutes '\$\{\{' "$release_workflow"
+  lignes secrets '^[[:space:]]+[A-Z_]+: \$\{\{ secrets\.[A-Z_]+ \}\}$' "$release_workflow"
+  assert_eq "$secrets" "$toutes" "aucune expression du YAML hors du mappage des secrets"
+}
+
+case_workflow_github_sans_mise_en_ligne() {
+  # AD-11 : la CI publique fait des contrôles, et rien d'autre — ni image, ni déploiement. Le
+  # workflow de mise en ligne n'a donc pas de jumeau sur GitHub.
+  local presents
+  presents=$(cd "$root/.github/workflows" && printf '%s\n' *.yaml | LC_ALL=C sort)
+  assert_eq "checks.yaml" "$presents" "GitHub ne porte que le workflow de contrôles"
 }
 
 run_case "$@"

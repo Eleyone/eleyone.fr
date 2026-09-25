@@ -4,7 +4,7 @@ Le serveur de production n'accepte que des demandes précises, sur deux canaux s
 
 **Rien de ce qui désigne le serveur n'entre dans le dépôt** (NFR-9) : ni nom d'hôte, ni adresse, ni nom du compte de déploiement, ni nom du réseau du proxy. Les valeurs propres au serveur vivent dans un fichier `.env` posé **sur le serveur**, à côté des fichiers Compose, et jamais commité. Ce `.env`-là n'est pas celui du poste de développement.
 
-Cette procédure décrit le protocole et l'installation attendue. L'**installation réelle** — compte dédié, `authorized_keys`, copie des fichiers — est l'opération manuelle de la story 11.6 ; la **livraison** (`docker save | gzip | ssh`) est la story 11.5.
+Cette procédure décrit le protocole et l'installation attendue. L'**installation réelle** — compte dédié, `authorized_keys`, copie des fichiers — est l'opération manuelle de la story 11.6. Ce qui envoie ces commandes est `scripts/release/ship.sh`, depuis le workflow de mise en ligne de la forge (`release-workflow.md`).
 
 ## Le protocole
 

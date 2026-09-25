@@ -23,7 +23,7 @@ scripts/release/build-image.sh v1.0.0-rc.1   # répétition générale
 
 Cette enveloppe **ne construit rien elle-même**. Elle est ce qui se trouve au-dessus de la commande de build : elle valide le tag, relève les valeurs de l'environnement, les écrit dans deux fichiers temporaires, délègue à `scripts/build-image.sh --release`, et supprime ces fichiers **même en cas d'échec**. L'image s'appelle `eleyone-site:<tag>`.
 
-Ce qu'elle exige dans l'environnement — ce que la CI livrera en secrets (story 11.5) :
+Ce qu'elle exige dans l'environnement — ce que la CI lui livre en secrets, mappés par `.gitea/workflows/release.yaml` (`release-workflow.md`) :
 
 | Variable | Contenu |
 | --- | --- |

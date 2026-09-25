@@ -2,6 +2,8 @@
 
 La forge lance les contrôles à chaque PR et à chaque push sur `dev` et sur `main` (AD-11). Le workflow est `.gitea/workflows/checks.yaml` ; il ne contient que son déclencheur, le checkout et l'appel de `scripts/ci/checks-job.sh` (`checks-job.md`). Aucun contrôle ne s'écrit dans le YAML : ce qui tourne sur la forge est ce qui tourne sur le poste.
 
+Le second workflow de la forge est `.gitea/workflows/release.yaml`, déclenché par un push de tag `v*` : il suit la même règle et n'appelle qu'un script, `scripts/ci/release-job.sh` (`release-workflow.md`). Les deux tournent sur le même label en mode hôte et épinglent le checkout au même SHA.
+
 ## Le runner doit être en mode hôte, et le mode hôte doit être la machine
 
 En mode conteneur, le runner monte l'espace de travail dans un **volume Docker**. Le job lance ensuite `docker run -v "$PWD:/repo"` : le démon résoudrait ce chemin sur la machine, où il n'existe pas, et le conteneur de contrôle verrait un dossier vide — les contrôles passeraient au vert sans rien avoir lu. D'où le mode hôte, décidé le 13/09/2026.
@@ -67,3 +69,4 @@ Le verrou « CI verte » de `scripts/verify-and-merge-pr.sh` lit ce même statut
 | PR de `feat/*` vers `dev`, ouverte ou mise à jour | un run `pull_request`, et un seul : le déclencheur `push` n'écoute que `dev` et `main` |
 | fusion de cette PR | un run `push` sur `dev` |
 | PR de `dev` vers `main` (mise en ligne) | un run `pull_request` ; les pushs sur `dev` gardent en plus leurs runs `push`, ce qui est voulu |
+| push d'un tag `v*` | un run `release`, et lui seul : `checks.yaml` n'écoute pas les tags, et `release.yaml` n'écoute pas les branches (`release-workflow.md`) |
