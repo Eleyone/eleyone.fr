@@ -275,8 +275,10 @@ single_pr_groups:
 # Blocages par une question encore ouverte du PRD (§11.2). Q9 tranchée (D-4) ;
 # Q13 (v1.1) ne bloque rien en v1.
 blocked_by_open_questions:
-  11-10-thirty-second-test: [Q2]
-  11-11-first-base-deployment-and-ip-free-proxy: [Q2]
+  # Les stories 11.10 et 11.11 y figuraient pour Q2. Blocage **levé le 25/09/2026** : Q2 a été
+  # tranchée pour les cas 01 et 05 (arbitrages d'Arnaud du 24/09/2026), et « bloquée par Q2 »
+  # voulait dire pour elles « le socle doit être complet : stories 10.6 et 10.7 » (epics.md), toutes
+  # deux `done`. Les cas 03, 04 et 06 gardent le leur : leurs périodes ne sont pas tranchées.
   13-1-integrate-and-release-case-03: [Q2, Q4, Q5]
   13-2-integrate-and-release-case-04: [Q2]
   13-3-integrate-and-release-case-06: [Q2]

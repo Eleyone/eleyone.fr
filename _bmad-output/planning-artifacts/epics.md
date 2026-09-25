@@ -3313,7 +3313,7 @@ afin de retoucher le haut de l'accueil avant la mise en ligne s'il le faut.
 
 **Couvre :** SM-1, SM-3, FR-1, FR-2, FR-37, FR-39 · AD-22, procédure « premier déploiement » (étape 3) · UX-DR24
 **Dépendances :** 9.4, 10.1 à 10.7, 11.9
-**Bloquée par :** **Q2** (le socle doit être complet : stories 10.6 et 10.7)
+**Bloquée par :** — (**levée le 25/09/2026** : Q2 a été tranchée pour les cas 01 et 05 — arbitrages d'Arnaud du 24/09/2026 — et les stories 10.6 et 10.7 sont `done`, donc le socle est complet. Reste la dépendance 11.9, qui n'est pas un blocage par question ouverte)
 **Prérequis de contenu :** cinq testeurs selon `EXPERIENCE.md`.
 **Opération manuelle (Arnaud) :** **oui**, jalon « répétition générale » d'AD-22 sur l'arbre du socle (tags `v1.0.0-rc.1` et `v1.0.0-rc.2` sur `dev`, par `rehearse-release`), puis Arnaud mène le test, par partage d'écran sur le site de répétition (canal non public).
 
@@ -3339,7 +3339,7 @@ afin de lire le CV et les preuves depuis le lien reçu.
 
 **Couvre :** FR-19, FR-32, FR-37, NFR-2 à NFR-5, NFR-13, SM-6, SM-8 · AD-14, AD-15, AD-17, procédure « premier déploiement » (étapes 4 à 8) · C15
 **Dépendances :** 11.7, 11.10 ; socle prêt (stories 9.1 à 9.4, 10.1 à 10.7)
-**Bloquée par :** **Q2** (par le socle)
+**Bloquée par :** — (**levée le 25/09/2026**, même raison que la story 11.10 : le socle est complet depuis les stories 10.6 et 10.7)
 **Prérequis de contenu :** ceux des stories du socle ; les CV PDF ne sont pas requis.
 **Opération manuelle (Arnaud) :** **oui**, tag `v1.0.0` par le skill `release`, hôte proxy dans Nginx Proxy Manager configuré sans IP dès sa création, vérifications, DNS en dernier, mesures.
 
