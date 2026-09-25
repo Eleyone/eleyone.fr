@@ -1,0 +1,25 @@
+# Commits d'amorçage exemptés du verrou de revue de la PR de publication (AD-24, D-13 ; arbitrage
+# d'Arnaud du 25/09/2026, story 11.7).
+#
+# Le verrou exige que chaque commit de « main..dev » soit le squash d'une PR fusionnée par
+# verify-and-merge-pr. Le marqueur « (#N) » ne le prouve pas : Gitea l'ajoute à **tout** squash. Ce
+# fichier nomme donc les seuls squashs qui n'ont pas pu passer par ce script — ils ont été fusionnés
+# à la main sous la règle d'amorçage, avant que le script existe (livré par la story 0.7, PR n° 11).
+# Pour tout autre commit, la règle reste stricte.
+#
+# Trois options ont été écartées : interroger la forge PR par PR (preuve réelle, mais 113 appels et
+# une dépendance réseau dans un verrou de fusion, alors qu'AD-14 prévoit que le homelab tombe), une
+# borne d'amorçage assumée (« tout ce qui est avant X passe » ne dit ni combien ni lesquels), et une
+# revue rétroactive de la plage (le verrou vérifie la provenance, pas seulement l'existence d'une revue).
+#
+# Format : un SHA complet (40 hexadécimaux) par ligne, suivi de la raison. Un SHA mal formé est une
+# anomalie, jamais une ligne ignorée. Les deux premiers sont déjà sur main : ils n'apparaissent donc
+# plus dans « main..dev », et restent listés parce que la liste dit quels commits ont échappé au
+# script, non lesquels restent à publier.
+c2c789e9ec3842be217b59b534d41066bf9aee1d PR n° 1, story 0.1 : fusionnée à la main, avant verify-and-merge-pr
+9e14036ff04753d451891ebcc4d59d35c2ca024c PR n° 2, story 0.1 : fusionnée à la main, et sans aucune revue au titre de l'exception documentaire
+c73552b5975b72475b04650967dfee959e8a6528 PR n° 6, story 0.2 : fusionnée à la main, avant verify-and-merge-pr
+1a46403995b05f44d7179a0724d8a0e81cfcea37 PR n° 7, story 0.3 : fusionnée à la main, avant verify-and-merge-pr
+19763e044c0393b8e25262ba15bcd3f8c36f6992 PR n° 8, story 0.4 : fusionnée à la main, avant verify-and-merge-pr
+c7376d965f5def59358cb17413f346be77e52e1d PR n° 9, story 0.5 : fusionnée à la main, avant verify-and-merge-pr
+6cdb7b248e23b352712f53d91b1996fbdcb31fe7 PR n° 10, story 0.6 : fusionnée à la main, avant verify-and-merge-pr

@@ -37,6 +37,10 @@ set +x
 script_name=release-job
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 cd "$root"
+# Les expressions des deux canaux et la recherche d'un tag -rc de même arbre vivent dans la
+# bibliothèque, seul exemplaire pour ce job et pour le skill release du poste (point 19 d'AGENTS.md).
+# shellcheck source=../lib/release.sh
+. "$root/scripts/lib/release.sh"
 
 die() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 2; }
 refuse() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 1; }
@@ -62,14 +66,11 @@ ref=${GITHUB_REF:-}
 tag=${ref#refs/tags/}
 
 # Mêmes expressions **disjointes** que scripts/release/ship.sh et deploy/remote/deploy-site.sh :
-# ancrées, sans zéro de tête, un canal chacune.
-motif_production='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$'
-motif_repetition='^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)-rc\.(0|[1-9][0-9]*)$'
-
-if [[ $tag =~ $motif_production ]]; then
+# ancrées, sans zéro de tête, un canal chacune. Elles viennent de scripts/lib/release.sh.
+if [[ $tag =~ $release_tag_production ]]; then
   canal=production
   branche=main
-elif [[ $tag =~ $motif_repetition ]]; then
+elif [[ $tag =~ $release_tag_rehearsal ]]; then
   canal=repetition
   branche=dev
 else
@@ -106,38 +107,15 @@ printf '%s: le tag %s descend de origin/%s.\n' "$script_name" "$tag" "$branche"
 # production, cette absence n'est qu'un **avertissement**, jamais un refus.
 #
 # « même arbre » et non « même commit » : la publication dev → main est un fast-forward, mais un
-# hotfix ou une signature changeraient le commit sans changer une ligne du site. C'est ce que
-# « git diff --quiet <tag> <rc> » compare, et ses codes se distinguent comme ceux de grep : 0 aucune
-# différence, 1 des différences, au-delà une erreur.
-rc_de_meme_arbre() { # $1 = tag de production ; remplit « repetition_trouvee »
-  repetition_trouvee=""
-  local liste rc numero code_diff
-  # Le motif est un **glob littéral** : « . » n'y est pas un joker, à la différence d'une expression
-  # régulière construite depuis une variable (piège connu, docs/procedures/shell-scripts.md).
-  liste=$(git tag --list "$1-rc.*") || return 2
-  while IFS= read -r rc; do
-    [[ -n $rc ]] || continue
-    # Comparaison **littérale**, sans regex construite : le préfixe exact, puis un numéro entier.
-    [[ $rc == "$1-rc."* ]] || continue
-    numero=${rc#"$1-rc."}
-    [[ $numero =~ ^(0|[1-9][0-9]*)$ ]] || continue
-    code_diff=0
-    git diff --quiet "$1^{tree}" "$rc^{tree}" || code_diff=$?
-    case $code_diff in
-      0) repetition_trouvee=$rc; return 0 ;;
-      1) ;;
-      *) return 2 ;;
-    esac
-  done <<< "$liste"
-  return 1
-}
-
+# hotfix ou une signature changeraient le commit sans changer une ligne du site. La recherche vit
+# dans scripts/lib/release.sh, qui la partage avec le skill release : ici l'arbre comparé est celui
+# du tag lui-même, puisque ce job tourne après son push ; sur le poste, c'est la tête de dev.
 if [[ $canal == production ]]; then
-  repetition_trouvee=""
+  release_rc_found=""
   code=0
-  rc_de_meme_arbre "$tag" || code=$?
+  release_rc_same_tree "$tag" "$tag" || code=$?
   case $code in
-    0) printf '%s: répétition générale trouvée sur le même arbre : %s.\n' "$script_name" "$repetition_trouvee" ;;
+    0) printf '%s: répétition générale trouvée sur le même arbre : %s.\n' "$script_name" "$release_rc_found" ;;
     1)
       if [[ $tag == v1.0.0 ]]; then
         refuse "aucun tag v1.0.0-rc.N ne pointe sur un commit de même arbre : la première mise en ligne se répète avant de se faire (AD-22, D-6). Rien n'a été lancé."

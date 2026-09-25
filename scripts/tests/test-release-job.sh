@@ -51,9 +51,12 @@ aucune_etape() {
 # aurait ramenées. Affiche le SHA du commit de base.
 depot_de_test() {
   new_repo
-  mkdir -p "$work/depot/scripts/ci" "$work/depot/scripts/release"
+  mkdir -p "$work/depot/scripts/ci" "$work/depot/scripts/release" "$work/depot/scripts/lib"
   cp "$source_job" "$work/depot/scripts/ci/release-job.sh"
   chmod +x "$work/depot/scripts/ci/release-job.sh"
+  # Le job charge la bibliothèque de la mise en ligne (expressions des canaux, recherche d'un tag
+  # -rc de même arbre) : elle est recopiée avec lui, ainsi que les enveloppes qu'elle charge.
+  cp "$root/scripts/lib/release.sh" "$root/scripts/lib/shell.sh" "$work/depot/scripts/lib/"
   temoin checks-job scripts/ci/checks-job.sh
   temoin build-image scripts/release/build-image.sh
   temoin ship scripts/release/ship.sh
@@ -395,8 +398,9 @@ case_release_job_hors_depot_git() {
   base=$(depot_de_test)
   origin main "$base"
   rm -rf "$work/hors-depot"
-  mkdir -p "$work/hors-depot/scripts/ci"
+  mkdir -p "$work/hors-depot/scripts/ci" "$work/hors-depot/scripts/lib"
   cp "$source_job" "$work/hors-depot/scripts/ci/release-job.sh"
+  cp "$root/scripts/lib/release.sh" "$root/scripts/lib/shell.sh" "$work/hors-depot/scripts/lib/"
   run env -i PATH="$work/bin:$PATH" HOME="$work" TMPDIR="$work" GITHUB_REF=refs/tags/v1.2.3 \
     bash "$work/hors-depot/scripts/ci/release-job.sh"
   assert_eq 2 "$rc" "hors d'un dépôt git, c'est une anomalie (messages : $err)"

@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-25-2026 10:15'
+last_updated: '09-25-2026 15:30'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -144,7 +144,7 @@ development_status:
   11-4-forced-deploy-site-command-and-services: done
   11-5-delivery-and-release-workflow: done
   11-6-production-server-and-secrets-setup: backlog
-  11-7-release-skill: backlog
+  11-7-release-skill: done
   11-8-rehearse-release-skill: backlog
   11-9-first-release-chain-rehearsal: backlog
   11-10-thirty-second-test: backlog
@@ -316,10 +316,18 @@ open_questions:
     epic: 3
     question: "Le substitut d'amorçage de verify-and-merge-pr.sh a-t-il encore un
       rôle une fois la CI en place ?"
-    state: "Décrit comme « régime révolu mais pas mort » (docs/procedures/verify-and-merge-pr.md:44)
-      ; le code vit toujours (scripts/verify-and-merge-pr.sh:188-206)."
-    lands_in: "story 11.7 — epics.md:3011 porte « À trancher par Arnaud avant de commencer
-      cette story (D-13) »"
+    state: "**Répondue par la story 11.7, le 25/09/2026.** Le résumé « régime révolu
+      mais pas mort » laissait tomber la moitié de la phrase de la procédure, qui nommait
+      déjà le cas restant : la PR de mise en ligne dev → main, dont la base est main,
+      où checks.yaml n'existe pas encore. Le régime n'était donc pas révolu mais dormant,
+      armé pour la première mise en ligne. Décision prise et écrite : release ne le tolère
+      pas — il lit les statuts de la tête, un commit de dev, et y traite un « absent »
+      comme un refus (docs/procedures/release.md, scripts/release.sh, cas
+      release_ci_absente_refuse_l_amorcage). Le code de verify-and-merge-pr.sh:188-206
+      reste, mais ne couvre plus aucun cas vivant : sa procédure le dit désormais."
+    lands_in: "réglée — story 11.7 ; la leçon pour le suivi des questions ouvertes (un
+      « state » qui résume un document finit par le remplacer) est dans le fichier de
+      story 11-7-release-skill.md"
   - id: "epic-4-oq-cause-des-insertions-pures"
     epic: 4
     question: "Comment les deux insertions pures d'epics.md se sont-elles produites

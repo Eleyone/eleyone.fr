@@ -92,4 +92,4 @@ Linear history, no merge commits.
 - A production fix branches from `main` as `hotfix/*`, returns to `main` fast-forward, and `dev` is then rebased onto `main` — never cherry-picked, because a copied commit breaks the next fast-forward.
 - Nothing merges without: a non-blocking cross-vendor review report on the head commit, the public/private guard passing on the whole history, green CI, and a sprint status consistent with the story.
 
-`main` is the default branch here and is never rewritten. This repository is a **mirror**: the main forge is private, and only the mirror identity can write here. The tooling named above for releases and hotfixes is built in a later epic; what is written here is the rule it will follow.
+`main` is the default branch here and is never rewritten. This repository is a **mirror**: the main forge is private, and only the mirror identity can write here. The release tooling named above now exists — `scripts/release.sh`, which checks that `main` is still an ancestor of `dev`, applies the same gates, merges fast-forward-only and tags. The hotfix tooling is built later in the same epic; what is written here is the rule it will follow.

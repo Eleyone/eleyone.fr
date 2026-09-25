@@ -1,0 +1,13 @@
+# translationKey des neuf pages du **socle**, liste figée de FR-32 : la mise en ligne v1.0.0 ne part
+# pas sans elles. Elle ne bouge plus ; c'est ci/release-pages.txt, la liste cumulative, qui grandit
+# à chaque page publiée (D-5). scripts/release.sh vérifie, pour v1.0.0 **seulement**, que chaque clé
+# d'ici figure là-bas (docs/procedures/release.md).
+home
+about
+contact
+legal-notice
+privacy
+case-01
+group-chiliz
+case-02
+case-05
