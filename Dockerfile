@@ -9,10 +9,12 @@
 # Image du site (AD-13) : trois étapes, dont une seule produit quelque chose qui survit. Ce qui est
 # servi est exactement ce qui a passé les contrôles, et rien d'autre du dépôt n'entre dans l'image.
 #
-#   scripts/build-image.sh            construit l'image, contrôles au niveau standard
-#   scripts/build-image.sh --release  y ajoute les contrôles de mise en ligne (epic 11)
+#   scripts/build-image.sh                construit l'image, contrôles au niveau standard
+#   scripts/build-image.sh --release      y ajoute les contrôles de mise en ligne
+#   scripts/release/build-image.sh <tag>  l'enveloppe de mise en ligne, qui appelle la précédente
 #
-# La commande s'écrit une seule fois, dans ce script : elle porte le secret BuildKit et les arguments.
+# La commande s'écrit une seule fois, dans scripts/build-image.sh : elle porte les deux secrets
+# BuildKit et les arguments. L'enveloppe, elle, ne construit rien — elle prépare et nettoie.
 # Procédure : docs/procedures/build-image.md
 
 # --- outils épinglés ------------------------------------------------------------------------------
@@ -36,16 +38,34 @@ COPY . .
 # CHECK_LEVEL vaut « standard » ; seul scripts/build-image.sh --release passe « release » (AD-13).
 ARG CHECK_LEVEL=standard
 # Une seule instruction, enchaînée par « && » : un « ; » laisserait passer un contrôle en échec, ce
-# qui viderait l'image de sa garantie. Le secret est monté le temps de la commande et n'entre dans
-# aucune couche : « docker history » ne montre aucune valeur légale (AD-9).
+# qui viderait l'image de sa garantie. Les secrets sont montés le temps de la commande et n'entrent
+# dans aucune couche : « docker history » ne montre ni valeur légale, ni motif (AD-9, AD-12).
+#
+# **« export », et surtout pas un préfixe d'affectation.** En shell, « FOO=x cmd1 && cmd2 » ne pose
+# FOO que pour cmd1 : cmd2 ne la voit pas. L'instruction écrivait ainsi ENV_MODE et LEGAL_ENV_FILE
+# devant scripts/build.sh, et scripts/check.sh — qui reconstruit lui-même les deux rendus — tournait
+# **sans elles**, donc sans secret, avec le repli sur ci/legal-placeholder.env : l'image emportait des
+# mentions légales portant « VALEUR-FACTICE » (mesuré le 25/09/2026, story 11.3). Le « if » ne le
+# trahissait pas, « ${CHECK_LEVEL} » y étant interpolé par Docker avant que le shell ne le lise.
+# scripts/tests/test-build-image.sh refuse désormais toute affectation qui ne soit pas un « export ».
+#
+# **Un seul build, celui de scripts/check.sh.** Le « scripts/build.sh production » qui précédait était
+# redondant — check.sh construit le rendu de travail **et** le rendu de production avant de contrôler
+# —, et c'est cette redondance qui rendait le défaut ci-dessus invisible : un build correct précédait
+# le build fautif, dont sortait pourtant le public/ copié dans l'image.
+#
 # TOOLS_LOCAL_DIR désigne un dossier inexistant : le .tools/ d'un poste ne peut pas entrer ici — le
 # .dockerignore l'exclut —, mais la règle est écrite plutôt que supposée (story 3.13).
+# PRIVATE_PATTERNS_FILE désigne le second secret, **facultatif** : sans lui le fichier n'existe pas
+# (vérifié, BuildKit ne monte rien), C21 se contente de la forme et C22 ne tourne pas au niveau
+# standard. Au niveau release, les deux exigent la liste et l'instruction échoue sans elle (AD-12,
+# AD-21) : .dockerignore exclut docs/private/ du contexte, la liste ne peut entrer que par là.
 RUN --mount=type=secret,id=legal_env,required=true \
-    ENV_MODE=release \
-    LEGAL_ENV_FILE=/run/secrets/legal_env \
-    TOOLS_LOCAL_DIR=/nonexistent/.tools \
-    CHECK_LEVEL="${CHECK_LEVEL}" \
-    ./scripts/build.sh production \
+    --mount=type=secret,id=private_patterns \
+    export ENV_MODE=release \
+      LEGAL_ENV_FILE=/run/secrets/legal_env \
+      PRIVATE_PATTERNS_FILE=/run/secrets/private_patterns \
+      TOOLS_LOCAL_DIR=/nonexistent/.tools \
     && if [ "${CHECK_LEVEL}" = release ]; then ./scripts/check.sh --release; else ./scripts/check.sh; fi \
     && chmod -R a+rX public
 

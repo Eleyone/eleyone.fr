@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-25-2026 03:40'
+last_updated: '09-25-2026 06:00'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -140,7 +140,7 @@ development_status:
   epic-11: in-progress
   11-1-release-checks-and-expected-pages: done
   11-2-forbidden-patterns-on-production-output: done
-  11-3-release-image-build: backlog
+  11-3-release-image-build: done
   11-4-forced-deploy-site-command-and-services: backlog
   11-5-delivery-and-release-workflow: backlog
   11-6-production-server-and-secrets-setup: backlog
@@ -391,6 +391,29 @@ open_questions:
       du contrôle."
     lands_in: "arbitrage d'Arnaud — un contrôle de plus contre une classe de faute
       déjà vue trois fois, ou la règle seule ?"
+
+  - id: "epic-11-oq-valeurs-legales-dans-le-depot"
+    epic: 11
+    question: "Les huit HUGO_LEGAL_* doivent-elles rester injectées au build, alors
+      qu'elles sont toutes affichées sur les mentions légales et donc publiques par
+      construction ?"
+    state: "Posée par Arnaud le 25/09/2026, pendant la story 11.3. Vérifié : les huit
+      valeurs sont bien rendues par « legal-list » sur les deux pages légales (éditeur
+      — nom, adresse, courriel, téléphone, immatriculation ; hébergeur — nom, adresse,
+      courriel). Six sont sans enjeu ; deux seulement sont sensibles, la commune de
+      résidence et le téléphone. Trois différences séparent « public sur le site »
+      de « public dans le dépôt » : l'historique git ne s'efface pas alors qu'une
+      page se redéploie, un fichier de dépôt public est scrapé par les agrégateurs,
+      et commiter ces valeurs supposerait de les retirer de forbidden-patterns.txt
+      — ce qui cesserait de les attraper partout ailleurs, et prive C22 du point de
+      référence qui lui fait distinguer l'occurrence légitime de la fuite. Arbitrage
+      d'Arnaud le 25/09/2026 : **ne rien changer pour l'instant**, l'epic 11 ayant
+      déjà un défaut d'image à corriger et le changement touchant AD-9, le garde-fou,
+      la liste des motifs, C22, C23, le Dockerfile et la story 11.6."
+    lands_in: "à rouvrir après la première mise en ligne, quand la chaîne sera éprouvée
+      ; l'option intermédiaire est tracée ici — commiter les six valeurs sans enjeu
+      et garder commune et téléphone en secret, ce qui retirerait six secrets Gitea
+      de la story 11.6"
 
 action_items:
   - id: "epic-1-retro-item-1-story-1-5-couverture-du-garde-fou-g1-env"

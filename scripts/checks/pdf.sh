@@ -7,7 +7,10 @@
 #   - chaque fichier présent commence par « %PDF- », a au moins une page et pèse au plus 500 Ko ;
 #   - quand la liste des motifs est disponible, le **texte** (pdftotext), les **métadonnées**
 #     (pdfinfo) et le **XMP** (pdfinfo -meta) lui sont confrontés. Un téléphone ou une ville de
-#     résidence vit souvent dans les métadonnées d'un PDF exporté, que personne ne regarde.
+#     résidence vit souvent dans les métadonnées d'un PDF exporté, que personne ne regarde ;
+#   - **au niveau « release », la liste n'est plus facultative** : son absence, ou une liste sans
+#     aucun motif, est une anomalie (code 2), comme pour C22. Une mise en ligne ne se valide pas sur
+#     un garde-fou qui n'a rien lu (story 11.3).
 #
 # Le garde-fou ne peut pas chercher dans un binaire (« git grep -I ») : il charge donc la même
 # bibliothèque, scripts/lib/pdf.sh, et confronte lui-même chaque PDF poussé ou indexé (story 7.3).
@@ -77,6 +80,19 @@ if [[ -n $patterns_file && -f $patterns_file ]]; then
   grep -vE '^[[:space:]]*(#|$)' "$patterns_file" > "$patterns_text" 2>/dev/null || rc=$?
   ((rc <= 1)) || checks_die "liste des motifs illisible ($patterns_file)"
   [[ -s $patterns ]] || { patterns=""; patterns_text=""; }
+fi
+
+# **Au niveau « release », la liste est exigée**, et son absence est une anomalie — comme pour C22,
+# et à la différence du cas général juste au-dessus. AD-21 veut la confrontation « quand la liste est
+# disponible », ce qui est juste sur GitHub ou dans un clone sans docs/private/ : les autres règles y
+# gardent leur valeur. Au niveau d'une mise en ligne, non : une image partirait avec deux CV dont ni
+# le texte, ni les métadonnées, ni le XMP n'auraient été confrontés — précisément les endroits où un
+# téléphone ou une commune se cachent sans qu'on les voie. Une liste **présente mais vide** tombe
+# dans le même refus, « patterns » étant vidé ci-dessus : le piège du fichier vide est consigné
+# (docs/procedures/shell-scripts.md, story 0.8). Mesuré à la story 11.3 : le build de l'image
+# annonçait « liste des motifs absente, contenu non confronté » et rendait 0.
+if [[ ${CHECK_LEVEL:-standard} == release && -z $patterns ]]; then
+  checks_die "liste des motifs absente ou sans motif ($patterns_file) : au niveau « release », une mise en ligne ne valide pas deux CV dont le contenu n'a pas été confronté (AD-12, AD-21). Poser PRIVATE_PATTERNS_FILE."
 fi
 
 # Confronte un extrait à la liste sans jamais l'afficher, ni lui ni le motif. La recherche vit

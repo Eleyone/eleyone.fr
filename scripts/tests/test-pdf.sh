@@ -526,4 +526,55 @@ case_pdf_repli_sur_la_liste_du_depot() {
   assert_contains "aucun motif privé" "$out" "la liste du dépôt a été trouvée et le contenu confronté"
 }
 
+controle_release() { # $1 = chemin de la liste des motifs, vide pour aucune
+  run env CHECK_LEVEL=release CHECK_CV_DIR="$work/cv" \
+    PRIVATE_PATTERNS_FILE="${1:-$work/liste-absente.txt}" bash "$root/scripts/checks/pdf.sh"
+}
+
+case_pdf_release_exige_la_liste() {
+  # Hors « release », une liste absente laisse les règles de forme valoir et le contrôle le dit
+  # (case_pdf_sans_liste_de_motifs). Au niveau d'une mise en ligne, non : l'image partirait avec deux
+  # CV dont ni le texte, ni les métadonnées, ni le XMP n'auraient été confrontés — précisément les
+  # endroits où un téléphone ou une commune se cachent sans qu'on les voie (story 11.3).
+  vide; tests_pdf "$work/cv/cv-fr.pdf"; tests_pdf "$work/cv/cv-en.pdf"
+  controle_release ""
+  assert_eq 2 "$rc" "au niveau release, une liste absente est une anomalie, jamais un succès"
+  assert_contains "liste des motifs absente" "$err" "le message le dit"
+  assert_contains "release" "$err" "et nomme le niveau qui l'exige"
+}
+
+case_pdf_release_liste_sans_motif_est_une_anomalie() {
+  # Le fichier **présent mais vide** : le piège est consigné (shell-scripts.md, story 0.8). Une liste
+  # faite de commentaires passe le test d'existence et ne cherche rien.
+  vide; tests_pdf "$work/cv/cv-fr.pdf"; tests_pdf "$work/cv/cv-en.pdf"
+  printf '# que des commentaires\n\n   \n' > "$work/motifs-sans-motif.txt"
+  controle_release "$work/motifs-sans-motif.txt"
+  assert_eq 2 "$rc" "une liste sans motif ne vaut pas une liste"
+  assert_contains "liste des motifs absente ou sans motif" "$err" "le message le dit"
+}
+
+case_pdf_release_sans_cv_exige_quand_meme_la_liste() {
+  # Même sans CV à lire : l'absence de liste au niveau release est une anomalie de **configuration**,
+  # pas un manque de contenu. Sans cette lecture, un dossier vide aurait rendu 0 et le garde-fou
+  # serait resté ouvert le jour où les deux CV arrivent (point 18 : que laisse passer cette
+  # condition ?).
+  vide
+  controle_release ""
+  assert_eq 2 "$rc" "la liste est exigée avant même de regarder s'il y a des CV"
+}
+
+case_pdf_release_avec_la_liste() {
+  vide; tests_pdf "$work/cv/cv-fr.pdf"; tests_pdf "$work/cv/cv-en.pdf"
+  controle_release "$(liste)"
+  assert_eq 0 "$rc" "deux CV propres passent au niveau release (messages : $err)"
+  assert_contains "aucun motif privé" "$out" "le contenu a bien été confronté"
+}
+
+case_pdf_release_trouve_le_motif() {
+  vide; tests_pdf "$work/cv/cv-fr.pdf"; tests_pdf "$work/cv/cv-en.pdf" "$motif ici"
+  controle_release "$(liste)"
+  assert_eq 1 "$rc" "un motif dans un CV reste un écart, pas une anomalie"
+  assert_contains "contenu privé" "$err" "le signalement est celui de C21"
+}
+
 run_case "$@"

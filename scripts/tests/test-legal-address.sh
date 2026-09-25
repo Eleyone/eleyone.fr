@@ -165,6 +165,38 @@ case_legal_sans_loutil_file_le_fichier_est_lu_quand_meme() {
   assert_contains "robots.txt" "$err" "le fichier fautif est nommé"
 }
 
+case_legal_un_octet_nul_nest_ni_bruyant_ni_aveuglant() {
+  # Un fichier que « file » ne classe pas binaire mais qui porte un octet nul : la substitution de
+  # commande l'avale **en écrivant « ignored null byte in input » sur la sortie d'erreur**, qu'un
+  # lecteur prendrait pour un signalement. C22 l'avait appris et écrit (« tr -d '\0' ») ; C23 ne
+  # l'avait pas repris. Constaté le 25/09/2026 au premier build d'image de mise en ligne, où le
+  # « file » de CHECK_IMAGE classe autrement que celui du poste (story 11.3).
+  #
+  # Le classement de « file » est **remplacé** par une fonction qui répond « us-ascii », sans quoi
+  # le cas rendrait un verdict différent selon la machine — exactement ce qu'un cas ne doit jamais
+  # faire (docs/procedures/shell-scripts.md).
+  site
+  printf 'debut\000%s\000fin\n' "$adresse" > "$work/public/flux.bin"
+  run env CHECK_PUBLIC_ROOT="$work/public" HUGO_LEGAL_PUBLISHER_ADDRESS="$adresse" \
+    bash -c 'file() { printf "us-ascii\n"; }; export -f file; bash "$0"' \
+    "$root/scripts/checks/legal-address.sh"
+  # L'invariant d'abord : l'adresse collée à un octet nul est tout de même vue.
+  assert_eq 1 "$rc" "l adresse est vue malgré les octets nuls"
+  assert_contains "flux.bin" "$err" "le fichier fautif est nommé"
+  # Et le bruit ensuite. L'assertion ne cherche **pas** le texte de l'avertissement : bash le traduit,
+  # et le cas aurait rendu un verdict différent selon la langue du poste — « octet nul ignoré » ici,
+  # « ignored null byte » dans CHECK_IMAGE. Mesuré : une première écriture cherchait « null byte » et
+  # restait verte sur un contrôle fautif (piège connu, docs/procedures/shell-scripts.md). La règle
+  # affirmée est donc l'invariant lui-même : **toute ligne écrite sur la sortie d'erreur est un
+  # signalement de C23**, et rien d'autre.
+  local ligne
+  while IFS= read -r ligne; do
+    [[ -n $ligne ]] || continue
+    [[ $ligne == *"C23 :"* ]] \
+      || { printf 'ligne étrangère sur la sortie d erreur : %q\n' "$ligne" >&2; exit 1; }
+  done <<< "$err"
+}
+
 # Une adresse postale tient souvent sur deux lignes. Le constat de la revue de la PR n° 98 visait
 # juste en concluant qu'il fallait la comparaison native de bash, mais **son mécanisme était
 # faux** : « grep -F » avec un motif contenant un saut de ligne ne rate pas l'adresse, il découpe

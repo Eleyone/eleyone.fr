@@ -177,7 +177,14 @@ while IFS= read -r fichier_relatif; do
   # Une garde qu'aucun test ne distingue n'est pas une garde : la valeur de repli est donc écrite
   # en clair, et c'est elle qui porte l'intention (revue de la PR n° 98).
   [[ $encodage != *binary* ]] || continue
-  contenu=$(cat "$public/$fichier_relatif") \
+  # « tr -d '\0' » plutôt qu'un « cat » : une substitution de commande avale les octets nuls **en
+  # écrivant un avertissement sur la sortie d'erreur**, qu'un lecteur prendrait pour un signalement.
+  # C22 l'avait déjà appris et écrit ; C23, son aîné, ne l'avait pas repris — le point 19 d'AGENTS.md
+  # dans les deux sens. Constaté le 25/09/2026 au premier build d'image de mise en ligne : quatre
+  # avertissements « ignored null byte in input » au milieu des contrôles, sur des fichiers que le
+  # « file » de CHECK_IMAGE ne classe pas binaires là où celui du poste le fait. Le contenu confronté
+  # est le même : la substitution retirait déjà ces octets, en le disant tout haut.
+  contenu=$(tr -d '\0' < "$public/$fichier_relatif") \
     || checks_die "lecture impossible de $fichier_relatif : rien n'est affirmé."
   if contient_adresse "$contenu"; then
     signaler "$fichier_relatif" "C23 : l'adresse de l'éditeur apparaît dans une sortie qui n'est pas une page (AD-9)"
