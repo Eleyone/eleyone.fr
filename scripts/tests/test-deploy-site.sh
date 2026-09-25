@@ -654,13 +654,22 @@ case_deploy_site_projets_concordent() {
 # sa revue de spec) : c'est le fichier du dépôt qui parle le plus du serveur — commandes `ssh`,
 # `authorized_keys`, nom du réseau du proxy — et donc celui qui court le plus grand risque d'y écrire
 # une valeur réelle. Il emploie des substituts, `<utilisateur>@<hôte>` et `<réseau-du-proxy>`.
+#
+# **Les quatre fichiers de la story 11.8 s'y ajoutent** : le skill de répétition parle des deux
+# comptes du serveur, et `.env.example` est le fichier qui *invite* à écrire une valeur — deux
+# destinations y sont nommées, sans valeur. Étendre une liste existante plutôt que d'en écrire une
+# seconde ailleurs est le point 19 d'AGENTS.md appliqué à un contrôle.
 fichiers_qui_parlent_du_serveur() {
   printf '%s\n' \
     "$script" \
     "$compose_production" \
     "$compose_repetition" \
     "$root/docs/procedures/deploy-site.md" \
-    "$root/docs/procedures/serveur-de-production.md"
+    "$root/docs/procedures/serveur-de-production.md" \
+    "$root/docs/procedures/rehearse-release.md" \
+    "$root/scripts/rehearse-release.sh" \
+    "$root/.claude/skills/rehearse-release/SKILL.md" \
+    "$root/.env.example"
 }
 
 case_deploy_site_aucune_adresse() {

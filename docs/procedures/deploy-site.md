@@ -79,6 +79,8 @@ La réponse nomme les deux canaux. Un `status` qui répond est la preuve que la 
 
 Le conteneur de répétition n'est publié que sur la boucle locale du serveur : aucun DNS, aucun hôte proxy, aucun port public. L'accès passe par un tunnel SSH depuis le poste, puis `curl -I` et un navigateur sur `http://127.0.0.1:18080/` (AD-22).
 
+La séquence complète — tags, attente, tunnel, vérifications, retour arrière, arrêt — est tenue par le skill `rehearse-release` (`rehearse-release.md`, story 11.8) ; ce qui suit n'en décrit que l'accès.
+
 **Ce tunnel n'emprunte pas la clé de déploiement.** Celle-ci est posée avec l'option `restrict`, qui coupe la redirection de ports — le quatrième des quatre essais de `serveur-de-production.md` le vérifie exprès. Le tunnel passe donc par le compte d'administration du serveur, jamais par le compte de déploiement : les deux exigences d'AD-22 et de la story 11.6 ne se contredisent pas, elles s'appliquent à deux comptes différents.
 
 ## Tests

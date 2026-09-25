@@ -355,7 +355,9 @@ check_env_file() { # $1 = fichier, $2 = noms attendus
 }
 env_rc=0
 check_env_file ci/legal-placeholder.env "$legal_names" || env_rc=1
-check_env_file .env.example "$(printf '%s GITEA_TOKEN GITEA_URL GITEA_USER' "$legal_names" | tr ' ' '\n' | LC_ALL=C sort | tr '\n' ' ' | sed 's/ *$//')" || env_rc=1
+# ADMIN_HOST et DEPLOY_HOST sont les deux destinations de la répétition générale (story 11.8,
+# AD-22) : elles vivent dans .env sur le poste, et .env.example les nomme sans valeur.
+check_env_file .env.example "$(printf '%s ADMIN_HOST DEPLOY_HOST GITEA_TOKEN GITEA_URL GITEA_USER' "$legal_names" | tr ' ' '\n' | LC_ALL=C sort | tr '\n' ' ' | sed 's/ *$//')" || env_rc=1
 
 if [[ -z ${report//[$'\n']/} ]] && ((env_rc == 0)); then
   printf '%s: rubriques, marqueurs [TODO, vocabulaire, matériel vivant, groupes, encarts, format et parcours vérifiés.\n' "$script_name"
