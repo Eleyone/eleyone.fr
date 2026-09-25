@@ -1,0 +1,44 @@
+# Service de production du site (story 11.4, AD-14, AD-15).
+#
+# Ce fichier est copié sur le serveur de production au premier déploiement, dans le dossier « deploy »
+# recopié tel quel ; ensuite, seul le tag change. Une modification ici se recopie à la main, comme le
+# hook pre-receive. Procédure : docs/procedures/deploy-site.md
+#
+# Deux variables, aucune valeur par défaut :
+#
+#   - SITE_TAG : posée par deploy/remote/deploy-site.sh dans l'environnement de la commande, jamais
+#     dans un fichier. La forme « :? » **fait échouer Compose** si elle manque, au lieu de résoudre
+#     en « eleyone-site: » et de tirer un « latest » qui n'existe pas (constat A3 de la revue de
+#     spec). Un garde-fou qui s'ouvre en cas de panne ne garde rien.
+#   - PROXY_NETWORK : le nom du réseau Docker du reverse proxy, lu dans le fichier « .env » posé à
+#     côté de ce fichier **sur le serveur**. Ce nom ne peut pas entrer dans le dépôt (NFR-9), et ce
+#     .env-là n'est pas celui du poste de développement.
+#
+# Le réseau est déclaré « external: true » : il existe déjà, c'est celui du proxy, et Compose ne doit
+# ni le créer ni le supprimer.
+#
+# **Aucun port publié** (AD-14) : le conteneur ne s'atteint que depuis le réseau du proxy, où le nom
+# « site » est l'alias que Compose donne au service. L'hôte proxy transmet à « site:80 ».
+name: site
+
+services:
+  site:
+    # La valeur est entre guillemets : le message du « :? » contient un « , » et pouvait contenir
+    # un « : », que le lecteur YAML lirait comme un début de clé (vérifié, « docker compose config »).
+    image: "eleyone-site:${SITE_TAG:?SITE_TAG absente, le tag de l'image se pose par deploy-site.sh}"
+    restart: unless-stopped
+    networks:
+      - proxy
+    # Rotation par Docker (AD-15) : sans elle, le journal du conteneur grossit sans fin sur le
+    # disque du serveur. Le format du journal lui-même, sans adresse IP, vit dans l'image
+    # (deploy/nginx/site.conf).
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  proxy:
+    name: "${PROXY_NETWORK:?PROXY_NETWORK absente, le nom du réseau du proxy se lit dans le .env du serveur}"
+    external: true
