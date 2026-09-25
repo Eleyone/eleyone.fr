@@ -4,7 +4,7 @@ Le serveur de production n'accepte que des demandes précises, sur deux canaux s
 
 **Rien de ce qui désigne le serveur n'entre dans le dépôt** (NFR-9) : ni nom d'hôte, ni adresse, ni nom du compte de déploiement, ni nom du réseau du proxy. Les valeurs propres au serveur vivent dans un fichier `.env` posé **sur le serveur**, à côté des fichiers Compose, et jamais commité. Ce `.env`-là n'est pas celui du poste de développement.
 
-Cette procédure décrit le protocole et l'installation attendue. L'**installation réelle** — compte dédié, `authorized_keys`, copie des fichiers — est l'opération manuelle de la story 11.6. Ce qui envoie ces commandes est `scripts/release/ship.sh`, depuis le workflow de mise en ligne de la forge (`release-workflow.md`).
+Cette procédure décrit le protocole et l'installation attendue. L'**installation réelle** — compte dédié, `authorized_keys`, copie des fichiers, secrets de la forge — se fait à la main, et ses commandes sont dans `serveur-de-production.md` (story 11.6). Ce qui envoie ces commandes est `scripts/release/ship.sh`, depuis le workflow de mise en ligne de la forge (`release-workflow.md`).
 
 ## Le protocole
 
@@ -78,6 +78,8 @@ La réponse nomme les deux canaux. Un `status` qui répond est la preuve que la 
 ## Vérifier le canal de répétition
 
 Le conteneur de répétition n'est publié que sur la boucle locale du serveur : aucun DNS, aucun hôte proxy, aucun port public. L'accès passe par un tunnel SSH depuis le poste, puis `curl -I` et un navigateur sur `http://127.0.0.1:18080/` (AD-22).
+
+**Ce tunnel n'emprunte pas la clé de déploiement.** Celle-ci est posée avec l'option `restrict`, qui coupe la redirection de ports — le quatrième des quatre essais de `serveur-de-production.md` le vérifie exprès. Le tunnel passe donc par le compte d'administration du serveur, jamais par le compte de déploiement : les deux exigences d'AD-22 et de la story 11.6 ne se contredisent pas, elles s'appliquent à deux comptes différents.
 
 ## Tests
 

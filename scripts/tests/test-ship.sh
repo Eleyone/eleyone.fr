@@ -311,6 +311,82 @@ case_ship_check_env_ne_livre_rien() {
   assert_contains "absente(s) de l'environnement" "$err" "c'est bien le refus de l'absence"
 }
 
+# --- la liste des noms de secrets (story 11.6) ----------------------------------------------------------
+
+# Les trois noms DEPLOY_* ne sont plus écrits dans le script : ils sont lus dans
+# ci/release-secrets.txt, que scripts/release/check-forge-secrets.sh lit aussi et qu'un cas de
+# test-workflows.sh confronte au YAML de mise en ligne. Ces cas exercent ce que cette lecture doit
+# **refuser** — le vrai fichier du dépôt ne peut pas être abîmé pour les besoins d'un cas, donc
+# chacun se lance depuis une racine jetable qui ne porte que le script, la bibliothèque et la liste.
+racine_jetable() { # $1 = contenu de ci/release-secrets.txt ; rien = fichier absent
+  local base=$work/faux-depot
+  rm -rf "$base"
+  mkdir -p "$base/scripts/release" "$base/scripts/lib" "$base/ci"
+  cp "$script" "$base/scripts/release/ship.sh"
+  cp "$root/scripts/lib/secrets.sh" "$base/scripts/lib/secrets.sh"
+  [[ $# -eq 0 ]] || printf '%s\n' "$1" > "$base/ci/release-secrets.txt"
+  printf '%s' "$base/scripts/release/ship.sh"
+}
+
+livre_depuis() { # $1 = chemin du script, $2 = tag, $3… = surcharges d'environnement
+  local copie=$1 premier=$2; shift 2
+  local -a variables=()
+  mapfile -d '' -t variables < <(environnement "$@")
+  run env -i PATH="$work/bin:$PATH" TMPDIR="$(tmpdir_a_soi)" HOME="$work" \
+    "${variables[@]}" bash "$copie" "$premier"
+}
+
+case_ship_liste_de_secrets_absente() {
+  faux_docker; faux_ssh
+  livre_depuis "$(racine_jetable)" v1.2.3
+  refus_sans_rien_envoyer 2 "sans la liste des noms, rien ne part"
+  assert_contains "release-secrets.txt" "$err" "le message nomme le fichier attendu"
+}
+
+case_ship_liste_de_secrets_sans_deploy() {
+  # Une liste réduite aux motifs interdits n'exigerait **aucun** secret de connexion : ssh partirait
+  # sans clé et échouerait une fois « docker save » commencé.
+  faux_docker; faux_ssh
+  livre_depuis "$(racine_jetable 'PRIVATE_PATTERNS')" v1.2.3
+  refus_sans_rien_envoyer 2 "une liste sans entrée DEPLOY_* est une anomalie"
+  assert_contains "DEPLOY_" "$err" "le message dit ce qui manque dans la liste"
+}
+
+case_ship_liste_de_secrets_mal_formee() {
+  # Une ligne qu'on ne sait pas lire n'est pas ignorée en silence : elle arrêterait sinon le script
+  # sur une liste amputée, et un secret cesserait d'être exigé sans que rien ne le dise.
+  faux_docker; faux_ssh
+  livre_depuis "$(racine_jetable 'DEPLOY_SSH_KEY
+DEPLOY HOST
+DEPLOY_KNOWN_HOSTS')" v1.2.3
+  refus_sans_rien_envoyer 2 "une ligne mal formée est une anomalie"
+  assert_contains "ligne 2" "$err" "le message donne le numéro de la ligne fautive"
+}
+
+case_ship_liste_de_secrets_doublon() {
+  faux_docker; faux_ssh
+  livre_depuis "$(racine_jetable 'DEPLOY_SSH_KEY
+DEPLOY_HOST
+DEPLOY_SSH_KEY')" v1.2.3
+  refus_sans_rien_envoyer 2 "un nom écrit deux fois est une anomalie"
+  assert_contains "deux fois" "$err" "le message dit pourquoi"
+}
+
+case_ship_nom_ajoute_a_la_liste_devient_exige() {
+  # La preuve que la lecture **sert** : un quatrième nom DEPLOY_* posé dans la liste est aussitôt
+  # exigé de l'environnement, sans qu'une ligne du script change. C'est ce qu'une liste recopiée
+  # dans le script ne ferait pas.
+  faux_docker; faux_ssh
+  livre_depuis "$(racine_jetable 'PRIVATE_PATTERNS
+DEPLOY_SSH_KEY
+DEPLOY_HOST
+DEPLOY_KNOWN_HOSTS
+DEPLOY_AUTRE_CHOSE')" v1.2.3
+  refus_sans_rien_envoyer 1 "le nom ajouté est exigé comme les trois autres"
+  assert_contains "DEPLOY_AUTRE_CHOSE" "$err" "le message nomme la variable absente"
+  assert_contains "absente(s) de l'environnement" "$err" "c'est bien le refus de l'absence"
+}
+
 # --- les outils et l'image -----------------------------------------------------------------------------
 
 case_ship_image_absente() {

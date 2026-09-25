@@ -53,7 +53,9 @@ Aucun registre, aucune écriture sur le disque du runner : l'image part dans un 
 
 ## Les secrets de la forge
 
-Ils sont créés à la story 11.6, au niveau du dépôt, sous ces noms exacts. Le workflow les mappe dans l'environnement du **seul** pas qui lance le job ; aucune valeur n'est écrite dans le dépôt ni affichée par un script (NFR-9).
+Ils se créent à la main, au niveau du dépôt, sous ces noms exacts : les commandes sont dans `serveur-de-production.md`, et `scripts/release/check-forge-secrets.sh` confronte ce qui est posé aux douze attendus. Le workflow les mappe dans l'environnement du **seul** pas qui lance le job ; aucune valeur n'est écrite dans le dépôt ni affichée par un script (NFR-9).
+
+Les noms des quatre qui ne sont pas des valeurs légales vivent dans `ci/release-secrets.txt`, lu par `ship.sh` et par le contrôle ; les huit valeurs légales sont nommées dans `ci/legal-placeholder.env` (C18). Le YAML, lui, ne lisant aucun fichier du dépôt, en porte une copie qu'un cas de `scripts/tests/test-workflows.sh` tient égale à ces deux sources.
 
 | Secret | Contenu |
 | --- | --- |

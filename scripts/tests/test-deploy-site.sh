@@ -649,16 +649,59 @@ case_deploy_site_projets_concordent() {
 
 # NFR-9 : rien de ce qui désigne le serveur n'entre dans le dépôt. La seule adresse admise est la
 # boucle locale du canal de répétition, qui ne désigne aucune machine en particulier.
+#
+# **docs/procedures/serveur-de-production.md est dans la liste depuis la story 11.6** (constat S2 de
+# sa revue de spec) : c'est le fichier du dépôt qui parle le plus du serveur — commandes `ssh`,
+# `authorized_keys`, nom du réseau du proxy — et donc celui qui court le plus grand risque d'y écrire
+# une valeur réelle. Il emploie des substituts, `<utilisateur>@<hôte>` et `<réseau-du-proxy>`.
+fichiers_qui_parlent_du_serveur() {
+  printf '%s\n' \
+    "$script" \
+    "$compose_production" \
+    "$compose_repetition" \
+    "$root/docs/procedures/deploy-site.md" \
+    "$root/docs/procedures/serveur-de-production.md"
+}
+
 case_deploy_site_aucune_adresse() {
   local fichier trouve ligne
-  for fichier in "$script" "$compose_production" "$compose_repetition" "$root/docs/procedures/deploy-site.md"; do
+  while IFS= read -r fichier; do
+    [[ -f $fichier ]] || { printf 'fichier attendu absent : %s\n' "$fichier" >&2; exit 1; }
     shell_grep_into trouve -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+' "$fichier"
     while IFS= read -r ligne; do
       [[ -n $ligne ]] || continue
       [[ $ligne == 127.0.0.1 ]] \
         || { printf 'adresse IP dans %s (NFR-9)\n' "$fichier" >&2; exit 1; }
     done <<< "$trouve"
-  done
+  done <<< "$(fichiers_qui_parlent_du_serveur)"
+}
+
+# La garde que ce fichier n'avait pas et que son jumeau scripts/tests/test-ship.sh portait déjà
+# (case_ship_aucun_nom_de_compte) : une adresse IP n'est pas la seule façon de nommer le serveur, et
+# « compte@machine.domaine » en est une autre. Point 19 d'AGENTS.md — une leçon ne se porte pas toute
+# seule dans le fichier jumeau. Les substituts `<utilisateur>@<hôte>` ne correspondent pas au motif :
+# il exige des caractères de nom de part et d'autre du « @ ».
+#
+# **Le point n'est pas exigé dans la partie droite**, et c'est un correctif : le motif le demandait,
+# si bien qu'un nom d'hôte court — « compte@serveur », courant sur un réseau local — passait sans
+# être vu. Les chevrons des substituts suffisent à écarter le faux positif : « <utilisateur>@<hôte> »
+# ne correspond pas, « <hôte> » commençant par un caractère hors de la classe (constat de la revue
+# du code de la PR n° 122).
+case_deploy_site_aucun_nom_de_compte() {
+  local fichier trouve ligne
+  while IFS= read -r fichier; do
+    # La garde de l'aîné, « case_deploy_site_aucune_adresse » : sans elle, un fichier renommé ou
+    # déplacé ne produit aucune correspondance et le cas passe au vert sur un contrôle qui n'a rien
+    # lu. La leçon ne s'était pas portée d'une déclinaison à l'autre **du même fichier** — point 19
+    # d'AGENTS.md, et constat bloquant de la revue du code de la PR n° 122.
+    [[ -f $fichier ]] || { printf 'fichier attendu absent : %s\n' "$fichier" >&2; exit 1; }
+    shell_grep_into trouve -oE '[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+' "$fichier"
+    while IFS= read -r ligne; do
+      [[ -n $ligne ]] || continue
+      printf 'compte@serveur écrit en clair dans %s (NFR-9) : %s\n' "$fichier" "$ligne" >&2
+      exit 1
+    done <<< "$trouve"
+  done <<< "$(fichiers_qui_parlent_du_serveur)"
 }
 
 run_case "$@"

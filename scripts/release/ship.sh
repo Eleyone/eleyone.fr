@@ -15,7 +15,10 @@
 # Dans les deux cas, la livraison se termine par un « status », dont la sortie s'affiche : c'est la
 # seule confirmation que le job donne de ce qui tourne réellement (constat P2).
 #
-# Ce qu'il exige dans l'environnement — ce que la CI livre en secrets Gitea (AD-14) :
+# Ce qu'il exige dans l'environnement — ce que la CI livre en secrets Gitea (AD-14). **Leurs noms
+# ne sont pas recopiés ici** : ils sont lus dans ci/release-secrets.txt, la source unique que
+# scripts/release/check-forge-secrets.sh lit aussi et qu'un cas de test confronte au workflow. Ce
+# qui suit dit ce que chacun porte, et c'est le fichier qui dit lesquels existent :
 #
 #   - DEPLOY_SSH_KEY     la clé privée du compte de déploiement ;
 #   - DEPLOY_HOST        la destination, au format « utilisateur@hôte ». **Il n'y a pas de secret
@@ -49,6 +52,11 @@ cd "$root"
 
 die() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 2; }
 refuse() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 1; }
+
+# Seul secrets_read_names est employé ici ; scripts/lib/shell.sh, dont dépend l'autre fonction de
+# cette bibliothèque, n'est donc pas chargé.
+# shellcheck source=../lib/secrets.sh
+. "$root/scripts/lib/secrets.sh"
 
 # Le dépôt d'images. Le même nom vit dans scripts/release/build-image.sh, qui le construit, et dans
 # deploy/remote/deploy-site.sh, qui ne peut rien partager avec le dépôt (il est recopié seul sur le
@@ -95,7 +103,12 @@ fi
 # --- ce que l'environnement doit porter -----------------------------------------------------------------
 # Les absences sont **toutes** relevées avant de refuser : une CI mal configurée apprend d'un coup ce
 # qui lui manque, au lieu d'un nom par exécution (garde de l'aîné scripts/release/build-image.sh).
-variables=(DEPLOY_SSH_KEY DEPLOY_HOST DEPLOY_KNOWN_HOSTS)
+# La liste vient de ci/release-secrets.txt et n'est pas écrite ici : un nom ajouté là-bas devient
+# exigé ici sans qu'on y touche, et scripts/release/check-forge-secrets.sh le cherchera sur la forge.
+variables=()
+secrets_read_names "$root/ci/release-secrets.txt" variables DEPLOY_
+((${#variables[@]} > 0)) \
+  || die "aucune entrée DEPLOY_* dans ci/release-secrets.txt : aucun secret de livraison ne serait exigé, et la connexion échouerait sans dire pourquoi. Rien n'a été envoyé."
 manquantes=()
 for nom in "${variables[@]}"; do
   [[ -n ${!nom:-} ]] || manquantes+=("$nom")

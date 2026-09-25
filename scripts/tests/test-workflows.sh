@@ -193,19 +193,28 @@ case_workflow_release_meme_checkout_que_les_controles() {
   assert_eq "$sha_checks" "$sha_release" "le checkout est épinglé au même commit que celui des contrôles"
 }
 
-# Les noms des secrets sont **recopiés** dans le YAML : un fichier YAML ne sait pas lire
-# ci/legal-placeholder.env. C'est donc ce cas qui tient la copie égale à sa source, comme le point 19
-# d'AGENTS.md l'exige d'une liste qui ne peut pas vivre à un seul endroit. Une neuvième valeur légale
-# ajoutée à AD-9 fait échouer ce cas tant qu'elle n'est pas dans le workflow.
+# Les noms des secrets sont **recopiés** dans le YAML : un workflow d'Actions ne lit aucun fichier du
+# dépôt, et « ${{ secrets.NOM }} » s'écrit un nom à la fois. C'est donc ce cas qui tient la copie
+# égale à ses sources, comme le point 19 d'AGENTS.md l'exige d'une liste qui ne peut pas vivre à un
+# seul endroit. Les deux sources : ci/legal-placeholder.env pour les huit valeurs légales (AD-9) et
+# ci/release-secrets.txt pour les quatre autres (AD-12, AD-14, story 11.6). Une neuvième valeur
+# légale, ou un cinquième secret de déploiement, fait échouer ce cas tant qu'il n'est pas dans le
+# workflow — et ce cas est aussi ce qui fait que scripts/release/check-forge-secrets.sh cherche sur
+# la forge exactement ce que le job recevra.
 case_workflow_release_secrets_exactement_ceux_attendus() {
-  local brut obtenus attendus legaux
+  local brut obtenus attendus legaux autres
   lignes brut '^[[:space:]]+[A-Z_]+: \$\{\{ secrets\.[A-Z_]+ \}\}$' "$release_workflow"
   [[ -n $brut ]] || { echo "aucun secret mappé dans le workflow de mise en ligne" >&2; exit 1; }
   obtenus=$(sed -E 's/^[[:space:]]*([A-Z_]+):.*/\1/' <<< "$brut" | LC_ALL=C sort)
   shell_grep_into legaux -oE '^HUGO_LEGAL_[A-Z0-9_]+=' "$root/ci/legal-placeholder.env"
+  [[ -n $legaux ]] || { echo "aucune valeur légale dans ci/legal-placeholder.env" >&2; exit 1; }
+  # Les commentaires et les lignes vides de la liste sont écartés ici comme scripts/lib/secrets.sh
+  # les écarte : ce cas lit le fichier, il ne récite pas son contenu.
+  shell_grep_into autres -E '^[A-Za-z_][A-Za-z0-9_]*$' "$root/ci/release-secrets.txt"
+  [[ -n $autres ]] || { echo "aucun nom dans ci/release-secrets.txt" >&2; exit 1; }
   attendus=$(
     sed 's/=$//' <<< "$legaux"
-    printf 'PRIVATE_PATTERNS\nDEPLOY_SSH_KEY\nDEPLOY_HOST\nDEPLOY_KNOWN_HOSTS\n'
+    printf '%s\n' "$autres"
   )
   attendus=$(LC_ALL=C sort <<< "$attendus")
   assert_eq "$attendus" "$obtenus" "les secrets mappés sont exactement ceux d'AD-9, d'AD-12 et d'AD-14"
