@@ -6,7 +6,7 @@ Tout le travail vit dans le dépôt. Ce qui manque sur une machine neuve, c'est 
 
 | Élément | Pourquoi il manque | Comment le retrouver |
 | --- | --- | --- |
-| `.env` | jamais commité, refusé par le garde-fou | recréé à la main, d'après `.env.example` (dix variables, sans valeur) |
+| `.env` | jamais commité, refusé par le garde-fou | recréé à la main, d'après `.env.example`, qui porte **tous** les noms sans aucune valeur — les compter là plutôt qu'ici, un chiffre écrit dans une procédure vieillit |
 | `docs/private/` | dépôt git imbriqué, poussé sur un dépôt privé séparé de la forge | cloné dans `docs/private/` |
 | `.tools/` | binaires épinglés, ignorés par git | `scripts/ci/install-tools.sh --local` |
 | Outils du poste | hors dépôt | `jq`, `xmllint` (paquet `libxml2-utils`, contrôles HTML d'AD-10), Docker, `agy` authentifié, `uv` |
@@ -19,7 +19,7 @@ Tout le travail vit dans le dépôt. Ce qui manque sur une machine neuve, c'est 
    git config core.hooksPath .githooks
    ```
 3. **Cloner le dépôt privé** dans `docs/private/`. Il porte les cas bruts, la mémoire de party mode et `forbidden-patterns.txt`, dont le garde-fou a besoin pour auditer autre chose que des chemins. Sans lui, `check-private.sh` se replie sur les chemins seulement, et **un passage « chemins seulement » ne vaut pas audit**.
-4. **Recréer `.env`** à la racine, avec les dix variables de `.env.example` : les sept `HUGO_LEGAL_*` (AD-9) et les trois `GITEA_*` (AD-24). Les valeurs viennent de l'ancien poste ou d'un gestionnaire de mots de passe — jamais d'un canal qui les écrirait quelque part. Le fichier est déjà ignoré par git et refusé par le garde-fou.
+4. **Recréer `.env`** à la racine, avec **toutes** les variables de `.env.example` : les `HUGO_LEGAL_*` (AD-9), les `GITEA_*` (AD-24), et les deux destinations de la répétition générale, `ADMIN_HOST` et `DEPLOY_HOST` (AD-22, story 11.8). `.env.example` fait foi et ne porte aucune valeur ; un `cut -d= -f1 .env.example` en donne la liste à jour. Les valeurs viennent de l'ancien poste ou d'un gestionnaire de mots de passe — jamais d'un canal qui les écrirait quelque part. Le fichier est déjà ignoré par git et refusé par le garde-fou.
 5. **Installer les outils du poste** : `jq`, `xmllint` (`sudo apt install libxml2-utils` ; sans lui, les contrôles HTML s'arrêtent en anomalie et le verrou de fusion bloque), Docker utilisable dans le shell, `agy` authentifié (`agy models` répond), `uv` pour les scripts Python de BMAD.
 6. **Installer les outils épinglés** :
    ```bash
@@ -36,7 +36,7 @@ Six commandes, avec leur sortie attendue. Tant qu'une échoue, le poste n'est pa
 | `PRIVATE_PATTERNS_FILE=docs/private/forbidden-patterns.txt scripts/check-private.sh history` | rien, code 0 — **aucune mention « chemins seulement »** |
 | `scripts/sprint-consistency.sh` | `cohérent dans l'arbre de travail` |
 | `scripts/build.sh production` puis `scripts/build.sh work` | aucun avertissement ; la production ne contient pas les brouillons |
-| `scripts/env.sh sh -c 'env \| grep -c "^HUGO_LEGAL_"; env \| grep -c "^GITEA_" \|\| true'` | `7` puis `0` — les valeurs légales passent, les jetons non |
+| `scripts/env.sh sh -c 'env \| grep -c "^HUGO_LEGAL_"; env \| grep -c "^GITEA_" \|\| true'` | le nombre de `HUGO_LEGAL_*` de `.env.example`, puis `0` — les valeurs légales passent, les jetons non. **Le nombre n'est pas écrit ici** : il a changé une fois (sept, puis huit à la story 9.7) et la procédure avait gardé l'ancien. `cut -d= -f1 .env.example \| grep -c '^HUGO_LEGAL_'` donne l'attendu |
 | `scripts/ci/checks-job.sh` | `check: N contrôle(s) passés` — tout le job dans le conteneur de contrôle (`checks-job.md`) ; il prouve Docker, l'image et les scripts d'un coup |
 
 Une sixième vérification touche la forge, et n'a besoin d'aucune PR ouverte : lancer l'audit sur une PR **déjà fusionnée** appelle l'API sans rien modifier.
