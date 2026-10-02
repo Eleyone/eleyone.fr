@@ -14,8 +14,12 @@ La procédure fait foi : `docs/procedures/rehearse-release.md`. L'exécution est
 À retenir :
 
 - **deux temps.** `scripts/rehearse-release.sh <tag>` vérifie tout — tag, `.env`, port local, tags
-  libres relus depuis la forge — affiche le programme et **s'arrête là**. Le second appel, avec
-  `--run`, joue la répétition ;
+  libres relus depuis la forge, puis les **deux connexions** — affiche le programme et **s'arrête
+  là**, sans rien pousser. Le second appel, avec `--run`, joue la répétition ;
+- **la clé du poste porte une phrase de passe.** Si elle n'est pas déjà dans un agent, le script la
+  charge lui-même dans un agent privé, qu'il tue en sortant : la phrase de passe se tape **dans un
+  terminal**, l'audit compris. Sans terminal — ton cas —, le script s'arrête avant tout tag ; ne
+  cherche pas à contourner : demande à Arnaud de le lancer lui-même, ou de charger la clé avant ;
 - **`--run` est l'affaire d'Arnaud**, pas la tienne : il pousse deux tags, et un tag poussé ne se
   reprend pas — la forge le voit, le miroir public aussi, et le workflow part. Ne le passe que s'il
   l'a demandé pour cette répétition, au moment de l'opération ;
@@ -27,7 +31,7 @@ La procédure fait foi : `docs/procedures/rehearse-release.md`. L'exécution est
   clé de déploiement **refuse** une redirection de port (story 11.6) ;
 - **l'attente passe par `deploy-site status`**, jamais par l'API de la forge : c'est l'état vrai, et
   il ne dépend pas d'un homelab qui peut tomber ;
-- **un échec ne nettoie pas le serveur.** Le tunnel est tué, la répétition reste en service : son
-  conteneur, ses journaux et son image sont ce qu'il faut inspecter. Le script affiche la commande
-  d'arrêt ; ne la lance pas avant d'avoir regardé ;
+- **un échec ne nettoie pas le serveur.** Le tunnel et l'agent privé sont tués, la répétition
+  reste en service : son conteneur, ses journaux et son image sont ce qu'il faut inspecter. Le
+  script affiche la commande d'arrêt ; ne la lance pas avant d'avoir regardé ;
 - la répétition ne touche ni la production, ni le proxy, ni le DNS.

@@ -129,7 +129,7 @@ Attendu : `authorized_keys` en `-rw-------`, propriétaire `<utilisateur>`, dans
 
 La répétition générale se pilote **depuis le poste** : `scripts/rehearse-release.sh` y demande `status`, `rehearse rollback` et `rehearse stop` au compte de déploiement (`rehearse-release.md`). Il lui faut donc une clé de ce compte sur le poste. Ce n'est pas celle de la forge, que le poste ne garde pas, mais **une seconde clé**, restreinte par la même ligne : une clé par utilisateur, si bien que chacune se révoque sans toucher l'autre.
 
-Elle vit dans `~/.ssh` et y reste. À la différence de celle de la forge, elle **porte une phrase de passe** : elle dort sur un disque, pas dans un coffre de secrets. Le script se connecte en `BatchMode=yes` et ne saurait pas la taper : la clé se charge dans l'agent avant une répétition.
+Elle vit dans `~/.ssh` et y reste. À la différence de celle de la forge, elle **porte une phrase de passe** : elle dort sur un disque, pas dans un coffre de secrets. Le script se connecte en `BatchMode=yes`, où `ssh` ne la tape pas : la clé ne sert que chargée dans un agent. **Le script s'en charge lui-même** : si `status` ne répond pas, il la charge dans un agent privé, qui meurt avec lui, et la phrase de passe est demandée une fois, dans le terminal (`rehearse-release.md`, « La clé du poste, et l'agent privé »). Aucun agent permanent n'est nécessaire.
 
 ```bash
 ssh-keygen -t ed25519 -f ~/.ssh/eleyone_deploiement_poste -C "poste eleyone.fr"
@@ -312,7 +312,7 @@ Attendu : `Error: remote port forwarding failed for listen port 19090`, code non
 
 ### Les mêmes essais, avec la clé du poste
 
-Sa ligne est une autre ligne d'`authorized_keys` : qu'elle ait été bien posée ne se déduit pas de la première. À l'inverse des essais de la forge, ceux-ci passent par la configuration du poste, et l'entrée `Match` n'y propose que la clé du poste (`IdentitiesOnly yes`) : la clé de la forge, qui n'est pas dans l'agent, ne peut pas prendre le relais. Les mêmes essais, **sans `-i`** — c'est l'entrée `Match` du `~/.ssh/config` qui choisit la clé, comme elle le fera pendant la répétition. La clé se charge d'abord dans l'agent :
+Sa ligne est une autre ligne d'`authorized_keys` : qu'elle ait été bien posée ne se déduit pas de la première. À l'inverse des essais de la forge, ceux-ci passent par la configuration du poste, et l'entrée `Match` n'y propose que la clé du poste (`IdentitiesOnly yes`) : la clé de la forge, qui n'est pas dans l'agent, ne peut pas prendre le relais. Les mêmes essais, **sans `-i`** — c'est l'entrée `Match` du `~/.ssh/config` qui choisit la clé, comme elle le fera pendant la répétition. Ces essais se tapent à la main : la clé se charge d'abord dans l'agent du shell — pendant une répétition, c'est le script qui le fait, dans le sien :
 
 ```bash
 ssh-add ~/.ssh/eleyone_deploiement_poste
@@ -322,7 +322,7 @@ ssh -o BatchMode=yes <utilisateur>@<hôte>; echo "code=$?"
 ssh -o BatchMode=yes -N -o ExitOnForwardFailure=yes -R 19090:127.0.0.1:19090 <utilisateur>@<hôte>; echo "code=$?"
 ```
 
-Attendu, dans l'ordre : les deux lignes de `status` et `code=0` ; le refus de `id` et `code=1` ; le refus d'une session et `code=1` ; `Error: remote port forwarding failed for listen port 19090` et un code non nul. Le premier essai passé en `BatchMode=yes` prouve aussi ce que le script exigera : aucune question posée, ni phrase de passe ni empreinte d'hôte. S'il échoue sur `Permission denied (publickey)`, l'entrée `Match` ne s'applique pas — refaire la vérification par `ssh -G` — ou la clé n'est pas dans l'agent.
+Attendu, dans l'ordre : les deux lignes de `status` et `code=0` ; le refus de `id` et `code=1` ; le refus d'une session et `code=1` ; `Error: remote port forwarding failed for listen port 19090` et un code non nul. Le premier essai passé en `BatchMode=yes` prouve aussi ce que le script exigera de `ssh` : aucune question posée, ni phrase de passe ni empreinte d'hôte, une fois la clé dans un agent. S'il échoue sur `Permission denied (publickey)`, l'entrée `Match` ne s'applique pas — refaire la vérification par `ssh -G` — ou la clé n'est pas dans l'agent.
 
 Un essai qui réussit là où il devrait échouer : retirer **cette** ligne, celle qui finit par `poste eleyone.fr`, et la reposer.
 
@@ -462,4 +462,4 @@ Comme le hook `pre-receive` de la forge, ces fichiers ne se mettent pas à jour 
 - **`check-forge-secrets` refuse le jeton (401 ou 403)** : le jeton de `.env` n'a pas la portée des secrets du dépôt. Voir `gitea-token.md`.
 - **`check-forge-secrets` rend 404** : le dépôt n'est pas celui que le jeton peut lire, ou la version de la forge n'a pas ce point d'API.
 - **Un essai de l'étape 5 réussit alors qu'il devait échouer** : retirer la ligne de cette clé dans `authorized_keys` immédiatement, ne poser aucun secret, et reprendre l'étape 2.
-- **`Permission denied (publickey)` avec la clé du poste** : l'entrée `Match` du `~/.ssh/config` ne s'applique pas — `ssh -G` le montre —, ou la clé n'est pas chargée dans l'agent (`ssh-add -l`).
+- **`Permission denied (publickey)` avec la clé du poste** : l'entrée `Match` du `~/.ssh/config` ne s'applique pas — `ssh -G` le montre —, ou, pour les essais à la main, la clé n'est pas chargée dans l'agent (`ssh-add -l`). Pendant une répétition, le script charge la clé lui-même ; s'il s'arrête quand même sur ce message, c'est l'entrée `Match` ou la ligne d'`authorized_keys` qu'il faut regarder.

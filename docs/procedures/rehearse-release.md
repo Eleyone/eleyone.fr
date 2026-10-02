@@ -9,13 +9,14 @@ La procédure vaut pour **tout tag `vX.Y.Z-rc.N`**, dont la première répétiti
 ## Prérequis
 
 - Le serveur installé et les secrets posés sur la forge (`serveur-de-production.md`, story 11.6).
-- `git`, `ssh` et `curl` sur le poste.
+- `git`, `ssh` et `curl` sur le poste ; `ssh-agent`, `ssh-add` et `ssh-keygen`, livrés avec OpenSSH, quand la clé du poste attend sa phrase de passe.
 - `.env` à la racine du dépôt, avec **deux destinations au format `<utilisateur>@<hôte>`, sans port** :
   - `ADMIN_HOST` — le compte d'administration. Il ne sert qu'au **tunnel** et à la lecture des **journaux** ;
   - `DEPLOY_HOST` — le compte de déploiement, celui dont la clé restreinte n'accepte que les commandes de `deploy-site`. Même nom, même valeur que le secret de la forge.
-- Les deux comptes joignables sans question interactive : l'empreinte de l'hôte déjà dans le `known_hosts` du poste, et chaque clé chargée dans l'agent. Le script se connecte en `BatchMode=yes` : une question posée est un échec, pas une attente.
+- Les deux comptes joignables sans question posée **par `ssh`** : l'empreinte de l'hôte déjà dans le `known_hosts` du poste, et la clé du compte d'administration utilisable telle quelle — sans phrase de passe, ou déjà dans l'agent de l'utilisateur. Le script se connecte en `BatchMode=yes` : une question posée par `ssh` est un échec, pas une attente. La clé du poste fait exception : si elle attend sa phrase de passe, **le script la charge lui-même** dans un agent privé (« La clé du poste, et l'agent privé », plus bas).
 - Pour le compte de déploiement, **la clé du poste**, pas celle de la forge : une seconde clé restreinte par la même ligne d'`authorized_keys`, que l'entrée `Match host … user …` du `~/.ssh/config` donne à ce compte seul (`serveur-de-production.md`, « La clé du poste »). La clé de la forge ne quitte jamais son secret : le poste ne l'a pas, et n'a pas à l'avoir.
 - Le port `18080` libre sur le poste.
+- Un **terminal**, si la clé du poste n'est pas déjà dans un agent : la phrase de passe s'y tape. Sans terminal — la CI, un agent IA —, le script s'arrête avant tout tag et dit quoi faire.
 
 **Aucune valeur de `.env` n'est affichée** par le script, ni dans un message, ni dans un journal : un message nomme la variable, jamais son contenu (NFR-9).
 
@@ -29,10 +30,30 @@ La procédure vaut pour **tout tag `vX.Y.Z-rc.N`**, dont la première répétiti
 
 AD-22 (« accès par `ssh -L` ») et la story 11.6 (« la clé de déploiement refuse un tunnel ») ne se contredisent qu'en apparence : ils portent sur deux comptes différents.
 
+## La clé du poste, et l'agent privé
+
+La clé du poste porte une phrase de passe (`serveur-de-production.md`, « La clé du poste »). En `BatchMode=yes`, `ssh` ne la tape pas : elle ne sert que chargée dans un agent. Plutôt que d'exiger un agent permanent, qu'on oublie et qui garde la clé déchiffrée en mémoire, le script en démarre un **à lui**, seulement s'il en a besoin, et le tue en sortant :
+
+1. `status` répond du premier coup — la clé est déjà dans un agent, ou n'a pas de phrase de passe : rien n'est démarré ;
+2. sinon, et seulement si `ssh` n'a pas pu se connecter (code `255` ; un autre code est la réponse du serveur, qu'une clé chargée ne changerait pas), le script relève par `ssh -G` les clés que `ssh` proposerait au compte de déploiement. Le chemin de la clé n'est écrit nulle part dans le script : c'est l'entrée `Match` du `~/.ssh/config` qui le donne. `~` et `%d` y sont développés ; un chemin qui porte un autre jeton (`%r`, `%h`…) est écarté ;
+3. si aucune de ces clés n'a de phrase de passe, l'échec n'est pas une affaire d'agent : le script s'arrête et montre le message de `ssh`, destinations masquées ;
+4. sinon, un agent démarre, `ssh-add` y charge la ou les clés protégées — **la phrase de passe est demandée une fois**, dans le terminal —, puis `status` est redemandé. S'il échoue encore, le script s'arrête.
+
+L'agent est **privé** à double titre :
+
+- sa socket vit dans le dossier temporaire du script, créé en `0700`, et n'est jamais exportée : seules les connexions au **compte de déploiement** la reçoivent, avec `-o IdentityAgent=SSH_AUTH_SOCK` pour qu'une entrée du `~/.ssh/config` ne désigne pas un autre agent. Les connexions au compte d'administration gardent l'environnement de l'utilisateur, et sa clé d'administration, si elle vit dans **son** agent, continue de servir ;
+- il meurt avec le script, sur **tous** les chemins de sortie — succès, refus, anomalie, `Ctrl-C`, `TERM` — par le même piège que le tunnel. Le script ne tue que l'agent qu'il a démarré, jamais celui de l'utilisateur.
+
+Il est lancé par `ssh-agent -D -a <socket>` en tâche de fond, et non par `ssh-agent -s` : celui-ci se dédouble pour passer en arrière-plan. Le PID qu'il affiche est bien l'agent vivant, mais ce n'est plus un enfant du script — on ne peut ni l'attendre ni lire son code —, et sa socket ne se connaîtrait qu'en relisant sa sortie, voire en l'`eval`-uant. Au premier plan, `$!` est l'agent lui-même, exactement comme pour le tunnel.
+
+**Sans terminal**, `ssh-add` ne peut rien demander : il écrit son invite sur la sortie d'erreur, lit une fin de fichier et rend `1` aussitôt, sans attendre. `SSH_ASKPASS_REQUIRE=never` écarte la fenêtre graphique qu'il ouvrirait sinon quand un affichage est disponible. Le script s'arrête alors avant tout tag, en disant de le lancer dans un terminal ou de charger la clé dans un agent avant. Ces comportements ont été vérifiés avec OpenSSH 10.2p1, le 02/10/2026 : `setsid ssh-add <clé> < /dev/null` sur une clé d'essai protégée, `ssh-add` sous un pseudo-terminal (`script`), et `ssh -G` sur une configuration d'essai.
+
+L'audit fait la même chose que `--run` : il peut donc demander la phrase de passe, et son agent meurt avec lui. `--run` la redemande.
+
 ## Lancer
 
 ```bash
-scripts/rehearse-release.sh v0.1.0-rc.1           # audit : vérifie tout, n'agit sur rien
+scripts/rehearse-release.sh v0.1.0-rc.1           # audit : vérifie tout, connexions comprises, ne pousse rien
 scripts/rehearse-release.sh v0.1.0-rc.1 --run     # joue la répétition, deux tags poussés compris
 ```
 
@@ -40,7 +61,7 @@ Le **tag suivant se calcule** : `v0.1.0-rc.1` donne `v0.1.0-rc.2`. Il n'y a qu'u
 
 `--run` ne se déduit jamais. Pousser un tag est irréversible — la forge le voit, le miroir public aussi, et le workflow part —, et une action irréversible se demande explicitement, comme `--merge` pour `release`.
 
-Codes de sortie : `0` la répétition s'est déroulée en entier et tout est vérifié ; `1` refus (tag déjà posé, délai dépassé, serveur qui refuse) ou vérification en échec ; `2` anomalie (usage, tag mal formé, outil absent, `.env` absent ou incomplet, dépôt illisible, tunnel impossible, serveur muet).
+Codes de sortie : `0` la répétition s'est déroulée en entier et tout est vérifié ; `1` refus (tag déjà posé, délai dépassé, serveur qui refuse) ou vérification en échec ; `2` anomalie (usage, tag mal formé, outil absent, `.env` absent ou incomplet, dépôt illisible, compte injoignable ou clé du poste impossible à charger avant le premier tag, tunnel impossible, serveur muet).
 
 ## Avant toute action
 
@@ -51,8 +72,9 @@ Dans cet ordre, et sans rien pousser :
 3. **Le port `18080` est libre sur le poste.** S'il répond déjà, le tunnel ne pourrait pas s'y poser — et, surtout, les vérifications interrogeraient ce service-là en croyant parler au serveur.
 4. **Les deux tags sont libres**, relus depuis la forge par un `git fetch --tags` explicite. Les **deux**, avant le premier push : découvrir le second occupé après avoir poussé le premier laisserait une répétition à moitié jouée.
 5. **L'arbre de travail** : une modification en attente ne bloque pas — la répétition porte sur `origin/dev` —, mais elle est signalée, pour que personne ne croie répéter ce qu'il a sous la main.
+6. **Les deux connexions.** `status` doit répondre par le compte de déploiement — au besoin après le chargement de la clé du poste dans l'agent privé — et le compte d'administration doit accepter une connexion (`true`). Sans cela, `--run` pousserait le premier tag, irréversible, puis échouerait sur trois `status` muets : une répétition à moitié jouée. Un échec arrête tout, nomme le compte par son rôle et montre le message de `ssh`, destinations masquées.
 
-Sans `--run`, le script affiche le programme et s'arrête là.
+Sans `--run`, le script affiche le programme et s'arrête là : l'audit a vraiment éprouvé les deux connexions, et n'a rien poussé.
 
 ## L'enchaînement
 
@@ -109,7 +131,7 @@ Une vérification en échec arrête la répétition, à ce point de la séquence
 
 ## Après un échec : ce que le script n'arrête pas
 
-Le piège de sortie **tue le tunnel** — un processus laissé sur le poste est un déchet — mais **ne lance pas `rehearse stop`**.
+Le piège de sortie **tue le tunnel et l'agent privé** — un processus laissé sur le poste est un déchet, et l'agent garderait la clé déchiffrée — mais **ne lance pas `rehearse stop`**.
 
 `rehearse stop` arrête le projet distant *et supprime toutes les images `-rc`* (`deploy-site.md`). Le lancer automatiquement après un échec détruirait exactement ce qu'il faut inspecter : le conteneur qui tournait, ses journaux, l'image qui a servi. Une répétition qui rate est précisément le moment où l'on veut regarder.
 
@@ -134,4 +156,6 @@ Ni le service de production, ni Nginx Proxy Manager, ni le DNS. Le seul canal em
 bash scripts/tests/run.sh scripts/tests/test-rehearse-release.sh
 ```
 
-Les cas tournent **hors ligne** : de faux `ssh`, `curl`, `git` et `sleep` sont posés en tête de `PATH` et enregistrent leurs appels. Aucun cas ne pose de tag, ni localement ni sur la forge, n'ouvre de connexion, ni ne lit le `.env` du dépôt — chacun se lance depuis un dépôt git jetable qui porte le sien.
+Les cas tournent **hors ligne** : de faux `ssh`, `curl`, `git`, `sleep`, `ssh-agent`, `ssh-add` et `ssh-keygen` sont posés en tête de `PATH` et enregistrent leurs appels. Aucun cas ne pose de tag, ni localement ni sur la forge, n'ouvre de connexion, ni ne lit le `.env` du dépôt — chacun se lance depuis un dépôt git jetable qui porte le sien.
+
+La mort de l'agent privé est vérifiée sur chaque chemin de sortie rejouable : succès, refus, anomalie, et `SIGTERM` envoyé pendant l'attente. `SIGINT` ne l'est pas par la suite : un shell non interactif lancé en tâche de fond l'ignore, et bash ne laisse pas piéger un signal ignoré à l'entrée. Il a été vérifié une fois, le 02/10/2026, en lançant le script avec les mêmes faux binaires depuis un processus Python qui ne l'ignore pas : code `130`, agent arrêté.

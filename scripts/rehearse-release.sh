@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 # Répétition générale de la mise en ligne, sur le canal de répétition du serveur (story 11.8, AD-22).
 #
-#   rehearse-release.sh <tag vX.Y.Z-rc.N>         audit : vérifie tout, n'agit sur rien
+#   rehearse-release.sh <tag vX.Y.Z-rc.N>         audit : vérifie tout, connexions comprises, ne pousse rien
 #   rehearse-release.sh <tag vX.Y.Z-rc.N> --run   joue la répétition, deux tags poussés compris
 #
-# Ce que « --run » enchaîne, et rien d'autre :
+# Avant tout tag, dans les deux modes, les **deux comptes** sont éprouvés : « status » doit répondre
+# par le compte de déploiement, et le compte d'administration doit accepter une connexion. Si la clé
+# du poste attend sa phrase de passe, le script la charge dans un **agent ssh privé**, qu'il tue en
+# sortant (voir « les connexions, avant le premier tag », plus bas).
+#
+# Ce que « --run » enchaîne ensuite, et rien d'autre :
 #
 #   1. le tag <tag> est posé sur origin/dev et poussé — le workflow « release » construit l'image et
 #      la livre au canal de répétition (scripts/release/ship.sh, story 11.5) ;
@@ -36,7 +41,7 @@
 #
 # Codes de sortie : 0 la répétition s'est déroulée en entier et tout est vérifié ; 1 refus ou
 # vérification en échec (rien n'est arrêté, voir le message) ; 2 anomalie (usage, outil absent, .env,
-# dépôt, tunnel, serveur injoignable).
+# dépôt, compte injoignable ou clé impossible à charger avant le premier tag, tunnel, serveur muet).
 # Procédure : docs/procedures/rehearse-release.md
 set -euo pipefail
 # Même lancé avec « bash -x », la trace s'arrête ici : .env porte le nom du compte et de l'hôte du
@@ -219,32 +224,28 @@ if [[ -n $pending ]]; then
     "$script_name" "$(printf '%s\n' "$pending" | wc -l)" "${dev_sha:0:7}"
 fi
 
-# --- le programme, affiché avant d'agir ------------------------------------------------------------
-printf '%s: répétition générale %s puis %s, sur origin/dev (%s).\n' "$script_name" "$tag" "$suivant" "${dev_sha:0:7}"
-printf '  canal        : répétition, projet %s, publié sur 127.0.0.1:%s du serveur (AD-22)\n' "$projet_repetition" "$port"
-printf '  enchaînement : tag %s → attente → tunnel → vérifications → tag %s → attente → vérifications\n' "$tag" "$suivant"
-printf '                 → rehearse rollback %s → attente → vérifications → rehearse stop\n' "$tag"
-
-if [[ -z $run ]]; then
-  printf "%s: rien n'a été fait. Pour jouer la répétition : scripts/rehearse-release.sh %s --run.\n" "$script_name" "$tag"
-  printf "  --run pousse deux tags sur la forge, et un tag poussé ne se reprend pas : il se demande, il ne se déduit jamais.\n"
-  exit 0
-fi
-
 # --- le nettoyage, et ce qu'il ne fait pas (décision A7 de la revue de spec) ------------------------
-# Le tunnel est un processus **sur le poste** : le laisser ouvert est un déchet, et le piège le tue
-# toujours. « rehearse stop », lui, arrête le projet distant **et supprime toutes les images -rc**
-# (story 11.4) : le lancer automatiquement après un échec détruirait exactement ce qu'il faut
-# inspecter — le conteneur qui tournait, ses journaux, l'image qui a servi. Une répétition qui rate
-# est précisément le moment où l'on veut regarder. Le canal de répétition est par ailleurs isolé
+# Le piège est posé **ici**, avant la première connexion, et non plus juste avant le premier tag :
+# la vérification des connexions, qui suit, peut démarrer un agent ssh privé, et un agent laissé
+# derrière soi garderait la clé de déploiement déchiffrée en mémoire. Il faut donc que le piège
+# existe dès qu'un agent peut exister — l'audit compris.
+#
+# Le tunnel et l'agent sont des processus **sur le poste** : les laisser vivre est un déchet, et le
+# piège les tue toujours. « rehearse stop », lui, arrête le projet distant **et supprime toutes les
+# images -rc** (story 11.4) : le lancer automatiquement après un échec détruirait exactement ce qu'il
+# faut inspecter — le conteneur qui tournait, ses journaux, l'image qui a servi. Une répétition qui
+# rate est précisément le moment où l'on veut regarder. Le canal de répétition est par ailleurs isolé
 # (projet Compose distinct, hors du réseau du proxy, boucle locale seule) : un conteneur qui survit à
 # un échec ne gêne ni la production, ni le proxy, ni personne. Le piège **dit** donc que la
 # répétition tourne encore, et donne la commande pour l'arrêter.
-tmp=$(mktemp -d) || die "dossier temporaire impossible."
-# La sortie d'erreur du tunnel y est retenue plutôt que laissée filer vers le terminal : « nettoie »
-# supprime tout le dossier, ce journal compris.
+tmp=$(mktemp -d) || die "dossier temporaire impossible. Rien n'a été fait."
+# Les sorties d'erreur du tunnel et de l'agent y sont retenues plutôt que laissées filer vers le
+# terminal : « nettoie » supprime tout le dossier, ces journaux et la socket de l'agent compris.
 tunnel_journal="$tmp/tunnel.err"
+agent_journal="$tmp/agent.err"
 tunnel_pid=""
+agent_pid=""
+agent_socket=""
 repetition_en_cours=0
 
 ferme_le_tunnel() {
@@ -252,8 +253,11 @@ ferme_le_tunnel() {
   local pid=$tunnel_pid code=0
   tunnel_pid=""
   if kill -0 "$pid" 2> /dev/null; then
-    if ! kill "$pid" 2> /dev/null; then
+    if ! kill "$pid" 2> /dev/null && kill -0 "$pid" 2> /dev/null; then
+      # Toujours vivant et impossible à arrêter : « wait » l'attendrait indéfiniment, et le script ne
+      # rendrait jamais la main. On le dit, et on s'en va.
       printf "%s: le tunnel (pid %s) n'a pas pu être arrêté : le fermer à la main.\n" "$script_name" "$pid" >&2
+      return 0
     fi
   fi
   # 143 est le code attendu d'un processus qu'on vient d'arrêter : il n'apprend rien, et il est lu
@@ -264,9 +268,33 @@ ferme_le_tunnel() {
   fi
 }
 
+# Le pendant de ferme_le_tunnel, pour le second processus durable du script. Il ne tue **que l'agent
+# que le script a démarré** : agent_pid n'est rempli que par demarre_l_agent, jamais lu dans
+# l'environnement — l'agent de l'utilisateur, s'il en a un, n'est pas le nôtre.
+ferme_l_agent() {
+  [[ -n $agent_pid ]] || return 0
+  local pid=$agent_pid code=0
+  agent_pid=""
+  agent_socket=""
+  if kill -0 "$pid" 2> /dev/null; then
+    # Même garde que pour le tunnel : un agent vivant qu'on n'a pas pu arrêter ne s'attend pas.
+    if ! kill "$pid" 2> /dev/null && kill -0 "$pid" 2> /dev/null; then
+      printf "%s: l'agent ssh privé (pid %s) n'a pas pu être arrêté : il garde la clé de déploiement en mémoire, le tuer à la main.\n" "$script_name" "$pid" >&2
+      return 0
+    fi
+  fi
+  # ssh-agent intercepte SIGTERM, supprime sa socket et sort en **2** (« exiting on signal 15 ») ;
+  # 143 si le signal l'atteint avant son gestionnaire. Mesuré avec OpenSSH 10.2p1 (point 10).
+  wait "$pid" 2> /dev/null || code=$?
+  if ((code != 0 && code != 2 && code != 143)); then
+    printf "%s: l'agent ssh privé (pid %s) s'est terminé avec le code %s.\n" "$script_name" "$pid" "$code" >&2
+  fi
+}
+
 nettoie() {
   local code=$?
   ferme_le_tunnel
+  ferme_l_agent
   rm -rf "$tmp"
   if ((code != 0 && repetition_en_cours == 1)); then
     printf "%s: **la répétition tourne encore sur le serveur** — elle n'est pas arrêtée automatiquement.\n" "$script_name" >&2
@@ -306,13 +334,194 @@ masque_destinations() { # lit l'entrée standard, écrit la sortie expurgée
   done
 }
 
+# **Toute** connexion au compte de déploiement passe par ici, et elle seule reçoit l'agent privé.
+# Sa socket n'est jamais exportée : elle n'entre que dans l'environnement de cet appel-ci. Les appels
+# au compte d'administration gardent ainsi l'environnement de l'utilisateur, et la clé
+# d'administration qui vit peut-être dans **son** agent continue de servir au tunnel et aux journaux.
+# « IdentityAgent=SSH_AUTH_SOCK » fait lire à ssh la variable d'environnement même si une entrée du
+# ~/.ssh/config désigne un autre agent : une option de la ligne de commande l'emporte sur la
+# configuration (vérifié par « ssh -G », OpenSSH 10.2p1).
+ssh_deploiement() { # $@ = arguments de ssh après les options communes et la destination
+  if [[ -n $agent_socket ]]; then
+    SSH_AUTH_SOCK=$agent_socket ssh "${ssh_options[@]}" -o IdentityAgent=SSH_AUTH_SOCK "$deploy_host" "$@"
+  else
+    ssh "${ssh_options[@]}" "$deploy_host" "$@"
+  fi
+}
+
 sortie_serveur=""
 demande_au_serveur() { # $@ = mots de la demande ; remplit sortie_serveur, rend le code de ssh
   local code=0 brute
-  brute=$(ssh "${ssh_options[@]}" "$deploy_host" "$*" < /dev/null 2>&1) || code=$?
+  brute=$(ssh_deploiement "$*" < /dev/null 2>&1) || code=$?
   sortie_serveur=$(printf '%s\n' "$brute" | masque_destinations)
   return "$code"
 }
+
+# --- les connexions, avant le premier tag ---------------------------------------------------------
+# Les deux comptes sont éprouvés **avant** que quoi que ce soit ne soit poussé, dans l'audit comme
+# avec « --run ». Sans cela, une clé de déploiement inutilisable laissait « --run » pousser le premier
+# tag — irréversible : la forge, le miroir public, le workflow qui part — puis échouer sur trois
+# « status » muets : une répétition à moitié jouée.
+#
+# ## La clé du poste, et l'agent privé
+#
+# Le compte de déploiement reçoit, depuis le poste, une clé **protégée par une phrase de passe**
+# (docs/procedures/serveur-de-production.md, « La clé du poste »). En BatchMode, ssh ne la tape
+# pas : elle ne sert que chargée dans un agent. Plutôt que d'exiger un agent permanent qu'on oublie,
+# le script en démarre un **à lui**, seulement s'il en a besoin, et le tue en sortant :
+#
+#   1. « status » répond du premier coup (clé déjà dans un agent, ou sans phrase de passe) : rien
+#      n'est démarré ;
+#   2. sinon, et seulement si ssh n'a pas pu se connecter (code 255 — un autre code est la réponse
+#      du serveur, que charger une clé ne changerait pas), les clés que ssh proposerait à ce compte
+#      sont relevées par « ssh -G », jamais écrites ici en dur ;
+#   3. aucune d'elles n'est protégée : l'échec n'est pas une affaire d'agent, le script s'arrête ;
+#   4. sinon, un agent privé démarre, « ssh-add » y charge la ou les clés protégées — la phrase de
+#      passe est demandée une fois, sur le terminal —, et « status » est redemandé.
+#
+# **Sans terminal** (CI, agent IA), « ssh-add » ne peut rien demander : mesuré avec OpenSSH 10.2p1,
+# il écrit son invite sur la sortie d'erreur, lit une fin de fichier et rend 1 aussitôt, sans attendre
+# (« setsid ssh-add <clé> < /dev/null »). « SSH_ASKPASS_REQUIRE=never » écarte la fenêtre graphique
+# qu'il ouvrirait sinon quand DISPLAY est posé : personne ne serait là pour y répondre. Le script
+# s'arrête alors en disant quoi faire.
+readonly agent_max=20      # 20 × 1 s pour que l'agent écoute sur sa socket
+readonly agent_delai=1
+
+# Les clés que ssh proposerait au compte de déploiement, et parmi elles celles qu'une phrase de passe
+# protège. « ssh -G » affiche la configuration résolue **sans se connecter** ; sa sortie porte aussi
+# le nom de l'hôte, elle n'est donc jamais affichée. ssh y laisse « ~ » et les jetons « %d » tels
+# quels (vérifié, OpenSSH 10.2p1) : les deux sont développés vers $HOME ; un chemin qui porte un autre
+# jeton (« %r », « %h »…) n'est pas deviné, il est écarté — le message final dit alors de charger la
+# clé soi-même.
+cles_protegees=()
+releve_les_cles_protegees() {
+  local config ligne fichier outil
+  cles_protegees=()
+  # Les outils sont exigés **avant** le premier « ssh-keygen » : absent, il rendrait 127, et une clé
+  # sans phrase de passe serait prise pour une clé protégée.
+  for outil in ssh-agent ssh-add ssh-keygen; do
+    command -v "$outil" > /dev/null 2>&1 \
+      || die "$outil est introuvable : il faudrait charger la clé de déploiement dans un agent, et ce poste n'a pas les outils d'OpenSSH pour le faire. Rien n'a été poussé."
+  done
+  config=$(ssh -G "$deploy_host" < /dev/null 2> /dev/null) \
+    || die "« ssh -G » n'a pas pu lire la configuration ssh du compte de déploiement : vérifier ~/.ssh/config. Rien n'a été poussé."
+  while IFS= read -r ligne; do
+    [[ $ligne == "identityfile "* ]] || continue
+    fichier=${ligne#identityfile }
+    case $fichier in
+      "~/"*) fichier=$HOME/${fichier#"~/"} ;;
+      "%d/"*) fichier=$HOME/${fichier#"%d/"} ;;
+    esac
+    [[ $fichier != *%* ]] || continue
+    [[ -f $fichier && -r $fichier ]] || continue
+    # « -P '' » essaie une phrase de passe vide **sans rien demander**, même sur un terminal (vérifié
+    # sous un pseudo-terminal) : 0, la clé n'est pas protégée ; autre chose, elle l'est — ou elle est
+    # illisible, et « ssh-add » le dira alors lui-même.
+    if ! ssh-keygen -y -P '' -f "$fichier" < /dev/null > /dev/null 2>&1; then
+      cles_protegees+=("$fichier")
+    fi
+  done <<< "$config"
+}
+
+# **Pas de « ssh-agent -s ».** Celui-là se dédouble et passe en arrière-plan : le PID qu'il affiche
+# est bien l'agent vivant (vérifié), mais ce n'est plus un enfant du script — rattaché à un autre
+# parent, on ne peut ni l'attendre ni lire son code —, et récupérer sa socket exigerait de relire sa
+# sortie, voire de l'« eval ». « -D » le garde au premier plan : lancé en tâche de fond du script,
+# « $! » est l'agent lui-même, comme pour le tunnel. « -a » pose sa socket dans le dossier temporaire
+# du script (créé par mktemp en 0700), que le nettoyage supprime : aucune sortie à relire.
+# L'agent se place lui-même dans son propre groupe de processus (mesuré : son PGID est son PID) : un
+# Ctrl-C ne l'atteint pas, c'est le piège qui le tue.
+demarre_l_agent() {
+  local essai=0 code
+  agent_socket=$tmp/agent.sock
+  ssh-agent -D -a "$agent_socket" < /dev/null > /dev/null 2> "$agent_journal" &
+  agent_pid=$!
+  while :; do
+    if ! kill -0 "$agent_pid" 2> /dev/null; then
+      agent_pid=""
+      agent_socket=""
+      printf "%s: ce que ssh-agent a répondu :\n" "$script_name" >&2
+      masque_destinations < "$agent_journal" >&2
+      die "l'agent ssh privé s'est arrêté aussitôt (chemin de socket trop long pour TMPDIR ?). Rien n'a été poussé."
+    fi
+    # « ssh-add -l » interroge l'agent : 1, il répond et ne porte aucune clé — il écoute ; 2, personne
+    # n'écoute encore sur la socket.
+    code=0
+    SSH_AUTH_SOCK=$agent_socket ssh-add -l < /dev/null > /dev/null 2>&1 || code=$?
+    ((code > 1)) || return 0
+    ((essai < agent_max)) \
+      || die "l'agent ssh privé ne répond pas sur sa socket après $((agent_max * agent_delai)) s. Rien n'a été poussé."
+    essai=$((essai + 1))
+    sleep "$agent_delai"
+  done
+}
+
+# La sortie d'erreur de « ssh-add » est retenue, puis affichée expurgée. L'invite de la phrase de
+# passe n'y passe pas quand un terminal existe : ssh-add l'écrit sur /dev/tty (vérifié sous un
+# pseudo-terminal), si bien que la retenir ne cache pas la question.
+charge_les_cles() {
+  local sortie code=0
+  sortie=$(SSH_AUTH_SOCK=$agent_socket SSH_ASKPASS_REQUIRE=never ssh-add "${cles_protegees[@]}" 2>&1) || code=$?
+  if ((code != 0)); then
+    printf "%s: ce que ssh-add a répondu :\n" "$script_name" >&2
+    printf '%s\n' "$sortie" | masque_destinations >&2
+    die "la clé de déploiement n'a pas pu être chargée (ssh-add, code $code) : phrase de passe refusée, ou **aucun terminal** pour la demander (CI, agent IA). Lancer le script dans un terminal, ou charger la clé dans un agent avant (ssh-add). Rien n'a été poussé."
+  fi
+  printf '%s\n' "$sortie" | masque_destinations
+}
+
+verifie_les_connexions() {
+  local code=0 premier_refus sortie
+  printf "%s: vérification des connexions, avant tout tag.\n" "$script_name"
+  demande_au_serveur status || code=$?
+  if ((code != 0)); then
+    premier_refus=$sortie_serveur
+    if ((code != 255)); then
+      printf "%s: ce que le compte de déploiement a répondu, destinations masquées (NFR-9) :\n%s\n" "$script_name" "$premier_refus" >&2
+      die "le compte de déploiement a refusé « status » (code $code) : la connexion passe, c'est le serveur qui répond non. Rien n'a été poussé."
+    fi
+    releve_les_cles_protegees
+    if ((${#cles_protegees[@]} == 0)); then
+      printf "%s: ce que ssh a répondu, destinations masquées (NFR-9) :\n%s\n" "$script_name" "$premier_refus" >&2
+      die "le compte de déploiement ne répond pas à « status » (ssh, code $code), et aucune des clés que ssh lui propose n'est protégée par une phrase de passe : un agent n'y changerait rien. Vérifier l'empreinte de l'hôte, l'entrée « Match » du ~/.ssh/config (ssh -G) et la clé du poste. Rien n'a été poussé."
+    fi
+    printf "%s: le compte de déploiement attend une clé protégée par une phrase de passe : chargement dans un agent privé, qui s'arrêtera avec le script.\n" "$script_name"
+    demarre_l_agent
+    charge_les_cles
+    code=0
+    demande_au_serveur status || code=$?
+    if ((code != 0)); then
+      printf "%s: ce que ssh a répondu, destinations masquées (NFR-9) :\n%s\n" "$script_name" "$sortie_serveur" >&2
+      die "le compte de déploiement ne répond toujours pas à « status » (ssh, code $code), clé chargée : vérifier l'empreinte de l'hôte, l'entrée « Match » du ~/.ssh/config (ssh -G) et la ligne de la clé du poste dans authorized_keys. Rien n'a été poussé."
+    fi
+  fi
+  printf "  ok      compte de déploiement : « status » répond\n"
+  # Le compte d'administration garde l'environnement de l'utilisateur : la socket de l'agent privé
+  # n'y entre pas (voir ssh_deploiement).
+  code=0
+  sortie=$(ssh "${ssh_options[@]}" "$admin_host" true < /dev/null 2>&1) || code=$?
+  if ((code != 0)); then
+    printf "%s: ce que ssh a répondu, destinations masquées (NFR-9) :\n" "$script_name" >&2
+    printf '%s\n' "$sortie" | masque_destinations >&2
+    die "le compte d'administration ne répond pas (ssh, code $code) : le tunnel et les journaux passent par lui. Vérifier l'empreinte de l'hôte et sa clé dans l'agent de l'utilisateur. Rien n'a été poussé."
+  fi
+  printf "  ok      compte d'administration : la connexion répond\n"
+}
+
+verifie_les_connexions
+
+# --- le programme, affiché avant d'agir ------------------------------------------------------------
+printf '%s: répétition générale %s puis %s, sur origin/dev (%s).\n' "$script_name" "$tag" "$suivant" "${dev_sha:0:7}"
+printf '  canal        : répétition, projet %s, publié sur 127.0.0.1:%s du serveur (AD-22)\n' "$projet_repetition" "$port"
+printf '  enchaînement : tag %s → attente → tunnel → vérifications → tag %s → attente → vérifications\n' "$tag" "$suivant"
+printf '                 → rehearse rollback %s → attente → vérifications → rehearse stop\n' "$tag"
+
+if [[ -z $run ]]; then
+  printf "%s: les deux connexions répondent, et rien n'a été poussé. Pour jouer la répétition : scripts/rehearse-release.sh %s --run.\n" "$script_name" "$tag"
+  printf "  --run pousse deux tags sur la forge, et un tag poussé ne se reprend pas : il se demande, il ne se déduit jamais.\n"
+  exit 0
+fi
+
 
 # Le tag réellement en service sur le canal de répétition, lu dans la sortie de « status ». La
 # comparaison porte sur le **jeton entier** « eleyone-site:<tag> » : chercher la sous-chaîne

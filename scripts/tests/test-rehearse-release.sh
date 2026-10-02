@@ -2,7 +2,8 @@
 # Répétition générale de la mise en ligne (story 11.8, AD-13, AD-15, AD-22) : ce que le skill
 # refuse, ce qu'il envoie, à quel compte, et ce qu'il **n'arrête pas** après un échec.
 #
-# **Aucun cas ne lance ssh, curl, docker ni git push.** De faux binaires sont posés en tête de PATH
+# **Aucun cas ne lance ssh, ssh-agent, ssh-add, ssh-keygen, curl, docker ni git push.** De faux
+# binaires sont posés en tête de PATH
 # et enregistrent leurs appels ; le vrai git ne sert que dans un dépôt jetable, et aucun tag n'est
 # posé ailleurs que là. La suite reste hors ligne (story 0.9), et ne lit jamais le .env du dépôt :
 # chaque cas écrit le sien dans sa racine jetable.
@@ -16,7 +17,8 @@
 # git réel et jetable, faux git qui ne dévie que pour « fetch » et « push », faux sleep qui n'attend
 # pas). Garde ajoutée ici, qu'aucun aîné n'avait : un faux ssh qui **survit** quand on lui demande un
 # tunnel, pour qu'un cas puisse constater que le piège de sortie l'a bien tué. Le tableau complet est
-# dans le fichier de story.
+# dans le fichier de story. Le faux ssh-agent reprend cette garde pour le second processus durable du
+# script, l'agent privé : il survit, et les cas constatent qu'il est tué sur chaque chemin de sortie.
 . "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 
 script=$root/scripts/rehearse-release.sh
@@ -41,17 +43,34 @@ faux_ssh() {
     printf 'dors=%q\n' "$vrai_sleep"
     cat <<'FAUX'
 printf '%s\n' "$*" >> "$w/ssh-args"
-dest=""; cmd=""; tunnel=0
+dest=""; cmd=""; tunnel=0; config=0
 while [ $# -gt 0 ]; do
   case "$1" in
     -o|-L|-i) shift 2 ;;
     -N) tunnel=1; shift ;;
+    -G) config=1; shift ;;
     -*) shift ;;
     *) if [ -z "$dest" ]; then dest=$1; else cmd="$cmd $1"; fi; shift ;;
   esac
 done
 cmd=${cmd# }
+# « ssh -G » ne se connecte pas : il affiche la configuration résolue. Comme le vrai, il y écrit
+# **le nom de l'hôte** — le script ne doit jamais afficher cette sortie —, puis les « identityfile »
+# posés par le cas, tels que ssh les écrit : « ~ » et « %d » non développés (vérifié, OpenSSH 10.2p1).
+if [ "$config" = 1 ]; then
+  printf '%s\n' "$dest" >> "$w/ssh-G"
+  [ -f "$w/ssh-G-code" ] && exit "$(cat "$w/ssh-G-code")"
+  echo "user ${dest%@*}"
+  echo "hostname ${dest#*@}"
+  [ -f "$w/identityfiles" ] && cat "$w/identityfiles"
+  exit 0
+fi
 printf '%s\t%s\n' "$dest" "$cmd" >> "$w/ssh-appels"
+# L'agent que reçoit chaque connexion : c'est ce qui prouve que la socket de l'agent privé n'entre que
+# dans les appels au compte de déploiement.
+# La commande vient en dernier : vide pour le tunnel, elle disparaîtrait au milieu d'une ligne lue
+# par « read » avec IFS=tab, deux tabulations de suite comptant pour une.
+printf '%s\t%s\t%s\n' "$dest" "${SSH_AUTH_SOCK:-}" "$cmd" >> "$w/ssh-env"
 if [ "$tunnel" = 1 ]; then
   if [ -f "$w/tunnel-meurt" ]; then
     # **Le vrai ssh nomme la destination dans ses erreurs**, et c'est tout l'enjeu de NFR-9 : un
@@ -68,13 +87,35 @@ if [ "$tunnel" = 1 ]; then
 fi
 lit() { [ -f "$w/$1" ] && cat "$w/$1"; return 0; }
 case "$cmd" in
+  true)
+    # La sonde du compte d'administration.
+    if [ -f "$w/admin-refuse" ]; then
+      echo "$dest: Permission denied (publickey)." >&2
+      exit 255
+    fi
+    exit 0 ;;
   status)
-    n=1
-    [ -f "$w/status-n" ] && n=$(($(cat "$w/status-n") + 1))
-    printf '%s' "$n" > "$w/status-n"
+    # **La clé du poste, protégée par une phrase de passe** : tant qu'elle n'est pas dans l'agent que
+    # reçoit cet appel, le vrai ssh, en BatchMode, ne peut pas s'en servir et rend 255.
+    if [ -f "$w/sonde-refusee" ] && { [ ! -f "$w/agent-charge" ] || [ "$(cat "$w/agent-charge")" != "${SSH_AUTH_SOCK:-}" ]; }; then
+      echo "$dest: Permission denied (publickey)." >&2
+      exit 255
+    fi
+    if [ -f "$w/status-code" ]; then
+      echo "deploy-site: commande refusée." >&2
+      exit "$(cat "$w/status-code")"
+    fi
+    # Les « status » muets de l'attente : comptés **après le premier push** seulement, pour que la
+    # vérification des connexions, qui précède tout tag, ne consomme pas un échec destiné à l'attente.
+    n=0
+    if [ -f "$w/git-push" ]; then
+      n=1
+      [ -f "$w/status-n" ] && n=$(($(cat "$w/status-n") + 1))
+      printf '%s' "$n" > "$w/status-n"
+    fi
     echecs=0
     [ -f "$w/status-echecs" ] && echecs=$(cat "$w/status-echecs")
-    if [ "$n" -le "$echecs" ]; then
+    if [ "$n" -ge 1 ] && [ "$n" -le "$echecs" ]; then
       # Même raison que pour le tunnel : la forme réelle, destination comprise.
       echo "ssh: connect to host ${dest#*@} port 22: Connection refused" >&2
       exit 255
@@ -210,14 +251,100 @@ FAUX
 }
 
 # Le faux sleep n'attend pas : il note seulement qu'on lui a demandé d'attendre.
+# Avec $work/sleep-bloque, il attend vraiment une seconde : le temps qu'un cas envoie un signal au
+# script pendant une attente.
 faux_sleep() {
+  local vrai_sleep
+  vrai_sleep=$(command -v sleep) || { echo "sleep introuvable" >&2; exit 2; }
   mkdir -p "$work/bin"
   {
     printf '#!/bin/sh\n'
     printf 'printf "%%s\\n" "$*" >> %q\n' "$work/sleeps"
+    printf '[ ! -f %q ] || %q 1\n' "$work/sleep-bloque" "$vrai_sleep"
     printf 'exit 0\n'
   } > "$work/bin/sleep"
   chmod +x "$work/bin/sleep"
+}
+
+# L'agent ssh, ssh-add et ssh-keygen : **aucun cas ne lance les vrais**. Le faux ssh-agent imite
+# « -D -a <socket> » : il pose sa socket (un fichier ordinaire tient lieu de socket), écrit son PID et
+# **survit**, comme le tunnel, pour qu'un cas constate que le piège l'a tué.
+faux_agent() {
+  local vrai_sleep
+  vrai_sleep=$(command -v sleep) || { echo "sleep introuvable" >&2; exit 2; }
+  mkdir -p "$work/bin"
+  {
+    printf '#!/bin/sh\n'
+    printf 'w=%q\n' "$work"
+    printf 'dors=%q\n' "$vrai_sleep"
+    cat <<'FAUX'
+printf '%s\n' "$*" >> "$w/agent-appels"
+sock=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -a) sock=$2; shift 2 ;;
+    -D) shift ;;
+    *) printf 'faux ssh-agent : option inattendue « %s »\n' "$1" >&2; exit 95 ;;
+  esac
+done
+[ -n "$sock" ] || { echo "faux ssh-agent : aucune socket demandée" >&2; exit 95; }
+if [ -f "$w/agent-meurt" ]; then
+  echo "unix_listener: path \"$sock\" too long for Unix domain socket" >&2
+  exit 1
+fi
+: > "$sock"
+printf '%s' "$$" > "$w/agent-pid"
+exec "$dors" 300
+FAUX
+  } > "$work/bin/ssh-agent"
+  {
+    printf '#!/bin/sh\n'
+    printf 'w=%q\n' "$work"
+    cat <<'FAUX'
+printf '%s\t%s\t%s\n' "${SSH_AUTH_SOCK:-}" "${SSH_ASKPASS_REQUIRE:-}" "$*" >> "$w/ssh-add-appels"
+if [ "${1:-}" = -l ]; then
+  if [ -n "${SSH_AUTH_SOCK:-}" ] && [ -e "$SSH_AUTH_SOCK" ]; then echo "The agent has no identities."; exit 1; fi
+  echo "Error connecting to agent: No such file or directory" >&2
+  exit 2
+fi
+# Sans terminal, le vrai ssh-add écrit son invite sur la sortie d'erreur, lit une fin de fichier et
+# rend 1 aussitôt (mesuré, OpenSSH 10.2p1).
+if [ -f "$w/ssh-add-code" ]; then
+  printf 'Enter passphrase for %s: ' "$1" >&2
+  exit "$(cat "$w/ssh-add-code")"
+fi
+[ -f "$w/agent-sans-effet" ] || printf '%s' "${SSH_AUTH_SOCK:-}" > "$w/agent-charge"
+for f in "$@"; do echo "Identity added: $f (poste eleyone.fr)" >&2; done
+exit 0
+FAUX
+  } > "$work/bin/ssh-add"
+  {
+    printf '#!/bin/sh\n'
+    printf 'w=%q\n' "$work"
+    cat <<'FAUX'
+printf '%s\n' "$*" >> "$w/ssh-keygen-appels"
+f=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -f|-P) [ "$1" = -f ] && f=$2; shift 2 ;;
+    -y) shift ;;
+    *) printf 'faux ssh-keygen : option inattendue « %s »\n' "$1" >&2; exit 95 ;;
+  esac
+done
+# Comme le vrai : un fichier absent est une erreur (255), pas une clé en clair.
+if [ ! -f "$f" ]; then
+  echo "$f: No such file or directory" >&2
+  exit 255
+fi
+if grep -q PROTEGEE "$f"; then
+  echo "Load key \"$f\": incorrect passphrase supplied to decrypt private key" >&2
+  exit 255
+fi
+echo "ssh-ed25519 AAAAessai poste"
+exit 0
+FAUX
+  } > "$work/bin/ssh-keygen"
+  chmod +x "$work/bin/ssh-agent" "$work/bin/ssh-add" "$work/bin/ssh-keygen"
 }
 
 # --- les réponses HTTP --------------------------------------------------------------------------------
@@ -332,7 +459,11 @@ reinitialise() {
     "$work/sleeps" "$work/tunnel-ouvert" "$work/tunnel-pid" "$work/tunnel-meurt" \
     "$work/en-service" "$work/status-n" "$work/status-echecs" "$work/livraison-inerte" \
     "$work/push-code" "$work/fetch-code" "$work/rollback-code" "$work/stop-code" \
-    "$work/ps-code" "$work/logs-code" "$work/journal" "$work/conteneur"
+    "$work/ps-code" "$work/logs-code" "$work/journal" "$work/conteneur" \
+    "$work/ssh-env" "$work/ssh-G" "$work/ssh-G-code" "$work/identityfiles" "$work/sonde-refusee" \
+    "$work/status-code" "$work/admin-refuse" "$work/agent-appels" "$work/agent-pid" "$work/agent-meurt" \
+    "$work/ssh-add-appels" "$work/ssh-add-code" "$work/agent-charge" "$work/ssh-keygen-appels" "$work/.ssh" \
+    "$work/agent-sans-effet" "$work/sleep-bloque" "$work/sys"
 }
 
 depot_de_test() { # $1 = URL du dépôt distant (défaut : le dépôt canonique)
@@ -348,13 +479,17 @@ depot_de_test() { # $1 = URL du dépôt distant (défaut : le dépôt canonique)
   faux_ssh
   faux_curl
   faux_sleep
+  faux_agent
   site_conforme "${2:-}"
 }
 
 # Le script se lance **depuis le dépôt jetable** : « git rev-parse --show-toplevel » l'y place, et
 # c'est donc son .env qui est lu, jamais celui du dépôt du projet.
+# L'utilisateur a **son** agent (SSH_AUTH_SOCK posé) : c'est lui que les appels au compte
+# d'administration doivent garder.
+readonly agent_utilisateur=/run/agent-de-l-utilisateur.sock
 repete() { # $@ = arguments du script
-  run env -i PATH="$work/bin:$PATH" HOME="$work" TMPDIR="$(tmpdir_a_soi)" LC_ALL=C \
+  run env -i PATH="$work/bin:$PATH" HOME="$work" TMPDIR="$(tmpdir_a_soi)" LC_ALL=C SSH_AUTH_SOCK="$agent_utilisateur" \
     bash -c 'cd "$1" || exit 99; shift; exec bash "$@"' bash "$depot" "$script" "$@"
 }
 
@@ -370,6 +505,14 @@ aucun_effet_de_bord() { # $1 = libellé
   [[ ! -f $work/ssh-appels ]] || { printf 'ssh a été lancé malgré le refus (%s) :\n%s\n' "$1" "$(appels_ssh)" >&2; exit 1; }
 }
 
+# Ce qui reste permis quand rien n'est poussé : les deux sondes de la vérification des connexions, et
+# elles seules — « status » au compte de déploiement, « true » au compte d'administration.
+seules_les_sondes() { # $1 = libellé
+  [[ ! -f $work/git-push ]] || { printf 'un push a eu lieu (%s) :\n%s\n' "$1" "$(pushs)" >&2; exit 1; }
+  assert_eq "$deploiement_essai	status
+$admin_essai	true" "$(appels_ssh)" "seules les deux sondes ont été envoyées ($1)"
+}
+
 aucun_arret_de_la_repetition() { # $1 = libellé
   local vu
   shell_grep_into vu -Fx -- "rehearse stop" <<< "$(commandes_ssh)"
@@ -377,6 +520,54 @@ aucun_arret_de_la_repetition() { # $1 = libellé
     || { printf "« rehearse stop » a été envoyé après un échec (%s) : la répétition et ses images -rc sont détruites, décision A7.\n" "$1" >&2; exit 1; }
   assert_contains "la répétition tourne encore" "$err" "le message dit que la répétition tourne encore ($1)"
   assert_contains "rehearse stop" "$err" "et donne la commande pour l'arrêter ($1)"
+}
+
+# La clé du poste : protégée par une phrase de passe, donnée au compte de déploiement par l'entrée
+# « Match » du ~/.ssh/config. Tant qu'elle n'est pas dans l'agent que reçoit l'appel, « status »
+# rend 255. « ssh -G » la liste parmi d'autres, **telles que ssh les écrit** : une clé par défaut
+# absente du disque, une clé sans phrase de passe, la clé du poste sous « ~ », une seconde clé
+# protégée sous « %d », et un chemin à jeton que le script ne doit pas deviner. Ce dernier **existe**
+# sous son nom littéral, et il est protégé : sans la garde du jeton, il serait chargé.
+cle_du_poste() {
+  mkdir -p "$work/.ssh"
+  printf 'CLE PRIVEE PROTEGEE\n' > "$work/.ssh/cle_poste"
+  printf 'CLE PRIVEE PROTEGEE\n' > "$work/.ssh/cle_seconde"
+  printf 'CLE PRIVEE EN CLAIR\n' > "$work/.ssh/cle_libre"
+  printf 'CLE PRIVEE PROTEGEE\n' > "$work/.ssh/cle_%r"
+  {
+    printf 'identityfile ~/.ssh/id_rsa\n'
+    printf 'identityfile ~/.ssh/cle_libre\n'
+    printf 'identityfile ~/.ssh/cle_poste\n'
+    printf 'identityfile %%d/.ssh/cle_seconde\n'
+    printf 'identityfile ~/.ssh/cle_%%r\n'
+  } > "$work/identityfiles"
+  : > "$work/sonde-refusee"
+}
+
+appels_ssh_add() { [[ -f $work/ssh-add-appels ]] && cat "$work/ssh-add-appels"; return 0; }
+
+# Le pendant de tunnel_ferme : l'agent privé ne survit au script sur aucun chemin de sortie.
+agent_ferme() { # $1 = libellé
+  local pid
+  [[ -f $work/agent-pid ]] || { printf "l'agent privé n'a jamais été démarré (%s)\n" "$1" >&2; exit 1; }
+  pid=$(cat "$work/agent-pid")
+  ! kill -0 "$pid" 2> /dev/null \
+    || { printf "l'agent privé (pid %s) tourne encore après la fin du script (%s)\n" "$pid" "$1" >&2; kill "$pid" 2>/dev/null; exit 1; }
+}
+
+aucun_agent() { # $1 = libellé
+  [[ ! -f $work/agent-appels ]] || { printf 'un agent a été démarré (%s) :\n%s\n' "$1" "$(cat "$work/agent-appels")" >&2; exit 1; }
+  [[ ! -f $work/ssh-add-appels ]] || { printf 'ssh-add a été appelé (%s) :\n%s\n' "$1" "$(appels_ssh_add)" >&2; exit 1; }
+}
+
+aucune_destination_dans() { # $1 = libellé, $2… = textes
+  local texte interdit
+  for texte in "${@:2}"; do
+    for interdit in "$admin_essai" "$deploiement_essai" "${admin_essai#*@}"; do
+      [[ $texte != *"$interdit"* ]] \
+        || { printf 'une destination apparaît dans la sortie (%s, NFR-9) : %s\n' "$1" "$interdit" >&2; exit 1; }
+    done
+  done
 }
 
 tunnel_ferme() {
@@ -461,7 +652,10 @@ case_rehearse_audit_ne_fait_rien() {
   assert_eq 0 "$rc" "l'audit passe (messages : $err)"
   assert_contains "v0.1.0-rc.2" "$out" "le tag suivant est calculé et annoncé"
   assert_contains "--run" "$out" "et le second appel est nommé"
-  aucun_effet_de_bord "audit"
+  # L'audit éprouve désormais les deux comptes : c'est tout ce qu'il envoie.
+  seules_les_sondes "audit"
+  assert_eq "" "$(tags_poses)" "l'audit ne pose aucun tag"
+  assert_contains "les deux connexions répondent" "$out" "et le message final le dit"
   # Le seul curl de l'audit est le contrôle du port local, qui ne reçoit aucune réponse : aucune
   # page du site n'est interrogée.
   local vu
@@ -762,7 +956,9 @@ case_rehearse_push_en_echec_retire_le_tag_local() {
   repete v0.1.0-rc.1 --run
   assert_eq 2 "$rc" "un push en échec est une anomalie (messages : $err)"
   assert_eq "" "$(tags_poses)" "le tag local est retiré pour qu'une reprise le repose sur le même commit"
-  [[ ! -f $work/ssh-appels ]] || { printf 'ssh a été lancé alors que le tag n a pas été poussé\n' >&2; exit 1; }
+  # Les deux sondes précèdent le push ; rien d'autre ne part après son échec.
+  assert_eq "$deploiement_essai	status
+$admin_essai	true" "$(appels_ssh)" "aucune connexion après le push en échec"
 }
 
 case_rehearse_rollback_refuse() {
@@ -966,6 +1162,266 @@ case_rehearse_aucun_exec() {
   local exec_trouve
   shell_grep_into exec_trouve -nE '^[[:space:]]*exec[[:space:]]' "$script"
   assert_eq "" "$exec_trouve" "aucun « exec » dans le script"
+}
+
+# --- les connexions, avant le premier tag, et l'agent privé -------------------------------------------
+
+case_rehearse_sonde_ok_aucun_agent() {
+  # La clé est déjà dans un agent, ou sans phrase de passe : « status » répond du premier coup, et
+  # rien n'est démarré — ni agent, ni ssh-add, ni même la lecture de la configuration.
+  local mode
+  for mode in audit --run; do
+    reinitialise
+    depot_de_test
+    if [[ $mode == audit ]]; then repete v0.1.0-rc.1; else repete v0.1.0-rc.1 --run; fi
+    assert_eq 0 "$rc" "la sonde répond, $mode passe (messages : $err)"
+    aucun_agent "sonde qui répond, $mode"
+    [[ ! -f $work/ssh-G ]] || { printf 'ssh -G a été lancé alors que la sonde répondait (%s)\n' "$mode" >&2; exit 1; }
+    [[ ! -f $work/ssh-keygen-appels ]] || { printf 'ssh-keygen a été lancé alors que la sonde répondait (%s)\n' "$mode" >&2; exit 1; }
+    assert_contains "compte de déploiement : « status » répond" "$out" "la sonde du déploiement est dite ($mode)"
+    assert_contains "compte d'administration : la connexion répond" "$out" "celle de l'administration aussi ($mode)"
+  done
+}
+
+case_rehearse_sondes_avant_le_premier_tag() {
+  # Les deux sondes partent **avant** le premier push : la première connexion de la séquence est
+  # « status » au compte de déploiement, la deuxième « true » au compte d'administration.
+  depot_de_test
+  repete v0.1.0-rc.1 --run
+  assert_eq 0 "$rc" "la répétition se déroule en entier (messages : $err)"
+  local premieres
+  premieres=$(head -n 2 "$work/ssh-appels")
+  assert_eq "$deploiement_essai	status
+$admin_essai	true" "$premieres" "les deux sondes ouvrent la séquence"
+}
+
+case_rehearse_agent_prive_charge_la_cle() {
+  local mode
+  for mode in audit --run; do
+    reinitialise
+    depot_de_test
+    cle_du_poste
+    if [[ $mode == audit ]]; then repete v0.1.0-rc.1; else repete v0.1.0-rc.1 --run; fi
+    assert_eq 0 "$rc" "la clé chargée dans l'agent privé, $mode passe (messages : $err)"
+    assert_contains "agent privé" "$out" "le chargement est annoncé ($mode)"
+    # Seules les clés protégées sont chargées, en un appel : ni la clé absente du disque, ni la clé
+    # en clair, ni le chemin à jeton — « ~ » et « %d » sont développés, « %r » n'est pas deviné.
+    local chargements
+    shell_grep_into chargements -v -- $'\t-l$' <<< "$(appels_ssh_add)"
+    assert_eq "$work/.ssh/cle_poste $work/.ssh/cle_seconde" "${chargements##*$'\t'}" "ssh-add charge les seules clés protégées ($mode)"
+    assert_contains $'\tnever\t' "$chargements" "sans fenêtre graphique : SSH_ASKPASS_REQUIRE=never ($mode)"
+    agent_ferme "succès, $mode"
+    if [[ $mode == audit ]]; then
+      assert_eq "$deploiement_essai	status
+$deploiement_essai	status
+$admin_essai	true" "$(appels_ssh)" "l'audit envoie la sonde, la resonde et la sonde d'administration"
+      [[ ! -f $work/git-push ]] || { echo "l'audit a poussé un tag" >&2; exit 1; }
+    else
+      [[ -f $work/git-push ]] || { echo "la répétition ne s'est pas poursuivie après le chargement" >&2; exit 1; }
+      tunnel_ferme
+    fi
+    assert_eq 0 "$(restes_dans "$work/tmp-a-soi")" "la socket de l'agent ne reste pas sur le disque ($mode)"
+  done
+}
+
+case_rehearse_agent_tue_apres_un_echec_plus_tard() {
+  # L'agent démarré à la vérification des connexions meurt aussi quand la répétition échoue bien
+  # plus loin, sur une vérification d'en-tête.
+  depot_de_test
+  cle_du_poste
+  change_entete / X-Content-Type-Options ""
+  repete v0.1.0-rc.1 --run
+  assert_eq 1 "$rc" "la vérification échoue (messages : $err)"
+  agent_ferme "vérification en échec"
+  tunnel_ferme
+  aucun_arret_de_la_repetition "échec avec agent"
+}
+
+case_rehearse_agent_tue_sur_sigterm() {
+  # Le piège TERM : le script est arrêté pendant l'attente du premier tag, l'agent doit mourir avec
+  # lui. (SIGINT n'est pas rejouable ici : un shell non interactif lancé en tâche de fond l'ignore, et
+  # bash ne laisse pas piéger un signal ignoré à l'entrée.)
+  depot_de_test
+  cle_du_poste
+  : > "$work/livraison-inerte"
+  : > "$work/sleep-bloque"
+  local pid essai=0 code=0
+  env -i PATH="$work/bin:$PATH" HOME="$work" TMPDIR="$(tmpdir_a_soi)" LC_ALL=C SSH_AUTH_SOCK="$agent_utilisateur" \
+    bash -c 'cd "$1" || exit 99; shift; exec bash "$@"' bash "$depot" "$script" v0.1.0-rc.1 --run \
+    > "$work/.out" 2> "$work/.err" &
+  pid=$!
+  while [[ ! -f $work/git-push ]]; do
+    ((essai < 100)) || { kill "$pid" 2>/dev/null; echo "le script n'a jamais atteint l'attente" >&2; cat "$work/.err" >&2; exit 1; }
+    essai=$((essai + 1))
+    sleep 0.1
+  done
+  kill -TERM "$pid"
+  wait "$pid" || code=$?
+  assert_eq 143 "$code" "le script sort en 143 sur SIGTERM ($(cat "$work/.err"))"
+  agent_ferme "SIGTERM"
+}
+
+case_rehearse_ssh_add_sans_terminal() {
+  # Sans terminal, ssh-add ne peut pas demander la phrase de passe : il rend 1 aussitôt. Le script
+  # s'arrête en le disant, rien n'est poussé, et l'agent déjà démarré est tué.
+  depot_de_test
+  cle_du_poste
+  printf '1' > "$work/ssh-add-code"
+  repete v0.1.0-rc.1 --run
+  assert_eq 2 "$rc" "une clé impossible à charger est une anomalie (messages : $err)"
+  assert_contains "aucun terminal" "$err" "le message nomme la cause probable"
+  assert_contains "Lancer le script dans un terminal" "$err" "et dit quoi faire"
+  [[ ! -f $work/git-push ]] || { echo "un tag a été poussé alors que la clé n'a pas été chargée" >&2; exit 1; }
+  assert_eq "" "$(tags_poses)" "aucun tag posé"
+  agent_ferme "ssh-add en échec"
+  aucune_destination_dans "ssh-add en échec" "$out" "$err"
+}
+
+case_rehearse_sonde_toujours_refusee_apres_chargement() {
+  depot_de_test
+  cle_du_poste
+  : > "$work/agent-sans-effet"
+  repete v0.1.0-rc.1 --run
+  assert_eq 2 "$rc" "une sonde refusée clé chargée est une anomalie (messages : $err)"
+  assert_contains "ne répond toujours pas" "$err" "le message le dit"
+  [[ ! -f $work/git-push ]] || { echo "un tag a été poussé malgré la sonde refusée" >&2; exit 1; }
+  agent_ferme "resonde refusée"
+  aucune_destination_dans "resonde refusée" "$out" "$err"
+}
+
+case_rehearse_aucune_cle_protegee() {
+  # La sonde échoue, mais aucune clé proposée n'a de phrase de passe : un agent n'y changerait rien.
+  depot_de_test
+  cle_du_poste
+  printf 'identityfile ~/.ssh/id_rsa\nidentityfile ~/.ssh/cle_libre\n' > "$work/identityfiles"
+  repete v0.1.0-rc.1 --run
+  assert_eq 2 "$rc" "une sonde refusée sans clé protégée est une anomalie (messages : $err)"
+  assert_contains "aucune des clés" "$err" "le message dit pourquoi aucun agent n'est démarré"
+  aucun_agent "aucune clé protégée"
+  [[ ! -f $work/git-push ]] || { echo "un tag a été poussé malgré la sonde refusée" >&2; exit 1; }
+  assert_contains "Permission denied" "$err" "le message de ssh est montré"
+  assert_contains "<compte de déploiement>" "$err" "expurgé"
+  aucune_destination_dans "aucune clé protégée" "$out" "$err"
+}
+
+case_rehearse_status_refuse_par_le_serveur() {
+  # Un code autre que 255 est la réponse du serveur : la connexion passe, charger une clé n'y
+  # changerait rien. Ni « ssh -G », ni agent.
+  depot_de_test
+  cle_du_poste
+  rm -f "$work/sonde-refusee"
+  printf '1' > "$work/status-code"
+  repete v0.1.0-rc.1 --run
+  assert_eq 2 "$rc" "un status refusé par le serveur arrête tout (messages : $err)"
+  assert_contains "c'est le serveur qui répond non" "$err" "le message distingue le refus du serveur"
+  aucun_agent "status refusé par le serveur"
+  [[ ! -f $work/ssh-G ]] || { echo "ssh -G a été lancé pour un refus du serveur" >&2; exit 1; }
+  [[ ! -f $work/git-push ]] || { echo "un tag a été poussé" >&2; exit 1; }
+}
+
+case_rehearse_agent_qui_meurt_aussitot() {
+  depot_de_test
+  cle_du_poste
+  : > "$work/agent-meurt"
+  repete v0.1.0-rc.1 --run
+  assert_eq 2 "$rc" "un agent qui ne démarre pas est une anomalie (messages : $err)"
+  assert_contains "s'est arrêté aussitôt" "$err" "le message le dit"
+  # « ssh-add -l » peut avoir interrogé la socket avant que la mort de l'agent soit constatée ; aucune
+  # clé, elle, n'a été chargée.
+  local chargements
+  shell_grep_into chargements -v -- $'\t-l$' <<< "$(appels_ssh_add)"
+  assert_eq "" "$chargements" "aucune clé chargée sans agent vivant"
+  [[ ! -f $work/git-push ]] || { echo "un tag a été poussé" >&2; exit 1; }
+}
+
+case_rehearse_admin_refuse() {
+  local mode
+  for mode in audit --run; do
+    reinitialise
+    depot_de_test
+    : > "$work/admin-refuse"
+    if [[ $mode == audit ]]; then repete v0.1.0-rc.1; else repete v0.1.0-rc.1 --run; fi
+    assert_eq 2 "$rc" "un compte d'administration injoignable arrête tout ($mode, messages : $err)"
+    assert_contains "le compte d'administration ne répond pas" "$err" "le message nomme le rôle ($mode)"
+    assert_contains "<compte d'administration>" "$err" "le message de ssh est montré expurgé ($mode)"
+    [[ ! -f $work/git-push ]] || { printf 'un tag a été poussé (%s)\n' "$mode" >&2; exit 1; }
+    assert_eq "" "$(tags_poses)" "aucun tag posé ($mode)"
+    aucune_destination_dans "administration refusée, $mode" "$out" "$err"
+  done
+}
+
+case_rehearse_admin_refuse_tue_l_agent() {
+  # L'agent démarré pour le compte de déploiement meurt aussi quand c'est l'autre sonde qui échoue.
+  depot_de_test
+  cle_du_poste
+  : > "$work/admin-refuse"
+  repete v0.1.0-rc.1 --run
+  assert_eq 2 "$rc" "un compte d'administration injoignable arrête tout (messages : $err)"
+  agent_ferme "administration refusée"
+}
+
+case_rehearse_seul_le_compte_de_deploiement_recoit_l_agent() {
+  # L'agent privé n'entre que dans les appels au compte de déploiement. Le compte d'administration
+  # garde l'agent de l'utilisateur, où vit peut-être sa propre clé.
+  depot_de_test
+  cle_du_poste
+  repete v0.1.0-rc.1 --run
+  assert_eq 0 "$rc" "la répétition se déroule en entier (messages : $err)"
+  local socket_privee destination commande socket n=0 deploiement_prive=0 admin=0
+  socket_privee=$(cat "$work/agent-charge")
+  [[ -n $socket_privee && $socket_privee != "$agent_utilisateur" ]] \
+    || { echo "la socket de l'agent privé est vide ou celle de l'utilisateur" >&2; exit 1; }
+  while IFS=$'\t' read -r destination socket commande; do
+    [[ -n $destination ]] || continue
+    n=$((n + 1))
+    case $destination in
+      "$admin_essai")
+        assert_eq "$agent_utilisateur" "$socket" "« $commande » au compte d'administration garde l'agent de l'utilisateur"
+        admin=$((admin + 1)) ;;
+      "$deploiement_essai")
+        if ((n == 1)); then
+          assert_eq "$agent_utilisateur" "$socket" "la première sonde part avec l'agent de l'utilisateur"
+        else
+          assert_eq "$socket_privee" "$socket" "« $commande » au compte de déploiement reçoit l'agent privé"
+          deploiement_prive=$((deploiement_prive + 1))
+        fi ;;
+    esac
+  done < "$work/ssh-env"
+  ((admin >= 3 && deploiement_prive >= 3)) \
+    || { printf 'trop peu d appels relevés : %s admin, %s déploiement\n' "$admin" "$deploiement_prive" >&2; exit 1; }
+  # Et « IdentityAgent=SSH_AUTH_SOCK », pour qu'une entrée du ~/.ssh/config ne désigne pas un autre
+  # agent : sur les appels de déploiement avec l'agent privé, jamais sur ceux d'administration.
+  local vu
+  shell_grep_into vu -F -- "IdentityAgent=SSH_AUTH_SOCK" "$work/ssh-args"
+  [[ -n $vu ]] || { echo "aucun appel ne force IdentityAgent=SSH_AUTH_SOCK" >&2; exit 1; }
+  [[ $vu != *"$admin_essai"* ]] || { echo "un appel au compte d'administration force l'agent privé" >&2; exit 1; }
+}
+
+case_rehearse_outils_de_l_agent_absents() {
+  # Sans ssh-keygen, « ! ssh-keygen » rendrait 127 et une clé en clair passerait pour protégée. Les
+  # outils sont exigés avant. Le PATH du cas est fait de liens vers les outils du poste, ssh-keygen
+  # excepté : le vrai, plus loin dans le PATH, serait sinon trouvé.
+  depot_de_test
+  cle_du_poste
+  rm -f "$work/bin/ssh-keygen"
+  mkdir -p "$work/sys"
+  local dossier fichier
+  local -a dossiers
+  IFS=: read -r -a dossiers <<< "$PATH"
+  for dossier in "${dossiers[@]}"; do
+    [[ -d $dossier ]] || continue
+    for fichier in "$dossier"/*; do
+      [[ -f $fichier && -x $fichier ]] || continue
+      [[ ${fichier##*/} != ssh-keygen ]] || continue
+      [[ -e $work/sys/${fichier##*/} ]] || ln -s "$fichier" "$work/sys/${fichier##*/}"
+    done
+  done
+  run env -i PATH="$work/bin:$work/sys" HOME="$work" TMPDIR="$(tmpdir_a_soi)" LC_ALL=C SSH_AUTH_SOCK="$agent_utilisateur" \
+    bash -c 'cd "$1" || exit 99; shift; exec bash "$@"' bash "$depot" "$script" v0.1.0-rc.1 --run
+  assert_eq 2 "$rc" "sans ssh-keygen, le script s'arrête (messages : $err)"
+  assert_contains "ssh-keygen est introuvable" "$err" "le message nomme l'outil"
+  aucun_agent "outils absents"
+  [[ ! -f $work/git-push ]] || { echo "un tag a été poussé" >&2; exit 1; }
 }
 
 # --- l'hygiène du dépôt et des messages -------------------------------------------------------------------------
