@@ -15,14 +15,15 @@ Il s'appuie sur les entrées suivantes, qu'il ne recopie pas :
 
 - le brief produit, validé le 13/09/2026 : `_bmad-output/planning-artifacts/briefs/brief-eleyone.fr-2026-09-13/brief.md` ;
 - son addendum, validé à la même date (inventaire des cas, contenu connu des encarts, matériel vivant, détail technique) : `_bmad-output/planning-artifacts/briefs/brief-eleyone.fr-2026-09-13/addendum.md` ;
-- le contrat de format des cas, `docs/format-cas.md`, en version 0.4, et le vocabulaire contrôlé de la stack, `data/stack.yaml`. Le PRD s'y réfère sans les redéfinir ;
+- le contrat de format des cas, `docs/format-cas.md`, en version 0.4, et le vocabulaire contrôlé de la stack, `data/stack.yaml`. Le PRD s'y réfère sans les redéfinir. Le contrat des postes, `docs/format-parcours.md`, sera écrit par la story 10.8 (proposition de changement du 02/10/2026) ;
 - l'architecture, `_bmad-output/planning-artifacts/architecture/architecture-eleyone.fr-2026-09-13/ARCHITECTURE-SPINE.md`, dont Arnaud a validé les recommandations le 13/09/2026. Le PRD en cite quelques décisions (AD-n) comme références, sans les détailler ;
 - le CV d'Arnaud, seule source des données de parcours, de formation, de certification et de langues ;
 - l'UX, validée par Arnaud le 13/09/2026 : `_bmad-output/planning-artifacts/ux-designs/ux-eleyone.fr-2026-09-13/DESIGN.md` (direction visuelle) et `EXPERIENCE.md` (comportement, premier écran, test des trente secondes). Le PRD n'en fixe aucun détail visuel ;
 - le cas pilote 02, rédigé en FR et en EN (§9) ;
 - les décisions d'Arnaud du 13/09/2026, postérieures au brief et recensées au §11.1, dont l'accueil conçu comme un CV ;
 - les consignes du dépôt (`AGENTS.md`), pour le contexte du dépôt et la manière de livrer les stories ;
-- le contrôle de préparation à l'implémentation du 13/09/2026 (`_bmad-output/planning-artifacts/implementation-readiness.md`), dont Arnaud a accepté les décisions D-1 à D-17, appliquées par `_bmad-output/planning-artifacts/sprint-change-proposal-2026-09-13.md`.
+- le contrôle de préparation à l'implémentation du 13/09/2026 (`_bmad-output/planning-artifacts/implementation-readiness.md`), dont Arnaud a accepté les décisions D-1 à D-17, appliquées par `_bmad-output/planning-artifacts/sprint-change-proposal-2026-09-13.md` ;
+- la proposition de changement du 02/10/2026 (`_bmad-output/planning-artifacts/sprint-change-proposal-2026-10-02.md`), approuvée par Arnaud avec ses arbitrages Q1 à Q8, qui donne à chaque poste du CV le contexte complet de sa mission : glossaire, FR-2, FR-6, FR-23, FR-25, FR-37 et §11.1 révisés.
 
 Conventions de lecture :
 
@@ -74,16 +75,16 @@ Le site lui-même sert de preuve. Il est statique, bilingue et sobre, parce que 
 - **Page Chiliz** : page cas qui réunit les cas 02, 03 et 04, dans cet ordre, chacun dans sa section.
 - **Section** : partie de la page Chiliz consacrée à un cas. Le terme ne désigne rien d'autre.
 - **Rubrique** : titre de niveau 2 du cas complet, pris dans la liste fixe de `docs/format-cas.md` (par exemple « Résultat »), avec le texte qu'il introduit.
-- **Encart « Contexte mission »** : bloc placé en tête d'un cas, avec cinq champs : société, cadre, rôle, période, stack.
+- **Encart « Contexte mission »** : bloc placé en tête d'un cas, avec cinq champs : société, cadre, rôle, période, stack. Sa stack est celle que le cas cite ; la stack du projet entier est portée par le poste (révisé le 02/10/2026).
 - **Cadre** : forme de la mission. Une valeur parmi quatre : salarié, freelance, ESN, Ton Pote le Geek. `docs/format-cas.md` en fixe les identifiants stockés, en anglais ; le site affiche un libellé dans la langue de la page.
-- **Stack** : liste des technologies citées dans le cas, tirée du vocabulaire contrôlé, identique en FR et en EN.
+- **Stack** : liste des technologies d'un cas (celles qu'il cite) ou d'un poste (celles du projet entier), tirée du vocabulaire contrôlé, identique en FR et en EN. *Révisé le 02/10/2026 : la définition ne visait que le cas.*
 - **Vocabulaire contrôlé** : liste des technologies autorisées, une seule écriture chacune, tenue dans `data/stack.yaml`, qui fait foi.
 - **Encart « En bref »** : bloc placé après l'encart « Contexte mission ». Il donne l'enjeu puis le résultat, en trois phrases et 400 caractères au plus par langue, lisibles par un dirigeant.
 - **Cas complet** : corps du cas, au niveau CTO, découpé en rubriques.
 - **Cas mis en avant** *(terme obsolète)* : désignait les cas 01, 02 et 05 dans l'ancienne logique de l'accueil, remplacée le 13/09/2026 par l'accueil conçu comme un CV (§11.1). Il n'y a plus de cas mis en avant : chaque cas mis en ligne apparaît sous son poste ou dans le bloc « En parallèle ». Les cas 01, 02 et 05 restent ceux du socle (FR-32).
 - **Ligne d'identité** : ligne placée en tête de l'accueil, « Arnaud Grousset · Eleyone ». Le nom est le repère principal ; le pseudonyme est affiché à côté.
 - **Parcours professionnel** : liste des postes d'Arnaud sur l'accueil, du plus récent au plus ancien, tirée du CV d'Arnaud.
-- **Poste** : entrée du parcours professionnel : société, intitulé du poste, période, ville de travail ou cadre (par exemple full remote, prestation), et les liens vers les cas qui le prouvent.
+- **Poste** : entrée du parcours professionnel : société ou intitulé, secteur, intitulé du poste, période donnée par l'auteur, ville de travail ou cadre (par exemple full remote, prestation), les liens vers les cas qui le prouvent, puis, dans un bloc repliable, **le périmètre complet de la mission** et **la stack complète du projet**. *Révisé le 02/10/2026 (proposition de changement du même jour) : le poste ne portait ni secteur, ni périmètre visible dès qu'il avait un cas, ni stack.*
 - **Bloc « En parallèle »** : bloc de l'accueil qui présente Ton Pote le Geek, avec le lien vers le cas 01.
 - **Bloc formation, certification et langues** : bloc de l'accueil qui présente la formation, les certifications et les langues d'Arnaud, tirées de son CV.
 - **Photo publiée** : copie redimensionnée et sans métadonnée d'une photo d'Arnaud, affichée sur l'accueil et sur la page « À propos ». L'original reste hors du dépôt.
@@ -128,7 +129,7 @@ Le site lui-même sert de preuve. Il est statique, bilingue et sobre, parce que 
 
 ### 4.1 Accueil : le CV
 
-**Description.** L'accueil est le CV d'Arnaud. En haut : la ligne d'identité, puis le titre du site, puis le pitch. Ensuite, le parcours professionnel, du plus récent au plus ancien ; chaque poste affiche les cas qui le prouvent, en liens. Puis le bloc « En parallèle » (Ton Pote le Geek et le cas 01), le bloc formation, certification et langues, et un appel à contact. Toutes les données de parcours viennent du CV d'Arnaud : rien n'est inventé. *Tranché le 13/09/2026 : cette logique remplace celle des trois cas mis en avant.* La mise en page relève de `DESIGN.md`. Réalise UJ-1 et UJ-2.
+**Description.** L'accueil est le CV d'Arnaud. En haut : la ligne d'identité, puis le titre du site, puis le pitch. Ensuite, le parcours professionnel, du plus récent au plus ancien ; chaque poste affiche les cas qui le prouvent, en liens, puis, dans un bloc repliable, le périmètre de la mission et la stack du projet (révisé le 02/10/2026). Puis le bloc « En parallèle » (Ton Pote le Geek et le cas 01), le bloc formation, certification et langues, et un appel à contact. Toutes les données de parcours viennent du CV d'Arnaud : rien n'est inventé. *Tranché le 13/09/2026 : cette logique remplace celle des trois cas mis en avant.* La mise en page relève de `DESIGN.md`. Réalise UJ-1 et UJ-2.
 
 #### FR-1 : Haut de l'accueil : identité, titre, pitch
 
@@ -142,15 +143,18 @@ L'accueil affiche, dans chaque langue et dans cet ordre, la ligne d'identité, l
 
 #### FR-2 : Parcours professionnel et cas par poste
 
-L'accueil présente le parcours professionnel d'Arnaud, du plus récent au plus ancien ; chaque poste affiche, en liens, les cas qui le prouvent. *Tranché le 13/09/2026.* Réalise UJ-1 et UJ-2.
+L'accueil présente le parcours professionnel d'Arnaud, du plus récent au plus ancien ; chaque poste affiche, en liens, les cas qui le prouvent, puis le contexte complet de sa mission. *Tranché le 13/09/2026 ; contexte complet de chaque mission ajouté le 02/10/2026 (proposition de changement du même jour, arbitrages Q1 à Q3).* Réalise UJ-1 et UJ-2.
 
 **Conséquences (testables) :**
 - Chaque poste affiche la société, l'intitulé du poste, la période, et la ville de travail ou le cadre (par exemple full remote, prestation), dans la langue de la page.
+- Chaque poste affiche son secteur. La société reste le client direct, la société de prestation reste à part ; les clients finaux, s'il y en a, sont dans le périmètre (arbitrage Q3 du 02/10/2026).
 - Les postes apparaissent du plus récent au plus ancien.
 - Chaque poste auquel se rattache au moins un cas mis en ligne affiche un lien vers chacun de ces cas, dans la même langue. Le lien d'un cas de la page Chiliz mène à sa section.
 - Sous un poste, chaque cas affiche son numéro et son titre du cas, et rien d'autre : pas d'encart « En bref » sur l'accueil (validé le 13/09/2026).
 - Un poste sans cas s'affiche complet, avec les mêmes champs qu'un poste avec cas, et n'affiche rien à la place des cas : ni mention, ni emplacement vide.
-- Le corps d'un poste (texte descriptif facultatif) ne s'affiche que si le poste n'a aucun cas mis en ligne.
+- Chaque poste porte son périmètre (corps du poste) et la stack complète du projet, **qu'il ait des cas ou non**, dans un bloc repliable fermé par défaut, après ses cas mis en ligne. *Révisé le 02/10/2026 : le corps d'un poste ne s'affichait que si le poste n'avait aucun cas mis en ligne.*
+- Aucune durée n'est affichée : la période, donnée par l'auteur, en porte les bornes (arbitrage Q2 du 02/10/2026).
+- La période d'un cas est comprise dans celle de son poste ; un cas ne couvre pas nécessairement toute la mission (arbitrage Q2 du 02/10/2026).
 - Aucun lien du parcours ne pointe vers un cas en brouillon ou absent de la mise en ligne (FR-26).
 - Chaque donnée de parcours figure dans le CV d'Arnaud ; aucune n'est inventée *(relecture)*.
 - Le cas 06 est lié depuis le poste April Technologies de 2017, en prestation Modis. Le parcours peut indiquer que ce poste porte sur le même projet que la mission chez April pour le compte de CGI en 2013–2014 ; le cas lui-même relève de 2017 (question 15, tranchée le 13/09/2026).
@@ -221,6 +225,8 @@ Sur mobile, le premier écran de l'accueil montre qui est Arnaud et mène déjà
 - Sur un écran de 390 × 844 pixels, sans défilement, l'accueil affiche, en FR et en EN : la ligne d'identité, le titre du site, le pitch, puis le début du premier poste avec le lien de son premier cas.
 - Le critère se vérifie sur le socle, puis à chaque modification du haut de l'accueil ou du premier poste.
 
+**Notes :** le périmètre et la stack d'un poste sont dans un bloc replié par défaut, placé après ses cas (FR-2) : fermé, il n'occupe qu'une ligne, et le lien du premier cas reste dans le premier écran (ajouté le 02/10/2026, arbitrage Q1).
+
 #### FR-38 : CV téléchargeables en PDF
 
 Le site propose au téléchargement deux CV PDF, en français et en anglais, depuis le pied de page de toutes les pages et, en évidence, depuis la page « À propos ». *Tranché le 13/09/2026 (question 16).*
@@ -255,7 +261,7 @@ L'encart « Contexte mission » affiche la société, le cadre, le rôle, la pé
 **Conséquences (testables) :**
 - Les cinq champs apparaissent, en FR et en EN, sous des libellés dans la langue de la page. En anglais, l'encart « Contexte mission » s'intitule *Engagement context* et l'encart « En bref » *At a glance* ; les cadres s'affichent *Employee*, *Freelance*, *IT consultancy* et *Ton Pote le Geek* (question 10, tranchée le 13/09/2026).
 - Le cadre affiché est l'une des quatre valeurs du glossaire, avec son libellé dans la langue de la page.
-- La stack ne contient que des technologies de `data/stack.yaml`, et elle est identique en FR et en EN. Seules les technologies citées dans le cas y figurent *(relecture)*.
+- La stack ne contient que des technologies de `data/stack.yaml`, et elle est identique en FR et en EN. Seules les technologies citées dans le cas y figurent *(relecture)*. La stack d'un poste est celle du projet entier ; celle d'un cas reste celle qu'il cite (précisé le 02/10/2026).
 - Une valeur manquante n'est jamais affichée comme un fait : elle reste un marqueur TODO et le cas reste un brouillon (FR-26). Le contenu connu à ce jour est dans l'addendum du brief (tableau « Encart Contexte mission ») et, pour le cas 02, dans le cas pilote.
 - La rubrique « Contexte » du cas complet ne répète pas les faits de l'encart *(relecture)*.
 
@@ -449,6 +455,7 @@ Un script de parité vérifie en CI la partie mécanique de la parité linguisti
 **Conséquences (testables) :**
 - Le script signale toute page FR sans page EN, et inversement.
 - Il signale, entre les deux fichiers d'un cas, toute différence dans les métadonnées qui ne se traduisent pas selon `docs/format-cas.md` : identifiants, numéro, groupe, poste (`position`), ordre, brouillon, cadre, stack, et identifiants, types et statuts du matériel vivant.
+- Il signale, entre les deux fichiers d'un poste, toute différence dans les métadonnées qui ne se traduisent pas, dont la stack du projet (`stack`, ajoutée le 02/10/2026) ; le secteur, traduit, n'y entre pas.
 - Il signale toute différence de rubriques entre les deux fichiers d'un cas.
 - Il signale tout schéma auquel manque l'un de ses deux SVG.
 - Chaque signalement nomme le fichier et l'écart.
@@ -478,7 +485,7 @@ Arnaud modifie le contenu sans toucher aux gabarits ni aux scripts.
 **Conséquences (testables) :**
 - Modifier le texte ou les métadonnées d'un cas ne touche que les fichiers Markdown de ce cas. Publier un cas touche en plus `ci/release-pages.txt` et, pour le premier cas d'un groupe, le fichier de la page de groupe (AD-4) : aucun gabarit ni script.
 - Ajouter ou modifier un schéma ne touche que les fichiers Markdown du cas, la source D2 du schéma et les SVG qui en sont régénérés. La régénération se fait en lançant les scripts existants, sans les modifier.
-- Utiliser une technologie nouvelle dans une stack ne demande en plus que de l'ajouter à `data/stack.yaml`, comme le prévoit `docs/format-cas.md`.
+- Utiliser une technologie nouvelle dans une stack, celle d'un cas comme celle d'un poste, ne demande en plus que de l'ajouter à `data/stack.yaml`, comme le prévoit `docs/format-cas.md` (et, pour un poste, `docs/format-parcours.md`, que la story 10.8 écrira).
 - Ajouter, modifier ou réordonner un poste, rattacher un cas à un poste, ou modifier le bloc formation, certification et langues ne touche que le contenu, sans toucher aux gabarits.
 - Le texte des pages hors cas (accueil, « À propos », Contact, pages légales) se modifie lui aussi en Markdown, sans toucher aux gabarits. C'est une contrainte du dépôt (`AGENTS.md` : contenu en Markdown modifiable sans toucher au code).
 
@@ -736,7 +743,7 @@ Le PRD rappelle les décisions déjà prises et nomme les points confiés à l'a
 | 13/09/2026 | Accessibilité et performance (ex-question 17) | Zéro JavaScript en v1, exceptions justifiées ; WCAG 2.2 AA ; Core Web Vitals « bons » sur mobile (LCP ≤ 2,5 s, CLS ≤ 0,1, INP ≤ 200 ms) et budget de poids par page ; outillage laissé à l'architecture | NFR-4, NFR-5, NFR-12, SM-8, §7 |
 | 13/09/2026 | Affichage d'un élément « prévu » (ex-question 5) | Invisible en production tant qu'il est « prévu », visible dans le rendu de travail ; le texte d'un cas se lit sans son matériel vivant | FR-12, FR-26 |
 | 13/09/2026 | Critère de mise en ligne (ex-question 21) | Socle d'abord (accueil, à propos, contact, pages légales, cas 01, 02 et 05), puis cas 03, 04 et 06 un par un ; page Chiliz correcte avec la seule section du cas 02 | FR-9, FR-32, §9 |
-| 13/09/2026 | Accueil conçu comme un CV (remplace les trois cas mis en avant ; rend sans objet les questions 6 et 7, tranche la question 8, numéros conservés) | En haut : ligne d'identité, titre, pitch. Puis parcours professionnel du plus récent au plus ancien (société, intitulé, période, ville de travail ou cadre), chaque poste avec les cas qui le prouvent en liens, postes sans cas affichés complets. Bloc « En parallèle » pour Ton Pote le Geek avec le cas 01. Bloc formation, certification et langues. Données tirées du CV d'Arnaud, rien d'inventé. Premier écran mobile (390 × 844, sans défilement) : identité, titre, pitch, début du premier poste avec son premier cas. Mode sombre en CSS pur | FR-1 à FR-4, FR-15, FR-36, FR-37, NFR-13, SM-3 |
+| 13/09/2026 | Accueil conçu comme un CV (remplace les trois cas mis en avant ; rend sans objet les questions 6 et 7, tranche la question 8, numéros conservés) | En haut : ligne d'identité, titre, pitch. Puis parcours professionnel du plus récent au plus ancien (société, intitulé, période, ville de travail ou cadre), chaque poste avec les cas qui le prouvent en liens, tous les postes affichés complets. *Révisé le 02/10/2026 : « postes sans cas affichés complets » ; voir la ligne du même jour.* Bloc « En parallèle » pour Ton Pote le Geek avec le cas 01. Bloc formation, certification et langues. Données tirées du CV d'Arnaud, rien d'inventé. Premier écran mobile (390 × 844, sans défilement) : identité, titre, pitch, début du premier poste avec son premier cas. Mode sombre en CSS pur | FR-1 à FR-4, FR-15, FR-36, FR-37, NFR-13, SM-3 |
 | 13/09/2026 | Identité publique | Ligne d'identité « Arnaud Grousset · Eleyone », nom en repère principal ; « Basé en France » seul lieu de résidence public ; `<title>` de l'accueil avec le nom ; photo publiée redimensionnée et sans métadonnée (vérifié), original hors dépôt, texte alternatif FR et EN, dans le budget de poids et compatible avec le premier écran mobile ; données structurées « Person » en JSON-LD, seule exception à NFR-12, données uniquement (nom, pseudonyme, intitulé, pays, URL, LinkedIn, GitHub) | FR-33, FR-34, FR-35, NFR-12 |
 | 13/09/2026 | CV téléchargeables | Deux CV PDF, FR et EN, téléchargeables (emplacement des liens précisé ensuite par la question 16). v1 : fournis par Arnaud, versionnés, publication bloquée tant qu'ils contiennent un numéro de téléphone ou une ville de résidence, contrôle du texte et des métadonnées. v1.1 : générés à partir des mêmes données que le site | FR-38, §8.2 |
 | 13/09/2026 | Frontière public/privé (reformulation de NFR-9) | Aucun contenu privé dans le dépôt ; nommer le répertoire privé dans les consignes et le garde-fou est autorisé ; l'adresse mail et LinkedIn sont écrits dans le contenu, dans le dépôt ; les villes de travail peuvent apparaître, seule la ville de résidence est privée | NFR-9, FR-3, FR-17, FR-2, FR-28 |
@@ -745,9 +752,10 @@ Le PRD rappelle les décisions déjà prises et nomme les points confiés à l'a
 | 13/09/2026 | CV PDF et socle (question 16, numéro conservé) | Liens vers les CV PDF FR et EN absents de l'en-tête ; présents dans le pied de page de toutes les pages et en évidence sur la page « À propos » ; affichés seulement si les fichiers existent et ont passé leur contrôle ; le socle peut être mis en ligne sans les PDF | FR-38, FR-16, FR-32, §3, §8.1 |
 | 13/09/2026 | Adresse de l'activité déclarée et lieu de résidence public (question 17, numéro conservé) | Option a : l'adresse de l'activité déclarée est le domicile d'Arnaud ; sa commune apparaît uniquement sur la page des mentions légales, injectée au build, jamais commitée ; partout ailleurs, « Basé en France » | FR-18, FR-33, NFR-9 |
 | 13/09/2026 | Direction visuelle | « Dossier d'architecture », accent vert ; un poste sans cas n'affiche rien à la place des cas ; détails dans `DESIGN.md`, en cours de rédaction | NFR-6, NFR-13, FR-2, §9 |
-| 13/09/2026 | UX validée (`DESIGN.md`, `EXPERIENCE.md`) ; étape UX (question 12, numéro conservé) | Direction visuelle et comportement décrits dans les deux documents validés. Sous un poste, les cas affichent numéro et titre, sans « En bref » ; le corps d'un poste ne s'affiche que s'il n'a aucun cas. CV PDF publiés ensemble ou pas du tout. Photo aussi sur la page « À propos ». Lien « Retour au parcours » de chaque page cas vers son poste sur l'accueil | NFR-6, FR-2, FR-15, FR-16, FR-34, FR-38, §0, §9 |
+| 13/09/2026 | UX validée (`DESIGN.md`, `EXPERIENCE.md`) ; étape UX (question 12, numéro conservé) | Direction visuelle et comportement décrits dans les deux documents validés. Sous un poste, les cas affichent numéro et titre, sans « En bref » ; le corps d'un poste ne s'affiche que s'il n'a aucun cas. *Révisé le 02/10/2026 : le corps et la stack de tout poste sont rendus dans un bloc repliable après ses cas ; voir la ligne du même jour.* CV PDF publiés ensemble ou pas du tout. Photo aussi sur la page « À propos ». Lien « Retour au parcours » de chaque page cas vers son poste sur l'accueil | NFR-6, FR-2, FR-15, FR-16, FR-34, FR-38, §0, §9 |
 | 13/09/2026 | Méthode du test des trente secondes (question 14, numéro conservé) | Méthode décrite dans `EXPERIENCE.md` : cinq testeurs, trois questions, seuil de quatre sur cinq | SM-1 |
 | 13/09/2026 | Titre et introduction de la page Chiliz (question 9, numéro conservé ; décision D-4 du contrôle de préparation à l'implémentation) | Titre « Chiliz » en FR et en EN, sans introduction en v1 : les sources n'en donnent pas (NFR-10), et la ligne de contexte EN du cas 02 présente déjà l'entreprise | FR-9 |
+| 02/10/2026 | Contexte complet de chaque mission sur le CV (proposition de changement du 02/10/2026, arbitrages Q1 à Q8 d'Arnaud) | Chaque poste affiche son secteur (clé traduite) et porte, **qu'il ait des cas ou non**, son périmètre complet et la stack complète du projet, tirée de `data/stack.yaml`, dans un bloc repliable natif fermé par défaut, placé après ses cas (Q1, Q3, Q4). Aucune durée n'est affichée : la période de l'auteur en porte les bornes ; la période d'un cas est comprise dans celle de son poste, sans couvrir nécessairement toute la mission (Q2). Termes du vocabulaire acceptés, termes génériques refusés, « Zend Framework » scindé en 1 et 2 (Q5). Contrat public `docs/format-parcours.md` et passation privée (Q6). Stories 10.8 à 10.10 dans l'Epic 10 (Q7) ; les incohérences du parcours publié attendent la story 10.10 (Q8). Les pages de cas ne changent pas, hormis la stack du cas 05 | §3, FR-2, FR-6, FR-23, FR-25, FR-37 |
 
 Les mentions « ex-question N » renvoient à la numérotation des versions antérieures de la liste, avant son gel ; « numéro conservé » renvoie à la numérotation figée du §11.2.
 
@@ -788,6 +796,7 @@ La numérotation est figée, car l'architecture y renvoie. Une question tranché
 - L'URL de son profil GitHub, pour les données structurées « Person » (FR-35).
 - La ligne de contexte EN sur April Technologies (FR-22).
 - Les données de parcours, de formation, de certification et de langues, tirées de son CV, en FR et en EN (FR-2, FR-36).
+- Le contexte de chaque mission (secteur, périmètre, stack du projet), validé ligne par ligne dans le premier jet privé, en FR et en EN (FR-2, story 10.10 ; ajouté le 02/10/2026).
 - La photo originale, hors dépôt (FR-34).
 - Les deux CV PDF de la v1, sans numéro de téléphone ni ville de résidence (FR-38).
 

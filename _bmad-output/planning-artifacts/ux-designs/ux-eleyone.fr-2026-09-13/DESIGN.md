@@ -12,6 +12,7 @@ sources:
   - content/cases/chiliz/case-02-chiliz.en.md
   - branche experiment/d2-bilingue (experiments/d2-bilingue/theme.d2)
   - décisions d'Arnaud du 13/09/2026 (direction, accent, accueil CV, pages cas, CV PDF, mentions légales)
+  - _bmad-output/planning-artifacts/sprint-change-proposal-2026-10-02.md (contexte complet de chaque mission, décision 5 révisée le 02/10/2026)
 companions:
   - EXPERIENCE.md
   - .memlog.md
@@ -208,6 +209,8 @@ components:
     companyTypography: '{typography.entry-heading}'
     roleTypography: '{typography.body}'
     locationColor: '{colors.ink-muted}'
+    bodyTypography: '{typography.body-sm}'
+    stackTypography: '{typography.meta}'
     separator: '1px {colors.rule}'
   attached-case:
     revisionBar: '{spacing.revision-bar} solid {colors.accent}'
@@ -260,7 +263,7 @@ components:
 >
 > Les maquettes « Dossier d'architecture » ont servi de base : le tour 1 pour la page cas (fichiers `cas-chiliz.html` et `style.css`, avec leurs captures), le tour 2 pour l'accueil CV (`index-vert.html`, `style.css` et captures). Elles sont restées hors du dépôt. **En cas de conflit, ce document et `EXPERIENCE.md` l'emportent sur les maquettes.**
 >
-> Les décisions d'Arnaud sont datées dans le texte ; celles du 13/09/2026 sur la mise en page sont récapitulées à la fin. Le document est validé par Arnaud (13/09/2026).
+> Les décisions d'Arnaud sont datées dans le texte ; celles du 13/09/2026 sur la mise en page sont récapitulées à la fin. Le document est validé par Arnaud (13/09/2026). La décision 5 a été révisée le 02/10/2026 par la proposition de changement du même jour (`sprint-change-proposal-2026-10-02.md`) : le relevé la garde, avec sa note de révision.
 
 ## Brand & Style
 
@@ -385,7 +388,7 @@ Les autres clés (N4 à N6, AA*, AB*) se fixent au spike, avec la même règle :
 | Société d'un poste | `entry-heading` 1,1875 rem | idem | accueil |
 | Lien de cas rattaché | `case-link` 1,0625 rem / 600 | idem | accueil |
 | Texte courant | `body` 1,0625 rem | `body-md` 1,125 rem | partout |
-| Texte secondaire | `body-sm` 1 rem | idem | valeurs de « Contexte mission », sommaire, en-tête, pied de page |
+| Texte secondaire | `body-sm` 1 rem | idem | valeurs de « Contexte mission », corps d'un poste, sommaire, en-tête, pied de page |
 | Métadonnées | `meta` 0,8125 rem | `meta-md` 0,875 rem | périodes, « Basé en France », numéros « Cas 02 », stack |
 | Étiquettes d'encart | `label` 0,8125 rem / 600, capitales CSS, +0,08 em | idem | « En bref », « Contexte mission », « Sommaire » |
 | Numéro de rubrique | `rubric-number` 0,7 em du titre | idem | « 02.3 » devant une rubrique |
@@ -445,7 +448,7 @@ Le contenu et l'ordre sont fixés par le PRD. Ce tableau fixe seulement leur dis
 | Zone | sm | md et lg |
 |---|---|---|
 | Identité | ligne d'identité sur toute la largeur moins la photo, photo `identity-block.photoSize` à droite sur les lignes nom → « Basé en France », pitch pleine largeur dessous | photo dans la colonne de marge, alignée à droite ; nom, titre du site, « Basé en France », pitch dans la colonne de texte |
-| « Parcours » | titre de bloc, puis postes empilés : période (meta) au-dessus de la société | titre de bloc dans la colonne de texte ; chaque poste est une ligne de registre : période dans la marge, société, rôle, lieu et cas dans le texte |
+| « Parcours » | titre de bloc, puis postes empilés : période (meta) au-dessus de la société ; le bloc repliable du poste suit ses cas | titre de bloc dans la colonne de texte ; chaque poste est une ligne de registre : période dans la marge, société, rôle, lieu et cas dans le texte, puis le bloc repliable du poste (périmètre et stack du projet, fermé par défaut ; 02/10/2026) |
 | « En parallèle » | même composant que « Parcours » (poste `track: parallel`) | idem |
 | « Formation, certification, langues » | registre compact, un sous-titre `label` par nature (formation, certification, langues) | période éventuelle dans la marge |
 | Appel à contact | titre de bloc, puis un lien | idem |
@@ -571,9 +574,11 @@ Un poste de « Parcours » ou d'« En parallèle ».
 - **Période** en `meta` et `ink-muted`. Dans la colonne de marge dès md, au-dessus de la société sous md. **La colonne de marge ne contient que la période** : le lieu et le cadre passent dans la colonne de texte, ce qui corrige le lieu de travail en monospace qui passait mal à la ligne dans la marge de la maquette.
 - **Société** (`h3`) en `entry-heading`. Pour Ton Pote le Geek, le nom est un lien vers son site.
 - **Ligne de rôle** en `body` : intitulé du poste (`role`), puis « · », puis, en `ink-muted` et dans cet ordre, ceux qui existent parmi : `location` (ville de travail ou « Full remote »), le libellé du cadre `setup`, et la société de prestation `via` (« prestation Modis » / *via Modis*). Champs `location` et `via` validés par Arnaud le 13/09/2026 (AD-18).
-- **Corps du poste** (Markdown facultatif, AD-18) en `body-sm`, affiché seulement pour un poste sans cas publié (validé par Arnaud le 13/09/2026). Un poste avec cas n'affiche pas son corps : ses cas en tiennent lieu.
+- **Secteur** (`sector`, AD-18, ajouté le 02/10/2026) : sur la ligne de rôle, en `ink-muted` ; sa place exacte dans la ligne est fixée par la story 10.9. Rien dans la marge ne change : la période y reste seule.
+- **Bloc repliable du poste** (02/10/2026, proposition de changement du même jour, arbitrage Q1) : un `<details>` natif, **fermé par défaut**, pour tout poste, placé **après** ses cas. Dedans, le corps du poste — le périmètre complet de la mission (Markdown, AD-18) — en `body-sm`, puis la stack du projet en `meta`, avec la classe `.stack` déjà définie pour l'encart des cas (`context-box`). Le `<summary>` est un libellé court (« Mission : périmètre et stack », à confirmer par la story 10.9), focalisable au clavier, avec un indicateur d'état visible (ouvert ou fermé) et une cible d'au moins 24 px. Fermé, le bloc n'occupe qu'une ligne : c'est ce qui garde le lien du premier cas dans le premier écran mobile (FR-37). Ce qui manque n'est pas rendu.
+  - *Révisé le 02/10/2026.* Avant : « **Corps du poste** (Markdown facultatif, AD-18) en `body-sm`, affiché seulement pour un poste sans cas publié (validé par Arnaud le 13/09/2026). Un poste avec cas n'affiche pas son corps : ses cas en tiennent lieu. » Un cas ne couvre qu'une décision et ne cite que la part de la stack qu'il mobilise : il ne tient pas lieu du contexte de la mission.
 - **Filet** `rule` entre deux postes, sur la seule colonne de texte dès md (la marge reste nette).
-- **Poste sans cas** (confirmé par Arnaud le 13/09/2026) : affiché normalement, avec société, rôle, période, lieu et cadre, puis plus rien. Pas de zone de cas, pas de barre de révision, pas de tiret, pas de mention d'absence.
+- **Poste sans cas** (confirmé par Arnaud le 13/09/2026) : affiché normalement, avec société, rôle, période, lieu et cadre, puis son bloc repliable (02/10/2026). Pas de zone de cas, pas de barre de révision, pas de tiret, pas de mention d'absence.
 - **Rattachement** : la liste des cas vient de la clé `position` de chaque cas (format des cas v0.4, validé ; `featured` supprimé, il n'y a plus de cas mis en avant).
 
 ### attached-case
@@ -692,7 +697,7 @@ Liste de définitions des mentions légales. Termes en `meta` et `ink-muted` (No
 2. Pas d'« En bref » sous les cas rattachés de l'accueil : numéro et titre seulement.
 3. Sommaire mobile dans un `<details>` fermé ; visible dans la marge dès 48 rem.
 4. Sélecteur de langue : « English » / « Français ».
-5. Corps d'un poste affiché seulement quand le poste n'a aucun cas publié.
+5. Corps d'un poste affiché seulement quand le poste n'a aucun cas publié. — *Révisée le 02/10/2026 (`sprint-change-proposal-2026-10-02.md`, arbitrage Q1 d'Arnaud) : le corps et la stack du projet de **tout** poste sont rendus dans un `<details>` natif fermé par défaut, après ses cas (composant `cv-position`). Le relevé ci-dessus reste ce qui a été décidé le 13/09/2026 ; `cv-position` fait foi pour l'état courant.*
 6. Cadre unique de 77,5 rem sur toutes les pages larges : la colonne de texte ne bouge pas d'une page à l'autre.
 7. N1 du thème D2 aligné sur `ink` (`#1C2030`).
 8. SVG D2 à double thème, sous réserve d'un spike (`<img>`, déterminisme octet par octet, ≤ 60 Ko) ; repli : planche claire encadrée sans filtre ; schéma large dans un cadre qui défile horizontalement, avec « Ouvrir en taille réelle ».

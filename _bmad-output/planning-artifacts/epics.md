@@ -24,7 +24,7 @@ updated: 2026-09-13
 
 ## Présentation
 
-Ce document découpe en epics et en stories le PRD, l'architecture et l'UX d'eleyone.fr. Il ne fixe rien de nouveau. Pour le **comment**, l'ordre de précédence est : l'architecture (`ARCHITECTURE-SPINE.md`, AD-1 à AD-24, contrôles C1 à C24), puis le PRD (FR-1 à FR-39, NFR-1 à NFR-13), puis `DESIGN.md` et `EXPERIENCE.md` (validés par Arnaud le 13/09/2026), puis `docs/format-cas.md` v0.4 et le brief. Aucune fonctionnalité n'est ajoutée. La v1.1 ne contient que ce que le PRD y place (génération des CV PDF, §8.2) et n'a aucune story ici.
+Ce document découpe en epics et en stories le PRD, l'architecture et l'UX d'eleyone.fr. Il ne fixe rien de nouveau. Pour le **comment**, l'ordre de précédence est : l'architecture (`ARCHITECTURE-SPINE.md`, AD-1 à AD-24, contrôles C1 à C25), puis le PRD (FR-1 à FR-39, NFR-1 à NFR-13), puis `DESIGN.md` et `EXPERIENCE.md` (validés par Arnaud le 13/09/2026), puis `docs/format-cas.md` v0.4 et le brief. Aucune fonctionnalité n'est ajoutée. La v1.1 ne contient que ce que le PRD y place (génération des CV PDF, §8.2) et n'a aucune story ici.
 
 Réalignement complet du 13/09/2026, sans interlocuteur (run headless). Là où l'atelier aurait posé une question, la réponse vient des documents. Ce qu'ils ne tranchent pas n'est pas décidé ici :
 
@@ -35,6 +35,8 @@ Réalignement complet du 13/09/2026, sans interlocuteur (run headless). Là où 
 Les questions Q6 à Q12 et Q14 à Q17 sont tranchées (PRD §11.1), Q9 comprise (titre « Chiliz », sans introduction : décision D-4).
 
 Mise à jour du 13/09/2026 (`bmad-correct-course`) : les décisions D-1 à D-17 et les corrections M-1 à M-18 du contrôle de préparation à l'implémentation (`implementation-readiness.md`) sont appliquées ; le détail est dans `sprint-change-proposal-2026-09-13.md`.
+
+Mise à jour du 02/10/2026 (`bmad-correct-course`) : la proposition de changement `sprint-change-proposal-2026-10-02.md`, approuvée par Arnaud avec ses arbitrages Q1 à Q8, donne à chaque poste du CV le contexte complet de sa mission. Elle ajoute à l'Epic 10 les stories 10.8 à 10.10, le contrôle C25, et révise UX-DR8.
 
 ### Règles de conduite des stories
 
@@ -69,7 +71,7 @@ Résumé ; le texte et les conséquences testables du PRD font foi.
 
 **Accueil CV**
 - FR-1 : haut de l'accueil, dans l'ordre : ligne d'identité, titre du site, pitch de trois phrases ; texte modifiable sans gabarit.
-- FR-2 : parcours du plus récent au plus ancien ; chaque poste (société, intitulé, période, ville de travail ou cadre) liste ses cas publiés par numéro et titre, sans « En bref » ; poste sans cas complet et sans zone de cas ; corps d'un poste affiché seulement sans cas ; cas 06 sous le poste April Technologies de 2017.
+- FR-2 : parcours du plus récent au plus ancien ; chaque poste (société, intitulé, période, ville de travail ou cadre) liste ses cas publiés par numéro et titre, sans « En bref » ; poste sans cas complet et sans zone de cas ; secteur, puis périmètre (corps) et stack du projet de **tout** poste dans un bloc repliable fermé par défaut, après ses cas (révisé le 02/10/2026 : le corps ne s'affichait que sans cas) ; aucune durée affichée ; période d'un cas comprise dans celle de son poste ; cas 06 sous le poste April Technologies de 2017.
 - FR-3 : appel à contact vers la page Contact de la même langue.
 - FR-4 : bloc « En parallèle » : lien vers Ton Pote le Geek et vers le cas 01, ligne de contexte EN, aucune page d'offre.
 - FR-33 : ligne d'identité « Arnaud Grousset · Eleyone », « Basé en France » seul lieu public hors mentions légales, nom dans le `<title>` de l'accueil.
@@ -81,7 +83,7 @@ Résumé ; le texte et les conséquences testables du PRD font foi.
 
 **Pages cas**
 - FR-5 : ordre d'un cas : titre, « Contexte mission », « En bref », cas complet.
-- FR-6 : « Contexte mission » : société, cadre, rôle, période, stack ; libellés par langue ; stack issue de `data/stack.yaml`.
+- FR-6 : « Contexte mission » : société, cadre, rôle, période, stack ; libellés par langue ; stack issue de `data/stack.yaml` ; celle d'un cas reste celle qu'il cite, celle d'un poste est celle du projet entier (02/10/2026).
 - FR-7 : « En bref » : enjeu puis résultat, 3 phrases et 400 caractères au plus.
 - FR-8 : rubriques de `docs/format-cas.md`, dans l'ordre, identiques en FR et en EN.
 - FR-9 : page Chiliz (cas 02, 03, 04 dans l'ordre), correcte avec la seule section 02 ; sections adressables ; titre et introduction : Q9.
@@ -153,14 +155,14 @@ Pas de gabarit de démarrage ; le dépôt part de la structure initiale de l'arc
 - **AD-15** : journaux sans IP dans le conteneur et dans Nginx Proxy Manager.
 - **AD-16** : agent de parité en script HTTP, Gitea seulement.
 - **AD-17** : contrôles automatiques, check-list manuelle par gabarit en clair et en sombre, critère 390 × 844, mesures consignées dans `docs/measures/`.
-- **AD-18** : `content/career/position-<id>` et `content/education/education-<id>` ; clé `position` dans le cas ; ancres `#position-<id>` et « Retour au parcours » ; `position-ton-pote-le-geek` en `track: parallel` ; identifiants de poste figés (`position-<société>`, suivi de `-<année de début>` si la société revient).
+- **AD-18** : `content/career/position-<id>` et `content/education/education-<id>` ; clé `position` dans le cas ; ancres `#position-<id>` et « Retour au parcours » ; `position-ton-pote-le-geek` en `track: parallel` ; identifiants de poste figés (`position-<société>`, suivi de `-<année de début>` si la société revient) ; clés `sector` (traduite) et `stack` (non traduite, dans `data/stack.yaml`), sans clé de durée ; corps et stack de tout poste dans un `<details>` fermé après ses cas ; période d'un cas comprise dans celle de son poste ; contrat `docs/format-parcours.md` (02/10/2026).
 - **AD-19** : identité dans `content/_index` ; `scripts/photo/prepare.sh` (Hugo, recadrage 4:5, 640 × 800, ancrage manuel) ; variantes accueil et « À propos » ≤ 40 Ko.
 - **AD-20** : JSON-LD `Person`, un bloc par accueil, champs de FR-35 seulement, sources fixées (`job_title` de `content/_index`, `linkedin` et `github` de `content/contact`, lien vide omis).
 - **AD-21** : `assets/cv/cv-{fr,en}.pdf`, liens conditionnels « ensemble ou rien », C21 en pre-commit, pre-receive (après `poppler-utils` sur Gitea) et `release`.
 - **AD-22** : canal de répétition `site-rehearsal` sur `127.0.0.1:18080`, accès par tunnel SSH, tags `-rc.N`, première répétition tôt sur `v0.1.0-rc.N`, jalon « répétition générale » avant `v1.0.0` ; tag `-rc` de même arbre exigé pour `v1.0.0` seulement.
 - **AD-23** : typographie française appliquée au build par `_partials/typo-fr.html`, pages FR seulement.
 - **AD-24** : flux de développement : `feat/*`, `fix/*`, `chore/*` et `docs/*` depuis `dev` en squash, `dev` → `main` en fast-forward, `hotfix/*` depuis `main` ; protections Gitea ; outillage en trois niveaux (neuf skills) ; revue par un LLM d'un autre fournisseur dans un worktree hors du dépôt, rapport `llm-review sha=… base=… model=… verdict=…` ; verrous de fusion, règle d'amorçage, exception documentaire sur tout `_bmad-output/` ; prérequis du poste (`jq`, `agy`, Docker dans WSL, Hugo et D2 locaux).
-- **Contrôles C1 à C24** : chacun est rattaché à une story.
+- **Contrôles C1 à C25** : chacun est rattaché à une story (C25, période d'un cas comprise dans celle de son poste : story 10.9).
 - **Procédures** : hook pre-receive (7 étapes, dont les PDF et l'image Gitea dérivée) ; premier déploiement (9 étapes, dont la répétition générale et la mesure).
 - **Walking skeleton** : WS-0 à WS-5, puis, hors squelette : parcours et formation, photo et JSON-LD, CV PDF, typographie, spike D2 puis pipeline, pages simples et légales, `release`, répétition générale, premier déploiement, agent de parité.
 
@@ -175,7 +177,7 @@ Tirées de `DESIGN.md` et `EXPERIENCE.md` (validés le 13/09/2026). Aucune valeu
 - UX-DR5 : `site-header` (marque, « À propos », « Contact », sélecteur ; pas de CV) — stories 5.1, 9.3, 9.4.
 - UX-DR6 : `site-footer` (CV, mentions légales, confidentialité, code source) — stories 5.1, 7.2, 9.1, 9.2, 9.5.
 - UX-DR7 : `identity-block` — story 5.2.
-- UX-DR8 : `cv-position` et `attached-case` (barre de révision, poste sans cas, corps affiché sans cas) — story 5.2.
+- UX-DR8 : `cv-position` et `attached-case` (barre de révision, poste sans cas, corps et stack de tout poste dans un bloc repliable, après ses cas) — stories 5.2, 10.9. *Révisé le 02/10/2026 : « corps affiché sans cas ».*
 - UX-DR9 : bloc formation, certification et langues en registre compact — story 5.3.
 - UX-DR10 : `portrait` (4:5, tailles, variantes, budget) — stories 5.4, 5.5, 9.4.
 - UX-DR11 : `context-box` et `summary-box` — story 6.1.
@@ -185,7 +187,7 @@ Tirées de `DESIGN.md` et `EXPERIENCE.md` (validés le 13/09/2026). Aucune valeu
 - UX-DR15 : `live-material-slot` (prêt par type, prévu en rendu de travail, schéma large, mode sombre ou repli) — stories 2.5, 13.4 à 13.6.
 - UX-DR16 : `legal-list` — story 9.1.
 - UX-DR17 : typographie française et anglaise (espaces insécables, pas de césure, `text-wrap`) — stories 6.3, 5.1.
-- UX-DR18 : premier écran par page, dont l'accueil 390 × 844 (FR-37) — stories 5.2, 6.1, 10.1, 11.11.
+- UX-DR18 : premier écran par page, dont l'accueil 390 × 844 (FR-37) — stories 5.2, 6.1, 10.1, 10.9, 10.10, 11.11.
 - UX-DR19 : libellés d'interface de « Voice and Tone », décidés ou à valider — toute story qui en pose.
 - UX-DR20 : plancher d'accessibilité (repères, plan des titres, ordre du DOM, clavier, cibles) — check-list de chaque story de gabarit.
 - UX-DR21 : mise en page des pages simples et de la 404 — stories 5.1, 9.1 à 9.4.
@@ -196,10 +198,10 @@ Tirées de `DESIGN.md` et `EXPERIENCE.md` (validés le 13/09/2026). Aucune valeu
 ### Carte de couverture des FR
 
 - FR-1 : 2.2, 5.2, 10.1
-- FR-2 : 2.7, 5.2, 10.2
+- FR-2 : 2.7, 5.2, 10.2, 10.8 à 10.10
 - FR-3 : 9.3
 - FR-4 : 5.2, 10.2, 10.6
-- FR-5 à FR-8 : 2.5, 3.3, 3.4, 3.6, 6.1, 6.2
+- FR-5 à FR-8 : 2.5, 3.3, 3.4, 3.6, 6.1, 6.2 ; FR-6 aussi 10.9 (stack d'un poste)
 - FR-9 : 2.5, 3.5, 6.1, 10.4, 11.1
 - FR-10 : 10.7, 13.1
 - FR-11 : 10.6
@@ -211,12 +213,12 @@ Tirées de `DESIGN.md` et `EXPERIENCE.md` (validés le 13/09/2026). Aucune valeu
 - FR-17 : 9.3
 - FR-18 : 0.1, 2.4, 9.1, 11.2, 11.3
 - FR-19 : 4.2, 9.2, 11.11
-- FR-20 : 2.2, 3.3, 6.3
+- FR-20 : 2.2, 3.3, 6.3, 10.10
 - FR-21 : 2.3
 - FR-22 : 10.2, 10.5 à 10.7, 13.3
-- FR-23 : 3.3, 8.3
+- FR-23 : 3.3, 8.3, 10.9
 - FR-24 : 12.1, 12.2
-- FR-25 : 2.7, 3.17, 10.2 à 10.7
+- FR-25 : 2.7, 3.17, 10.2 à 10.8
 - FR-26 : 2.2, 2.7, 3.2, 3.4, 11.1
 - FR-27 : 8.2, 8.3
 - FR-28 : 0.2, 0.3, 0.7 à 0.9, 1.1 à 1.4, 3.12, 7.3
@@ -228,13 +230,13 @@ Tirées de `DESIGN.md` et `EXPERIENCE.md` (validés le 13/09/2026). Aucune valeu
 - FR-34 : 5.4, 5.5, 9.4
 - FR-35 : 3.8, 9.6
 - FR-36 : 5.3, 10.3
-- FR-37 : 5.2, 10.1, 11.11
+- FR-37 : 5.2, 10.1, 10.9, 11.11
 - FR-38 : 7.1 à 7.4, 9.4
 - FR-39 : 11.4, 11.5, 11.8, 11.9, 11.10
 
 ## Liste des epics
 
-L'ordre suit le walking skeleton, précédé de l'outillage de développement (Epic 0, décidé par Arnaud le 13/09/2026) : WS-0, puis WS-1 à WS-5, puis l'ordre « hors du squelette » de l'architecture. Deux ajustements, pour qu'aucune story ne dépende d'une story suivante : le JSON-LD vient après la page Contact, qui porte le lien LinkedIn ; les stories d'intégration du contenu du socle forment un epic placé avant la mise en ligne. Troisième ajustement (décision D-5) : les stories 11.1 à 11.9 (chaîne de mise en ligne, skills `release` et `rehearse-release`, première répétition) sont placées avant l'Epic 10, dont elles ne dépendent pas, pour répéter tôt ; les stories 11.10 à 11.13 (test des trente secondes, socle en ligne, `hotfix`, retour arrière) restent après lui. Les numéros des stories sont conservés.
+L'ordre suit le walking skeleton, précédé de l'outillage de développement (Epic 0, décidé par Arnaud le 13/09/2026) : WS-0, puis WS-1 à WS-5, puis l'ordre « hors du squelette » de l'architecture. Deux ajustements, pour qu'aucune story ne dépende d'une story suivante : le JSON-LD vient après la page Contact, qui porte le lien LinkedIn ; les stories d'intégration du contenu du socle forment un epic placé avant la mise en ligne. Troisième ajustement (décision D-5) : les stories 11.1 à 11.9 (chaîne de mise en ligne, skills `release` et `rehearse-release`, première répétition) sont placées avant l'Epic 10, dont elles ne dépendent pas, pour répéter tôt ; les stories 11.10 à 11.13 (test des trente secondes, socle en ligne, `hotfix`, retour arrière) restent après lui. Les numéros des stories sont conservés. Quatrième ajustement (proposition de changement du 02/10/2026) : les stories 10.8 à 10.10, ajoutées à l'Epic 10, se jouent après la 11.9 ; 10.8 et 10.9 avant la 11.10, quoi qu'il arrive ; 10.10 avant la 11.10 si son prérequis de contenu est rempli, sinon après la 11.11.
 
 ### Epic 0 : Outillage de développement
 Arnaud et ses agents travaillent sur un flux de branches linéaire sans merge commit, avec revue LLM d'un autre fournisseur, verrous de fusion et garde-fou avant tout envoi. Jeton Gitea dans `.env` et `.env.example`, protections des branches, skills `check-private`, `create-pull-request`, `llm-review`, `sprint-consistency`, `verify-and-merge-pr`, puis leur durcissement après la rétrospective (stories 0.8 et 0.9) ; les skills `publish-case`, `release`, `rehearse-release` et `hotfix` et le verrou « CI verte » sont placés après les stories dont ils dépendent.
@@ -277,11 +279,11 @@ Un lecteur trouve mentions légales, confidentialité, Contact, « À propos » 
 **FR :** FR-3, FR-16 à FR-19, FR-29, FR-33 à FR-35, FR-38. **NFR :** NFR-9, NFR-12. **AD :** AD-3, AD-9, AD-15, AD-20. **C :** C10, C23.
 
 ### Epic 10 : Contenu du socle
-Le pitch, le parcours, la formation, la page Chiliz et les cas 01, 02 et 05 passent les contrôles et quittent l'état de brouillon.
-**FR :** FR-1, FR-2, FR-4, FR-9 à FR-11, FR-22, FR-25, FR-36. **NFR :** NFR-10.
+Le pitch, le parcours, la formation, la page Chiliz et les cas 01, 02 et 05 passent les contrôles et quittent l'état de brouillon. Depuis le 02/10/2026, chaque poste du CV porte aussi le contexte complet de sa mission : contrat des postes, rendu et contrôles, puis contenu (stories 10.8 à 10.10).
+**FR :** FR-1, FR-2, FR-4, FR-6, FR-9 à FR-11, FR-20, FR-22, FR-23, FR-25, FR-36, FR-37. **NFR :** NFR-10. **AD :** AD-18. **C :** C3, C6, C19, C25.
 
 ### Epic 11 : Mise en ligne, répétition générale et socle
-La chaîne de mise en ligne et les skills `release`, `rehearse-release` et `hotfix` sont construits ; la chaîne est répétée sur le serveur de production, le test des trente secondes est passé, puis le socle est mis en ligne derrière un proxy sans journal d'IP. Les stories 11.1 à 11.9 se placent avant l'Epic 10, les stories 11.10 à 11.13 après lui (D-5).
+La chaîne de mise en ligne et les skills `release`, `rehearse-release` et `hotfix` sont construits ; la chaîne est répétée sur le serveur de production, le test des trente secondes est passé, puis le socle est mis en ligne derrière un proxy sans journal d'IP. Les stories 11.1 à 11.9 se placent avant l'Epic 10, les stories 11.10 à 11.13 après lui (D-5) — à une exception près : la story 10.10 passe après la 11.11 si son contenu n'est pas prêt (proposition du 02/10/2026).
 **FR :** FR-18, FR-19, FR-26, FR-32, FR-37, FR-39. **NFR :** NFR-2, NFR-3, NFR-5, NFR-9. **AD :** AD-9, AD-11, AD-14, AD-15, AD-17, AD-22, AD-24. **C :** C15, C22.
 
 ### Epic 12 : Agent de parité consultatif
@@ -1338,6 +1340,7 @@ Périmètre : `content/career/_index.{fr,en}.md` (jamais rendu), `content/career
 **Étant donné** une copie locale du poste Chiliz avec un corps Markdown
 **Quand** on lance le rendu de travail
 **Alors** le corps n'est pas affiché, puisque le poste a un cas (AD-18).
+*(Règle révisée le 02/10/2026 : le corps et la stack de tout poste sont rendus dans un `<details>` après ses cas — story 10.9. Le critère reste ce que la story 2.7 a livré.)*
 
 **Étant donné** la page Chiliz
 **Quand** Claire suit « Retour au parcours » (i18n `back_to_career`), placé **une fois, en haut de page**, avant le `h1` (`EXPERIENCE.md`, premier écran ; décidé par Arnaud le 17/09/2026)
@@ -2121,6 +2124,7 @@ afin de passer le test des trente secondes et d'ouvrir une preuve en un clic.
 **Étant donné** un poste avec cas publiés (copie locale)
 **Quand** on l'affiche
 **Alors** il montre période, société (`h3`), rôle puis, dans cet ordre, `location`, cadre et `via` s'ils existent, puis la liste des cas (numéro « Cas 02 » et titre en lien, sans « En bref »), marquée par la barre de révision ; son corps n'est pas affiché.
+*(Règle révisée le 02/10/2026 : le corps et la stack de tout poste sont rendus dans un `<details>` après ses cas — story 10.9. Le critère reste ce que la story 5.2 a livré.)*
 
 **Étant donné** un poste sans cas publié
 **Quand** on l'affiche
@@ -3093,6 +3097,8 @@ afin de découvrir une erreur de chaîne bien avant la mise en ligne.
 
 Stories d'**intégration** : le contenu fourni par Arnaud passe les contrôles et quitte l'état de brouillon. Les cas passent par le skill `publish-case` (story 3.17).
 
+**Stories ajoutées le 02/10/2026** (`sprint-change-proposal-2026-10-02.md`, arbitrage Q7 d'Arnaud) : 10.8 à 10.10, pour que chaque poste du CV porte le contexte complet de sa mission. Les deux premières ne sont pas des stories d'intégration : 10.8 écrit le contrat des postes, 10.9 le rendu et les contrôles, avec des clés facultatives ; seule 10.10 intègre le contenu validé par Arnaud. L'epic repasse `in-progress` pour elles.
+
 ### Story 10.1 : Home page pitch
 
 En tant que Claire, CTO (UJ-1),
@@ -3301,9 +3307,164 @@ afin de voir comment Arnaud mesure une performance et en nomme les limites.
 **Alors** aucun élément « prévu » ne laisse de trace, comme pour le cas 02
 **Et** cela ne fait pas de cette story une réalisation de FR-12, que la carte attribue aux stories qui construisent le mécanisme et publient du matériel « prêt ».
 
+### Story 10.8 : Career format contract
+
+**Ajoutée par la proposition de changement du 02/10/2026** (`_bmad-output/planning-artifacts/sprint-change-proposal-2026-10-02.md`, arbitrages Q1 à Q8 d'Arnaud). Ce que cette proposition appelle « le prompt du CV » : le contrat qui permet de rédiger un poste complet, sur le modèle de `docs/format-cas.md`.
+
+En tant qu'Arnaud, mainteneur,
+je veux un contrat de rédaction des postes,
+afin qu'une personne ou un agent produise un poste complet sans toucher au code.
+
+**Couvre :** FR-2, FR-25, NFR-10 · AD-18
+**Dépendances :** — (arbitrages Q1 à Q8 rendus le 02/10/2026)
+**Bloquée par :** —
+**Prérequis de contenu :** —
+**Opération manuelle (Arnaud) :** non
+
+**Critères d'acceptation :**
+
+**Étant donné** `docs/format-parcours.md`
+**Quand** on le lit
+**Alors** il suit la structure de `docs/format-cas.md` : emplacement et identifiants figés (renvoi à la liste d'AD-18, jamais recopiée), front matter aux clés anglaises, valeurs traduites ou non selon AD-18 — `company`, `stack`, `setup`, `via`, `track` et `order` ne se traduisent pas, `sector` se traduit —, parité FR/EN, marqueurs `[TODO: …]`, et un modèle vide
+**Et** il fixe le corps : le périmètre de la mission, de 3 à 6 phrases, à la première personne, dans la voix du noyau narratif — le jugement, pas l'exécution
+**Et** il reprend les règles de rédaction de `docs/format-cas.md` : rien d'inventé, aucune information personnelle, ton factuel, aucune personne physique nommée, un sujet jamais mis en production présenté comme tel.
+
+**Étant donné** la clé `stack` d'un poste
+**Quand** on la rédige selon le contrat
+**Alors** elle porte la stack du projet entier, en termes de `data/stack.yaml`, et les notions qui ne sont pas des technologies (DEX, microservices, APIs, CI, VPS ou infrastructure auto-hébergée) vont dans le périmètre (Q5)
+**Et** le contrat dit qu'aucune durée n'est écrite, la période en portant les bornes (Q2), et que la période d'un cas est comprise dans celle de son poste.
+
+**Étant donné** AD-18, `docs/format-cas.md` et la section « `docs/format-cas.md` v0.4 » de l'architecture
+**Quand** la story est livrée
+**Alors** AD-18 renvoie au contrat ; `docs/format-cas.md` passe en v0.5, garde pour un cas la règle « seules les technologies citées dans le cas » et renvoie à `format-parcours.md` pour la stack d'un poste
+**Et** la ligne « Renvoi » de l'architecture, qui annonce ce contrat au futur, passe au présent dans la même PR (point 8 d'AGENTS.md).
+
+**Étant donné** la passation privée (Q6)
+**Quand** la story est livrée
+**Alors** `docs/private/handoff-redaction-postes.md` existe, sur le modèle de `docs/private/handoff-redaction-cas.md` : les décisions qui touchent les postes, ce qui manque poste par poste (repris des `[TODO]` et `[À TRANCHER]` du premier jet), les incohérences à trancher
+**Et** il est commité dans le dépôt privé par `git -C docs/private commit`, jamais dans ce dépôt, et ni la PR ni le fichier de story n'en recopient le contenu.
+
+- [ ] Le fichier de story nomme le fichier aîné, `docs/format-cas.md`, et liste ses règles en disant pour chacune si le contrat des postes la reprend (point 19 d'AGENTS.md).
+- [ ] `scripts/tests/run.sh scripts/tests/test-docs-headings.sh` passe ; le garde-fou passe sur la branche.
+- [ ] La PR touche `docs/format-cas.md` : l'exception documentaire ne s'applique pas, la revue du code est exigée.
+
+**Questions à poser avant de commencer :**
+- Le contrat couvre-t-il aussi les entrées de `content/education/`, ou les seuls postes, comme le dit la proposition ?
+
+### Story 10.9 : Full mission context on the CV
+
+**Ajoutée par la proposition de changement du 02/10/2026.** Elle rend le contexte complet de chaque mission avec des clés **facultatives** : le site reste juste et publiable avec les postes d'aujourd'hui, et la story 10.10 apporte le contenu.
+
+En tant que recruteur,
+je veux lire pour chaque mission son secteur, son périmètre et sa stack,
+afin de juger l'ampleur du travail et pas seulement une décision.
+
+**Couvre :** FR-2, FR-6, FR-23, FR-37 · AD-18 · C3, C6, C13, C19, C25 · UX-DR8, UX-DR18, UX-DR19, UX-DR20
+**Dépendances :** 10.8 ; `DESIGN.md` (`cv-position`), `EXPERIENCE.md` (`cv-position`, « State Patterns », premier écran)
+**Bloquée par :** —
+**Prérequis de contenu :** — (démonstration sur des copies locales non commitées)
+**Opération manuelle (Arnaud) :** non
+
+**Critères d'acceptation :**
+
+**Étant donné** un poste qui porte `sector`, `stack` et un corps (copie locale)
+**Quand** l'accueil est rendu, en FR puis en EN
+**Alors** `_partials/position.html` affiche le secteur sur la ligne de rôle, et rend le corps puis la stack dans un `<details>` natif **fermé par défaut**, placé **après** la liste des cas publiés : corps en `body-sm`, stack en `meta` avec la classe `.stack` de l'encart des cas (`DESIGN.md`, `cv-position`)
+**Et** ce bloc existe pour **tout** poste, qu'il ait des cas ou non ; ce qui manque n'est pas rendu.
+
+**Étant donné** le résumé du bloc
+**Quand** on parcourt l'accueil au clavier, en clair puis en sombre
+**Alors** il est atteint dans l'ordre de lecture, s'ouvre et se referme par Entrée ou Espace, montre son état et un focus visible, offre une cible d'au moins 24 px, sans JavaScript ni `tabindex` positif (WCAG 2.2 AA, check-list d'AD-17)
+**Et** son libellé vient d'`i18n/`, confirmé par Arnaud avant commit (« Mission : périmètre et stack » proposé).
+
+**Étant donné** le site actuel, dont aucun poste ne porte encore `sector` ni `stack`
+**Quand** on lance `scripts/check.sh`
+**Alors** le build et tous les contrôles passent : les clés sont facultatives jusqu'à la story 10.10.
+
+**Étant donné** C3, C6 et C19
+**Quand** la `stack` d'un poste diffère entre FR et EN, cite un terme absent de `data/stack.yaml`, ou que `sector` ou `stack` est présente mais vide (chaîne d'espaces, liste vide)
+**Alors** C3, C6, puis C19 échouent en nommant le fichier et la clé
+**Et** un `sector` différent entre les langues n'est pas signalé : il se traduit.
+
+**Étant donné** C25, la période d'un cas comprise dans celle de son poste (AD-18)
+**Quand** un cas déborde de la période de son poste, ou qu'une période — du cas ou du poste — n'a pas l'une des formes lues : « mois AAAA – mois AAAA », « depuis mois AAAA », « AAAA », en FR et en EN
+**Alors** C25 échoue en nommant les deux fichiers ; une forme illisible est refusée, jamais laissée passer
+**Et** les périodes écrites aujourd'hui passent : cas 01 dans Ton Pote le Geek, 02 et 04 dans Chiliz, 05 dans Orange, 06 dans April Technologies 2017.
+
+**Étant donné** chaque garde ajoutée (C3, C6, C19, C25)
+**Quand** on la retire une fois
+**Alors** son test échoue, et il exerce l'entrée qu'elle doit refuser, pas seulement celle qu'elle accepte (point 9 d'AGENTS.md).
+
+**Étant donné** l'accueil sur 390 × 844 px, bloc fermé, en FR et en EN, avec Charter puis une serif de repli large
+**Quand** la page s'ouvre sans défilement
+**Alors** on voit la ligne d'identité, le titre, le pitch, le premier poste et le lien « Cas 02 » (FR-37)
+**Et** la mesure est faite sur un poste court, un poste vide et le poste Chiliz le plus long, pas sur le seul qui existe (point 11 d'AGENTS.md).
+
+- [ ] C13 (budget) passe sur l'accueil.
+- [ ] Le fichier de story nomme les aînés que cette story imite — le rendu de la stack de `_partials/case.html` pour le bloc, C6 sur les cas pour C6 sur les postes — et liste leurs gardes, en disant pour chacune si la cadette en a besoin (point 19 d'AGENTS.md).
+- [ ] Les lignes C3, C6, C19 et C25 de l'architecture, AD-18, `DESIGN.md` et `EXPERIENCE.md`, qui annoncent ce rendu et ces contrôles « à partir de la story 10.9 », passent au présent dans la PR ; la ligne C25 y reçoit le nom de son script (point 8 d'AGENTS.md).
+
+**Questions à poser avant de commencer :**
+- Libellé du `<summary>`, en FR et en EN ?
+- Place du secteur sur la ligne de rôle (avant ou après le lieu, le cadre et `via`) ?
+- Rendu d'un poste qui n'a ni corps ni stack : pas de bloc du tout, ou un bloc réduit à ce qui existe ?
+
+### Story 10.10 : Mission context content
+
+**Ajoutée par la proposition de changement du 02/10/2026.** Story d'intégration : le contenu validé par Arnaud passe les contrôles.
+
+En tant qu'Arnaud, mainteneur,
+je veux que les quatorze fichiers de poste portent le contexte complet validé,
+afin que le CV jugé et publié soit le CV complet.
+
+**Couvre :** FR-2, FR-20, NFR-10 · AD-18 · C3, C6, C19, C25
+**Dépendances :** 10.9
+**Bloquée par :** —
+**Prérequis de contenu :** le premier jet `docs/private/drafts/contexte-des-missions-v0.md` validé par Arnaud, ligne par ligne, sans `[TODO]` ni `[À TRANCHER]`.
+**Opération manuelle (Arnaud) :** non
+
+**Calendrier** (proposition du 02/10/2026) : avant la story 11.10 si le prérequis est rempli à temps ; sinon après la 11.11, publiée par une mise en ligne ordinaire (`release`), et les testeurs de la 11.10 jugent le CV d'avant. Les incohérences ci-dessous attendent cette story quel que soit son calendrier (Q8).
+
+**Critères d'acceptation :**
+
+**Étant donné** les sept postes, soit quatorze fichiers `content/career/position-<id>.{fr,en}.md`
+**Quand** on lance les contrôles puis le build de production
+**Alors** chacun porte son secteur, son périmètre (le corps) et sa stack, tirés du premier jet validé, selon `docs/format-parcours.md`, et tous les contrôles bloquants passent
+**Et** chaque donnée figure dans les sources ou a été confirmée par Arnaud *(relecture)*.
+
+**Étant donné** `data/stack.yaml`
+**Quand** la story est livrée
+**Alors** il porte les termes acceptés par Arnaud (Q5) : DFNS, TypeScript, viem.js, Chiliz Chain, Ethereum, SugarCRM, BackboneJS, Marionette, n8n, Stripe ; les termes refusés (DEX, microservices, APIs, CI, VPS ou infrastructure auto-hébergée) n'y sont pas et figurent dans le périmètre
+**Et** son en-tête dit : « … dans la `stack` d'un cas ; la `stack` d'un poste porte celles du projet entier »
+**Et** les exclusions de n8n et de Stripe **pour le cas 01** restent : elles portent sur ce que le cas cite.
+
+**Étant donné** l'entrée « Zend Framework » du vocabulaire
+**Quand** elle est scindée en « Zend Framework 1 » et « Zend Framework 2 »
+**Alors** la stack du cas 05, en FR et en EN, reçoit celle des deux que le cas cite, confirmée par Arnaud : c'est la seule modification d'une page de cas
+**Et** plus aucune stack ne porte « Zend Framework » seul.
+
+**Étant donné** les incohérences relevées dans le parcours publié (proposition du 02/10/2026, § Contenu)
+**Quand** Arnaud les tranche
+**Alors** chacune est corrigée ou confirmée, avec sa décision dans le fichier de story : début de carrière (juillet 2008 au parcours, avril 2008 sur « À propos ») ; Chiliz, « quatre ans » à l'accueil contre 3 ans et 10 mois d'après la période ; Mister Auto et Synolia qui se recouvrent sur janvier 2020 ; Chiliz, « traitement par lots on-chain », qui ne doit pas laisser croire mis en production le batch du cas 03 (règle 6 de `docs/format-cas.md`) ; Chiliz, « conçue from scratch », contre le POC existant et le départ en Python du cas 02 ; Mister Auto, « Chef de projet », contre le positionnement du noyau narratif
+**Et** l'écart entre la période d'Orange et celle du cas 05 n'en est pas une : un cas ne couvre pas nécessairement toute la mission (Q2).
+
+**Étant donné** C19
+**Quand** les quatorze fichiers sont remplis
+**Alors** `sector` et `stack` deviennent obligatoires pour un poste, et un test échoue sans cette règle (point 9 d'AGENTS.md).
+
+**Étant donné** l'accueil réel sur 390 × 844 px, en FR et en EN
+**Quand** la page s'ouvre sans défilement
+**Alors** FR-37 est revérifié sur le contenu livré.
+
+- [ ] Le CV PDF de la story 7.4, fourni à la main, ne porte pas ce contexte : la divergence est notée dans le fichier de story, sans être corrigée ici (les PDF générés depuis les mêmes données relèvent de la v1.1, PRD §8.2).
+- [ ] Aucun contenu du premier jet privé n'est recopié ailleurs que dans les fichiers publiés qu'il alimente ; le garde-fou passe.
+
+**Questions à poser avant de commencer :**
+- Quelle version de Zend Framework le cas 05 cite-t-il ?
+
 ## Mise en ligne du socle (stories 11.10 à 11.13)
 
-Suite de l'Epic 11, placée après l'Epic 10 (décision D-5) : ces stories demandent le contenu du socle. Les numéros sont conservés.
+Suite de l'Epic 11, placée après l'Epic 10 (décision D-5) : ces stories demandent le contenu du socle. Les numéros sont conservés. Les stories 10.8 et 10.9 les précèdent ; la 10.10 aussi si son prérequis de contenu est rempli, sinon elle suit la 11.11 (proposition du 02/10/2026).
 
 ### Story 11.10 : Thirty-second test
 
@@ -3312,7 +3473,8 @@ je veux vérifier avec cinq testeurs que l'accueil dit en trente secondes qui je
 afin de retoucher le haut de l'accueil avant la mise en ligne s'il le faut.
 
 **Couvre :** SM-1, SM-3, FR-1, FR-2, FR-37, FR-39 · AD-22, procédure « premier déploiement » (étape 3) · UX-DR24
-**Dépendances :** 9.4, 10.1 à 10.7, 11.9
+**Dépendances :** 9.4, 10.1 à 10.7, 10.9, 11.9
+**Ordre (proposition du 02/10/2026) :** joue après 10.9 ; après 10.10 si son prérequis de contenu est rempli, sinon 10.10 passe après 11.11.
 **Bloquée par :** — (**levée le 25/09/2026** : Q2 a été tranchée pour les cas 01 et 05 — arbitrages d'Arnaud du 24/09/2026 — et les stories 10.6 et 10.7 sont `done`, donc le socle est complet. Reste la dépendance 11.9, qui n'est pas un blocage par question ouverte)
 **Prérequis de contenu :** cinq testeurs selon `EXPERIENCE.md`.
 **Opération manuelle (Arnaud) :** **oui**, jalon « répétition générale » d'AD-22 sur l'arbre du socle (tags `v1.0.0-rc.1` et `v1.0.0-rc.2` sur `dev`, par `rehearse-release`), puis Arnaud mène le test, par partage d'écran sur le site de répétition (canal non public).
@@ -3338,7 +3500,8 @@ je veux ouvrir le site en ligne, en HTTPS, dans ma langue,
 afin de lire le CV et les preuves depuis le lien reçu.
 
 **Couvre :** FR-19, FR-32, FR-37, NFR-2 à NFR-5, NFR-13, SM-6, SM-8 · AD-14, AD-15, AD-17, procédure « premier déploiement » (étapes 4 à 8) · C15
-**Dépendances :** 11.7, 11.10 ; socle prêt (stories 9.1 à 9.4, 10.1 à 10.7)
+**Dépendances :** 11.7, 11.10 ; socle prêt (stories 9.1 à 9.4, 10.1 à 10.7, 10.9)
+**Ordre (proposition du 02/10/2026) :** joue après 10.9 ; après 10.10 si son prérequis de contenu est rempli, sinon 10.10 passe après 11.11.
 **Bloquée par :** — (**levée le 25/09/2026**, même raison que la story 11.10 : le socle est complet depuis les stories 10.6 et 10.7)
 **Prérequis de contenu :** ceux des stories du socle ; les CV PDF ne sont pas requis.
 **Opération manuelle (Arnaud) :** **oui**, tag `v1.0.0` par le skill `release`, hôte proxy dans Nginx Proxy Manager configuré sans IP dès sa création, vérifications, DNS en dernier, mesures.
@@ -3637,9 +3800,9 @@ afin de la regarder sur YouTube sans cookie sur le site.
 
 ### Validation finale
 
-- **Couverture** : chaque FR (FR-1 à FR-39), chaque NFR (NFR-1 à NFR-13), chaque contrôle (C1 à C24) et chaque AD (AD-1 à AD-24) est cité par au moins une story ; chaque UX-DR est rattachée à une story.
+- **Couverture** : chaque FR (FR-1 à FR-39), chaque NFR (NFR-1 à NFR-13), chaque contrôle (C1 à C25) et chaque AD (AD-1 à AD-24) est cité par au moins une story ; chaque UX-DR est rattachée à une story.
 - **Dépendances** : aucune story ne dépend d'une story suivante. Les skills d'Epic 0 qui s'appuient sur des stories ultérieures sont placés après elles (3.16, 3.17, 11.7, 11.8, 11.12). Les stories 11.1 à 11.9 sont placées avant l'Epic 10 (D-5).
-- **Note pour la planification de sprint** (décision d'Arnaud du 13/09/2026) : les numéros de stories sont conservés. `sprint-status.yaml` les trie par numéro, donc l'Epic 11 après l'Epic 10 : l'ordre de travail, stories 11.1 à 11.9 avant l'Epic 10, puis 11.10 à 11.13 après lui, est fixé lors de la planification de sprint. Les stories 10.4 et 10.5 sont livrées dans une seule PR.
+- **Note pour la planification de sprint** (décision d'Arnaud du 13/09/2026) : les numéros de stories sont conservés. `sprint-status.yaml` les trie par numéro, donc l'Epic 11 après l'Epic 10 : l'ordre de travail, stories 11.1 à 11.9 avant l'Epic 10, puis 11.10 à 11.13 après lui, est fixé lors de la planification de sprint. Les stories 10.4 et 10.5 sont livrées dans une seule PR. Les stories 10.8 à 10.10 (02/10/2026) suivent la 11.9 ; 10.8 et 10.9 précèdent la 11.10, et la 10.10 aussi si son contenu est prêt, sinon elle suit la 11.11.
 - **Répétition sur les mêmes fichiers** : `layouts/` est touché par les epics 2 (structure), 5 et 6 (mise en page), 9 (pages) et 13 (matériel prêt). Le regroupement est écarté : la structure précède les contrôles (walking skeleton), et chaque epic de mise en page est démontrable seul.
 - **Pas de gabarit de démarrage** ni de base de données.
 
@@ -3675,6 +3838,7 @@ Q13 (v1.1) ne bloque rien. Q9 est tranchée (D-4) : les stories 10.4 et 10.5 ne 
 | URL du profil GitHub et intitulé `job_title` (JSON-LD) | 9.6 |
 | Relecture du premier jet du README-cas (voix et faits) | 3.15 |
 | Cas 01, 03, 04, 05, 06 ; ligne de contexte sur April Technologies | 10.6, 10.7, 13.1 à 13.3 |
+| Premier jet du contexte des missions validé ligne par ligne, sans `[TODO]` ni `[À TRANCHER]` (dépôt privé) | 10.10 |
 
 ### Stories avec opérations manuelles d'Arnaud
 

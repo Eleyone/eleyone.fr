@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '09-25-2026 21:00'
+last_updated: '10-02-2026 18:00'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -127,7 +127,7 @@ development_status:
   9-7-host-identification-without-phone: done
   epic-9-retrospective: done
 
-  epic-10: done
+  epic-10: in-progress
   10-1-home-page-pitch: done
   10-2-career-positions: done
   10-3-education-certification-and-languages-content: done
@@ -135,6 +135,12 @@ development_status:
   10-5-publish-pilot-case-02: done
   10-6-integrate-case-01: done
   10-7-integrate-case-05: done
+  # Stories 10.8 à 10.10 : proposition de changement du 02/10/2026 (contexte complet de chaque
+  # mission), arbitrage Q7 d'Arnaud. L'epic repasse in-progress ; sa rétrospective reste celle du
+  # 24/09/2026.
+  10-8-career-format-contract: backlog
+  10-9-full-mission-context-on-the-cv: backlog
+  10-10-mission-context-content: backlog
   epic-10-retrospective: done
 
   epic-11: in-progress
@@ -172,6 +178,9 @@ work_order:
   # l'Epic 10 y apparaît avant l'Epic 11. L'ordre de travail fait foi ici :
   # Epics 0 à 9, stories 11.1 à 11.9, Epic 10, stories 11.10 à 11.13,
   # puis Epics 12 et 13. Numéros des stories conservés.
+  # Stories 10.8 à 10.10 (proposition du 02/10/2026) : après la 11.9 et avant la 11.10.
+  # 10.10 n'y reste que si son prérequis de contenu est rempli ; sinon elle passe
+  # après la 11.11 (mise en ligne ordinaire par release).
   # Statuts : seulement dans development_status. Une story bloquée reste en
   # backlog ; ses blocages sont dans blocked_by_open_questions.
   - 0-1-gitea-token-in-env-and-env-example
@@ -251,6 +260,9 @@ work_order:
   - 10-5-publish-pilot-case-02
   - 10-6-integrate-case-01
   - 10-7-integrate-case-05
+  - 10-8-career-format-contract
+  - 10-9-full-mission-context-on-the-cv
+  - 10-10-mission-context-content
   - 11-10-thirty-second-test
   - 11-11-first-base-deployment-and-ip-free-proxy
   - 11-12-hotfix-skill
@@ -301,6 +313,8 @@ content_prerequisites:
   10-5-publish-pilot-case-02: "Relecture et accord d'Arnaud"
   10-6-integrate-case-01: "Cas 01 FR et EN rédigé par Arnaud"
   10-7-integrate-case-05: "Cas 05 FR et EN rédigé par Arnaud"
+  10-10-mission-context-content: "Premier jet privé du contexte des missions validé
+    par Arnaud, sans [TODO] ni [À TRANCHER]"
   11-10-thirty-second-test: "Cinq testeurs selon EXPERIENCE.md"
   13-1-integrate-and-release-case-03: "Cas 03 FR et EN rédigé par Arnaud"
   13-2-integrate-and-release-case-04: "Cas 04 FR et EN rédigé par Arnaud"

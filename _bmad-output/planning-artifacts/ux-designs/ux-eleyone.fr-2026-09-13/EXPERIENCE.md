@@ -9,6 +9,7 @@ sources:
   - content/cases/chiliz/case-02-chiliz.fr.md
   - content/cases/chiliz/case-02-chiliz.en.md
   - décisions d'Arnaud du 13/09/2026
+  - _bmad-output/planning-artifacts/sprint-change-proposal-2026-10-02.md (contexte complet de chaque mission, décision 10 révisée le 02/10/2026)
 companions:
   - DESIGN.md
   - .memlog.md
@@ -77,6 +78,9 @@ Microcopie de l'interface (libellés i18n, AD-3). La voix du contenu est celle d
 | `contact_cta` | Me contacter | Get in touch | à valider par Arnaud |
 | `case_number` | Cas 02 | Case 02 | décidé (13/09/2026) |
 | `cases_of_position` (nom accessible de la liste) | Cas qui prouvent ce poste | Cases behind this role | décidé (17/09/2026, story 2.7) |
+| Libellé du secteur d'un poste | Secteur | Sector | à valider par Arnaud à la story 10.9 (FR tiré de la proposition de changement du 02/10/2026, EN proposé ici) ; clé fixée par la story |
+| Libellé de la stack d'un poste | Stack du projet | Project stack | idem |
+| Résumé (`<summary>`) du bloc repliable d'un poste | Mission : périmètre et stack | à fixer par la story 10.9 | à confirmer par la story 10.9 ; retouchable après le test des trente secondes |
 | `context_box` | Contexte mission | Engagement context | décidé (AD-3) |
 | `summary_box` | En bref | At a glance | décidé (AD-3) |
 | Champs de l'encart | Société · Cadre · Rôle · Période · Stack | Company · Engagement · Role · Period · Stack | décidé (AD-3) |
@@ -115,7 +119,7 @@ Comportement. L'aspect visuel est dans `DESIGN.md.Components`, sous les mêmes n
 | `site-header` | toutes les pages | Ordre de tabulation : marque, À propos, Contact, sélecteur. L'élément de la page courante porte `aria-current="page"` et reste un lien. |
 | `language-switch` | en-tête | Mène à la page équivalente (`.Translations`, AD-2). Page Chiliz → page Chiliz de l'autre langue. Si une traduction manque (impossible en production, FR-20), il mène à l'accueil de l'autre langue plutôt que de disparaître. |
 | `identity-block` | accueil | Aucun élément interactif. `h1` = ligne d'identité. La photo a un `alt` dans la langue de la page (FR-34). |
-| `cv-position` | accueil | Porte `id="position-<id>"`. Non cliquable en entier : seuls le nom de Ton Pote le Geek et les titres de cas sont des liens. Les postes suivent `order` (AD-18). |
+| `cv-position` | accueil | Porte `id="position-<id>"`. Non cliquable en entier : seuls le nom de Ton Pote le Geek et les titres de cas sont des liens, et le résumé de son bloc repliable la seule commande. Les postes suivent `order` (AD-18). **Bloc repliable** (02/10/2026, arbitrage Q1) : `<details>` natif placé après les cas, fermé à chaque chargement ; il s'ouvre et se referme au clic, au toucher, à Entrée ou à Espace sur son résumé, sans JavaScript ; le résumé est focalisable, dans l'ordre de lecture, et son état (ouvert ou fermé) est visible et exposé nativement aux technologies d'assistance. |
 | `attached-case` | accueil | Cas retrouvés par leur clé `position` (format v0.4, validé ; plus de `featured` ni de cas mis en avant). Liste ordonnée par `number`, nom accessible `cases_of_position`. Chaque titre mène au cas en un clic : page cas, ou `#case-NN` de la page Chiliz. N'affiche que les cas publiés dans la langue de la page. |
 | `context-box` | page cas, section Chiliz | Placé après le titre du cas et avant « En bref » dans le HTML (FR-5), quel que soit l'endroit où la grille l'affiche. Titre au niveau des rubriques, sans numéro, hors sommaire. |
 | `summary-box` | page cas, section Chiliz | Toujours déplié, jamais tronqué. Titre au niveau des rubriques, sans numéro, hors sommaire. |
@@ -131,7 +135,9 @@ Comportement. L'aspect visuel est dans `DESIGN.md.Components`, sous les mêmes n
 
 | État | Surface | Traitement |
 |---|---|---|
-| Poste sans cas publié | accueil | Le poste s'affiche normalement (société, rôle, période, lieu, cadre, via), puis plus rien : pas de zone de cas, pas de barre de révision, pas de tiret, pas de mention d'absence (décision confirmée par Arnaud le 13/09/2026, FR-2). |
+| Poste sans cas publié | accueil | Le poste s'affiche normalement (société, rôle, période, lieu, cadre, via), puis son bloc repliable : pas de zone de cas, pas de barre de révision, pas de tiret, pas de mention d'absence (décision confirmée par Arnaud le 13/09/2026, FR-2 ; bloc ajouté le 02/10/2026). |
+| Tout poste, avec ou sans cas | accueil | Il porte son bloc repliable (périmètre et stack du projet), fermé au chargement, ouvert par le lecteur. *Révisé le 02/10/2026 : seul un poste sans cas affichait son corps.* |
+| Poste sans corps ni stack | accueil | Ce qui manque n'est pas rendu : ni bloc vide, ni mention. Cas réel tant que la story 10.10 n'a pas rempli les postes ; le rendu exact est fixé par la story 10.9. |
 | Poste dont tous les cas sont en brouillon | accueil, production | Comme un poste sans cas. |
 | Cas en brouillon | production | Absent partout : aucune page, aucun lien, aucune entrée de sommaire, aucune section (FR-26). |
 | Cas en brouillon | rendu de travail | Affiché, lié depuis son poste ; un marqueur `label` « Brouillon » précède le titre du cas. |
@@ -156,7 +162,7 @@ Comportement. L'aspect visuel est dans `DESIGN.md.Components`, sous les mêmes n
 
 ## Interaction Primitives
 
-- **Cliquer ou toucher un lien** : c'est la seule interaction de l'interface, avec l'ouverture du `<details>` du sommaire sur mobile.
+- **Cliquer ou toucher un lien** : c'est la seule interaction de l'interface, avec l'ouverture du `<details>` du sommaire sur mobile et celle du bloc repliable d'un poste sur l'accueil (02/10/2026).
 - **Suivre une ancre** : saut direct, sans défilement animé (`scroll-behavior` reste `auto`). La cible est marquée par `:target` (voir `DESIGN.md.rubric-heading`).
 - **Revenir** : le bouton retour du navigateur ramène à la position précédente ; le lien « Retour au parcours » ramène au poste sur l'accueil.
 - **Défiler horizontalement** : uniquement dans un schéma large ou un extrait, jamais sur la page.
@@ -218,6 +224,8 @@ Référence : 390 × 844 px sans défilement (FR-37 pour l'accueil). Sur les aut
 | Mentions légales | titre ; bloc Éditeur | les trois blocs |
 | Confidentialité | titre ; début du texte | idem |
 | 404 | titre ; phrase ; deux liens | idem |
+
+Le bloc repliable d'un poste (02/10/2026) suit ses cas et reste fermé au chargement : il ne repousse pas le lien du premier cas, et la ligne « Accueil » ci-dessus reste exacte. FR-37 se revérifie à 390 × 844 sur un poste court, un poste vide et le poste Chiliz le plus long (story 10.9).
 
 Le retrait de l'en-tête des liens de CV (44 px au lieu de 69 px dans la maquette) et l'absence d'« En bref » sous les cas de l'accueil libèrent environ 150 px par rapport à la maquette du tour 2, qui tenait déjà le critère.
 
@@ -298,6 +306,7 @@ Méthode pour SM-1, validée par Arnaud (question 14, tranchée le 13/09/2026). 
   - il désigne un cas ou un poste avec cas ;
   - il atteint une section de cas en un toucher depuis l'accueil (SM-3).
 - **Seuil** : quatre testeurs sur cinq. En dessous, on retouche le titre, le pitch ou le premier poste, puis on refait le test (le critère mobile FR-37 est revérifié à chaque retouche).
+- **Bloc repliable** (02/10/2026) : un testeur peut ne pas ouvrir le bloc d'un poste. C'est le prix assumé de l'arbitrage Q1 ; si le test le montre, le libellé du bloc fait partie de ce qui se retouche.
 - **Trace** : une note par passage dans `docs/measures/`, avec le rôle du testeur, sa langue, son appareil, ses réponses résumées et le verdict. Aucun nom, aucune donnée personnelle : le fichier est public.
 
 ## Décisions validées par Arnaud (13/09/2026)
@@ -311,7 +320,7 @@ Méthode pour SM-1, validée par Arnaud (question 14, tranchée le 13/09/2026). 
 7. Encre des schémas D2 alignée sur le texte du site.
 8. SVG D2 à double thème, sous réserve d'un spike (`<img>`, déterminisme octet par octet, ≤ 60 Ko) ; repli : planche claire encadrée ; schéma large dans un cadre qui défile horizontalement, avec « Ouvrir en taille réelle ».
 9. Typographie française appliquée au rendu des pages FR.
-10. Corps d'un poste affiché seulement quand il n'a aucun cas.
+10. Corps d'un poste affiché seulement quand il n'a aucun cas. — *Révisée le 02/10/2026 (`sprint-change-proposal-2026-10-02.md`, arbitrage Q1 d'Arnaud) : le corps et la stack du projet de **tout** poste sont dans un `<details>` natif fermé par défaut, après ses cas (« Component Patterns », `cv-position`). Le relevé ci-dessus reste ce qui a été décidé le 13/09/2026.*
 11. Même cadre de 77,5 rem sur toutes les pages larges.
 12. Portrait aussi sur la page À propos (160 × 200 et 320 × 400).
 
