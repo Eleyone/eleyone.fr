@@ -1,6 +1,6 @@
 ---
 name: rehearse-release
-description: Joue la répétition générale de la mise en ligne du site eleyone.fr — tag de répétition sur dev, attente du serveur, tunnel SSH, vérifications des en-têtes et des journaux, retour arrière, arrêt. À utiliser quand Arnaud demande de répéter la mise en ligne, de jouer une répétition générale ou de poser un tag vX.Y.Z-rc.N.
+description: Joue la répétition générale de la mise en ligne du site eleyone.fr — tag de répétition sur dev, attente du serveur, tunnel SSH, vérifications des en-têtes, des vraies valeurs des pages légales et des journaux, retour arrière, arrêt. À utiliser quand Arnaud demande de répéter la mise en ligne, de jouer une répétition générale ou de poser un tag vX.Y.Z-rc.N.
 ---
 
 # rehearse-release
@@ -13,9 +13,15 @@ La procédure fait foi : `docs/procedures/rehearse-release.md`. L'exécution est
 
 À retenir :
 
-- **deux temps.** `scripts/rehearse-release.sh <tag>` vérifie tout — tag, `.env`, port local, tags
-  libres relus depuis la forge, puis les **deux connexions** — affiche le programme et **s'arrête
-  là**, sans rien pousser. Le second appel, avec `--run`, joue la répétition ;
+- **deux temps.** `scripts/rehearse-release.sh <tag>` vérifie tout — tag, `.env`, fichier des
+  valeurs légales, port local, tags libres relus depuis la forge, puis les **deux connexions** —
+  affiche le programme et **s'arrête là**, sans rien pousser. Le second appel, avec `--run`, joue
+  la répétition ;
+- **les pages légales sont vérifiées avec les vraies valeurs**, à chaque passage, depuis
+  `docs/private/legal-release.env` (ou `LEGAL_RELEASE_ENV_FILE`). Le fichier doit exister sur le
+  poste et porter chaque nom `HUGO_LEGAL_*` de `.env.example` ; sinon le script s'arrête avant tout
+  tag. **N'ouvre pas ce fichier et n'en recopie aucune valeur** : le script les nomme sans jamais
+  les afficher, et c'est tout ce qu'il te faut ;
 - **la clé du poste porte une phrase de passe.** Si elle n'est pas déjà dans un agent, le script la
   charge lui-même dans un agent privé, qu'il tue en sortant : la phrase de passe se tape **dans un
   terminal**, l'audit compris. Sans terminal — ton cas —, le script s'arrête avant tout tag ; ne

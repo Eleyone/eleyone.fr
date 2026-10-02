@@ -42,8 +42,20 @@ fail=0
 signaler() { checks_report "$1" "$2"; fail=1; }
 
 # Les deux pages où l'adresse est admise, dans leur corps seulement. Les chemins viennent des
-# permaliens décidés le 13/09/2026 (ARCHITECTURE-SPINE, « Slugs des pages simples »).
-readonly pages_legales=(mentions-legales/index.html en/legal-notice/index.html)
+# permaliens décidés le 13/09/2026 (ARCHITECTURE-SPINE, « Slugs des pages simples »), écrits une
+# seule fois dans scripts/lib/legal.sh depuis la story 11.9 : la répétition générale interroge les
+# mêmes pages par leur URL, et deux écritures auraient fini par diverger (point 19 d'AGENTS.md).
+# shellcheck source=../lib/legal.sh
+. "$(dirname "${BASH_SOURCE[0]}")/../lib/legal.sh" || checks_die "scripts/lib/legal.sh illisible."
+pages_legales=()
+# Le chemin est lu dans une variable, avec son arrêt, avant d'entrer dans le tableau : en argument
+# d'un « += ( … ) », la substitution avalerait un échec (constat de la revue du code de la PR n° 128).
+for url_legale in "${legal_page_urls[@]}"; do
+  chemin_legal=$(checks_page_de_url "$url_legale") || checks_die "chemin du rendu de $url_legale introuvable."
+  [[ -n $chemin_legal ]] || checks_die "chemin du rendu de $url_legale vide."
+  pages_legales+=("$chemin_legal")
+done
+readonly pages_legales
 
 est_page_legale() { # $1 = chemin relatif à la racine du rendu
   local page
@@ -63,10 +75,12 @@ est_page_legale() { # $1 = chemin relatif à la racine du rendu
 # brute dans un HTML échappé, ne trouvait rien, et se déclarait vert — il aurait laissé passer la
 # commune de l'éditeur dans un titre (constat bloquant de la revue de la PR n° 98).
 #
-# **Les deux filtres vivaient ici** ; depuis la story 11.2 ils vivent dans « scripts/checks/lib.sh »,
+# **Les deux filtres vivaient ici** ; depuis la story 11.2 ils vivaient dans « scripts/checks/lib.sh »,
 # chargée en tête, parce que C22 (scripts/checks/output-patterns.sh) en a besoin pour les mêmes
-# raisons : une seconde écriture aurait été la faute du point 19 d'AGENTS.md. Leur comportement n'a
-# pas changé, et les cas de scripts/tests/test-legal-address.sh continuent de les éprouver à travers
+# raisons : une seconde écriture aurait été la faute du point 19 d'AGENTS.md. Depuis la story 11.9,
+# ils vivent dans « scripts/lib/text.sh », que « scripts/checks/lib.sh » charge, parce que la
+# répétition générale cherche à son tour les valeurs légales dans les pages servies. Leur
+# comportement n'a pas changé, et les cas de scripts/tests/test-legal-address.sh continuent de les éprouver à travers
 # ce contrôle — l'adresse échappée, l'adresse minifiée et l'adresse sérialisée en JSON-LD.
 #
 # Le texte est normalisé des **deux** côtés : l'adresse d'AD-9 tient souvent sur deux lignes.

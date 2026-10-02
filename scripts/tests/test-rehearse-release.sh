@@ -394,6 +394,115 @@ page() { # $1 = langue, $2… = liens supplémentaires
   printf '</head><body>Bonjour</body></html>'
 }
 
+# --- les pages légales et leurs valeurs (story 11.9) -------------------------------------------------
+#
+# **Les deux fixtures sont les vraies pages**, copiées d'un build de production local fait avec les
+# valeurs factices de ci/legal-placeholder.env (`scripts/build.sh production`, 02/10/2026) : minifiées,
+# sans guillemets d'attribut, `<meta charset=utf-8>` en tête, la typographie française appliquée à la
+# page FR. Une page écrite à la main aurait la forme qu'on imagine, et une vérification qui passe sur
+# elle peut échouer sur la vraie (point 16 d'AGENTS.md).
+#
+# Les valeurs « de mise en ligne » d'essai sont les valeurs factices où « VALEUR-FACTICE » devient
+# « VRAIE-VALEUR-ESSAI » : la page servie s'obtient en faisant le même remplacement dans la fixture, ce
+# qui garde la forme exacte du rendu — liens « mailto: » compris. Le marqueur ne doit jamais
+# apparaître dans une sortie du script (NFR-9).
+readonly fixture_fr=$fixtures/rehearse-release/mentions-legales.html
+readonly fixture_en=$fixtures/rehearse-release/legal-notice.html
+readonly marqueur_legal=VRAIE-VALEUR-ESSAI
+readonly factice=$root/ci/legal-placeholder.env
+
+# Les noms, lus dans le .env.example du projet comme le script les lit : aucun nombre écrit ici.
+# Appelée dans « $(…) », elle ne peut pas arrêter le cas : elle **rend 1**, et chaque appelant lit sa
+# sortie dans une variable avec son arrêt, jamais derrière « <<< "$(…)" », qui avalerait le code
+# (constat de la revue du code de la PR n° 128).
+noms_legaux() {
+  local ligne trouves=0
+  [[ -r $root/.env.example ]] || { echo ".env.example illisible" >&2; return 1; }
+  while IFS= read -r ligne; do
+    if [[ $ligne =~ ^(HUGO_LEGAL_[A-Z0-9_]+)= ]]; then
+      printf '%s\n' "${BASH_REMATCH[1]}"
+      trouves=$((trouves + 1))
+    fi
+  done < "$root/.env.example"
+  ((trouves > 0)) || { echo ".env.example ne nomme aucune variable HUGO_LEGAL_" >&2; return 1; }
+}
+
+# La valeur factice d'un nom, telle que le fichier la porte (sans guillemets : aucune n'en a).
+valeur_factice() { # $1 = nom
+  local ligne
+  while IFS= read -r ligne; do
+    [[ ${ligne%%=*} == "$1" ]] && { printf '%s' "${ligne#*=}"; return 0; }
+  done < "$factice"
+  printf 'aucune valeur factice pour %s\n' "$1" >&2
+  exit 1
+}
+
+legal_par_defaut() { printf '%s' "$depot/docs/private/legal-release.env"; }
+
+# Le fichier de mise en ligne d'essai : chaque nom de .env.example, avec sa valeur d'essai. Des
+# lignes supplémentaires remplacent une valeur (la première non vide gagne, règle de env.sh : elles
+# sont donc écrites **avant**).
+ecris_valeurs_legales() { # $@ = lignes à placer en tête ; LEGAL_ESSAI_FICHIER pour un autre fichier
+  local fichier=${LEGAL_ESSAI_FICHIER:-$(legal_par_defaut)} nom valeur noms
+  noms=$(noms_legaux) || exit 1
+  mkdir -p "$(dirname "$fichier")"
+  : > "$fichier"
+  (($# == 0)) || printf '%s\n' "$@" >> "$fichier"
+  while IFS= read -r nom; do
+    [[ -n $nom ]] || continue
+    valeur=$(valeur_factice "$nom")
+    printf '%s="%s"\n' "$nom" "${valeur//VALEUR-FACTICE/$marqueur_legal}" >> "$fichier"
+  done <<< "$noms"
+}
+
+# Une page légale servie : la fixture, avec des remplacements optionnels **avant** celui du marqueur
+# — c'est ainsi qu'un cas retire une valeur, ou la sert sous une autre écriture.
+page_legale() { # $1 = fixture, $2… = paires « ancien » « nouveau »
+  local corps
+  corps=$(cat "$1") || { echo "fixture illisible : $1" >&2; exit 1; }
+  shift
+  while (($# >= 2)); do
+    [[ $corps == *"$1"* ]] || { printf 'la fixture ne porte pas « %s » : le remplacement ne ferait rien\n' "$1" >&2; exit 1; }
+    corps=${corps//"$1"/"$2"}
+    shift 2
+  done
+  printf '%s' "${corps//VALEUR-FACTICE/$marqueur_legal}"
+}
+
+# Pose une page légale servie. Le corps et les en-têtes sont lus dans des variables **avec leur
+# arrêt** avant d'être passés : en argument direct, « "$(page_legale …)" » avalerait l'échec de la
+# garde de page_legale — un remplacement qui ne trouve pas sa cible —, et le cas tournerait sur une
+# page qui n'est pas celle qu'il croit (constat de la revue du code de la PR n° 128).
+pose_page_legale() { # $1 = chemin, $2 = html | texte | brute, $3 = fixture, $4… = paires de page_legale
+  local chemin=$1 forme=$2 fixture=$3 corps entetes
+  shift 3
+  case $forme in
+    html|brute) entetes=$(entetes_html 200) || exit 1 ;;
+    texte) entetes=$(entetes_ressource text/plain no-cache) || exit 1 ;;
+    *) printf 'pose_page_legale : forme inconnue « %s »\n' "$forme" >&2; exit 1 ;;
+  esac
+  if [[ $forme == brute ]]; then
+    corps=$(cat "$fixture") || { echo "fixture illisible : $fixture" >&2; exit 1; }
+  else
+    corps=$(page_legale "$fixture" "$@") || exit 1
+  fi
+  pose_reponse "$chemin" 200 "$entetes" "$corps"
+}
+
+pages_legales_servies() {
+  pose_page_legale /mentions-legales/ html "$fixture_fr"
+  pose_page_legale /en/legal-notice/ html "$fixture_en"
+}
+
+# Aucun cas ne voit une valeur légale — ni d'essai, ni servie — sur une sortie du script.
+aucune_valeur_legale_dans_la_sortie() { # $1 = libellé, $2… = autres fragments interdits
+  local interdit
+  for interdit in "$marqueur_legal" VALEUR-FACTICE "${@:2}"; do
+    [[ $out != *"$interdit"* ]] || { printf 'une valeur légale apparaît sur la sortie standard (%s) : %s\n' "$1" "$interdit" >&2; exit 1; }
+    [[ $err != *"$interdit"* ]] || { printf "une valeur légale apparaît sur la sortie d'erreur (%s) : %s\n" "$1" "$interdit" >&2; exit 1; }
+  done
+}
+
 site_conforme() { # $1 = « avec-svg » pour qu'un SVG figure dans la page d'accueil
   local liens=()
   [[ ${1:-} != avec-svg ]] || liens=("$svg")
@@ -401,6 +510,7 @@ site_conforme() { # $1 = « avec-svg » pour qu'un SVG figure dans la page d'acc
   pose_reponse /en/ 200 "$(entetes_html 200)" "$(page en "${liens[@]}")"
   pose_reponse /page-absente-de-la-repetition/ 404 "$(entetes_html 404)" "$(page fr)"
   pose_reponse /en/page-absente-de-la-repetition/ 404 "$(entetes_html 404)" "$(page en)"
+  pages_legales_servies
   pose_reponse "$css" 200 "$(entetes_ressource text/css "$immutable")" ""
   [[ ${1:-} != avec-svg ]] || pose_reponse "$svg" 200 "$(entetes_ressource image/svg+xml "$immutable")" ""
   printf '[25/Sep/2026:14:03:11 +0200] "GET /" 200 4096\n[25/Sep/2026:14:03:12 +0200] "GET %s" 200 8192\n' "$css" \
@@ -475,6 +585,9 @@ depot_de_test() { # $1 = URL du dépôt distant (défaut : le dépôt canonique)
   git -C "$depot" update-ref refs/remotes/origin/dev "$sha"
   printf '%s' "$sha" > "$work/forge-dev"
   ecris_env
+  # Le dépôt privé, ignoré comme dans le vrai dépôt : l'arbre de travail reste propre.
+  printf 'docs/private/\n' >> "$depot/.git/info/exclude"
+  ecris_valeurs_legales
   faux_git
   faux_ssh
   faux_curl
@@ -488,9 +601,13 @@ depot_de_test() { # $1 = URL du dépôt distant (défaut : le dépôt canonique)
 # L'utilisateur a **son** agent (SSH_AUTH_SOCK posé) : c'est lui que les appels au compte
 # d'administration doivent garder.
 readonly agent_utilisateur=/run/agent-de-l-utilisateur.sock
+# LEGAL_ESSAI_VARIABLE, s'il est posé, devient le LEGAL_RELEASE_ENV_FILE du script ; LEGAL_ESSAI_DOSSIER
+# change le dossier d'où il est lancé (le dépôt par défaut).
 repete() { # $@ = arguments du script
+  local -a legal=()
+  [[ -z ${LEGAL_ESSAI_VARIABLE:-} ]] || legal=(LEGAL_RELEASE_ENV_FILE="$LEGAL_ESSAI_VARIABLE")
   run env -i PATH="$work/bin:$PATH" HOME="$work" TMPDIR="$(tmpdir_a_soi)" LC_ALL=C SSH_AUTH_SOCK="$agent_utilisateur" \
-    bash -c 'cd "$1" || exit 99; shift; exec bash "$@"' bash "$depot" "$script" "$@"
+    "${legal[@]}" bash -c 'cd "$1" || exit 99; shift; exec bash "$@"' bash "${LEGAL_ESSAI_DOSSIER:-$depot}" "$script" "$@"
 }
 
 appels_ssh() { [[ -f $work/ssh-appels ]] && cat "$work/ssh-appels"; return 0; }
@@ -1424,6 +1541,375 @@ case_rehearse_outils_de_l_agent_absents() {
   [[ ! -f $work/git-push ]] || { echo "un tag a été poussé" >&2; exit 1; }
 }
 
+# --- les pages légales et leurs vraies valeurs (story 11.9) ---------------------------------------------------
+
+# Combien de noms .env.example porte : le compte vient du fichier, jamais d'un chiffre écrit ici.
+nombre_de_noms() { # rend 1 si noms_legaux échoue
+  local n=0 nom noms
+  noms=$(noms_legaux) || return 1
+  while IFS= read -r nom; do [[ -z $nom ]] || n=$((n + 1)); done <<< "$noms"
+  printf '%s' "$n"
+}
+
+case_rehearse_pages_legales_verifiees_a_chaque_passage() {
+  depot_de_test
+  repete v0.1.0-rc.1 --run
+  assert_eq 0 "$rc" "les pages légales portent les valeurs d'essai : la répétition passe (messages : $err)"
+  local n vu nombre urls
+  n=$(nombre_de_noms) || exit 1
+  urls=$(urls_curl) || exit 1
+  ((n > 0)) || { echo ".env.example ne nomme aucune valeur légale ?" >&2; exit 1; }
+  assert_contains "mentions légales FR : les $n valeurs légales de mise en ligne sont présentes" "$out" "la page FR est vérifiée"
+  assert_contains "mentions légales EN : les $n valeurs légales de mise en ligne sont présentes" "$out" "la page EN est vérifiée"
+  # À **chaque** passage : après le premier tag, après le second, après le retour arrière.
+  shell_grep_into vu -cFx -- "http://127.0.0.1:18080/mentions-legales/" <<< "$urls"
+  assert_eq 3 "$vu" "la page FR est interrogée aux trois passages"
+  shell_grep_into vu -cFx -- "http://127.0.0.1:18080/en/legal-notice/" <<< "$urls"
+  assert_eq 3 "$vu" "la page EN est interrogée aux trois passages"
+  shell_grep_into nombre -c -- "valeurs légales de mise en ligne sont présentes" <<< "$out"
+  assert_eq 6 "$nombre" "deux pages, trois passages"
+  aucune_valeur_legale_dans_la_sortie "séquence nominale"
+}
+
+case_rehearse_valeur_absente_de_la_page_fr() {
+  # **Chaque** nom, un par un : une valeur que la vérification ne saurait pas lire — un courriel vu
+  # seulement dans le lien, un numéro réécrit — passerait inaperçue si un seul nom était essayé.
+  local nom factice_valeur autre vu noms
+  noms=$(noms_legaux) || exit 1
+  while IFS= read -r nom; do
+    [[ -n $nom ]] || continue
+    reinitialise
+    depot_de_test
+    factice_valeur=$(valeur_factice "$nom")
+    autre=${factice_valeur//VALEUR-FACTICE/AUTRE-VALEUR}
+    pose_page_legale /mentions-legales/ html "$fixture_fr" "$factice_valeur" "$autre"
+    repete v0.1.0-rc.1 --run
+    assert_eq 1 "$rc" "la page FR sans la valeur de $nom est un échec (messages : $err)"
+    assert_contains "mentions légales FR : la valeur de $nom est absente de la page servie (/mentions-legales/)" "$err" \
+      "le message nomme $nom et la page"
+    shell_grep_into vu -F -- "mentions légales EN : la valeur de" <<< "$err"
+    assert_eq "" "$vu" "la page EN, conforme, n'est pas mise en cause ($nom)"
+    shell_grep_into vu -c -- "est absente de la page servie" <<< "$err"
+    assert_eq 1 "$vu" "une seule valeur manque, une seule est signalée ($nom)"
+    aucun_arret_de_la_repetition "valeur $nom absente"
+    aucune_valeur_legale_dans_la_sortie "valeur $nom absente" AUTRE-VALEUR
+  done <<< "$noms"
+}
+
+case_rehearse_valeur_absente_de_la_page_en() {
+  local nom=HUGO_LEGAL_HOST_NAME factice_valeur vu
+  depot_de_test
+  factice_valeur=$(valeur_factice "$nom")
+  pose_page_legale /en/legal-notice/ html "$fixture_en" "$factice_valeur" "Autre hébergeur"
+  repete v0.1.0-rc.1 --run
+  assert_eq 1 "$rc" "la page EN sans la valeur de $nom est un échec (messages : $err)"
+  assert_contains "mentions légales EN : la valeur de $nom est absente de la page servie (/en/legal-notice/)" "$err" "le message nomme la variable et la page EN"
+  shell_grep_into vu -F -- "mentions légales FR : la valeur de" <<< "$err"
+  assert_eq "" "$vu" "la page FR, conforme, n'est pas mise en cause"
+  aucune_valeur_legale_dans_la_sortie "valeur absente EN" "Autre hébergeur"
+}
+
+case_rehearse_valeur_echappee_retrouvee() {
+  # Une esperluette et une apostrophe : le minifieur les laisse en clair (mesuré), une autre
+  # sérialisation les écrit en entités. Les trois écritures de l'apostrophe et deux de l'esperluette
+  # doivent toutes être retrouvées — sans le décodage, la valeur serait déclarée absente.
+  local valeur="Dupont & Fils l'Ancien $marqueur_legal" factice_valeur forme
+  factice_valeur=$(valeur_factice HUGO_LEGAL_PUBLISHER_NAME)
+  for forme in "Dupont &amp; Fils l&#39;Ancien" "Dupont &#38; Fils l&#x27;Ancien" "Dupont &amp; Fils l&apos;Ancien" "Dupont & Fils l'Ancien"; do
+    reinitialise
+    depot_de_test
+    ecris_valeurs_legales "HUGO_LEGAL_PUBLISHER_NAME=\"$valeur\""
+    pose_page_legale /mentions-legales/ html "$fixture_fr" "$factice_valeur" "$forme VALEUR-FACTICE"
+    pose_page_legale /en/legal-notice/ html "$fixture_en" "$factice_valeur" "$forme VALEUR-FACTICE"
+    repete v0.1.0-rc.1 --run
+    assert_eq 0 "$rc" "$(printf 'la valeur servie sous la forme %q est retrouvée' "$forme") (messages : $err)"
+    aucune_valeur_legale_dans_la_sortie "valeur échappée" Dupont
+  done
+}
+
+case_rehearse_insecables_de_la_typographie_retrouvees() {
+  # La typographie française **remplace** l'espace devant « : » par U+00A0, et celle devant « ; »,
+  # « ? » ou à l'intérieur des guillemets par U+202F, sur la page FR seulement (mesuré sur un vrai
+  # build). Le minifieur replie aussi deux espaces en une. Trois écritures de la page FR : les
+  # caractères en clair, comme le rendu les écrit, puis leurs entités décimales et nommées.
+  local adresse="12 rue Haute : bât. B ; « Centre » ? $marqueur_legal"
+  local immat="SIREN 123  456 $marqueur_legal"
+  local f_adresse f_immat nb=$'\xc2\xa0' fine=$'\xe2\x80\xaf' forme_fr forme_en ecriture
+  f_adresse=$(valeur_factice HUGO_LEGAL_PUBLISHER_ADDRESS)
+  f_immat=$(valeur_factice HUGO_LEGAL_PUBLISHER_REGISTRATION)
+  forme_en="12 rue Haute : bât. B ; « Centre » ? VALEUR-FACTICE"
+  for ecriture in clair entites nommees; do
+    case $ecriture in
+      clair) forme_fr="12 rue Haute${nb}: bât. B${fine}; «${fine}Centre${fine}»${fine}? VALEUR-FACTICE" ;;
+      entites) forme_fr="12 rue Haute&#160;: bât. B&#8239;; «&#x202F;Centre&#x202f;»&#8239;? VALEUR-FACTICE" ;;
+      nommees) forme_fr="12 rue Haute&nbsp;: bât. B&#X202F;; «&#xa0;Centre&#8239;»&#8239;? VALEUR-FACTICE" ;;
+    esac
+    reinitialise
+    depot_de_test
+    ecris_valeurs_legales "HUGO_LEGAL_PUBLISHER_ADDRESS=\"$adresse\"" "HUGO_LEGAL_PUBLISHER_REGISTRATION=\"$immat\""
+    pose_page_legale /mentions-legales/ html "$fixture_fr" "$f_adresse" "$forme_fr" "$f_immat" "SIREN 123 456 VALEUR-FACTICE"
+    pose_page_legale /en/legal-notice/ html "$fixture_en" "$f_adresse" "$forme_en" "$f_immat" "SIREN 123 456 VALEUR-FACTICE"
+    repete v0.1.0-rc.1 --run
+    assert_eq 0 "$rc" "les insécables de la page FR ($ecriture) et les espaces repliées sont retrouvées (messages : $err)"
+    aucune_valeur_legale_dans_la_sortie "insécables $ecriture" "rue Haute" SIREN
+  done
+}
+
+case_rehearse_page_legale_absente_ou_pas_html() {
+  local chemin libelle mode
+  for mode in fr-404 en-texte; do
+    reinitialise
+    depot_de_test
+    if [[ $mode == fr-404 ]]; then
+      chemin=/mentions-legales/ libelle="mentions légales FR"
+      pose_reponse "$chemin" 404 "$(entetes_html 404)" "$(page fr)"
+    else
+      chemin=/en/legal-notice/ libelle="mentions légales EN"
+      # Le corps porte **toutes les valeurs** : seul le type de contenu peut faire refuser la page.
+      pose_page_legale "$chemin" texte "$fixture_en"
+    fi
+    repete v0.1.0-rc.1 --run
+    assert_eq 1 "$rc" "$mode : la vérification échoue (messages : $err)"
+    assert_contains "$libelle : valeurs légales non vérifiées" "$err" "$mode : le message dit que les valeurs n'ont pas été lues"
+    aucune_valeur_legale_dans_la_sortie "$mode"
+  done
+}
+
+case_rehearse_valeurs_factices_servies() {
+  # Le cas que la vérification existe pour refuser : l'image servie a été construite avec les valeurs
+  # factices — une variable de la forge vide, un build de contrôle livré. Les pages sont bien formées,
+  # tout le reste passe ; seules les valeurs trahissent.
+  depot_de_test
+  pose_page_legale /mentions-legales/ brute "$fixture_fr"
+  pose_page_legale /en/legal-notice/ brute "$fixture_en"
+  repete v0.1.0-rc.1 --run
+  assert_eq 1 "$rc" "des pages aux valeurs factices sont un échec (messages : $err)"
+  local nom page noms
+  noms=$(noms_legaux) || exit 1
+  while IFS= read -r nom; do
+    [[ -n $nom ]] || continue
+    for page in "FR : la valeur de $nom est absente de la page servie (/mentions-legales/)" \
+                "EN : la valeur de $nom est absente de la page servie (/en/legal-notice/)"; do
+      assert_contains "$page" "$err" "chaque valeur est signalée, sur chaque page ($nom)"
+    done
+  done <<< "$noms"
+  aucun_arret_de_la_repetition "valeurs factices servies"
+  aucune_valeur_legale_dans_la_sortie "valeurs factices servies"
+}
+
+case_rehearse_corps_avec_octets_nuls() {
+  # Une substitution avale les octets nuls en l'écrivant sur la sortie d'erreur : la lecture du corps
+  # passe par « tr -d '\0' » (leçon de C22 et C23). La page porte toutes ses valeurs.
+  #
+  # Le contrôle de langue de verifie_html, plus ancien, lit le corps par grep, qui prend un fichier
+  # portant un octet nul pour un binaire et n'y trouve pas « lang=fr » : la tournée échoue donc pour
+  # cette raison-là, et le cas affirme seulement que **les valeurs**, elles, ont été lues sans bruit.
+  # Une vraie page de nginx ne porte pas d'octet nul ; la garde vient des aînés, qui lisent tout
+  # fichier de public/ (point 19).
+  depot_de_test
+  local cle
+  cle=$(cle_http /mentions-legales/) || exit 1
+  printf '\0' >> "$work/http/$cle.corps"
+  repete v0.1.0-rc.1 --run
+  assert_eq 1 "$rc" "la tournée échoue sur la langue, illisible pour grep (messages : $err)"
+  assert_contains "mentions légales FR : la page servie n'est pas en « fr »" "$err" "c'est bien le contrôle de langue qui échoue"
+  local vu
+  shell_grep_into vu -F -- "est absente de la page servie" <<< "$err"
+  assert_eq "" "$vu" "les valeurs ont été retrouvées malgré l'octet nul"
+  [[ $err != *"null byte"* ]] || { printf 'un avertissement de bash sur un octet nul est sorti :\n%s\n' "$err" >&2; exit 1; }
+}
+
+# --- le fichier des valeurs légales, avant le premier tag ------------------------------------------------------
+
+case_rehearse_fichier_legal_absent() {
+  local args
+  for args in "v0.1.0-rc.1" "v0.1.0-rc.1 --run"; do
+    reinitialise
+    depot_de_test
+    rm -f "$(legal_par_defaut)"
+    # shellcheck disable=SC2086
+    repete $args
+    assert_eq 2 "$rc" "sans fichier des valeurs légales, rien ne part ($args ; messages : $err)"
+    assert_contains "fichier des valeurs légales de mise en ligne introuvable" "$err" "le message le dit ($args)"
+    assert_contains "LEGAL_RELEASE_ENV_FILE" "$err" "et nomme la variable qui en désigne un autre ($args)"
+    aucun_effet_de_bord "fichier légal absent, $args"
+  done
+}
+
+case_rehearse_fichier_legal_est_un_dossier() {
+  depot_de_test
+  rm -f "$(legal_par_defaut)"
+  mkdir -p "$(legal_par_defaut)"
+  repete v0.1.0-rc.1 --run
+  assert_eq 2 "$rc" "un dossier n'est pas un fichier de valeurs (messages : $err)"
+  # Le message affirmé est celui de **cette** garde : sans elle, le dossier se lit comme un fichier
+  # vide et le refus vient des variables manquantes, plus loin (mesuré par mutation).
+  assert_contains "qui n'est pas un fichier" "$err" "le message dit pourquoi"
+  aucun_effet_de_bord "fichier légal dossier"
+}
+
+case_rehearse_fichier_legal_incomplet() {
+  # Une valeur manquante **et** une valeur vide : les deux sont nommées d'un coup, comme env.sh et
+  # build-image.sh le font, et rien ne part — dans l'audit comme avec --run.
+  local args fichier ligne contenu=""
+  for args in "v0.1.0-rc.1" "v0.1.0-rc.1 --run"; do
+    reinitialise
+    depot_de_test
+    fichier=$(legal_par_defaut)
+    contenu=""
+    while IFS= read -r ligne; do
+      case $ligne in
+        HUGO_LEGAL_HOST_EMAIL=*) ;;
+        HUGO_LEGAL_PUBLISHER_NAME=*) contenu+="HUGO_LEGAL_PUBLISHER_NAME="$'\n' ;;
+        *) contenu+="$ligne"$'\n' ;;
+      esac
+    done < "$fichier"
+    printf '%s' "$contenu" > "$fichier"
+    # shellcheck disable=SC2086
+    repete $args
+    assert_eq 2 "$rc" "un fichier incomplet arrête tout ($args ; messages : $err)"
+    assert_contains "HUGO_LEGAL_HOST_EMAIL" "$err" "la variable absente est nommée ($args)"
+    assert_contains "HUGO_LEGAL_PUBLISHER_NAME" "$err" "la variable vide aussi, dans le même message ($args)"
+    aucun_effet_de_bord "fichier légal incomplet, $args"
+    aucune_valeur_legale_dans_la_sortie "fichier légal incomplet"
+  done
+}
+
+case_rehearse_valeur_faite_de_blancs() {
+  # « "   " » n'est pas vide pour dotenv, mais l'est une fois normalisée : une chaîne vide se trouve
+  # dans toute page, et la vérification passerait sans rien prouver.
+  depot_de_test
+  ecris_valeurs_legales 'HUGO_LEGAL_HOST_NAME="   "'
+  repete v0.1.0-rc.1 --run
+  assert_eq 2 "$rc" "une valeur faite de blancs arrête tout (messages : $err)"
+  assert_contains "que des blancs pour : HUGO_LEGAL_HOST_NAME" "$err" "le message nomme la variable"
+  aucun_effet_de_bord "valeur de blancs"
+}
+
+case_rehearse_premiere_valeur_non_vide() {
+  # La règle de scripts/env.sh, le chargeur du build : une entrée vide ne compte pas, et la première
+  # valeur non vide d'un nom est la sienne. Une entrée vide **avant** la bonne ne doit rien refuser ;
+  # une valeur non vide n'est pas écrasée par une plus loin — ici, celle qu'ecris_valeurs_legales
+  # écrit ensuite, et que la page servie ne porte pas.
+  local f_nom
+  f_nom=$(valeur_factice HUGO_LEGAL_HOST_NAME)
+  depot_de_test
+  ecris_valeurs_legales "HUGO_LEGAL_HOST_NAME=" "HUGO_LEGAL_HOST_NAME=\"Premier $marqueur_legal\""
+  pose_page_legale /mentions-legales/ html "$fixture_fr" "$f_nom" "Premier VALEUR-FACTICE"
+  pose_page_legale /en/legal-notice/ html "$fixture_en" "$f_nom" "Premier VALEUR-FACTICE"
+  repete v0.1.0-rc.1 --run
+  assert_eq 0 "$rc" "la première valeur non vide est retenue, l'entrée vide qui la précède ne compte pas (messages : $err)"
+}
+
+case_rehearse_cle_comparee_entiere() {
+  # dotenv_read retient les clés par **préfixe** : « HUGO_LEGAL_HOST_NAMEX » commence par
+  # « HUGO_LEGAL_HOST_NAME ». Écrite avant la vraie, elle serait prise pour elle si la clé n'était pas
+  # comparée entière, et la page — qui porte la vraie — serait déclarée fautive.
+  depot_de_test
+  ecris_valeurs_legales "HUGO_LEGAL_HOST_NAMEX=\"Intrus $marqueur_legal\""
+  repete v0.1.0-rc.1 --run
+  assert_eq 0 "$rc" "une clé plus longue ne se fait pas passer pour HUGO_LEGAL_HOST_NAME (messages : $err)"
+  aucune_valeur_legale_dans_la_sortie "clé plus longue" Intrus
+}
+
+case_rehearse_espaces_de_bord_ignores() {
+  # Une valeur entre guillemets garde ses espaces de bord pour dotenv ; la page n'en montre aucun, le
+  # minifieur les retirant autour d'un élément. Sans le rognage, « " Nom" » serait déclaré absent.
+  depot_de_test
+  local f_nom
+  f_nom=$(valeur_factice HUGO_LEGAL_HOST_NAME)
+  ecris_valeurs_legales "HUGO_LEGAL_HOST_NAME=\"  ${f_nom//VALEUR-FACTICE/$marqueur_legal}  \""
+  repete v0.1.0-rc.1 --run
+  assert_eq 0 "$rc" "les espaces de bord de la valeur ne comptent pas (messages : $err)"
+}
+
+case_rehearse_fichier_legal_copie_du_factice() {
+  # Le chemin du fichier factice est refusé plus bas ; ici, c'est son **contenu**, copié sous le nom
+  # attendu. Sans cette garde, des pages aux valeurs factices passeraient pour conformes.
+  depot_de_test
+  cp "$factice" "$(legal_par_defaut)"
+  repete v0.1.0-rc.1
+  assert_eq 2 "$rc" "les valeurs factices ne sont pas des valeurs de mise en ligne (messages : $err)"
+  assert_contains "porte la valeur factice" "$err" "le message dit pourquoi"
+  local nom noms
+  noms=$(noms_legaux) || exit 1
+  while IFS= read -r nom; do
+    [[ -z $nom ]] || assert_contains "$nom" "$err" "chaque variable factice est nommée"
+  done <<< "$noms"
+  aucun_effet_de_bord "copie du factice"
+  aucune_valeur_legale_dans_la_sortie "copie du factice"
+}
+
+case_rehearse_fichier_legal_de_travail_refuse() {
+  # Les deux fichiers de travail du dépôt, et tout fichier nommé .env : refusés par chemin, comme
+  # build-image.sh et env.sh le font. Le .env du dépôt porte ici toutes les valeurs d'essai — seul
+  # son **chemin** peut le faire refuser.
+  local cible
+  for cible in depot-env factice nomme-env; do
+    reinitialise
+    depot_de_test
+    case $cible in
+      depot-env)
+        cat "$(legal_par_defaut)" >> "$depot/.env"
+        LEGAL_ESSAI_VARIABLE=$depot/.env repete v0.1.0-rc.1 ;;
+      factice)
+        LEGAL_ESSAI_VARIABLE=$factice repete v0.1.0-rc.1 ;;
+      nomme-env)
+        mkdir -p "$work/ailleurs"
+        cp "$(legal_par_defaut)" "$work/ailleurs/.env"
+        LEGAL_ESSAI_VARIABLE=$work/ailleurs/.env repete v0.1.0-rc.1 ;;
+    esac
+    assert_eq 2 "$rc" "$cible : refusé (messages : $err)"
+    case $cible in
+      nomme-env) assert_contains "s'appelle .env" "$err" "$cible : le message dit pourquoi" ;;
+      *) assert_contains "fichier de travail du dépôt" "$err" "$cible : le message dit pourquoi" ;;
+    esac
+    aucun_effet_de_bord "fichier de travail $cible"
+  done
+}
+
+case_rehearse_fichier_legal_relatif_au_dossier_d_appel() {
+  # Un chemin relatif se résout depuis là où l'utilisateur l'a écrit, comme dans build-image.sh — et
+  # non depuis la racine du dépôt, où le script se place.
+  depot_de_test
+  mkdir -p "$depot/sous/dossier" "$work/ailleurs"
+  mv "$(legal_par_defaut)" "$work/ailleurs/legal.env"
+  LEGAL_ESSAI_DOSSIER=$depot/sous/dossier LEGAL_ESSAI_VARIABLE=../../../ailleurs/legal.env repete v0.1.0-rc.1
+  assert_eq 0 "$rc" "le chemin relatif est résolu depuis le dossier d'appel (messages : $err)"
+  assert_contains "variable(s) lue(s)" "$out" "et le fichier est lu"
+}
+
+case_rehearse_modele_ou_factice_manquant_a_cote_du_script() {
+  # Le script lit le .env.example et le fichier factice **qui l'accompagnent** : le cas en monte une
+  # copie, à laquelle il retire l'un ou l'autre.
+  #   - un modèle sans nom HUGO_LEGAL_ : une liste vide n'est pas une conformité, la vérification
+  #     des pages ne chercherait rien et passerait ;
+  #   - un modèle illisible : même conséquence ;
+  #   - un fichier factice illisible : la garde contre une copie des valeurs factices disparaîtrait
+  #     en silence.
+  local arbre=$work/arbre defaut attendu
+  for defaut in modele-sans-nom modele-absent factice-absent; do
+    reinitialise
+    depot_de_test
+    rm -rf "$arbre"
+    mkdir -p "$arbre/scripts/lib" "$arbre/ci"
+    cp "$script" "$arbre/scripts/"
+    cp "$root"/scripts/lib/*.sh "$arbre/scripts/lib/"
+    cp "$factice" "$arbre/ci/"
+    cp "$root/.env.example" "$arbre/"
+    case $defaut in
+      modele-sans-nom) printf 'ADMIN_HOST=\nDEPLOY_HOST=\n' > "$arbre/.env.example"; attendu="ne nomme aucune variable HUGO_LEGAL_" ;;
+      modele-absent) rm "$arbre/.env.example"; attendu=".env.example illisible" ;;
+      factice-absent) rm "$arbre/ci/legal-placeholder.env"; attendu="ci/legal-placeholder.env illisible" ;;
+    esac
+    run env -i PATH="$work/bin:$PATH" HOME="$work" TMPDIR="$(tmpdir_a_soi)" LC_ALL=C \
+      bash -c 'cd "$1" || exit 99; shift; exec bash "$@"' bash "$depot" "$arbre/scripts/rehearse-release.sh" v0.1.0-rc.1 --run
+    assert_eq 2 "$rc" "$defaut : rien ne part (messages : $err)"
+    assert_contains "$attendu" "$err" "$defaut : le message le dit"
+    aucun_effet_de_bord "$defaut"
+  done
+}
+
 # --- l'hygiène du dépôt et des messages -------------------------------------------------------------------------
 
 case_rehearse_aucune_valeur_dans_les_messages() {
@@ -1449,6 +1935,9 @@ case_rehearse_aucune_trace_de_shell() {
   assert_eq 0 "$rc" "l'audit passe sous bash -x (messages : $err)"
   [[ $err != *"$marqueur"* ]] || { echo "bash -x a écrit la destination dans la trace" >&2; exit 1; }
   [[ $out != *"$marqueur"* ]] || { echo "bash -x a écrit la destination sur la sortie standard" >&2; exit 1; }
+  # Les valeurs légales passent aussi par ce script depuis la story 11.9 : la trace coupée doit les
+  # taire comme les destinations (garde de l'aîné scripts/release/build-image.sh, point 19).
+  aucune_valeur_legale_dans_la_sortie "bash -x"
   local rallumage
   shell_grep_into rallumage -nE '^[[:space:]]*set[[:space:]]+-[a-z]*x' "$script"
   assert_eq "" "$rallumage" "aucun « set -x » dans le script"

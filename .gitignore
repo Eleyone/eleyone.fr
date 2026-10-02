@@ -21,3 +21,4 @@ public/
 build/
 resources/_gen/
 .hugo_build.lock
+.agents/mcp_config.json

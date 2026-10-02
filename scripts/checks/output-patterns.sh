@@ -35,7 +35,7 @@
 # de l'epic 7 — les deux copies avaient divergé sur la lecture du code de grep.
 #
 # **Chaque fichier est décodé puis normalisé avant d'être confronté** (decoder_echappements,
-# normaliser_blancs, scripts/checks/lib.sh). Sans cela le contrôle serait décoratif : une même
+# normaliser_blancs, scripts/lib/text.sh, chargés par scripts/checks/lib.sh). Sans cela le contrôle serait décoratif : une même
 # chaîne a six sérialisations constatées dans une sortie de Hugo — entités décimales, hexadécimales
 # ou nommées, séquences « \uXXXX » du JSON-LD de Go — et celle qu'on oublie est celle qui fuite.
 # C'est ce qui a coûté huit tours de revue à la PR n° 98 (C23), et ce qu'aucune lentille de la revue

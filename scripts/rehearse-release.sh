@@ -4,17 +4,25 @@
 #   rehearse-release.sh <tag vX.Y.Z-rc.N>         audit : vérifie tout, connexions comprises, ne pousse rien
 #   rehearse-release.sh <tag vX.Y.Z-rc.N> --run   joue la répétition, deux tags poussés compris
 #
-# Avant tout tag, dans les deux modes, les **deux comptes** sont éprouvés : « status » doit répondre
-# par le compte de déploiement, et le compte d'administration doit accepter une connexion. Si la clé
-# du poste attend sa phrase de passe, le script la charge dans un **agent ssh privé**, qu'il tue en
-# sortant (voir « les connexions, avant le premier tag », plus bas).
+# Avant tout tag, dans les deux modes :
+#
+#   - le **fichier des valeurs légales de mise en ligne** est lu — docs/private/legal-release.env par
+#     défaut, LEGAL_RELEASE_ENV_FILE pour un autre, comme scripts/build-image.sh — et il doit porter
+#     chacun des noms HUGO_LEGAL_* de .env.example, non vide et distinct de la valeur factice (voir
+#     « les valeurs légales, avant le premier tag », plus bas) ;
+#   - les **deux comptes** sont éprouvés : « status » doit répondre par le compte de déploiement, et
+#     le compte d'administration doit accepter une connexion. Si la clé du poste attend sa phrase de
+#     passe, le script la charge dans un **agent ssh privé**, qu'il tue en sortant (voir « les
+#     connexions, avant le premier tag », plus bas).
 #
 # Ce que « --run » enchaîne ensuite, et rien d'autre :
 #
 #   1. le tag <tag> est posé sur origin/dev et poussé — le workflow « release » construit l'image et
 #      la livre au canal de répétition (scripts/release/ship.sh, story 11.5) ;
 #   2. le script **attend** de voir ce tag en service, en interrogeant « deploy-site status » ;
-#   3. il ouvre le tunnel SSH vers 127.0.0.1:18080, puis vérifie le site servi ;
+#   3. il ouvre le tunnel SSH vers 127.0.0.1:18080, puis vérifie le site servi — en-têtes, 404,
+#      journaux, et les deux pages légales, qui doivent porter **chacune des vraies valeurs** du
+#      fichier de mise en ligne, sans qu'aucune ne soit jamais affichée ;
 #   4. le tag suivant (<tag> avec N+1) est posé, poussé, attendu, vérifié ;
 #   5. « rehearse rollback <tag> » remet le premier en service, attendu, vérifié ;
 #   6. « rehearse stop » arrête la répétition et supprime les images -rc.
@@ -41,7 +49,8 @@
 #
 # Codes de sortie : 0 la répétition s'est déroulée en entier et tout est vérifié ; 1 refus ou
 # vérification en échec (rien n'est arrêté, voir le message) ; 2 anomalie (usage, outil absent, .env,
-# dépôt, compte injoignable ou clé impossible à charger avant le premier tag, tunnel, serveur muet).
+# fichier des valeurs légales absent ou incomplet, dépôt, compte injoignable ou clé impossible à
+# charger avant le premier tag, tunnel, serveur muet).
 # Procédure : docs/procedures/rehearse-release.md
 set -euo pipefail
 # Même lancé avec « bash -x », la trace s'arrête ici : .env porte le nom du compte et de l'hôte du
@@ -64,6 +73,10 @@ script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # release.sh porte les deux expressions de tags, et charge lui-même shell.sh.
 # shellcheck source=lib/release.sh
 . "$script_dir/lib/release.sh"
+# legal.sh porte les deux pages légales, la lecture des noms et des valeurs, et la forme sous laquelle
+# une valeur se cherche dans une page servie ; il charge dotenv.sh et text.sh.
+# shellcheck source=lib/legal.sh
+. "$script_dir/lib/legal.sh"
 
 # gitea.sh définit die() avec le code 1 ; ici 1 est réservé aux refus et aux vérifications en échec,
 # et 2 dit l'anomalie, comme dans release.sh et verify-and-merge-pr.sh.
@@ -123,6 +136,9 @@ for outil in git ssh curl; do
     || die "$outil est introuvable : la répétition est « git push », « ssh » et « curl ». Rien n'a été fait."
 done
 
+# Le dossier d'appel est retenu avant de se placer à la racine : un LEGAL_RELEASE_ENV_FILE relatif se
+# résout depuis là où l'utilisateur l'a écrit, comme dans scripts/build-image.sh.
+appel=$PWD
 root=$(git rev-parse --show-toplevel 2> /dev/null) || die "à lancer dans le dépôt."
 cd "$root"
 check_origin
@@ -177,6 +193,100 @@ admin_host=""
 deploy_host=""
 exige_destination ADMIN_HOST admin_host
 exige_destination DEPLOY_HOST deploy_host
+
+# --- les valeurs légales, avant le premier tag ----------------------------------------------------
+# La répétition vérifie que les deux pages légales servies portent **les vraies valeurs** (story
+# 11.9, arbitrage d'Arnaud du 02/10/2026). Il lui faut donc ces valeurs, et leur absence est une
+# **anomalie**, jamais un succès : une vérification qui chercherait une chaîne vide la trouverait
+# partout et passerait au vert — la faute que C23 décrit en tête (scripts/checks/legal-address.sh).
+# Le contrôle est **ici**, avant toute connexion et tout tag, dans l'audit comme avec « --run » : le
+# découvrir après le premier push laisserait une répétition à moitié jouée.
+#
+# Le fichier se trouve comme scripts/build-image.sh le trouve — même variable, même défaut absolu,
+# même résolution d'un chemin relatif — et se lit par dotenv.sh, seul lecteur dotenv du dépôt, avec
+# la règle de scripts/env.sh : une valeur vide vaut absence. Les gardes de ces deux aînés sont
+# reprises une par une, et le tableau de leur reprise est dans le fichier de la story 11.9.
+legal_fichier=${LEGAL_RELEASE_ENV_FILE:-$root/docs/private/legal-release.env}
+[[ $legal_fichier == /* ]] || legal_fichier="$appel/$legal_fichier"
+# « -f » et pas seulement « -r » : un dossier lisible passerait ce test (garde de build-image.sh).
+[[ -f $legal_fichier && -r $legal_fichier ]] \
+  || die "fichier des valeurs légales de mise en ligne introuvable, illisible, ou qui n'est pas un fichier ($legal_fichier) : la répétition vérifie que les pages légales servies portent ses valeurs. Le créer dans le dépôt privé, ou en désigner un autre par LEGAL_RELEASE_ENV_FILE (docs/procedures/rehearse-release.md). Rien n'a été fait."
+
+# Les deux fichiers de travail du dépôt sont refusés, comme par build-image.sh et par env.sh en mode
+# release : comparées au .env du poste ou au fichier factice, les pages servies pourraient passer pour
+# conformes alors qu'elles ne portent pas les valeurs de la mise en ligne.
+legal_canonique() { local chemin=$1; [[ -e $chemin ]] || { printf '%s' "$chemin"; return 0; }; readlink -f -- "$chemin"; }
+legal_fichier_canonique=$(legal_canonique "$legal_fichier") || die "chemin du fichier des valeurs légales illisible. Rien n'a été fait."
+legal_factice=$script_dir/../ci/legal-placeholder.env
+# Le chemin canonique de chaque fichier interdit est lu **avant** la comparaison, avec son arrêt : dans
+# un « [[ … ]] », la substitution avalerait un échec de readlink, et une chaîne vide ne serait égale à
+# rien — le refus disparaîtrait en silence (classe du constat de la revue du code de la PR n° 128).
+for legal_interdit in "$root/.env" "$legal_factice"; do
+  legal_interdit_canonique=$(legal_canonique "$legal_interdit") \
+    || die "chemin de ${legal_interdit##*/} illisible. Rien n'a été fait."
+  [[ $legal_fichier_canonique != "$legal_interdit_canonique" ]] \
+    || die "LEGAL_RELEASE_ENV_FILE désigne un fichier de travail du dépôt (${legal_interdit##*/}) : la répétition se compare aux valeurs de la mise en ligne, dans un fichier dédié. Rien n'a été fait."
+done
+[[ ${legal_fichier_canonique##*/} != .env ]] \
+  || die "le fichier des valeurs légales s'appelle .env : une mise en ligne emploie un fichier de secrets dédié (scripts/env.sh). Rien n'a été fait."
+
+# Les noms, lus dans le .env.example **du code qui tourne** — celui qui accompagne ce script — et
+# non dans le dépôt où il est lancé : c'est la liste qui fait foi, et un nombre écrit ici
+# deviendrait faux au premier nom ajouté. Une liste vide n'est pas une conformité.
+legal_noms=()
+legal_names_into legal_noms "$script_dir/../.env.example" \
+  || die ".env.example illisible à côté du script : la liste des valeurs légales y est lue. Rien n'a été fait."
+((${#legal_noms[@]} > 0)) \
+  || die ".env.example ne nomme aucune variable HUGO_LEGAL_ : la vérification des pages légales n'aurait rien à chercher. Rien n'a été fait."
+
+declare -A legal_valeurs=()
+legal_manquants=()
+legal_values_into legal_valeurs legal_manquants "$legal_fichier" "${legal_noms[@]}" \
+  || die "fichier des valeurs légales illisible ($legal_fichier). Rien n'a été fait."
+# Tous les noms manquants sont dits d'un coup, comme env.sh et build-image.sh le font : les découvrir
+# un par un coûterait autant d'essais.
+((${#legal_manquants[@]} == 0)) \
+  || die "le fichier des valeurs légales ($legal_fichier) n'a pas de valeur pour : ${legal_manquants[*]}. Les valeurs ne sont pas affichées. Voir .env.example et docs/procedures/rehearse-release.md. Rien n'a été fait."
+
+# Chaque valeur est ramenée **une fois** à la forme sous laquelle elle se cherche (scripts/lib/legal.sh).
+# Deux refus de plus, qu'aucun aîné n'avait, parce qu'aucun ne cherchait une valeur dans une page :
+#   - une valeur faite de blancs devient vide une fois normalisée, et une chaîne vide se trouve
+#     dans toute page : elle vaut absence ;
+#   - une valeur **égale à la valeur factice** du même nom (ci/legal-placeholder.env) ferait passer
+#     pour conforme un site construit avec les valeurs factices — exactement ce que la vérification
+#     existe pour refuser. Refuser le chemin du fichier factice ne suffit pas : une copie de son
+#     contenu sous un autre nom passerait.
+declare -A legal_formes=()
+declare -A legal_valeurs_factices=()
+legal_factices=()
+legal_factices_manquants=()
+# Le fichier factice accompagne le script, comme .env.example : illisible, la garde disparaîtrait en
+# silence. C'est donc une anomalie, pas une raison de sauter la comparaison.
+legal_values_into legal_valeurs_factices legal_factices_manquants "$legal_factice" "${legal_noms[@]}" \
+  || die "ci/legal-placeholder.env illisible à côté du script : la garde contre les valeurs factices s'y compare. Rien n'a été fait."
+legal_vides=()
+for legal_nom in "${legal_noms[@]}"; do
+  legal_comparable_value legal_forme "${legal_valeurs[$legal_nom]}" \
+    || die "normalisation de $legal_nom impossible (sed). Rien n'a été fait."
+  if [[ -z $legal_forme ]]; then
+    legal_vides+=("$legal_nom")
+    continue
+  fi
+  legal_formes[$legal_nom]=$legal_forme
+  if [[ -n ${legal_valeurs_factices[$legal_nom]:-} ]]; then
+    legal_comparable_value legal_forme_factice "${legal_valeurs_factices[$legal_nom]}" \
+      || die "normalisation de $legal_nom impossible (sed). Rien n'a été fait."
+    [[ $legal_forme != "$legal_forme_factice" ]] || legal_factices+=("$legal_nom")
+  fi
+done
+((${#legal_vides[@]} == 0)) \
+  || die "le fichier des valeurs légales ($legal_fichier) ne porte que des blancs pour : ${legal_vides[*]}. Une chaîne vide se trouve dans toute page : la vérification ne prouverait rien. Rien n'a été fait."
+((${#legal_factices[@]} == 0)) \
+  || die "le fichier des valeurs légales ($legal_fichier) porte la valeur factice de ci/legal-placeholder.env pour : ${legal_factices[*]}. Une page construite avec les valeurs factices passerait pour conforme. Rien n'a été fait."
+# Les valeurs brutes ne servent plus : seules leurs formes comparables restent en mémoire.
+unset legal_valeurs legal_valeurs_factices legal_forme legal_forme_factice
+printf "%s: valeurs légales de mise en ligne : %s variable(s) lue(s) dans %s, valeurs non affichées.\n" \
+  "$script_name" "${#legal_noms[@]}" "${legal_fichier#"$root"/}"
 
 # Les mêmes options pour toutes les connexions, écrites une fois :
 #   - BatchMode=yes : aucune question interactive, donc aucun script qui attend indéfiniment ;
@@ -677,6 +787,51 @@ verifie_html() { # $1 = chemin, $2 = code HTTP attendu, $3 = langue attendue, $4
   [[ -n $vu ]] || verif_ko "$4 : la page servie n'est pas en « $3 »"
 }
 
+# Une page légale : tout ce que verifie_html contrôle, puis **chacune des valeurs** du fichier de mise
+# en ligne dans le corps servi (story 11.9). Les deux pages portent toutes les valeurs : le gabarit
+# des mentions légales est le même dans les deux langues (layouts/_shortcodes/legal-list.html).
+#
+# Ce qui est cherché, et comment, vient de scripts/lib/legal.sh : la page est décodée et ses blancs
+# normalisés — insécables de la typographie française comprises —, la valeur est normalisée de même,
+# et la comparaison est celle de bash, sur une seule ligne, sans expression régulière (la forme de C23).
+#
+# **Une valeur absente est nommée par sa variable et par la page, jamais montrée.** Les valeurs
+# servies ne sont pas affichées non plus : sur une page construite avec d'autres valeurs, ce serait
+# celles-là qu'on verrait.
+verifie_page_legale() { # $1 = chemin, $2 = langue, $3 = libellé
+  local corps texte nom absentes=() code=0
+  verifie_html "$1" 200 "$2" "$3"
+  # Une page qui n'est pas servie en HTML n'a pas de corps à lire : verifie_html a déjà dit pourquoi,
+  # et chercher les valeurs dans une page d'erreur ou dans autre chose que du HTML ne prouverait rien.
+  lit_entete content-type
+  if [[ $http_code != 200 || $valeur_entete != text/html* ]]; then
+    verif_ko "$3 : valeurs légales non vérifiées, la page n'est pas servie en HTML avec le code 200"
+    return 0
+  fi
+  # « tr -d '\0' » plutôt qu'un « cat » : une substitution avale les octets nuls **en écrivant un
+  # avertissement**, qu'un lecteur prendrait pour un signalement (leçon de C22, reprise par C23).
+  corps=$(tr -d '\0' < "$tmp/corps") || code=$?
+  if ((code != 0)); then
+    verif_ko "$3 : corps de la page illisible ($tmp/corps), valeurs légales non vérifiées"
+    return 0
+  fi
+  texte=$(printf '%s' "$corps" | legal_comparable_text) || code=$?
+  if ((code != 0)); then
+    verif_ko "$3 : décodage de la page impossible (sed, code $code), valeurs légales non vérifiées"
+    return 0
+  fi
+  for nom in "${legal_noms[@]}"; do
+    [[ $texte == *"${legal_formes[$nom]}"* ]] || absentes+=("$nom")
+  done
+  if ((${#absentes[@]} == 0)); then
+    verif_ok "$3 : les ${#legal_noms[@]} valeurs légales de mise en ligne sont présentes (valeurs non affichées)"
+    return 0
+  fi
+  for nom in "${absentes[@]}"; do
+    verif_ko "$3 : la valeur de $nom est absente de la page servie ($1) — valeur non affichée (AD-9)"
+  done
+}
+
 # Une ressource qui n'est pas du HTML. La CSP y est **absente par conception** : le « map » de
 # deploy/nginx/site.conf ne l'envoie que sur « ~^text/html », et une valeur vide supprime l'en-tête —
 # les schémas D2 portent des <style> et des polices embarquées, qu'une politique « style-src 'self' »
@@ -766,8 +921,10 @@ verifie_les_journaux() { # $1 = libellé
   verif_ok "$1 : journal du conteneur de répétition sans adresse IP"
 }
 
-# Une tournée complète : la page d'accueil dans les deux langues, les deux 404, un fichier empreinté,
-# un SVG s'il en existe un, et les journaux.
+# Une tournée complète : la page d'accueil dans les deux langues, les deux 404, les deux pages
+# légales et leurs vraies valeurs, un fichier empreinté, un SVG s'il en existe un, et les journaux.
+# Elle tourne à **chaque** passage — après le premier tag, après le second, après le retour arrière :
+# une image construite avec d'autres valeurs que celles de la mise en ligne se voit partout.
 verifie_le_site() { # $1 = libellé de l'étape ; le nombre d'échecs reste dans verifs_ko
   verifs_ko=0
   printf '%s: vérifications — %s\n' "$script_name" "$1"
@@ -776,6 +933,8 @@ verifie_le_site() { # $1 = libellé de l'étape ; le nombre d'échecs reste dans
   verifie_html /en/ 200 en "accueil EN"
   verifie_html "$absente_fr" 404 fr "404 FR"
   verifie_html "$absente_en" 404 en "404 EN"
+  verifie_page_legale "$legal_page_fr" fr "mentions légales FR"
+  verifie_page_legale "$legal_page_en" en "mentions légales EN"
   if [[ -n $ressource_empreintee ]]; then
     verifie_ressource "$ressource_empreintee" "fichier empreinté ($ressource_empreintee)"
   else

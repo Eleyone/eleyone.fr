@@ -282,8 +282,9 @@ case_content_c18_nom_de_fichier_hors_format() {
 copie_depot() {
   mkdir -p "$work/depot/scripts/checks" "$work/depot/scripts/lib" "$work/depot/ci"
   cp "$root/scripts/checks/content.sh" "$root/scripts/checks/lib.sh" "$work/depot/scripts/checks/"
-  # lib.sh charge les enveloppes communes du dépôt : le dépôt d'essai les emporte aussi
-  cp "$root/scripts/lib/shell.sh" "$work/depot/scripts/lib/"
+  # lib.sh charge les enveloppes communes du dépôt et ses filtres de lecture (scripts/lib/text.sh,
+  # story 11.9) : le dépôt d'essai les emporte aussi
+  cp "$root/scripts/lib/shell.sh" "$root/scripts/lib/text.sh" "$work/depot/scripts/lib/"
   cp "$root/.env.example" "$work/depot/"
   cp "$root/ci/legal-placeholder.env" "$work/depot/ci/"
   mkdir -p "$work/depot/rendu/en"

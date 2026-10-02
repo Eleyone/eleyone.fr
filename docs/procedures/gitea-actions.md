@@ -43,6 +43,7 @@ Prérequis de l'environnement qui exécute les jobs — la machine, ou le conten
 - `bash` : les étapes `run:` et le job lui-même en dépendent ;
 - `node` : c'est lui qui exécute les actions JavaScript, celle du checkout comprise ;
 - `git`, et une architecture x86_64 ; runner en version 0.2.10 au minimum.
+- `ssh` (paquet `openssh-client` sur Alpine) et `gzip` : le workflow `release` livre l'image par `docker save | gzip | ssh` (`release-workflow.md`). Le client manquait au runner conteneurisé : la première répétition générale, le 02/10/2026, a construit l'image puis échoué à la livraison sur « ssh est introuvable » (story 11.9). `ship.sh` le vérifie avant tout envoi, mais seulement au moment de livrer.
 
 ## L'action de checkout est épinglée par une URL absolue
 
