@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '10-02-2026 18:00'
+last_updated: '10-02-2026 20:26'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -138,7 +138,7 @@ development_status:
   # Stories 10.8 à 10.10 : proposition de changement du 02/10/2026 (contexte complet de chaque
   # mission), arbitrage Q7 d'Arnaud. L'epic repasse in-progress ; sa rétrospective reste celle du
   # 24/09/2026.
-  10-8-career-format-contract: backlog
+  10-8-career-format-contract: done
   10-9-full-mission-context-on-the-cv: backlog
   10-10-mission-context-content: backlog
   epic-10-retrospective: done

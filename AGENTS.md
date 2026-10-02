@@ -48,7 +48,7 @@ These supersede the original brief. The validated brief, PRD, architecture, UX (
 - **Repository:** public on GitHub, including BMAD planning artifacts, because showing the framing process is part of the point. No private files, no raw cases.
 - **Tooling:** the right tool for the job. Plain scripts rather than heavy tooling in CI or build images; no Symfony or React for a static site.
 
-Pilot case: `content/cases/chiliz/case-02-chiliz.{fr,en}.md` follows `docs/format-cas.md` (v0.4: grouped cases live in their group's folder, and each case points to its career position with the `position` key, whose identifiers are frozen in AD-18) and is the architecture's test fixture. The stack vocabulary lives in `data/stack.yaml`. The validated architecture is in `_bmad-output/planning-artifacts/architecture/`.
+Pilot case: `content/cases/chiliz/case-02-chiliz.{fr,en}.md` follows `docs/format-cas.md` (v0.5: grouped cases live in their group's folder, and each case points to its career position with the `position` key, whose identifiers are frozen in AD-18) and is the architecture's test fixture. The stack vocabulary lives in `data/stack.yaml`. The validated architecture is in `_bmad-output/planning-artifacts/architecture/`.
 
 Unchanged constraints: static site, Markdown content editable without touching code, no database, no backend to maintain, sober and readable design, simplicity over everything. Out of scope for v1: blog, client area, contact form, advanced analytics.
 
@@ -109,7 +109,7 @@ Key values: project `eleyone.fr`, user `Eleyone`, output folder `_bmad-output/`,
 
 **Language:** talk to Arnaud in French. Planning documents are written in French too (`document_output_language` is overridden to French in `_bmad/custom/config.toml`). Code is in English: identifiers, front matter keys, file and directory names. Site content exists in French and English.
 
-**Case content format:** `docs/format-cas.md` is the contract every case file follows: one file per case per language, English front matter keys, fixed FR/EN headings, `[TODO: …]` markers for anything missing.
+**Case content format:** `docs/format-cas.md` is the contract every case file follows: one file per case per language, English front matter keys, fixed FR/EN headings, `[TODO: …]` markers for anything missing. **Career position format:** `docs/format-parcours.md` is the contract every position file (`content/career/position-*`) follows — sector, period with no duration, the whole project's stack, the mission scope as body (story 10.8, sprint change proposal of 02/10/2026).
 
 ### Scripts
 

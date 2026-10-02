@@ -15,7 +15,7 @@ Il s'appuie sur les entrées suivantes, qu'il ne recopie pas :
 
 - le brief produit, validé le 13/09/2026 : `_bmad-output/planning-artifacts/briefs/brief-eleyone.fr-2026-09-13/brief.md` ;
 - son addendum, validé à la même date (inventaire des cas, contenu connu des encarts, matériel vivant, détail technique) : `_bmad-output/planning-artifacts/briefs/brief-eleyone.fr-2026-09-13/addendum.md` ;
-- le contrat de format des cas, `docs/format-cas.md`, en version 0.4, et le vocabulaire contrôlé de la stack, `data/stack.yaml`. Le PRD s'y réfère sans les redéfinir. Le contrat des postes, `docs/format-parcours.md`, sera écrit par la story 10.8 (proposition de changement du 02/10/2026) ;
+- le contrat de format des cas, `docs/format-cas.md`, en version 0.4 (0.5 depuis la story 10.8), et le vocabulaire contrôlé de la stack, `data/stack.yaml`. Le PRD s'y réfère sans les redéfinir. Le contrat des postes, `docs/format-parcours.md`, est écrit par la story 10.8 (proposition de changement du 02/10/2026) ;
 - l'architecture, `_bmad-output/planning-artifacts/architecture/architecture-eleyone.fr-2026-09-13/ARCHITECTURE-SPINE.md`, dont Arnaud a validé les recommandations le 13/09/2026. Le PRD en cite quelques décisions (AD-n) comme références, sans les détailler ;
 - le CV d'Arnaud, seule source des données de parcours, de formation, de certification et de langues ;
 - l'UX, validée par Arnaud le 13/09/2026 : `_bmad-output/planning-artifacts/ux-designs/ux-eleyone.fr-2026-09-13/DESIGN.md` (direction visuelle) et `EXPERIENCE.md` (comportement, premier écran, test des trente secondes). Le PRD n'en fixe aucun détail visuel ;
@@ -485,7 +485,7 @@ Arnaud modifie le contenu sans toucher aux gabarits ni aux scripts.
 **Conséquences (testables) :**
 - Modifier le texte ou les métadonnées d'un cas ne touche que les fichiers Markdown de ce cas. Publier un cas touche en plus `ci/release-pages.txt` et, pour le premier cas d'un groupe, le fichier de la page de groupe (AD-4) : aucun gabarit ni script.
 - Ajouter ou modifier un schéma ne touche que les fichiers Markdown du cas, la source D2 du schéma et les SVG qui en sont régénérés. La régénération se fait en lançant les scripts existants, sans les modifier.
-- Utiliser une technologie nouvelle dans une stack, celle d'un cas comme celle d'un poste, ne demande en plus que de l'ajouter à `data/stack.yaml`, comme le prévoit `docs/format-cas.md` (et, pour un poste, `docs/format-parcours.md`, que la story 10.8 écrira).
+- Utiliser une technologie nouvelle dans une stack, celle d'un cas comme celle d'un poste, ne demande en plus que de l'ajouter à `data/stack.yaml`, comme le prévoit `docs/format-cas.md` (et, pour un poste, `docs/format-parcours.md`, écrit par la story 10.8).
 - Ajouter, modifier ou réordonner un poste, rattacher un cas à un poste, ou modifier le bloc formation, certification et langues ne touche que le contenu, sans toucher aux gabarits.
 - Le texte des pages hors cas (accueil, « À propos », Contact, pages légales) se modifie lui aussi en Markdown, sans toucher aux gabarits. C'est une contrainte du dépôt (`AGENTS.md` : contenu en Markdown modifiable sans toucher au code).
 

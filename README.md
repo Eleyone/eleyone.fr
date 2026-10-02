@@ -75,6 +75,7 @@ Measured page weight and Core Web Vitals will be published in [`docs/measures/`]
 | Architecture | [ARCHITECTURE-SPINE.md](_bmad-output/planning-artifacts/architecture/architecture-eleyone.fr-2026-09-13/ARCHITECTURE-SPINE.md) |
 | Framing artefacts | [brief](_bmad-output/planning-artifacts/briefs/brief-eleyone.fr-2026-09-13/brief.md), [PRD](_bmad-output/planning-artifacts/prds/prd-eleyone.fr-2026-09-13/prd.md), [backlog](_bmad-output/planning-artifacts/epics.md), [stories and their reviews](_bmad-output/implementation-artifacts/) |
 | The contract every case file follows | [`docs/format-cas.md`](docs/format-cas.md) |
+| The contract every career position follows | [`docs/format-parcours.md`](docs/format-parcours.md) |
 | How the scripts are written and tested | [`docs/procedures/`](docs/procedures/) |
 | Measures, after the first deployment | [`docs/measures/`](docs/measures/) |
 | Rules the agents work under | [`AGENTS.md`](AGENTS.md) |

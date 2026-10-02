@@ -1,8 +1,8 @@
 ---
 title: "Format de sortie des cas clients"
-version: 0.4
+version: 0.5
 status: validated
-updated: 2026-09-13
+updated: 2026-10-02
 ---
 
 # Format de sortie des cas clients
@@ -20,13 +20,13 @@ content/cases/chiliz/case-02-chiliz.fr.md        ← cas groupé : dans le dossi
 content/cases/chiliz/case-02-chiliz.en.md
 content/cases/chiliz/_index.fr.md                ← page du groupe : créée avec le site, pas par la rédaction des cas
 content/cases/chiliz/_index.en.md
-content/career/position-chiliz.fr.md             ← poste du parcours : créé avec le site, pas par la rédaction des cas
+content/career/position-chiliz.fr.md             ← poste du parcours : rédigé selon docs/format-parcours.md, pas par la rédaction des cas
 …
 ```
 
 - **Noms de fichiers en anglais**, en minuscules et en kebab-case : `case-<NN>-<nom-court>.<langue>.md`. Le nom de fichier est un identifiant ; l'URL publique vient du `slug` de chaque langue.
 - **Cas groupé** : le fichier est dans `content/cases/<group>/`, et la clé `group` est obligatoire et **égale au nom du dossier**. Un contrôle bloquant le vérifie.
-- **Rattachement au parcours** : la clé `position` désigne le poste (`position-<id>`, par exemple `position-chiliz`). Le poste ne liste pas ses cas : c'est le cas qui pointe vers lui, et un cas se publie sans toucher au poste.
+- **Rattachement au parcours** : la clé `position` désigne le poste (`position-<id>`, par exemple `position-chiliz`). Le poste ne liste pas ses cas : c'est le cas qui pointe vers lui, et un cas se publie sans toucher au poste. La période du cas (`context.period`) est comprise dans celle de son poste ; un cas ne couvre pas nécessairement toute la mission (AD-18, `docs/format-parcours.md`).
 - **Identifiants de poste** : ils sont figés dans l'architecture (AD-18, règle `position-<société>`, suivie de `-<année de début>` quand la société revient dans le parcours ; `position-earlier-career` regroupe le parcours antérieur). Un cas reprend l'identifiant de cette liste et n'en invente aucun ; un identifiant publié n'est jamais renommé.
 - Le suffixe `.fr.md` / `.en.md` est la convention multilingue native de Hugo. Les deux fichiers d'un même cas partagent le même `translationKey`.
 - **URL** : un cas seul est publié à `/cas/<slug>/` et `/en/cases/<slug>/`. Un cas groupé est une section de la page du groupe, avec pour ancre son `translationKey` (par exemple `/cas/chiliz/#case-02`).
@@ -72,6 +72,8 @@ La clé `featured` des versions précédentes n'existe plus : l'accueil est le C
 La liste des technologies autorisées, avec leur écriture unique et les exclusions décidées, est tenue dans **`data/stack.yaml`**. Elle fait foi : ce document ne la recopie pas.
 
 Seules les technologies **citées dans le cas** figurent dans sa stack. Une technologie absente du vocabulaire s'y ajoute avant d'être utilisée.
+
+La stack d'un **poste** suit une autre règle : elle porte celle du projet entier, et non la part qu'en cite un cas. Elle est décrite par `docs/format-parcours.md`, le contrat de rédaction des postes.
 
 ## Corps du texte
 

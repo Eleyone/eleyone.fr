@@ -30,7 +30,7 @@ companions:
 
 Document de référence pour les stories. Il fixe ce que deux stories construites séparément ne doivent pas décider chacune de leur côté. Les décisions portent un identifiant stable `AD-n` ; leur justification courte est en fin de document (« Décisions clés ») et, en détail, dans `.memlog.md`. Les décisions d'Arnaud du 13/09/2026 sont consignées dans la section du même nom. Une proposition ouverte serait marquée **[à valider par Arnaud]** et récapitulée à la fin ; il n'en reste aucune.
 
-Statut : validé par Arnaud le 13/09/2026, puis mis à jour le même jour avec les décisions D-1 à D-17 du contrôle de préparation à l'implémentation (`implementation-readiness.md`, appliquées par `sprint-change-proposal-2026-09-13.md`). Première rédaction sans interlocuteur (run headless), sur la base du PRD, du brief et de son addendum, du format des cas, du cas pilote 02, du test D2 bilingue et des décisions d'Arnaud du 13/09/2026. Les affirmations sur Hugo ont été vérifiées par des spikes (Hugo v0.166.0, hors dépôt) ; les autres, par recherche web et lecture du code source (voir « Sources vérifiées »). Les renvois « question N » visent le §11.2 du PRD, dont la numérotation Q1 à Q17 est figée ; une question tranchée est citée par son intitulé au §11.1. La direction visuelle est tranchée et décrite par `DESIGN.md` et `EXPERIENCE.md` : ce document n'en fixe aucune valeur. Mis à jour le 02/10/2026 par la proposition de changement du même jour (`sprint-change-proposal-2026-10-02.md`, arbitrages Q1 à Q8 d'Arnaud) : AD-18 (secteur, stack et corps de tout poste, période d'un cas comprise dans celle de son poste), C3, C6, C19 et le nouveau contrôle C25.
+Statut : validé par Arnaud le 13/09/2026, puis mis à jour le même jour avec les décisions D-1 à D-17 du contrôle de préparation à l'implémentation (`implementation-readiness.md`, appliquées par `sprint-change-proposal-2026-09-13.md`). Première rédaction sans interlocuteur (run headless), sur la base du PRD, du brief et de son addendum, du format des cas, du cas pilote 02, du test D2 bilingue et des décisions d'Arnaud du 13/09/2026. Les affirmations sur Hugo ont été vérifiées par des spikes (Hugo v0.166.0, hors dépôt) ; les autres, par recherche web et lecture du code source (voir « Sources vérifiées »). Les renvois « question N » visent le §11.2 du PRD, dont la numérotation Q1 à Q17 est figée ; une question tranchée est citée par son intitulé au §11.1. La direction visuelle est tranchée et décrite par `DESIGN.md` et `EXPERIENCE.md` : ce document n'en fixe aucune valeur. Mis à jour le 02/10/2026 par la proposition de changement du même jour (`sprint-change-proposal-2026-10-02.md`, arbitrages Q1 à Q8 d'Arnaud) : AD-18 (secteur, stack et corps de tout poste, période d'un cas comprise dans celle de son poste), C3, C6, C19 et le nouveau contrôle C25 ; puis par la story 10.8 : AD-3, AD-18 et la section « `docs/format-cas.md` v0.4 » renvoient au contrat des postes, `docs/format-parcours.md`, et au format des cas v0.5.
 
 ## Paradigme
 
@@ -114,7 +114,7 @@ flowchart TD
 - **Binds:** FR-1, FR-5 à FR-8, FR-16 à FR-19, FR-25, NFR-6 ; `content/`, `i18n/`, `layouts/`.
 - **Prevents:** du texte de contenu écrit dans un gabarit (qui obligerait à toucher au code pour le modifier), des libellés d'interface éparpillés, un cas qui dépend de sa mise en page.
 - **Rule:**
-  - Les cas suivent `docs/format-cas.md` ; les postes et formations suivent AD-18. Aucun gabarit ne contient de texte de contenu : identité, titre du site et pitch sont dans `content/_index.{fr,en}.md` ; les autres pages, dans leur fichier Markdown.
+  - Les cas suivent `docs/format-cas.md` ; les postes suivent AD-18 et leur contrat de rédaction, `docs/format-parcours.md` (story 10.8) ; les formations suivent AD-18. Aucun gabarit ne contient de texte de contenu : identité, titre du site et pitch sont dans `content/_index.{fr,en}.md` ; les autres pages, dans leur fichier Markdown.
   - **Contact** : l'adresse mail et l'URL LinkedIn sont du contenu commité, dans le front matter de `content/contact.{fr,en}.md` (`email`, `linkedin` et `github`, URL du profil GitHub d'Arnaud, identiques en FR et en EN ; `github` ajoutée le 13/09/2026, D-7), et non des variables d'environnement (décidé le 13/09/2026).
   - **Lien vers le dépôt public** : URL dans `params.source_url` de `config/_default/hugo.yaml` ; tant qu'elle est vide, aucun lien n'est rendu (pas de lien factice), et C12 ne l'attend pas.
   - Les libellés d'interface (encarts, champs, cadres, blocs de l'accueil, sélecteur, pied de page) sont dans `i18n/fr.yaml` et `i18n/en.yaml`, en clés `snake_case` anglaises. Le libellé d'un cadre s'obtient par `T (printf "setup_%s" (replace .setup "-" "_"))`.
@@ -376,7 +376,7 @@ flowchart TD
 
 ### AD-18 — Parcours, formation, certifications et langues : l'accueil est un CV
 
-- **Binds:** FR-1, FR-2, FR-3, FR-4, FR-6, FR-11, FR-15, FR-20, FR-23, FR-25, FR-32, FR-36, FR-37, FR-38, NFR-10 ; `content/career/`, `content/education/`, `layouts/home.html`, `_partials/position.html`, `data/stack.yaml`, format des cas v0.4, et `docs/format-parcours.md`, contrat des postes que la story 10.8 écrira.
+- **Binds:** FR-1, FR-2, FR-3, FR-4, FR-6, FR-11, FR-15, FR-20, FR-23, FR-25, FR-32, FR-36, FR-37, FR-38, NFR-10 ; `content/career/`, `content/education/`, `layouts/home.html`, `_partials/position.html`, `data/stack.yaml`, format des cas (v0.5), et `docs/format-parcours.md`, contrat de rédaction des postes.
 - **Prevents:** deux sources du parcours (données et contenu), un poste qui liste ses cas à la main et doit être modifié à chaque cas publié, une période calculée ou inventée par un gabarit, un cas publié rattaché à un poste absent ou différent entre FR et EN, une stack de poste hors du vocabulaire contrôlé, un cas dont la période déborde de celle de son poste.
 - **Rule:**
   - **Emplacement** : le parcours est du contenu Markdown bilingue, pas un fichier de `data/` :
@@ -414,7 +414,7 @@ flowchart TD
     - `draft`.
     Le corps Markdown décrit le périmètre complet de la mission ; il est rendu pour tout poste, avec la stack du projet, dans un `<details>` fermé par défaut placé après la liste de ses cas publiés (arbitrage Q1 du 02/10/2026 ; rendu livré par la story 10.9 — d'ici là, `_partials/position.html` applique encore l'ancienne règle). *Révisé le 02/10/2026 : le corps, facultatif, n'était rendu que si le poste n'avait aucun cas publié dans la langue de la page — un poste avec cas cachait donc son corps.* Un poste sans cas publié affiche ses champs, sans zone de cas ni mention d'absence (décidé le 13/09/2026), puis ce bloc. Ce qui manque n'est pas rendu (« ne rien écrire pour ce qui n'existe pas », `EXPERIENCE.md`) ; le libellé du `<summary>` et le rendu d'un poste sans corps ni stack sont fixés par la story 10.9.
   - **Période d'un cas comprise dans celle de son poste** (règle d'Arnaud, arbitrage Q2 du 02/10/2026) : la période de l'encart d'un cas (`context.period`) est comprise dans la `period` du poste que désigne sa clé `position` ; un cas ne couvre pas nécessairement toute la mission. C25, livré par la story 10.9, le vérifiera en comparant des bornes, sans rien afficher : la période reste le texte de l'auteur.
-  - **Contrat de rédaction** : `docs/format-parcours.md`, que la story 10.8 écrira sur le modèle de `docs/format-cas.md` (arbitrage Q6 du 02/10/2026). Cet AD reste la référence du front matter ; le contrat dit comment rédiger un poste complet.
+  - **Contrat de rédaction** : `docs/format-parcours.md`, écrit par la story 10.8 sur le modèle de `docs/format-cas.md` (arbitrage Q6 du 02/10/2026). Cet AD reste la référence du front matter ; le contrat dit comment rédiger un poste complet, cite la liste des clés non traduites de C3 sans la recopier et renvoie à la liste des identifiants ci-dessus. Il ne couvre que les postes : les entrées de `content/education/` restent décrites par cet AD seul (arbitrage d'Arnaud du 02/10/2026, story 10.8).
   - **Front matter d'une entrée de `content/education/`** : `kind` (`education`, `certification` ou `language`), `title`, `institution` (facultatif), `period` (facultatif, même règle que pour un poste), `level` (facultatif, pour une langue), `order` (unique par `kind`), `draft`. Ces données, comme celles des postes, viennent du CV d'Arnaud (NFR-10).
   - **Lien cas → poste** : la clé `position: "position-<id>"` est dans le **cas** (format v0.4), identique en FR et en EN, obligatoire pour un cas publié. Le poste ne liste pas ses cas : `_partials/position.html` les retrouve par `where site.RegularPages "Params.position" $translationKey`, triés par `number`, et Hugo exclut les brouillons en production. Un cas se publie ainsi sans modifier aucun autre fichier (FR-25, FR-32), et un brouillon ne peut pas apparaître par erreur sous un poste.
   - **Ancres et retour au parcours** : `_partials/position.html` pose `id="<translationKey>"` sur chaque poste (par exemple `#position-chiliz`). La page d'un cas seul et la page de groupe rendent **une fois, en haut de page**, avant le `h1`, un lien « Retour au parcours » (i18n `back_to_career`) vers l'accueil de leur langue suivi de `#<position>`, construit par `_partials/career-url.html` à partir de la clé `position` du cas (celle des cas de la page pour un groupe, tous rattachés au même poste ; décidé le 17/09/2026, story 2.7). C12 vérifie ces ancres.
@@ -736,7 +736,7 @@ Portée : C3 porte sur tout fichier de `content/`. C4, C7, C8, C16 et C18 ne por
 ├── tests/fixtures/          # schéma de démonstration et cas de test des contrôles, jamais publiés
 ├── docs/
 │   ├── format-cas.md
-│   ├── format-parcours.md   # contrat des postes, écrit par la story 10.8 (AD-18)
+│   ├── format-parcours.md   # contrat de rédaction des postes (AD-18, story 10.8)
 │   ├── procedures/          # une procédure par skill, sous le même nom (AD-24), plus gitea-branches.md (D-10)
 │   └── measures/            # mesures PageSpeed par tag
 └── _bmad-output/            # artefacts de cadrage
@@ -776,14 +776,15 @@ flowchart LR
 
 ## `docs/format-cas.md` v0.4
 
-Décidé le 13/09/2026 et en place : `docs/format-cas.md` est en v0.4 et le cas pilote porte `position`. Contenu de la version :
+Décidé le 13/09/2026 et en place : `docs/format-cas.md` est passé en v0.4 et le cas pilote porte `position`. Il est en v0.5 depuis la story 10.8 (02/10/2026 ; dernière puce de cette section). Contenu de la v0.4 :
 
 - **Nouvelle clé** `position: "position-<id>"` dans le front matter du cas, entre `group` et `order` : identifiant du poste auquel le cas est rattaché (AD-18), identique en FR et en EN, obligatoire pour un cas publié (`draft: false`), `[TODO: poste]` accepté en brouillon.
 - **`featured`** : supprimée. L'accueil ne présente plus de cas mis en avant à part (PRD §11.1) ; le pilote 02 la retire au passage en v0.4, et C3 ne la compare plus.
 - **Modèle vide** : ajouter `position: "[TODO: poste]"`.
-- **Renvoi** : le format des postes et formations est décrit par AD-18. *Révisé le 02/10/2026 : la phrase disait qu'un `docs/format-parcours.md` « pourra le reprendre si la rédaction du parcours est confiée à un agent ».* Ce contrat est décidé (proposition de changement du 02/10/2026, arbitrage Q6) : la story 10.8 l'écrira pour les postes, et `docs/format-cas.md` passera alors en v0.5 pour y renvoyer au sujet de la stack d'un poste. Il n'existe pas encore.
+- **Renvoi** : le format des postes et formations est décrit par AD-18. *Révisé le 02/10/2026 : la phrase disait qu'un `docs/format-parcours.md` « pourra le reprendre si la rédaction du parcours est confiée à un agent ».* Ce contrat est décidé (proposition de changement du 02/10/2026, arbitrage Q6) et écrit : `docs/format-parcours.md` décrit la rédaction des postes depuis la story 10.8, et `docs/format-cas.md`, passé en v0.5 dans la même story, y renvoie au sujet de la stack d'un poste. La formation reste décrite par AD-18 seul.
 - **Règle de rédaction 5** : inchangée ; la version précédente autorisait déjà les villes de mission et réservait le lieu public à « basé en France ».
 - **Identifiants de poste** : `docs/format-cas.md` renvoie à la liste figée d'AD-18 (D-8).
+- **v0.5** (story 10.8, 02/10/2026) : la règle « seules les technologies citées dans le cas » reste celle de la stack d'un cas ; une phrase renvoie à `docs/format-parcours.md` pour la stack d'un poste, qui porte celle du projet entier ; la puce du rattachement au parcours ajoute que la période d'un cas est comprise dans celle de son poste ; l'arborescence d'exemple renvoie le poste à son contrat.
 
 ## README-cas
 
