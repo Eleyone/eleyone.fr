@@ -1,6 +1,6 @@
 # Procédure — Installer le serveur de production et les secrets de la forge
 
-C'est la **seule opération manuelle** de l'epic 11 (story 11.6). Elle couvre les étapes 1 et 2 de la procédure « premier déploiement » de l'architecture : le compte de déploiement, sa clé restreinte, `deploy-site` installé, les deux fichiers Compose et le `.env` du serveur, puis les **douze secrets d'Actions** du dépôt sur la forge.
+C'est la **seule opération manuelle** de l'epic 11 (story 11.6). Elle couvre les étapes 1 et 2 de la procédure « premier déploiement » de l'architecture : le compte de déploiement, ses deux clés restreintes — celle de la forge et celle du poste —, `deploy-site` installé, les deux fichiers Compose et le `.env` du serveur, puis les **douze secrets d'Actions** du dépôt sur la forge.
 
 Elle se fait une fois, à la main, par Arnaud. Rien ici n'est joué par un agent ni par la CI : ce que le dépôt livre, ce sont cette procédure et le contrôle qui vérifie les secrets une fois posés.
 
@@ -20,7 +20,8 @@ Elle se fait une fois, à la main, par Arnaud. Rien ici n'est joué par un agent
 | Élément | Emplacement | Propriétaire, droits |
 | --- | --- | --- |
 | Le compte de déploiement, membre du groupe `docker`, sans mot de passe | — | — |
-| La clé publique restreinte | `~<utilisateur>/.ssh/authorized_keys` | `<utilisateur>`, `0600` |
+| Les deux clés publiques restreintes, une ligne chacune | `~<utilisateur>/.ssh/authorized_keys` | `<utilisateur>`, `0600` |
+| La clé privée **du poste**, et son entrée `Match` | `~/.ssh/eleyone_deploiement_poste`, `~/.ssh/config` **du poste** | Arnaud, `0600` |
 | La commande forcée, copie de `deploy/remote/deploy-site.sh` | `<dossier>/remote/deploy-site.sh` | `<utilisateur>`, `0700` |
 | Le service de production, copie de `deploy/compose.yaml` | `<dossier>/compose.yaml` | `<utilisateur>`, `0600` |
 | Le canal de répétition, copie de `deploy/compose.rehearsal.yaml` | `<dossier>/compose.rehearsal.yaml` | `<utilisateur>`, `0600` |
@@ -78,7 +79,7 @@ Attendu : le compte existe et le groupe `docker` figure dans ses groupes. Sinon,
 
 Le mot de passe est verrouillé : ce compte ne se connecte que par sa clé. Le shell reste `/bin/bash` — `command=` ne dépend pas du shell de connexion, mais un shell inexistant empêcherait aussi la commande forcée de tourner.
 
-## 2. La clé restreinte
+## 2. Les clés restreintes
 
 C'est la pièce qui compte. `restrict,command="…"` est ce qui fait qu'une clé volée ne donne rien d'autre que le protocole de `deploy-site`.
 
@@ -94,7 +95,7 @@ ssh-keygen -t ed25519 -f "$tmp/deploy" -N '' -C "deploiement eleyone.fr"
 
 Attendu : `$tmp/deploy` (clé privée) et `$tmp/deploy.pub` (clé publique). La phrase de passe est **vide** : un job de CI ne peut pas en taper une.
 
-La clé privée n'est gardée nulle part sur le poste. Elle part dans le secret `DEPLOY_SSH_KEY` à l'étape 6, puis le dossier temporaire est supprimé à l'étape 7. Une clé perdue se refabrique en cinq minutes ; une copie gardée est un endroit de plus d'où elle peut fuir.
+Cette clé-ci est **celle de la forge**, et elle n'est gardée nulle part sur le poste : elle part dans le secret `DEPLOY_SSH_KEY` à l'étape 6, puis le dossier temporaire est supprimé à l'étape 7. Le poste a la sienne, distincte, fabriquée plus bas. Une clé perdue se refabrique en cinq minutes ; une copie gardée est un endroit de plus d'où elle peut fuir.
 
 **Les étapes 2 à 7 se suivent dans le même shell** : `$tmp` porte la clé, les empreintes de l'hôte et la destination jusqu'à ce qu'elles soient posées en secrets. Un shell fermé entre-temps oblige à refaire l'étape 2 en entier, ligne d'`authorized_keys` comprise.
 
@@ -124,7 +125,45 @@ ssh <utilisateur-admin>@<hôte> 'sudo chown <utilisateur>:<utilisateur> ~<utilis
 
 Attendu : `authorized_keys` en `-rw-------`, propriétaire `<utilisateur>`, dans un dossier `.ssh` en `drwx------`. Sinon, s'arrêter : `sshd` ignore un `authorized_keys` trop ouvert, et l'accès échouerait sans dire pourquoi.
 
-Les quatre essais de la restriction sont à l'étape 5 : ils ont besoin du script installé.
+### La clé du poste
+
+La répétition générale se pilote **depuis le poste** : `scripts/rehearse-release.sh` y demande `status`, `rehearse rollback` et `rehearse stop` au compte de déploiement (`rehearse-release.md`). Il lui faut donc une clé de ce compte sur le poste. Ce n'est pas celle de la forge, que le poste ne garde pas, mais **une seconde clé**, restreinte par la même ligne : une clé par utilisateur, si bien que chacune se révoque sans toucher l'autre.
+
+Elle vit dans `~/.ssh` et y reste. À la différence de celle de la forge, elle **porte une phrase de passe** : elle dort sur un disque, pas dans un coffre de secrets. Le script se connecte en `BatchMode=yes` et ne saurait pas la taper : la clé se charge dans l'agent avant une répétition.
+
+```bash
+ssh-keygen -t ed25519 -f ~/.ssh/eleyone_deploiement_poste -C "poste eleyone.fr"
+```
+
+Attendu : une phrase de passe demandée deux fois, puis `~/.ssh/eleyone_deploiement_poste` (privée, `-rw-------`) et `~/.ssh/eleyone_deploiement_poste.pub`. Le commentaire `poste eleyone.fr` distingue sa ligne de celle de la forge dans `authorized_keys` : c'est elle qu'on retire si le poste est perdu.
+
+La ligne, posée comme la précédente, avec la **même** restriction :
+
+```bash
+ssh <utilisateur-admin>@<hôte> "sudo tee -a ~<utilisateur>/.ssh/authorized_keys > /dev/null" <<< "restrict,command=\"<dossier>/remote/deploy-site.sh\" $(cat ~/.ssh/eleyone_deploiement_poste.pub)"
+ssh <utilisateur-admin>@<hôte> 'sudo grep -c "^restrict,command=" ~<utilisateur>/.ssh/authorized_keys; sudo grep -c . ~<utilisateur>/.ssh/authorized_keys'
+```
+
+Attendu : `2` puis `2` — deux lignes non vides, et toutes deux restreintes. Les deux comptes passent par `sudo grep` et non par une redirection `< fichier` : celle-ci serait ouverte par le compte d'administration lui-même, sans `sudo`, et refusée sur un fichier en `0600` qui ne lui appartient pas. Un écart entre les deux nombres veut dire qu'une ligne a été posée sans `restrict,command=` : la retirer avant toute autre opération.
+
+Puis, dans le `~/.ssh/config` **du poste**, l'entrée qui donne cette clé au compte de déploiement, et à lui seul :
+
+```
+Match host <hôte> user <utilisateur>
+  IdentityFile ~/.ssh/eleyone_deploiement_poste
+  IdentitiesOnly yes
+```
+
+`Match … user` vise le compte distant : le compte d'administration, sur la même machine, garde ses clés habituelles. `IdentitiesOnly yes` empêche `ssh` de proposer d'abord au compte de déploiement les autres clés de l'agent. `<hôte>` s'écrit exactement comme dans `DEPLOY_HOST` : `Match host` compare le nom que `ssh` résout, et une entrée `Host` qui renommerait la machine le changerait. La seule façon de le savoir est de demander à `ssh` ce qu'il fera, sans se connecter :
+
+```bash
+ssh -G <utilisateur>@<hôte> | grep -E '^(identityfile|identitiesonly) '
+ssh -G <utilisateur-admin>@<hôte> | grep -c eleyone_deploiement_poste
+```
+
+Attendu : `identitiesonly yes` et la seule `identityfile ~/.ssh/eleyone_deploiement_poste` pour le compte de déploiement ; `0` pour le compte d'administration, que l'entrée ne touche pas. Vérifié avec OpenSSH 10.2p1 le 01/10/2026, par `ssh -G` sur une configuration d'essai.
+
+Les quatre essais de la restriction sont à l'étape 5, pour les deux clés : ils ont besoin du script installé.
 
 ## 3. Le dossier `deploy/` sur le serveur
 
@@ -175,14 +214,20 @@ Attendu : `composition lisible`. Si le message parle de `PROXY_NETWORK`, le `.en
 
 Le `.env` ne peut pas entrer dans le dépôt par accident : `scripts/check-private.sh` refuse tout chemin `.env`, seul ou suffixé, et le hook `pre-receive` de la forge le refuse aussi. `deploy/.env` n'est pas un oubli du `.gitignore`, c'est un chemin interdit.
 
-## 5. Les quatre essais de la clé restreinte
+## 5. Les quatre essais des clés restreintes
 
-C'est le premier critère d'acceptation de la story : `status` répond, une autre commande, un shell et une redirection de port sont refusés. Les quatre se lancent depuis le poste, avec la clé fabriquée à l'étape 2.
+C'est le premier critère d'acceptation de la story : `status` répond, une autre commande, un shell et une redirection de port sont refusés. Les quatre se lancent depuis le poste, d'abord avec la clé de la forge fabriquée à l'étape 2, puis avec celle du poste.
+
+**Chaque essai de la forge n'emploie que la clé de la forge.** Un simple `-i` ne suffit pas : `ssh` ajoute la clé passée par `-i` à celles de sa configuration, et l'entrée `Match` de la clé du poste s'applique au même compte. Si la ligne de la forge était mal posée, la clé du poste, chargée dans l'agent, prendrait le relais et l'essai passerait à tort. `-F /dev/null` écarte la configuration — celle du poste comme celle du système —, `IdentitiesOnly=yes` écarte les autres clés de l'agent, et `known_hosts` reste celui du poste. Vérifié avec OpenSSH 10.2p1 le 01/10/2026, par `ssh -G` : sans `-F /dev/null`, la liste des clés proposées contient les deux.
+
+```bash
+cle_forge=(-F /dev/null -o IdentitiesOnly=yes -i "$tmp/deploy")
+```
 
 ### Essai 1 — `status` répond
 
 ```bash
-ssh -i "$tmp/deploy" <utilisateur>@<hôte> status; echo "code=$?"
+ssh "${cle_forge[@]}" <utilisateur>@<hôte> status; echo "code=$?"
 ```
 
 Attendu, sur un serveur où rien n'est encore déployé :
@@ -198,7 +243,7 @@ C'est la preuve que la copie est en place, exécutable, et que le compte atteint
 ### Essai 2 — une autre commande est refusée
 
 ```bash
-ssh -i "$tmp/deploy" <utilisateur>@<hôte> id; echo "code=$?"
+ssh "${cle_forge[@]}" <utilisateur>@<hôte> id; echo "code=$?"
 ```
 
 Attendu :
@@ -211,7 +256,7 @@ code=1
 La commande demandée n'est pas lancée : elle est seulement **lue** dans `SSH_ORIGINAL_COMMAND`, et le mot est cité entre guillemets par `printf '%q'`. Même chose pour une commande composée, qui n'est qu'une suite de mots :
 
 ```bash
-ssh -i "$tmp/deploy" <utilisateur>@<hôte> 'status; id'; echo "code=$?"
+ssh "${cle_forge[@]}" <utilisateur>@<hôte> 'status; id'; echo "code=$?"
 ```
 
 Attendu : refus, code 1, et le message cite la demande sans l'exécuter — le `;` n'est qu'un caractère d'un mot.
@@ -219,7 +264,7 @@ Attendu : refus, code 1, et le message cite la demande sans l'exécuter — le `
 Le transfert de fichiers passe par la même porte, parce que `command=` vaut aussi pour un sous-système :
 
 ```bash
-scp -i "$tmp/deploy" /etc/hostname <utilisateur>@<hôte>:/tmp/; echo "code=$?"
+scp "${cle_forge[@]}" /etc/hostname <utilisateur>@<hôte>:/tmp/; echo "code=$?"
 ```
 
 Attendu : échec, code non nul. Rien n'est écrit sur le serveur.
@@ -227,7 +272,7 @@ Attendu : échec, code non nul. Rien n'est écrit sur le serveur.
 ### Essai 3 — un shell est refusé
 
 ```bash
-ssh -i "$tmp/deploy" <utilisateur>@<hôte>; echo "code=$?"
+ssh "${cle_forge[@]}" <utilisateur>@<hôte>; echo "code=$?"
 ```
 
 Attendu :
@@ -244,7 +289,7 @@ code=1
 Dans un terminal :
 
 ```bash
-ssh -i "$tmp/deploy" -N -L 18080:127.0.0.1:18080 <utilisateur>@<hôte>
+ssh "${cle_forge[@]}" -N -L 18080:127.0.0.1:18080 <utilisateur>@<hôte>
 ```
 
 Dans un autre, pendant que le premier tourne :
@@ -258,18 +303,34 @@ Attendu : `curl` échoue (connexion fermée, réponse vide), code non nul, et le
 La variante qui échoue immédiatement, et qui se lit encore mieux :
 
 ```bash
-ssh -i "$tmp/deploy" -N -o ExitOnForwardFailure=yes -R 19090:127.0.0.1:19090 <utilisateur>@<hôte>; echo "code=$?"
+ssh "${cle_forge[@]}" -N -o ExitOnForwardFailure=yes -R 19090:127.0.0.1:19090 <utilisateur>@<hôte>; echo "code=$?"
 ```
 
 Attendu : `Error: remote port forwarding failed for listen port 19090`, code non nul, immédiatement.
 
 **Si l'un de ces essais réussit là où il devrait échouer**, retirer la ligne de `authorized_keys` avant toute autre opération, et ne poser aucun secret sur la forge : une clé qui ouvre un tunnel ou un shell ne doit pas exister dans la CI.
 
+### Les mêmes essais, avec la clé du poste
+
+Sa ligne est une autre ligne d'`authorized_keys` : qu'elle ait été bien posée ne se déduit pas de la première. À l'inverse des essais de la forge, ceux-ci passent par la configuration du poste, et l'entrée `Match` n'y propose que la clé du poste (`IdentitiesOnly yes`) : la clé de la forge, qui n'est pas dans l'agent, ne peut pas prendre le relais. Les mêmes essais, **sans `-i`** — c'est l'entrée `Match` du `~/.ssh/config` qui choisit la clé, comme elle le fera pendant la répétition. La clé se charge d'abord dans l'agent :
+
+```bash
+ssh-add ~/.ssh/eleyone_deploiement_poste
+ssh -o BatchMode=yes <utilisateur>@<hôte> status; echo "code=$?"
+ssh -o BatchMode=yes <utilisateur>@<hôte> id; echo "code=$?"
+ssh -o BatchMode=yes <utilisateur>@<hôte>; echo "code=$?"
+ssh -o BatchMode=yes -N -o ExitOnForwardFailure=yes -R 19090:127.0.0.1:19090 <utilisateur>@<hôte>; echo "code=$?"
+```
+
+Attendu, dans l'ordre : les deux lignes de `status` et `code=0` ; le refus de `id` et `code=1` ; le refus d'une session et `code=1` ; `Error: remote port forwarding failed for listen port 19090` et un code non nul. Le premier essai passé en `BatchMode=yes` prouve aussi ce que le script exigera : aucune question posée, ni phrase de passe ni empreinte d'hôte. S'il échoue sur `Permission denied (publickey)`, l'entrée `Match` ne s'applique pas — refaire la vérification par `ssh -G` — ou la clé n'est pas dans l'agent.
+
+Un essai qui réussit là où il devrait échouer : retirer **cette** ligne, celle qui finit par `poste eleyone.fr`, et la reposer.
+
 ### Ce que ces essais ne disent pas
 
-Ils prouvent que la clé est restreinte, pas que la chaîne de mise en ligne fonctionne : ni `docker load`, ni la mise en service, ni le retour arrière ne sont exercés ici. C'est la répétition générale qui s'en charge (AD-22, stories 11.9 et 11.11).
+Ils prouvent que les clés sont restreintes, pas que la chaîne de mise en ligne fonctionne : ni `docker load`, ni la mise en service, ni le retour arrière ne sont exercés ici. C'est la répétition générale qui s'en charge (AD-22, stories 11.9 et 11.11).
 
-**Le tunnel de la répétition n'emprunte pas cette clé.** AD-22 fait vérifier le canal de répétition par `ssh -L 18080:127.0.0.1:18080`, ce que l'essai 4 vient précisément de rendre impossible : ce tunnel-là passe par `<utilisateur-admin>`, le compte d'administration, jamais par le compte de déploiement. Les deux exigences ne se contredisent pas, elles s'appliquent à deux comptes différents.
+**Le tunnel de la répétition n'emprunte aucune de ces deux clés.** AD-22 fait vérifier le canal de répétition par `ssh -L 18080:127.0.0.1:18080`, ce que l'essai 4 vient précisément de rendre impossible : ce tunnel-là passe par `<utilisateur-admin>`, le compte d'administration, jamais par le compte de déploiement. Les deux exigences ne se contredisent pas, elles s'appliquent à deux comptes différents.
 
 ## 6. Les douze secrets d'Actions
 
@@ -377,7 +438,9 @@ rm -rf "$tmp"
 unset tmp forge_url forge_jeton
 ```
 
-Aucune copie de la clé privée, de la ligne `known_hosts` ni du jeton ne reste dans le shell ou sur le disque du poste. La clé privée n'existe plus que dans le secret de la forge et, sous sa forme publique, dans `authorized_keys`.
+Aucune copie de la clé privée **de la forge**, de la ligne `known_hosts` ni du jeton ne reste dans le shell ou sur le disque du poste. Cette clé n'existe plus que dans le secret de la forge et, sous sa forme publique, dans `authorized_keys`.
+
+La clé **du poste**, elle, reste dans `~/.ssh` : c'est voulu, la répétition s'en sert. Elle est protégée par sa phrase de passe, et elle n'ouvre que ce qu'ouvre celle de la forge — le protocole de `deploy-site`.
 
 ## Recopier après une modification
 
@@ -387,7 +450,8 @@ Comme le hook `pre-receive` de la forge, ces fichiers ne se mettent pas à jour 
 - **Le nom du réseau du proxy change** : refaire l'étape 4.
 - **La liste des motifs interdits change** (`docs/private/forbidden-patterns.txt`) : reposer le secret `PRIVATE_PATTERNS`. Tant que ce n'est pas fait, C21 et C22 travaillent sur l'ancienne liste pendant une mise en ligne.
 - **Les mentions légales changent** : reposer les valeurs `HUGO_LEGAL_*` concernées, puis relancer `scripts/release/check-forge-secrets.sh` — il confirmera les noms, pas les valeurs.
-- **La clé de déploiement est refaite** : reposer `DEPLOY_SSH_KEY` **et** remplacer la ligne de `authorized_keys`, dans cet ordre ; entre les deux, aucune mise en ligne n'aboutirait.
+- **La clé de la forge est refaite** : reposer `DEPLOY_SSH_KEY` **et** remplacer sa ligne de `authorized_keys`, celle qui finit par `deploiement eleyone.fr`, dans cet ordre ; entre les deux, aucune mise en ligne n'aboutirait. La ligne du poste ne bouge pas.
+- **Le poste est perdu, ou sa clé refaite** : retirer de `authorized_keys` la ligne qui finit par `poste eleyone.fr`, puis refaire « La clé du poste » à l'étape 2 et ses essais à l'étape 5. La forge n'est pas touchée : ses mises en ligne continuent.
 
 ## En cas d'échec
 
@@ -397,4 +461,5 @@ Comme le hook `pre-receive` de la forge, ces fichiers ne se mettent pas à jour 
 - **`PROXY_NETWORK` manquante dans un message de Compose** : le `.env` n'est pas dans le dossier des fichiers Compose, ou il n'appartient pas à `<utilisateur>`.
 - **`check-forge-secrets` refuse le jeton (401 ou 403)** : le jeton de `.env` n'a pas la portée des secrets du dépôt. Voir `gitea-token.md`.
 - **`check-forge-secrets` rend 404** : le dépôt n'est pas celui que le jeton peut lire, ou la version de la forge n'a pas ce point d'API.
-- **Un essai de l'étape 5 réussit alors qu'il devait échouer** : retirer la ligne de `authorized_keys` immédiatement, ne poser aucun secret, et reprendre l'étape 2.
+- **Un essai de l'étape 5 réussit alors qu'il devait échouer** : retirer la ligne de cette clé dans `authorized_keys` immédiatement, ne poser aucun secret, et reprendre l'étape 2.
+- **`Permission denied (publickey)` avec la clé du poste** : l'entrée `Match` du `~/.ssh/config` ne s'applique pas — `ssh -G` le montre —, ou la clé n'est pas chargée dans l'agent (`ssh-add -l`).

@@ -1,6 +1,6 @@
 # Procédure — Commande forcée `deploy-site` et services du serveur
 
-Le serveur de production n'accepte que des demandes précises, sur deux canaux séparés : la production et la répétition (AD-14, AD-22). La clé de déploiement est restreinte dans `authorized_keys` par `restrict,command="…/deploy-site.sh"` ; quoi que le client demande, c'est `deploy/remote/deploy-site.sh` qui tourne, et la demande lui arrive dans `SSH_ORIGINAL_COMMAND`. Une clé volée ne donne rien d'autre que le protocole ci-dessous.
+Le serveur de production n'accepte que des demandes précises, sur deux canaux séparés : la production et la répétition (AD-14, AD-22). Le compte de déploiement a deux clés, celle de la forge et celle du poste, chacune restreinte dans `authorized_keys` par `restrict,command="…/deploy-site.sh"` ; quoi que le client demande, c'est `deploy/remote/deploy-site.sh` qui tourne, et la demande lui arrive dans `SSH_ORIGINAL_COMMAND`. Une clé volée ne donne rien d'autre que le protocole ci-dessous.
 
 **Rien de ce qui désigne le serveur n'entre dans le dépôt** (NFR-9) : ni nom d'hôte, ni adresse, ni nom du compte de déploiement, ni nom du réseau du proxy. Les valeurs propres au serveur vivent dans un fichier `.env` posé **sur le serveur**, à côté des fichiers Compose, et jamais commité. Ce `.env`-là n'est pas celui du poste de développement.
 
@@ -81,7 +81,7 @@ Le conteneur de répétition n'est publié que sur la boucle locale du serveur :
 
 La séquence complète — tags, attente, tunnel, vérifications, retour arrière, arrêt — est tenue par le skill `rehearse-release` (`rehearse-release.md`, story 11.8) ; ce qui suit n'en décrit que l'accès.
 
-**Ce tunnel n'emprunte pas la clé de déploiement.** Celle-ci est posée avec l'option `restrict`, qui coupe la redirection de ports — le quatrième des quatre essais de `serveur-de-production.md` le vérifie exprès. Le tunnel passe donc par le compte d'administration du serveur, jamais par le compte de déploiement : les deux exigences d'AD-22 et de la story 11.6 ne se contredisent pas, elles s'appliquent à deux comptes différents.
+**Ce tunnel n'emprunte aucune clé du compte de déploiement.** Elles sont posées avec l'option `restrict`, qui coupe la redirection de ports — le quatrième des quatre essais de `serveur-de-production.md` le vérifie exprès. Le tunnel passe donc par le compte d'administration du serveur, jamais par le compte de déploiement : les deux exigences d'AD-22 et de la story 11.6 ne se contredisent pas, elles s'appliquent à deux comptes différents.
 
 ## Tests
 

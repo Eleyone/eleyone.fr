@@ -13,7 +13,8 @@ La procédure vaut pour **tout tag `vX.Y.Z-rc.N`**, dont la première répétiti
 - `.env` à la racine du dépôt, avec **deux destinations au format `<utilisateur>@<hôte>`, sans port** :
   - `ADMIN_HOST` — le compte d'administration. Il ne sert qu'au **tunnel** et à la lecture des **journaux** ;
   - `DEPLOY_HOST` — le compte de déploiement, celui dont la clé restreinte n'accepte que les commandes de `deploy-site`. Même nom, même valeur que le secret de la forge.
-- Les deux comptes joignables sans question interactive : l'empreinte de l'hôte déjà dans le `known_hosts` du poste, et la clé chargée dans l'agent ou déclarée dans `~/.ssh/config`. Le script se connecte en `BatchMode=yes` : une question posée est un échec, pas une attente.
+- Les deux comptes joignables sans question interactive : l'empreinte de l'hôte déjà dans le `known_hosts` du poste, et chaque clé chargée dans l'agent. Le script se connecte en `BatchMode=yes` : une question posée est un échec, pas une attente.
+- Pour le compte de déploiement, **la clé du poste**, pas celle de la forge : une seconde clé restreinte par la même ligne d'`authorized_keys`, que l'entrée `Match host … user …` du `~/.ssh/config` donne à ce compte seul (`serveur-de-production.md`, « La clé du poste »). La clé de la forge ne quitte jamais son secret : le poste ne l'a pas, et n'a pas à l'avoir.
 - Le port `18080` libre sur le poste.
 
 **Aucune valeur de `.env` n'est affichée** par le script, ni dans un message, ni dans un journal : un message nomme la variable, jamais son contenu (NFR-9).
@@ -22,7 +23,7 @@ La procédure vaut pour **tout tag `vX.Y.Z-rc.N`**, dont la première répétiti
 
 | Ce qui part | Par quel compte | Pourquoi |
 |---|---|---|
-| `status`, `rehearse rollback <tag>`, `rehearse stop` | **déploiement** (`DEPLOY_HOST`) | c'est le canal restreint : la clé est posée avec `restrict,command=`, elle n'ouvre rien d'autre |
+| `status`, `rehearse rollback <tag>`, `rehearse stop` | **déploiement** (`DEPLOY_HOST`), avec la clé du poste | c'est le canal restreint : la clé est posée avec `restrict,command=`, elle n'ouvre rien d'autre |
 | le tunnel `ssh -L 18080:127.0.0.1:18080` | **administration** (`ADMIN_HOST`) | `restrict` **refuse une redirection de port** — premier critère d'acceptation de la story 11.6, vérifié par le quatrième de ses quatre essais |
 | `docker logs` du conteneur de répétition | **administration** (`ADMIN_HOST`) | le tunnel ne transporte que du HTTP ; un `docker logs` lancé en local parlerait au démon Docker du poste |
 
