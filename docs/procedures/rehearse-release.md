@@ -156,6 +156,25 @@ Les **journaux** se lisent par `ssh <compte d'administration> docker logs …`, 
 
 Une vérification en échec arrête la répétition, à ce point de la séquence, sans rien effacer.
 
+## Garder une répétition en service
+
+Le script se termine toujours par `rehearse stop`. Pour **montrer** le site de répétition — le test des trente secondes de la story 11.10, mené par partage d'écran (`EXPERIENCE.md`) —, il faut qu'une version y reste en service après la répétition. Méthode retenue par Arnaud le 03/10/2026, sans code : un tag de répétition de plus, posé à la main **après** une répétition réussie, sur le même commit d'`origin/dev`.
+
+```bash
+git fetch origin --tags
+git tag -a v1.0.0-rc.3 -m "Répétition en service pour le test des trente secondes" origin/dev
+git push origin refs/tags/v1.0.0-rc.3
+```
+
+Le workflow `release` le construit et le livre au canal de répétition, comme n'importe quel tag `vX.Y.Z-rc.N` (`release-workflow.md`). Le numéro est le premier libre après ceux de la répétition. Puis :
+
+1. attendre que le serveur le serve : `ssh <compte de déploiement> status` doit montrer `eleyone-site:v1.0.0-rc.3` sur le canal de répétition ;
+2. ouvrir le tunnel par le compte d'administration — jamais par celui de déploiement, que `restrict` refuse — et le garder ouvert : `ssh -o ExitOnForwardFailure=yes -N -L 18080:127.0.0.1:18080 <compte d'administration>` ;
+3. montrer `http://127.0.0.1:18080/` et `http://127.0.0.1:18080/en/` ;
+4. une fois fini, fermer le tunnel (Ctrl-C) et arrêter la répétition : `ssh <compte de déploiement> 'rehearse stop'`.
+
+Ce tag n'est pas vérifié par le script : il porte le même arbre qu'une répétition qui vient de passer toutes les vérifications. Le canal reste isolé pendant qu'il sert — hors du réseau du proxy, publié sur la boucle locale du serveur seulement (AD-22) —, si bien qu'il peut rester en service plusieurs jours sans rien exposer.
+
 ## Après un échec : ce que le script n'arrête pas
 
 Le piège de sortie **tue le tunnel et l'agent privé** — un processus laissé sur le poste est un déchet, et l'agent garderait la clé déchiffrée — mais **ne lance pas `rehearse stop`**.

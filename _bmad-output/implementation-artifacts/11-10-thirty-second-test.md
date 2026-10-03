@@ -57,4 +57,17 @@ Voici le rapport de la revue de spec pour la story 11.10.
 | S1 | Pas de critère pour le succès | **Retenu** : quatre ou cinq réussites → la story est `done` sans retouche, et la 11.11 peut partir. |
 | S2 | La revérification de FR-37 ne laisse pas de trace | **Retenu** : en cas de retouche, la mesure FR-37 (méthode de la story 10.9) est consignée dans la même section du fichier de mesures. |
 
+**Arbitrages d'Arnaud (03/10/2026) :**
+
+1. **A2, garder le site de répétition en service : option b, sans code.** La répétition complète se
+   joue d'abord (`scripts/rehearse-release.sh v1.0.0-rc.1 --run`, qui s'arrête par `rehearse stop`) ;
+   puis un tag de répétition de plus, posé à la main sur le même commit d'`origin/dev`, est livré par
+   le workflow `release` au canal de répétition, où il reste en service le temps des cinq passages ;
+   `rehearse stop` à la main ensuite. Marche à suivre : `docs/procedures/rehearse-release.md`,
+   « Garder une répétition en service ». Options écartées : une option `--garder` du script
+   (recommandée par l'orchestrateur) ; mener le test entre deux étapes du script.
+2. **A3, le second passage après mise en ligne : option a.** Il devient une case de la check-list de
+   la story 11.11, ses résultats dans le même `docs/measures/thirty-second-test.md`. Options
+   écartées : une question ouverte pour une story future ; retirer ce passage d'`EXPERIENCE.md`.
+
 ## Revue du code

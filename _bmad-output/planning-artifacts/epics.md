@@ -3529,6 +3529,7 @@ afin de lire le CV et les preuves depuis le lien reçu.
 - [ ] Directives NPM recopiées dans `deploy/proxy/npm-advanced.conf`, sans nom d'hôte ni adresse.
 - [ ] Mesure PageSpeed Insights mobile de chaque gabarit (accueil CV, page de cas, page de groupe, page simple, 404) consignée dans `docs/measures/v1.0.0.md` par une PR ordinaire.
 - [ ] La politique de confidentialité est vraie sur toute la chaîne.
+- [ ] Second passage du test des trente secondes, sur le site en ligne et le téléphone de chaque testeur (`EXPERIENCE.md`, « Quand ») : section « Après mise en ligne » de `docs/measures/thirty-second-test.md` (arbitrage d'Arnaud du 03/10/2026, story 11.10).
 
 ### Story 11.12 : Hotfix skill
 
