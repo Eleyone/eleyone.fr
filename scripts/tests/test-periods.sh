@@ -118,7 +118,8 @@ case_periods_cas_avant_un_poste_ouvert() {
 case_periods_forme_illisible_dans_le_cas() {
   # Chaque forme a son pas : la garde qui n'en refuserait qu'une passerait le cas suivant.
   local forme
-  for forme in "2025 – 2026" "juillet 2022 - avril 2026" "juillet 2022 — avril 2026" "juillet 2022–avril 2026" \
+  for forme in "2025-2026" "2025 - 2026" "2025–2026" "2025 — 2026" "juillet 2022 – 2026" "2022 – avril 2026" \
+               "25 – 26" "juillet 2022 - avril 2026" "juillet 2022 — avril 2026" "juillet 2022–avril 2026" \
                "07/2022 – 04/2026" "juil. 2022 – avril 2026" "July 2022 – April 2026" "since mai 2025" \
                "de juillet 2022 à avril 2026" " juillet 2022 – avril 2026" "" "[TODO: période]"; do
     rendu "Juillet 2022 – avril 2026" "$forme" "July 2022 – April 2026" "September 2025 – February 2026"
@@ -141,10 +142,10 @@ case_periods_forme_anglaise_lue_en_anglais_seulement() {
 }
 
 case_periods_forme_illisible_dans_le_poste() {
-  rendu "2022 – 2026" "septembre 2025 – février 2026" "July 2022 – April 2026" "September 2025 – February 2026"
+  rendu "2022 - 2026" "septembre 2025 – février 2026" "July 2022 – April 2026" "September 2025 – February 2026"
   periodes
   assert_eq 1 "$rc" "une période de poste illisible fait échouer"
-  assert_contains 'content/career/position-essai.fr.md: C25 : période « 2022 – 2026 » illisible' "$err" "le poste est nommé"
+  assert_contains 'content/career/position-essai.fr.md: C25 : période « 2022 - 2026 » illisible' "$err" "le poste est nommé"
   assert_contains 'content/cases/case-09-essai.fr.md: C25 : comparaison impossible avec content/career/position-essai.fr.md' "$err" \
     "et le cas dit qu'il n'a pas été comparé, en nommant les deux fichiers"
 }
@@ -157,6 +158,39 @@ case_periods_poste_sans_cas_lu_aussi() {
   assert_contains 'career/position-essai.fr.md: C25 : période « Juillet 2008 à juin 2014 » illisible' "$err" "le signalement nomme le poste"
 }
 
+# Story 10.10 : l'intervalle d'années « AAAA – AAAA », la période du cas 01 donnée par Arnaud. Sans
+# la forme, ce cas échoue (période illisible) : c'est le test qui échoue sans elle (point 9).
+case_periods_intervalle_d_annees_lu() {
+  rendu "Depuis février 2024" "2025 – 2026" "Since February 2024" "2025 – 2026"
+  periodes
+  assert_eq 0 "$rc" "un intervalle d'années sous une fin ouverte passe, en FR et en EN (messages : $err)"
+  rendu "2025 – 2026" "janvier 2025 – décembre 2026" "2025 – 2026" "January 2025 – December 2026"
+  periodes
+  assert_eq 0 "$rc" "un intervalle d'années va du 1er janvier au 31 décembre, bornes incluses (messages : $err)"
+  rendu "2025 – 2025" "2025" "2025 – 2025" "2025"
+  periodes
+  assert_eq 0 "$rc" "un intervalle d'une seule année vaut l'année seule (messages : $err)"
+  rendu "Juillet 2022 – avril 2026" "2023 – 2025" "July 2022 – April 2026" "2023 – 2025"
+  periodes
+  assert_eq 0 "$rc" "un intervalle d'années dans un intervalle de mois passe (messages : $err)"
+}
+
+case_periods_intervalle_d_annees_qui_deborde() {
+  # « 2026 » finit en décembre : sous un poste qui finit en avril 2026, le cas déborde. Et le début
+  # de « 2022 – … » est janvier, avant un poste commencé en juillet 2022.
+  rendu "Juillet 2022 – avril 2026" "2025 – 2026" "July 2022 – April 2026" "2022 – 2025"
+  periodes
+  assert_eq 1 "$rc" "un intervalle d'années qui déborde fait échouer"
+  assert_contains 'case-09-essai.fr.md: C25 : période « 2025 – 2026 » hors de celle du poste' "$err" "la fin, côté français"
+  assert_contains 'case-09-essai.en.md: C25 : période « 2022 – 2025 » hors de celle du poste' "$err" "le début, côté anglais"
+  # Un poste en intervalle d'années borne aussi ses cas.
+  rendu "2017 – 2018" "mars 2019 – mai 2019" "2017 – 2018" "March 2018 – May 2018"
+  periodes
+  assert_eq 1 "$rc" "un cas après un poste en intervalle d'années fait échouer"
+  assert_contains 'case-09-essai.fr.md: C25 : période « mars 2019 – mai 2019 » hors de celle du poste content/career/position-essai.fr.md (« 2017 – 2018 »)' \
+    "$err" "le signalement cite la période du poste"
+}
+
 case_periods_intervalle_inverse() {
   rendu "Avril 2026 – juillet 2022" "septembre 2025 – février 2026" "July 2022 – April 2026" "September 2025 – February 2026"
   periodes
@@ -166,6 +200,14 @@ case_periods_intervalle_inverse() {
   periodes
   assert_eq 1 "$rc" "et dans un cas aussi"
   assert_contains 'case-09-essai.fr.md: C25 : période « février 2026 – septembre 2025 » illisible' "$err" "le cas est nommé"
+  # L'intervalle d'années (story 10.10) passe par la même garde.
+  rendu "Juillet 2022 – avril 2026" "2026 – 2025" "July 2022 – April 2026" "2026 – 2025"
+  periodes
+  assert_eq 1 "$rc" "un intervalle d'années inversé est refusé"
+  assert_contains 'case-09-essai.fr.md: C25 : période « 2026 – 2025 » illisible ; formes lues : « mois AAAA – mois AAAA », « depuis mois AAAA », « AAAA » ou « AAAA – AAAA »' \
+    "$err" "côté français, avec les formes lues"
+  assert_contains 'case-09-essai.en.md: C25 : période « 2026 – 2025 » illisible ; formes lues : « Month YYYY – Month YYYY », « since Month YYYY », « YYYY » ou « YYYY – YYYY »' \
+    "$err" "côté anglais"
 }
 
 case_periods_todo_tolere_dans_un_brouillon() {

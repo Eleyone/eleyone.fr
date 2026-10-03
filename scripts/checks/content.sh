@@ -291,8 +291,8 @@ def todo_value: (. // "") | tostring | gsub("^\\s+"; "") | startswith("[TODO");
          # vides. « company_url » non plus : elle a sa propre règle, qui exige une adresse https.
          #
          # « sector » y entre avec la story 10.9, qui la fait lire par « position.html » sur la ligne
-         # de rôle. Elle reste **facultative** jusqu'à la story 10.10 ; seule son écriture vide est
-         # refusée ici.
+         # de rôle. Depuis la story 10.10, elle est **obligatoire** dans un poste publié (règle
+         # suivante) ; ce tamis-ci refuse son écriture vide, brouillons compris.
          ((["company", "label", "location", "setup", "via", "sector"][] as $key
            | select($f.front_matter | has($key))
            | ($f.front_matter[$key] // "") as $value
@@ -305,7 +305,7 @@ def todo_value: (. // "") | tostring | gsub("^\\s+"; "") | startswith("[TODO");
          # donc nommées : la liste vide, la liste dont aucun terme ne renseigne rien, et la valeur
          # qui n'est pas une liste — une chaîne vide comprise, que le gabarit lirait comme absente.
          # Un seul terme blanc au milieu de vrais termes relève de C6, qui ne le trouve pas dans le
-         # vocabulaire. Facultative jusqu'à la story 10.10, comme « sector ».
+         # vocabulaire. Obligatoire dans un poste publié depuis la story 10.10, comme « sector ».
          (select($f.front_matter | has("stack"))
           | $f.front_matter.stack as $stack
           | if ($stack | type) != "array" then
@@ -315,6 +315,27 @@ def todo_value: (. // "") | tostring | gsub("^\\s+"; "") | startswith("[TODO");
             elif ($stack | all(blank)) then
               [$f.file, "C19 : « stack » présente mais faite de termes vides ; la retirer ou l'écrire"]
             else empty end)
+         ,
+         # Story 10.10 : « sector » et « stack » sont **obligatoires dans un poste publié**, une fois
+         # les quatorze fichiers remplis (AD-18). Un brouillon les tolère absentes, comme il tolère
+         # un « [TODO » dans les autres valeurs de contenu (AD-10). Le partage avec le tamis
+         # ci-dessus est net, pour qu'une même faute ne soit pas signalée deux fois : ici la clé
+         # **absente** — ou un « sector » resté en « [TODO » —, là la clé présente mais vide. Un
+         # terme « [TODO » dans la stack d'un poste publié relève de C6, qui ne le trouve pas dans le
+         # vocabulaire.
+         (select($f.draft != true)
+          | (
+              (select($f.front_matter | has("sector") | not)
+               | [$f.file, "C19 : sector absent d'un poste publié ; secteur du client ou de la mission (AD-18)"])
+              ,
+              (select($f.front_matter | has("sector"))
+               | select(($f.front_matter.sector | blank) | not)
+               | select($f.front_matter.sector | todo_value)
+               | [$f.file, "C19 : sector encore en [TODO dans un poste publié (AD-18)"])
+              ,
+              (select($f.front_matter | has("stack") | not)
+               | [$f.file, "C19 : stack absente d'un poste publié ; la stack du projet entier, en termes de data/stack.yaml (AD-18)"])
+            ))
          ,
          (($f.front_matter.track // "") as $track
           | select(($f.draft == true and ($track | todo_value)) | not)

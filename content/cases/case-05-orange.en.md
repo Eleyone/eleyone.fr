@@ -2,7 +2,7 @@
 title: "From seconds to milliseconds without touching the database"
 translationKey: "case-05"
 number: "05"
-slug: "orange-visit-reports-performance"
+slug: "orange-crv-performance"
 position: "position-orange"
 order: 5
 draft: false
@@ -12,7 +12,7 @@ context:
   setup: "agency"
   role: "Zend Framework expert, de facto technical decision-maker in the absence of a tech lead"
   period: "July 2014 – January 2016"
-  stack: ["PHP", "Zend Framework", "Oracle", "Xdebug"]
+  stack: ["PHP", "Zend Framework 1", "Oracle", "Xdebug"]
 
 summary: >-
   Field sales reps were waiting several seconds on every lookup, over 3G. Without touching the database or the rest of the system, page loads went from seconds to milliseconds.

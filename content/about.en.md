@@ -7,7 +7,7 @@ layout: about
 
 ## What I offer
 
-I have been a backend developer, PHP and Symfony first, since April 2008. For a long time, what people bought from me was code: knowing it, writing it fast, holding a framework in my head. That is no longer it. AI writes, I verify. What I offer today is judgment: what to build, when, at what cost, and what breaks if we get it wrong.
+I have been a backend developer, PHP and Symfony first, since 2008. For a long time, what people bought from me was code: knowing it, writing it fast, holding a framework in my head. That is no longer it. AI writes, I verify. What I offer today is judgment: what to build, when, at what cost, and what breaks if we get it wrong.
 
 ## What I do well
 

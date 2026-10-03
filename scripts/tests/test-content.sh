@@ -341,8 +341,9 @@ case_content_c19_poste_en_brouillon() {
   contenu
   assert_eq 1 "$rc" "un cas publié rattaché à un poste en brouillon fait échouer"
   assert_contains "aucun poste publié de cette langue ne porte ce translationKey" "$err" "le signalement le dit"
-  rendu '.files[2] |= (.draft = false | .todo = false) | .files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025 – 2026")' \
-        '.files[2] |= (.draft = false | .todo = false) | .files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025 – 2026")'
+  # Un poste publié porte « sector » et « stack » depuis la story 10.10 (C19).
+  rendu '.files[2] |= (.draft = false | .todo = false) | .files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025 – 2026" | .front_matter.sector = "Assurance" | .front_matter.stack = ["PHP"])' \
+        '.files[2] |= (.draft = false | .todo = false) | .files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025 – 2026" | .front_matter.sector = "Insurance" | .front_matter.stack = ["PHP"])'
   contenu
   assert_eq 0 "$rc" "avec son poste publié, le cas passe (messages : $err)"
 }
@@ -653,7 +654,7 @@ case_content_c6_stack_de_poste_todo_dans_un_brouillon() {
 }
 
 case_content_c19_secteur_et_stack_presents_mais_vides() {
-  # Story 10.9 : « sector » et « stack » sont facultatives, mais une écriture vide est refusée —
+  # Story 10.9 : « sector » et « stack », écrites vides, sont refusées — dans un brouillon aussi —
   # chaîne vide ou d'espaces pour l'une, liste vide, liste de blancs ou valeur qui n'est pas une
   # liste pour l'autre. Chaque forme a son pas : un tamis vérifié en bloc laisserait passer celle
   # qu'on a oublié d'écrire, le cas échouant déjà sur les autres.
@@ -680,14 +681,53 @@ case_content_c19_secteur_et_stack_presents_mais_vides() {
   contenu
   assert_eq 1 "$rc" "une stack qui n'est pas une liste est refusée"
   assert_contains "C19 : « stack » présente mais n'est pas une liste" "$err" "le signalement le dit"
-  # Les clés restent facultatives : absentes, rien n'est dit (la story 10.10 les rend obligatoires).
+  # Renseignées, elles passent ; absentes d'un brouillon aussi (le poste des fixtures en est un).
   rendu '.files[1].front_matter.sector = "Assurance" | .files[1].front_matter.stack = ["PHP"]' \
         '.files[1].front_matter.sector = "Insurance" | .files[1].front_matter.stack = ["PHP"]'
   contenu
   assert_eq 0 "$rc" "renseignées, elles passent (messages : $err)"
   rendu 'del(.files[1].front_matter.sector, .files[1].front_matter.stack)' 'del(.files[1].front_matter.sector, .files[1].front_matter.stack)'
   contenu
-  assert_eq 0 "$rc" "absentes, elles passent encore (messages : $err)"
+  assert_eq 0 "$rc" "absentes d'un brouillon, elles passent (messages : $err)"
+}
+
+# Story 10.10 : « sector » et « stack » sont obligatoires dans un poste **publié** (AD-18, C19).
+# Chaque clé a son pas, et chaque pas exerce l'entrée que la règle doit refuser (point 9) : retirer
+# l'une des deux branches de la règle fait échouer le pas correspondant.
+case_content_c19_secteur_et_stack_obligatoires_publie() {
+  local publie='.files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025")'
+  rendu "$publie | .files[1].front_matter.sector = \"Assurance\" | .files[1].front_matter.stack = [\"PHP\"]" \
+        "$publie | .files[1].front_matter.sector = \"Insurance\" | .files[1].front_matter.stack = [\"PHP\"]"
+  contenu
+  assert_eq 0 "$rc" "un poste publié qui porte les deux passe (messages : $err)"
+  rendu "$publie | .files[1].front_matter.stack = [\"PHP\"]" "$publie | .files[1].front_matter.stack = [\"PHP\"]"
+  contenu
+  assert_eq 1 "$rc" "un poste publié sans sector fait échouer"
+  assert_contains 'career/position-essai.fr.md: C19 : sector absent d'"'"'un poste publié' "$err" "le signalement nomme le fichier et la clé"
+  assert_contains 'career/position-essai.en.md: C19 : sector absent d'"'"'un poste publié' "$err" "dans chaque langue"
+  [[ $err != *"stack absente"* ]] || { echo "la stack, présente, est signalée : $err" >&2; exit 1; }
+  rendu "$publie | .files[1].front_matter.sector = \"Assurance\"" "$publie | .files[1].front_matter.sector = \"Insurance\""
+  contenu
+  assert_eq 1 "$rc" "un poste publié sans stack fait échouer"
+  assert_contains 'career/position-essai.fr.md: C19 : stack absente d'"'"'un poste publié' "$err" "le signalement nomme le fichier et la clé"
+  [[ $err != *"sector absent"* ]] || { echo "le secteur, présent, est signalé : $err" >&2; exit 1; }
+  # Un secteur resté en [TODO est toléré dans un brouillon, refusé une fois publié.
+  rendu ".files[1].front_matter.sector = \"[TODO: secteur]\" | .files[1].front_matter.stack = [\"PHP\"]" \
+        ".files[1].front_matter.sector = \"[TODO: secteur]\" | .files[1].front_matter.stack = [\"PHP\"]"
+  contenu
+  assert_eq 0 "$rc" "un sector en [TODO passe dans un brouillon (messages : $err)"
+  rendu "$publie | .files[1].front_matter.sector = \"[TODO: secteur]\" | .files[1].front_matter.stack = [\"PHP\"]" \
+        "$publie | .files[1].front_matter.sector = \"Insurance\" | .files[1].front_matter.stack = [\"PHP\"]"
+  contenu
+  assert_eq 1 "$rc" "un sector en [TODO fait échouer un poste publié"
+  assert_contains 'career/position-essai.fr.md: C19 : sector encore en [TODO dans un poste publié' "$err" "le signalement le dit"
+  # Présente mais vide, la faute n'est dite qu'une fois, par le tamis « présente mais vide ».
+  rendu "$publie | .files[1].front_matter.sector = \"\" | .files[1].front_matter.stack = [\"PHP\"]" \
+        "$publie | .files[1].front_matter.sector = \"Insurance\" | .files[1].front_matter.stack = [\"PHP\"]"
+  contenu
+  assert_eq 1 "$rc" "un sector vide fait échouer un poste publié"
+  assert_contains 'C19 : « sector » présente mais vide' "$err" "le tamis le dit"
+  [[ $err != *"sector absent"* && $err != *"sector encore"* ]] || { echo "la même faute est dite deux fois : $err" >&2; exit 1; }
 }
 
 run_case "$@"

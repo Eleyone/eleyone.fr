@@ -12,7 +12,7 @@ context:
   setup: "agency"
   role: "Expert Zend Framework, décisionnaire technique en l'absence de tech lead"
   period: "juillet 2014 – janvier 2016"
-  stack: ["PHP", "Zend Framework", "Oracle", "Xdebug"]
+  stack: ["PHP", "Zend Framework 1", "Oracle", "Xdebug"]
 
 summary: >-
   Des commerciaux terrain attendaient plusieurs secondes à chaque consultation, en 3G. Sans toucher à la base ni au reste du système, l'affichage est passé en millisecondes.

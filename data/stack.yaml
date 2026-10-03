@@ -1,13 +1,19 @@
-# Vocabulaire contrôlé de la stack des cas. Ce fichier fait foi.
+# Vocabulaire contrôlé de la stack des cas et des postes. Ce fichier fait foi.
 #
 # - Une seule écriture par technologie, identique en FR et en EN.
-# - Seules les technologies citées dans le texte d'un cas figurent dans sa `stack`.
-# - Une technologie absente de cette liste s'y ajoute ici avant d'être utilisée dans un cas.
-# - Notes en fin de ligne : cas où la technologie apparaît, remarques.
+# - Seules les technologies citées dans le texte d'un cas figurent dans la `stack` d'un cas ; la
+#   `stack` d'un poste porte celles du projet entier (docs/format-parcours.md).
+# - Une technologie absente de cette liste s'y ajoute ici avant d'être utilisée dans un cas ou un
+#   poste.
+# - Les notions qui ne sont pas des technologies — DEX, microservices, APIs, CI, VPS ou
+#   infrastructure auto-hébergée — vont dans le corps d'un poste, jamais ici.
+# - Notes en fin de ligne : cas et postes où la technologie apparaît, remarques.
 #
 # Exclusions décidées :
 # - Python (cas 02) : départ abandonné du projet, non utilisé ; l'abandon reste dans le récit.
-# - n8n, Stripe (cas 01) : automatisations annexes de la cliente, hors du cas.
+# - n8n, Stripe (cas 01) : automatisations annexes de la cliente, hors du cas. Les deux termes sont
+#   au vocabulaire pour la stack du poste Ton Pote le Geek (story 10.10) ; l'exclusion porte sur ce
+#   que le cas 01 cite, et sa `stack` ne les reçoit pas.
 # - REST (cas 06) : cité comme alternative émergente, non utilisée.
 #
 # En attente :
@@ -16,19 +22,46 @@
 #   (bus de messages ? bibliothèque blockchain ?).
 
 technologies:
-  - Claude Code      # cas 01
-  - Docker Compose   # cas 01
-  - Fireblocks       # cas 04 ; gestion des wallets d'entreprise
-  - Java             # cas 06
-  - Oracle           # cas 05 ; base de données
-  - PHP              # cas 02, 05
-  - PostgreSQL       # cas 01
-  - Redshift         # cas 02 ; écriture courte retenue plutôt que « Amazon Redshift »
-  - SOAP             # cas 06
-  - Symfony          # cas 01, 02 ; sans numéro de version sauf cas 06
-  - Symfony 1.3      # cas 06 ; version explicite : c'est le sujet
-  - Symfony UX       # cas 02
-  - Systeme.io       # cas 01
-  - Twig             # cas 02
-  - Xdebug           # cas 05
-  - Zend Framework   # cas 05
+  - AWS SQS/SNS      # poste Chiliz
+  - BackboneJS       # poste Orange
+  - CakePHP          # poste Parcours antérieur
+  - Chiliz Chain     # poste Chiliz
+  - Claude Code      # cas 01 ; poste Ton Pote le Geek
+  - DFNS             # poste Chiliz ; prestataire de wallets non-custodial
+  - Docker           # postes Chiliz, Synolia
+  - Docker Compose   # cas 01 ; poste Ton Pote le Geek
+  - Drupal           # poste Parcours antérieur
+  - Ethereum         # poste Chiliz
+  - ethers.js        # poste Chiliz
+  - Fireblocks       # cas 04 ; poste Chiliz ; gestion des wallets d'entreprise
+  - GitHub Actions   # poste Chiliz ; l'outil de CI se nomme, la notion « CI » ne s'écrit pas ici
+  - GitLab CI        # poste Synolia ; même remarque
+  - Hibernate        # poste April Technologies 2017
+  - Java             # cas 06 ; postes April Technologies 2017, Parcours antérieur
+  - JavaScript       # poste Synolia
+  - jQuery           # poste April Technologies 2017
+  - Marionette       # poste Orange
+  - MySQL            # postes Synolia, Mister Auto, Parcours antérieur
+  - n8n              # poste Ton Pote le Geek ; exclu du cas 01 (voir plus haut)
+  - Node.js          # poste Chiliz ; socle de l'indexer interne
+  - Oracle           # cas 05 ; poste Orange ; base de données
+  - PHP              # cas 02, 05 ; postes Chiliz, Synolia, Mister Auto, April Technologies 2017, Orange, Parcours antérieur
+  - PostgreSQL       # cas 01 ; postes Chiliz, Ton Pote le Geek
+  - RabbitMQ         # poste Chiliz
+  - Redis            # poste Chiliz
+  - Redshift         # cas 02 ; poste Chiliz ; écriture courte retenue plutôt que « Amazon Redshift »
+  - SOAP             # cas 06 ; poste April Technologies 2017
+  - Solana           # poste Chiliz
+  - Stripe           # poste Ton Pote le Geek ; exclu du cas 01 (voir plus haut)
+  - SugarCRM         # poste Synolia
+  - Symfony          # cas 01, 02 ; postes Chiliz, Ton Pote le Geek ; sans numéro de version sauf cas 06
+  - Symfony 1.3      # cas 06 ; postes April Technologies 2017, Parcours antérieur ; version explicite : c'est le sujet du cas 06
+  - Symfony UX       # cas 02 ; poste Chiliz
+  - Systeme.io       # cas 01 ; poste Ton Pote le Geek
+  - Twig             # cas 02 ; poste Chiliz
+  - TypeScript       # poste Chiliz
+  - viem.js          # poste Chiliz
+  - WordPress        # poste Parcours antérieur
+  - Xdebug           # cas 05 ; poste Orange
+  - Zend Framework 1 # cas 05 ; postes Orange, Parcours antérieur ; scission de « Zend Framework » (arbitrage Q5 du 02/10/2026)
+  - Zend Framework 2 # poste Orange ; même scission

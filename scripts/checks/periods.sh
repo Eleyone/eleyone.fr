@@ -5,12 +5,14 @@
 # La période reste le texte de l'auteur : rien n'est calculé ni affiché, le contrôle compare des
 # bornes. Il lit, insensible à la casse, mois en toutes lettres et dans la langue du manifeste :
 #
-#   fr   « mois AAAA – mois AAAA »    « depuis mois AAAA »    « AAAA »
-#   en   « Month YYYY – Month YYYY »  « since Month YYYY »    « YYYY »
+#   fr   « mois AAAA – mois AAAA »    « depuis mois AAAA »    « AAAA »    « AAAA – AAAA »
+#   en   « Month YYYY – Month YYYY »  « since Month YYYY »    « YYYY »    « YYYY – YYYY »
 #
 # Le séparateur est le tiret demi-cadratin entouré d'une espace de chaque côté, celui des fichiers
 # d'aujourd'hui. Une année seule vaut de janvier à décembre ; « depuis » / « since » n'a pas de
-# borne de fin. Inclusion : début du cas ≥ début du poste **et** fin du cas ≤ fin du poste, une fin
+# borne de fin. L'intervalle d'années « AAAA – AAAA » (story 10.10 : la période du cas 01 donnée
+# par Arnaud, « 2025 – 2026 ») va du 1er janvier de la première au 31 décembre de la seconde ; une
+# forme mêlée, « mois AAAA – AAAA » ou « AAAA – mois AAAA », reste illisible. Inclusion : début du cas ≥ début du poste **et** fin du cas ≤ fin du poste, une fin
 # ouverte valant l'infini — un cas en cours sous un poste terminé déborde donc. Un intervalle dont
 # la fin précède le début est refusé. **Toute autre forme est refusée**, jamais laissée passer :
 # un contrôle qui sauterait ce qu'il ne sait pas lire passerait au vert sur une période fausse
@@ -70,6 +72,9 @@ def parse_period($lang):
   | if $since == null then null
     elif ($text | test("^[0-9]{4}$")) then
       ($text | tonumber) as $y | {start: ($y * 12 + 1), end: ($y * 12 + 12)}
+    elif ($text | test("^[0-9]{4} – [0-9]{4}$")) then
+      ($text | capture("^(?<y1>[0-9]{4}) – (?<y2>[0-9]{4})$")) as $c
+      | {start: (($c.y1 | tonumber) * 12 + 1), end: (($c.y2 | tonumber) * 12 + 12)}
     elif ($text | test("^[^ ]+ [0-9]{4} – [^ ]+ [0-9]{4}$")) then
       ($text | capture("^(?<m1>[^ ]+) (?<y1>[0-9]{4}) – (?<m2>[^ ]+) (?<y2>[0-9]{4})$")) as $c
       | bound($lang; $c.m1; $c.y1) as $start
@@ -86,8 +91,8 @@ def tolerated($entry; $value): $entry.draft == true and ($value | todo_value);
 def show: if . == null then "absente" elif type == "string" then . else tojson end;
 
 def forms($lang):
-  if $lang == "en" then "« Month YYYY – Month YYYY », « since Month YYYY » ou « YYYY »"
-  else "« mois AAAA – mois AAAA », « depuis mois AAAA » ou « AAAA »" end;
+  if $lang == "en" then "« Month YYYY – Month YYYY », « since Month YYYY », « YYYY » ou « YYYY – YYYY »"
+  else "« mois AAAA – mois AAAA », « depuis mois AAAA », « AAAA » ou « AAAA – AAAA »" end;
 
 # Une période lue mais dont la fin précède le début n'est pas une période.
 def readable($p): $p != null and ($p.end == null or $p.end >= $p.start);

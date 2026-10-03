@@ -7,7 +7,7 @@ layout: about
 
 ## Ce que je vends
 
-Je suis développeur backend, PHP et Symfony en tête, depuis avril 2008. Pendant longtemps, ce qu'on m'achetait, c'était du code : le connaître, l'écrire vite, tenir un framework par cœur. Ce n'est plus ça. L'IA écrit, je vérifie. Ce que je vends aujourd'hui, c'est le jugement : quoi construire, quand, à quel coût, et ce qui casse si on se trompe.
+Je suis développeur backend, PHP et Symfony en tête, depuis 2008. Pendant longtemps, ce qu'on m'achetait, c'était du code : le connaître, l'écrire vite, tenir un framework par cœur. Ce n'est plus ça. L'IA écrit, je vérifie. Ce que je vends aujourd'hui, c'est le jugement : quoi construire, quand, à quel coût, et ce qui casse si on se trompe.
 
 ## Ce que je fais bien
 

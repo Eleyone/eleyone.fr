@@ -11,7 +11,7 @@ context:
   company: "Institut Lionne"
   setup: "ton-pote-le-geek"
   role: "Design, development and hosting of the application, from V1 to ongoing maintenance"
-  period: "since May 2025"
+  period: "2025 – 2026"
   stack: ["Symfony", "PostgreSQL", "Docker Compose", "Systeme.io", "Claude Code"]
 
 summary: >-

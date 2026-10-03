@@ -1,17 +1,16 @@
 ---
 translationKey: position-mister-auto
 company: "Mister Auto"
-role: "Architecte technique / Chef de projet"
-period: "Janvier 2018 – janvier 2020"
+role: "Architecte technique · team lead"
+sector: "E-commerce pièces automobiles"
+period: "Janvier 2018 – octobre 2019"
 location: "Villeurbanne"
 setup: "agency"
 via: "Modis"
+stack: ["PHP", "MySQL"]
 track: "main"
 order: 3
 draft: false
 ---
 
-E-commerce de pièces automobiles, groupe PSA.
-
-- Encadrement d'une équipe de 6 développeurs : coordination des priorités de livraison et de la qualité de code.
-- Responsable des choix de solutions techniques et de la rédaction des spécifications de la plateforme.
+Sur la plateforme e-commerce à fort volume de Mister Auto, filiale du groupe PSA, je portais les choix de solutions techniques et je rédigeais les spécifications techniques de la plateforme. J'encadrais une équipe de six développeurs, sur les priorités de livraison et la qualité du code. C'est sur cette mission que j'ai tenu le rôle de team lead, en coordonnant au quotidien le travail de l'équipe.

@@ -2,7 +2,7 @@
 title: "Format de rédaction des postes du parcours"
 version: 0.1
 status: draft
-updated: 2026-10-02
+updated: 2026-10-03
 ---
 
 # Format de rédaction des postes du parcours
@@ -38,20 +38,20 @@ Les **clés** sont en anglais et identiques dans les deux langues. Certaines **v
 | `company` | non | l'employeur, ou le client direct quand la mission passe par une société de prestation | `company` ou `label`, l'une des deux au moins |
 | `label` | **oui** | nom affiché d'un poste qui n'est pas une société (« Parcours antérieur » / « Earlier career ») ; passe devant `company` | voir `company` |
 | `role` | **oui** | intitulé du poste | oui |
-| `sector` | **oui** | secteur du client ou de la mission | facultative jusqu'à la story 10.10, obligatoire ensuite (C19) |
+| `sector` | **oui** | secteur du client ou de la mission | oui dans un poste publié, depuis la story 10.10 (C19) ; un brouillon la tolère absente |
 | `period` | **oui** | période donnée par l'auteur (voir plus bas) | oui |
 | `location` | **oui** | ville de travail ou mode de travail (« Full remote ») | `location` ou `setup`, l'une des deux au moins |
 | `setup` | non | cadre : `employee`, `freelance`, `agency` ou `ton-pote-le-geek` | voir `location` |
 | `via` | non | société de prestation par laquelle passait la mission | non |
 | `company_url` | non | adresse absolue en `https://` ; le nom de la société devient un lien | non |
-| `stack` | non | stack complète du projet (voir plus bas) | même calendrier que `sector` |
+| `stack` | non | stack complète du projet (voir plus bas) | comme `sector` : oui dans un poste publié |
 | `track` | non | `main` (parcours) ou `parallel` (bloc « En parallèle ») | oui |
 | `order` | non | entier, 1 pour le plus récent, unique dans son `track`, brouillons compris ; l'ordre d'affichage vient de lui, jamais d'une date | oui |
 | `draft` | non | `true` tant qu'un `[TODO` reste | oui |
 
 - **`stack` est dans la liste de C3** depuis la story 10.9, avec son contrôle par le vocabulaire (C6 étendu aux postes) : une stack qui diffère entre FR et EN, ordre compris, ou qui cite un terme absent de `data/stack.yaml` fait échouer les contrôles.
 - **`label`, `role`, `sector`, `period` et `location` se traduisent**, et c'est pour cela qu'ils n'entrent pas dans la liste de C3 : « Parcours antérieur » devient « Earlier career », « Lyon » peut devenir « Lyon, France ». `company`, au contraire, y reste, pour qu'un nom de société ne s'écrive jamais de deux façons.
-- **Une clé facultative absente vaut mieux qu'une clé vide** : C19 refuse une clé écrite mais vide (`location: ""`) — pour `company`, `label`, `location`, `setup`, `via` et, depuis la story 10.9, `sector` et `stack` (une liste vide, une liste dont aucun terme ne renseigne rien, ou une valeur qui n'est pas une liste). Une clé se renseigne ou se retire.
+- **Une clé facultative absente vaut mieux qu'une clé vide** : C19 refuse une clé écrite mais vide (`location: ""`) — pour `company`, `label`, `location`, `setup`, `via` et, depuis la story 10.9, `sector` et `stack` (une liste vide, une liste dont aucun terme ne renseigne rien, ou une valeur qui n'est pas une liste). Une clé se renseigne ou se retire. `sector` et `stack`, elles, ne se retirent que d'un brouillon : depuis la story 10.10, C19 les exige dans un poste publié, et y refuse un `sector` resté en `[TODO`.
 - **`company`, `via` et le corps** se partagent les sociétés (arbitrage Q3 du 02/10/2026) : `company` porte le client direct ou l'employeur, `via` la société de prestation, et les clients finaux, s'il y en a, sont nommés dans le corps.
 - **`location`** ne porte jamais la ville de résidence : seulement une ville où la mission s'est déroulée, ou un mode de travail.
 - **`company_url`**, pas `url` : Hugo réserve `url` pour forcer l'adresse d'une page et refuse une valeur à protocole (AD-18).
@@ -76,7 +76,7 @@ draft: true                           # passe à false quand plus aucun [TODO] n
 
 - **La période est le texte de l'auteur**, dans la langue du fichier. Elle n'est jamais calculée ni déduite, ni par un gabarit, ni par la rédaction (AD-18).
 - **Aucune durée n'est écrite** (arbitrage Q2 du 02/10/2026) : ni clé de durée, ni durée dans le texte de la période, ni durée dans le corps (« près de quatre ans »). La période porte les bornes, et le lecteur en déduit la durée. Une durée écrite à côté des bornes est une seconde source qui finit par les contredire.
-- **Formes de période** : celles que décrit le contrôle C25 (liste des contrôles de l'architecture), en français et en anglais — un intervalle « mois AAAA – mois AAAA » (« Juillet 2022 – avril 2026 », « July 2022 – April 2026 »), une activité en cours « depuis mois AAAA » (« Depuis février 2024 », « Since February 2024 »), ou une année seule « AAAA ». La période d'un poste prend une majuscule initiale, comme dans tous les postes publiés : elle s'affiche seule, dans la marge. Le séparateur est un tiret demi-cadratin entouré d'espaces. Les mois s'écrivent en toutes lettres, dans la langue du fichier ; la casse ne compte pas. Aucune autre forme : C25 (`scripts/checks/periods.sh`, story 10.9) fait échouer les contrôles sur une période qu'il ne sait pas lire, au lieu de la laisser passer — y compris un intervalle dont la fin précède le début. Une période en `[TODO` n'est tolérée que dans un brouillon.
+- **Formes de période** : celles que décrit le contrôle C25 (liste des contrôles de l'architecture), en français et en anglais — un intervalle « mois AAAA – mois AAAA » (« Juillet 2022 – avril 2026 », « July 2022 – April 2026 »), une activité en cours « depuis mois AAAA » (« Depuis février 2024 », « Since February 2024 »), une année seule « AAAA », ou un intervalle d'années « AAAA – AAAA » (« 2025 – 2026 », du 1er janvier de la première au 31 décembre de la seconde ; ajouté par la story 10.10). La période d'un poste prend une majuscule initiale, comme dans tous les postes publiés : elle s'affiche seule, dans la marge. Le séparateur est un tiret demi-cadratin entouré d'espaces. Les mois s'écrivent en toutes lettres, dans la langue du fichier ; la casse ne compte pas. Aucune autre forme : C25 (`scripts/checks/periods.sh`, story 10.9) fait échouer les contrôles sur une période qu'il ne sait pas lire, au lieu de la laisser passer — y compris un intervalle dont la fin précède le début, et une forme mêlée comme « juillet 2022 – 2026 ». Une période en `[TODO` n'est tolérée que dans un brouillon.
 - **La période d'un cas est comprise dans celle de son poste**, et un cas ne couvre pas nécessairement toute la mission (règle d'Arnaud, arbitrage Q2). Un cas plus court que son poste n'est donc pas une incohérence ; un cas qui en déborde en est une. C25 le vérifie, en comparant des bornes, sans rien afficher : une année seule vaut de janvier à décembre, une activité « depuis » n'a pas de fin — un cas en cours sous un poste terminé déborde donc.
 
 ### Stack
@@ -85,7 +85,7 @@ La liste des technologies autorisées, avec leur écriture unique et les exclusi
 
 - **La stack d'un poste est celle du projet entier** sur lequel la mission a porté, et non la part qu'en cite un de ses cas (arbitrage Q4 du 02/10/2026). C'est la différence avec un cas, dont la stack ne porte que les technologies citées dans le cas (`docs/format-cas.md`).
 - **Termes de `data/stack.yaml` seulement**, identiques en FR et en EN. Une technologie absente du vocabulaire s'y ajoute **avant** d'être utilisée dans un poste, dans la même PR ou dans une PR antérieure.
-- **Une version ne s'écrit que si le vocabulaire la porte.** « Symfony » s'écrit sans numéro, et « Symfony 1.3 » n'existe que parce que la version est le sujet d'un cas. Zend Framework 1 et Zend Framework 2, en revanche, sont deux technologies que le lecteur doit pouvoir distinguer : elles forment deux entrées (arbitrage Q5 du 02/10/2026), et la scission de l'entrée unique « Zend Framework » dans `data/stack.yaml` revient à la story 10.10.
+- **Une version ne s'écrit que si le vocabulaire la porte.** « Symfony » s'écrit sans numéro, et « Symfony 1.3 » n'existe que parce que la version est le sujet d'un cas. Zend Framework 1 et Zend Framework 2, en revanche, sont deux technologies que le lecteur doit pouvoir distinguer : elles forment deux entrées (arbitrage Q5 du 02/10/2026) ; la story 10.10 a scindé l'entrée unique « Zend Framework » de `data/stack.yaml`, et aucune stack ne la porte plus seule.
 - **Une technologie essayée puis abandonnée n'est pas dans la stack** ; son abandon peut se raconter dans le corps, s'il dit quelque chose d'une décision (Python au départ du projet du cas 02 en est l'exemple, exclu de `data/stack.yaml` pour cette raison).
 - **Une notion n'est pas une technologie** : une architecture, un protocole générique ou une pratique ne vont pas dans la stack, mais dans le corps (voir « Corps du texte »).
 
