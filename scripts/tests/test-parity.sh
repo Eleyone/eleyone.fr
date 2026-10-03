@@ -144,4 +144,33 @@ case_parity_un_seul_manifeste() {
   assert_contains "deux attendus" "$err" "le message dit ce qui manque"
 }
 
+case_parity_stack_de_poste_comparee() {
+  # Story 10.9 : la stack d'un poste est celle du projet, en termes de data/stack.yaml, identique
+  # dans les deux langues (AD-18). Le cas exerce l'écart qu'elle doit refuser — un terme de plus
+  # d'un côté —, puis un ordre différent, qui en est un aussi, et enfin la stack absente d'un seul
+  # côté.
+  rendu '.files[1].front_matter.stack = ["PHP", "Symfony"]' '.files[1].front_matter.stack = ["PHP", "Symfony"]'
+  parite
+  assert_eq 0 "$rc" "la même stack des deux côtés passe (messages : $err)"
+  rendu '.files[1].front_matter.stack = ["PHP", "Symfony"]' '.files[1].front_matter.stack = ["PHP"]'
+  parite
+  assert_eq 1 "$rc" "une stack de poste différente entre FR et EN fait échouer"
+  assert_contains 'career/position-essai.en.md: clé non traduite « stack » : ["PHP","Symfony"] en français, ["PHP"] en anglais' "$err" \
+    "le signalement nomme le fichier, la clé et les deux valeurs"
+  rendu '.files[1].front_matter.stack = ["PHP", "Symfony"]' '.files[1].front_matter.stack = ["Symfony", "PHP"]'
+  parite
+  assert_eq 1 "$rc" "le même vocabulaire dans un autre ordre fait échouer"
+  rendu '.files[1].front_matter.stack = ["PHP"]' .
+  parite
+  assert_eq 1 "$rc" "une stack présente d'un seul côté fait échouer"
+  assert_contains 'clé non traduite « stack » : ["PHP"] en français, absente en anglais' "$err" "le signalement dit laquelle manque"
+}
+
+case_parity_secteur_de_poste_se_traduit() {
+  # « sector » se traduit (AD-18, arbitrage Q3 du 02/10/2026) : deux écritures ne sont pas un écart.
+  rendu '.files[1].front_matter.sector = "Assurance"' '.files[1].front_matter.sector = "Insurance"'
+  parite
+  assert_eq 0 "$rc" "deux écritures d'un même secteur passent (messages : $err)"
+}
+
 run_case "$@"

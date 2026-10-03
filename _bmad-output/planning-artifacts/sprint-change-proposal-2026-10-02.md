@@ -329,3 +329,14 @@ Proposition approuvée par Arnaud le 02/10/2026, appliquée le même jour sur la
 - **EXPERIENCE.md** : sources, « Voice and Tone » (trois libellés à valider à la story 10.9), `cv-position` dans « Component Patterns », « State Patterns », « Interaction Primitives », note du premier écran, test des trente secondes, décision 10 révisée avec sa note.
 - **epics.md** : présentation, inventaire (FR-2, FR-6, AD-18, C1 à C25, UX-DR8, UX-DR18), carte de couverture, liste des epics (ordre, Epic 10, Epic 11), stories 2.7 et 5.2 annotées, en-tête de l'Epic 10, **stories 10.8, 10.9 et 10.10**, ordre et dépendances des stories 11.10 et 11.11, synthèse.
 - **sprint-status.yaml** : `epic-10: in-progress`, trois stories en `backlog`, ordre de travail, prérequis de contenu de la 10.10, `last_updated`.
+
+## Révision (02/10/2026, story 10.9)
+
+Arnaud a révisé l'arbitrage **Q1** le même jour, en répondant aux questions de la story 10.9, avant son implémentation : « le bloc repliable comprend uniquement la stack. Le contexte de mission doit être lisible. Le bloc se nomme stack. » Le tableau ci-dessus garde Q1 tel qu'il a été rendu ; cette section le révise.
+
+- **Q1 révisé** : le périmètre d'un poste (son corps) est **toujours visible**, après la liste de ses cas — l'option « après les cas, déployé » du tableau, pour le périmètre seulement. La stack du projet est seule dans un `<details>` natif fermé par défaut, dont le résumé est « Stack » en FR et en EN.
+- **Place du secteur** : juste après le rôle, sur la ligne de rôle — rôle · secteur · lieu · cadre · via.
+- **Ce qui n'existe pas n'est pas rendu** : sans stack, pas de bloc ; sans corps, pas de périmètre ; aucune mention d'absence.
+- **Effet sur FR-37** : le périmètre et le bloc suivent la liste des cas et ne repoussent pas le lien du premier cas ; la story 10.9 l'a mesuré. Elle a aussi mesuré qu'avec une serif de repli large, le lien « Cas 02 » passait déjà sous la ligne de 844 px avant elle, et qu'un secteur qui allonge la ligne de rôle le repousse encore (`docs/accessibility.md`) : la suite relève d'un arbitrage d'Arnaud.
+
+Documents corrigés dans la PR de la story 10.9 (point 12 d'AGENTS.md) : PRD (glossaire « Poste », description du §4.1, FR-2, note de FR-37, §11.1), `ARCHITECTURE-SPINE.md` (statut, AD-18, lignes C3, C6, C19 et C25, décision 77), `DESIGN.md` et `EXPERIENCE.md` (`cv-position`, « State Patterns », premier écran, décisions 5 et 10, notes de révision datées), `epics.md` (FR-2, AD-18, UX-DR8, notes des stories 2.7, 5.2 et 10.9), `docs/format-parcours.md` et `docs/procedures/check.md`.

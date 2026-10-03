@@ -36,7 +36,7 @@ Les questions Q6 à Q12 et Q14 à Q17 sont tranchées (PRD §11.1), Q9 comprise 
 
 Mise à jour du 13/09/2026 (`bmad-correct-course`) : les décisions D-1 à D-17 et les corrections M-1 à M-18 du contrôle de préparation à l'implémentation (`implementation-readiness.md`) sont appliquées ; le détail est dans `sprint-change-proposal-2026-09-13.md`.
 
-Mise à jour du 02/10/2026 (`bmad-correct-course`) : la proposition de changement `sprint-change-proposal-2026-10-02.md`, approuvée par Arnaud avec ses arbitrages Q1 à Q8, donne à chaque poste du CV le contexte complet de sa mission. Elle ajoute à l'Epic 10 les stories 10.8 à 10.10, le contrôle C25, et révise UX-DR8.
+Mise à jour du 02/10/2026 (`bmad-correct-course`) : la proposition de changement `sprint-change-proposal-2026-10-02.md`, approuvée par Arnaud avec ses arbitrages Q1 à Q8, donne à chaque poste du CV le contexte complet de sa mission. Elle ajoute à l'Epic 10 les stories 10.8 à 10.10, le contrôle C25, et révise UX-DR8. Le même jour, les arbitrages d'Arnaud sur la story 10.9 révisent son arbitrage Q1 : le périmètre d'un poste reste visible, seule sa stack est repliée (FR-2, UX-DR8).
 
 ### Règles de conduite des stories
 
@@ -71,7 +71,7 @@ Résumé ; le texte et les conséquences testables du PRD font foi.
 
 **Accueil CV**
 - FR-1 : haut de l'accueil, dans l'ordre : ligne d'identité, titre du site, pitch de trois phrases ; texte modifiable sans gabarit.
-- FR-2 : parcours du plus récent au plus ancien ; chaque poste (société, intitulé, période, ville de travail ou cadre) liste ses cas publiés par numéro et titre, sans « En bref » ; poste sans cas complet et sans zone de cas ; secteur, puis périmètre (corps) et stack du projet de **tout** poste dans un bloc repliable fermé par défaut, après ses cas (révisé le 02/10/2026 : le corps ne s'affichait que sans cas) ; aucune durée affichée ; période d'un cas comprise dans celle de son poste ; cas 06 sous le poste April Technologies de 2017.
+- FR-2 : parcours du plus récent au plus ancien ; chaque poste (société, intitulé, période, ville de travail ou cadre) liste ses cas publiés par numéro et titre, sans « En bref » ; poste sans cas complet et sans zone de cas ; secteur juste après le rôle, puis périmètre (corps) de **tout** poste, toujours visible, après ses cas, et stack du projet seule dans un bloc repliable « Stack » fermé par défaut (révisé le 02/10/2026 : le corps ne s'affichait que sans cas ; révisé le même jour par la story 10.9 : la proposition mettait aussi le corps dans le bloc) ; aucune durée affichée ; période d'un cas comprise dans celle de son poste ; cas 06 sous le poste April Technologies de 2017.
 - FR-3 : appel à contact vers la page Contact de la même langue.
 - FR-4 : bloc « En parallèle » : lien vers Ton Pote le Geek et vers le cas 01, ligne de contexte EN, aucune page d'offre.
 - FR-33 : ligne d'identité « Arnaud Grousset · Eleyone », « Basé en France » seul lieu public hors mentions légales, nom dans le `<title>` de l'accueil.
@@ -155,7 +155,7 @@ Pas de gabarit de démarrage ; le dépôt part de la structure initiale de l'arc
 - **AD-15** : journaux sans IP dans le conteneur et dans Nginx Proxy Manager.
 - **AD-16** : agent de parité en script HTTP, Gitea seulement.
 - **AD-17** : contrôles automatiques, check-list manuelle par gabarit en clair et en sombre, critère 390 × 844, mesures consignées dans `docs/measures/`.
-- **AD-18** : `content/career/position-<id>` et `content/education/education-<id>` ; clé `position` dans le cas ; ancres `#position-<id>` et « Retour au parcours » ; `position-ton-pote-le-geek` en `track: parallel` ; identifiants de poste figés (`position-<société>`, suivi de `-<année de début>` si la société revient) ; clés `sector` (traduite) et `stack` (non traduite, dans `data/stack.yaml`), sans clé de durée ; corps et stack de tout poste dans un `<details>` fermé après ses cas ; période d'un cas comprise dans celle de son poste ; contrat `docs/format-parcours.md` (02/10/2026).
+- **AD-18** : `content/career/position-<id>` et `content/education/education-<id>` ; clé `position` dans le cas ; ancres `#position-<id>` et « Retour au parcours » ; `position-ton-pote-le-geek` en `track: parallel` ; identifiants de poste figés (`position-<société>`, suivi de `-<année de début>` si la société revient) ; clés `sector` (traduite) et `stack` (non traduite, dans `data/stack.yaml`), sans clé de durée ; corps de tout poste toujours visible après ses cas, et sa stack seule dans un `<details>` fermé (révisé le 02/10/2026 par la story 10.9) ; période d'un cas comprise dans celle de son poste ; contrat `docs/format-parcours.md` (02/10/2026).
 - **AD-19** : identité dans `content/_index` ; `scripts/photo/prepare.sh` (Hugo, recadrage 4:5, 640 × 800, ancrage manuel) ; variantes accueil et « À propos » ≤ 40 Ko.
 - **AD-20** : JSON-LD `Person`, un bloc par accueil, champs de FR-35 seulement, sources fixées (`job_title` de `content/_index`, `linkedin` et `github` de `content/contact`, lien vide omis).
 - **AD-21** : `assets/cv/cv-{fr,en}.pdf`, liens conditionnels « ensemble ou rien », C21 en pre-commit, pre-receive (après `poppler-utils` sur Gitea) et `release`.
@@ -177,7 +177,7 @@ Tirées de `DESIGN.md` et `EXPERIENCE.md` (validés le 13/09/2026). Aucune valeu
 - UX-DR5 : `site-header` (marque, « À propos », « Contact », sélecteur ; pas de CV) — stories 5.1, 9.3, 9.4.
 - UX-DR6 : `site-footer` (CV, mentions légales, confidentialité, code source) — stories 5.1, 7.2, 9.1, 9.2, 9.5.
 - UX-DR7 : `identity-block` — story 5.2.
-- UX-DR8 : `cv-position` et `attached-case` (barre de révision, poste sans cas, corps et stack de tout poste dans un bloc repliable, après ses cas) — stories 5.2, 10.9. *Révisé le 02/10/2026 : « corps affiché sans cas ».*
+- UX-DR8 : `cv-position` et `attached-case` (barre de révision, poste sans cas, secteur après le rôle, corps de tout poste toujours visible après ses cas, puis sa stack seule dans un bloc repliable « Stack ») — stories 5.2, 10.9. *Révisé le 02/10/2026 : « corps affiché sans cas ». Révisé le même jour par la story 10.9 (arbitrage d'Arnaud) : « corps et stack de tout poste dans un bloc repliable, après ses cas ».*
 - UX-DR9 : bloc formation, certification et langues en registre compact — story 5.3.
 - UX-DR10 : `portrait` (4:5, tailles, variantes, budget) — stories 5.4, 5.5, 9.4.
 - UX-DR11 : `context-box` et `summary-box` — story 6.1.
@@ -1340,7 +1340,7 @@ Périmètre : `content/career/_index.{fr,en}.md` (jamais rendu), `content/career
 **Étant donné** une copie locale du poste Chiliz avec un corps Markdown
 **Quand** on lance le rendu de travail
 **Alors** le corps n'est pas affiché, puisque le poste a un cas (AD-18).
-*(Règle révisée le 02/10/2026 : le corps et la stack de tout poste sont rendus dans un `<details>` après ses cas — story 10.9. Le critère reste ce que la story 2.7 a livré.)*
+*(Règle révisée le 02/10/2026 : le corps de tout poste est rendu après ses cas, toujours visible, et sa stack dans un `<details>` — story 10.9. Le critère reste ce que la story 2.7 a livré.)*
 
 **Étant donné** la page Chiliz
 **Quand** Claire suit « Retour au parcours » (i18n `back_to_career`), placé **une fois, en haut de page**, avant le `h1` (`EXPERIENCE.md`, premier écran ; décidé par Arnaud le 17/09/2026)
@@ -2124,7 +2124,7 @@ afin de passer le test des trente secondes et d'ouvrir une preuve en un clic.
 **Étant donné** un poste avec cas publiés (copie locale)
 **Quand** on l'affiche
 **Alors** il montre période, société (`h3`), rôle puis, dans cet ordre, `location`, cadre et `via` s'ils existent, puis la liste des cas (numéro « Cas 02 » et titre en lien, sans « En bref »), marquée par la barre de révision ; son corps n'est pas affiché.
-*(Règle révisée le 02/10/2026 : le corps et la stack de tout poste sont rendus dans un `<details>` après ses cas — story 10.9. Le critère reste ce que la story 5.2 a livré.)*
+*(Règle révisée le 02/10/2026 : le corps de tout poste est rendu après ses cas, toujours visible, et sa stack dans un `<details>` — story 10.9. Le critère reste ce que la story 5.2 a livré.)*
 
 **Étant donné** un poste sans cas publié
 **Quand** on l'affiche
@@ -3408,6 +3408,8 @@ afin de juger l'ampleur du travail et pas seulement une décision.
 - Libellé du `<summary>`, en FR et en EN ?
 - Place du secteur sur la ligne de rôle (avant ou après le lieu, le cadre et `via`) ?
 - Rendu d'un poste qui n'a ni corps ni stack : pas de bloc du tout, ou un bloc réduit à ce qui existe ?
+
+*(Questions tranchées par Arnaud le 02/10/2026, avant l'implémentation ; le texte validé ci-dessus reste tel qu'il a été écrit, et ces réponses le révisent là où il diffère — fichier de la story, « Arbitrages d'Arnaud ». 1. Le `<details>` ne contient que la stack et se nomme « Stack », en FR comme en EN ; le corps est toujours visible, en `body-sm`, après la liste des cas — le premier critère et le libellé proposé du second sont révisés d'autant, et l'arbitrage Q1 de la proposition avec eux. 2. Le secteur vient juste après le rôle : rôle · secteur · lieu · cadre · via. 3. Un poste n'affiche que ce qui existe : sans stack, pas de bloc ; sans corps, pas de périmètre ; aucune mention d'absence. C25 est `scripts/checks/periods.sh`.)*
 
 ### Story 10.10 : Mission context content
 

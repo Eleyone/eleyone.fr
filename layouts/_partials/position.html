@@ -1,12 +1,18 @@
 {{/*
   Un poste du parcours (AD-18, DESIGN.md « cv-position » et « attached-case »). Le poste ne liste pas
   ses cas : ils sont retrouvés par leur clé « position » et triés par numéro ; Hugo exclut les
-  brouillons en production, donc un poste dont tous les cas sont en brouillon retombe de lui-même
-  sur son corps, sans zone de cas ni barre de révision orpheline. Rien ne signale l'absence de cas.
+  brouillons en production, donc un poste dont tous les cas sont en brouillon n'a ni zone de cas ni
+  barre de révision orpheline. Rien ne signale l'absence de cas.
 
   Disposition (DESIGN.md « Mise en page par page ») : la **colonne de marge ne porte que la
   période**. Le lieu et le cadre restent dans la colonne de texte — en marge, un lieu en monospace
   passait mal à la ligne.
+
+  Contexte de la mission (story 10.9, arbitrages d'Arnaud du 02/10/2026) : après la liste des cas,
+  le corps du poste — son périmètre — **toujours visible**, puis la stack du projet, seule dans un
+  <details> natif fermé par défaut, nommé « Stack ». Le corps était jusque-là rendu seulement pour
+  un poste sans cas publié ; cette règle est retirée. Ce qui n'existe pas n'est pas rendu, sans
+  mention d'absence : sans corps, pas de périmètre ; sans stack, pas de bloc.
 
   Paramètre : la page du poste.
 */}}
@@ -18,8 +24,10 @@
 {{- $name := .Params.company -}}
 {{- with .Params.label }}{{ $name = . }}{{ end -}}
 {{- $cases := sort (where site.RegularPages "Params.position" $key) "Params.number" -}}
-{{/* Ordre imposé par DESIGN.md § cv-position : location, puis le libellé du cadre, puis via. */}}
+{{/* Ordre imposé par DESIGN.md § cv-position : le secteur juste après le rôle (arbitrage d'Arnaud
+     du 02/10/2026, story 10.9), puis location, le libellé du cadre, et via. */}}
 {{- $details := slice -}}
+{{- with .Params.sector }}{{ $details = $details | append . }}{{ end -}}
 {{- with .Params.location }}{{ $details = $details | append . }}{{ end -}}
 {{- with .Params.setup }}{{ $details = $details | append (i18n (printf "setup_%s" (replace . "-" "_"))) }}{{ end -}}
 {{- with .Params.via }}{{ $details = $details | append (i18n "via_label" .) }}{{ end -}}
@@ -43,8 +51,21 @@
           </li>
         {{- end }}
       </ol>
-    {{- else }}
-      <div class="cv-position__content">{{ .Content }}</div>
+    {{- end }}
+    {{/* Un corps fait de blancs vaut un corps absent (constat A2 de la revue de spec). Hugo le
+         rend déjà en contenu vide — mesuré, et rejoué par test-career-position.sh — : « with »
+         suffit, et une seconde garde par « strings.TrimSpace » n'aurait été distinguée par aucun
+         test (point 9 d'AGENTS.md). */}}
+    {{- with .Content }}
+      <div class="cv-position__content">{{ . }}</div>
+    {{- end }}
+    {{/* La liste reprend le rendu de la stack de l'encart d'un cas (_partials/case.html) : la
+         classe « .stack », dont la feuille de style pose les virgules, jamais le gabarit. */}}
+    {{- with .Params.stack }}
+      <details class="cv-position__stack">
+        <summary class="label">{{ i18n "position_stack" }}</summary>
+        <ul class="stack">{{ range . }}<li>{{ . }}</li>{{ end }}</ul>
+      </details>
     {{- end }}
   </div>
 </article>

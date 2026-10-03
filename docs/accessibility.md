@@ -27,7 +27,7 @@ Mesures relevées au navigateur, à 320 px, sur le rendu de travail.
 
 | Gabarit | Vérifié le | Par | Contraste min. (clair / sombre) | Cible min. | Défilement à 320 px | Focus |
 |---|---|---|---|---|---|---|
-| Accueil (CV) | 21/09/2026 | story 5.5 | aucune paire sous 4,5:1 | 28 px | aucun | anneau 2 px `accent` dans les deux modes |
+| Accueil (CV) | 02/10/2026 | story 10.9 | aucune paire sous 4,5:1 | 26,2 px (résumé « Stack ») | aucun | anneau 2 px `accent` dans les deux modes |
 | Page de groupe (Chiliz) | 22/09/2026 | story 6.2 | aucune paire sous 4,5:1 | 26,2 px | aucun | idem |
 | Page de cas seul | 22/09/2026 | story 6.2 | aucune paire sous 4,5:1 | 26,2 px | aucun | idem |
 | 404 | 21/09/2026 | story 5.1 | 15,61:1 / 14,75:1 | 28 px | aucun | idem |
@@ -50,6 +50,30 @@ Les ratios relevés au navigateur retrouvent exactement ceux de `DESIGN.md` : `i
 **Critère mobile 390 × 844 de l'accueil** (FR-37), revérifié le 21/09/2026 par la story 5.5, **photo comprise**, sur un pitch d'essai de trois phrases : sans défiler, on voit la ligne d'identité (98 → 158 px), la photo à sa droite (98 → 188 px), le pitch (256 → 379 px), le titre « Parcours » (419 px), et le premier poste entier avec son lien de cas, qui finit à **622 px sur 844**. Il reste 222 px de marge.
 
 La photo ne repousse donc pas le pitch hors du premier écran, ce qu'exige `DESIGN.md` : sous `md` elle occupe la colonne de droite à hauteur des seules lignes d'identité, et le pitch passe pleine largeur dessous. À revérifier à chaque modification du haut de l'accueil, du premier poste ou de la photo.
+
+**Accueil, revérifié le 02/10/2026 par la story 10.9** (secteur, périmètre et bloc « Stack » d'un poste), sur des copies locales jamais commitées du poste Chiliz, construites en production. Chromium sans tête (image `zenika/alpine-chrome:with-puppeteer`, polices Noto Serif, DejaVu Serif et Bitstream Charter ajoutées), mesures par `getBoundingClientRect`.
+
+- **Clavier** : le résumé « Stack » est atteint juste après le lien du cas 02, dans l'ordre de lecture ; Entrée l'ouvre, Espace le referme ; le marqueur passe de « ▸ » à « ▾ ». Anneau de 2 px `accent` (`#1c6b45` en clair, `#7cc79d` en sombre). Cible 62 × 26,2 px.
+- **320 px**, bloc ouvert, FR et EN, clair et sombre : `scrollWidth` 320, aucun élément qui dépasse. Secteur en `ink-muted`, stack en `ink` : des paires déjà mesurées (6,52 / 7,68 et 15,61 / 14,75).
+- **Premier écran à 390 × 844** (FR-37), densité 3, bloc fermé. Le haut de page ne dépend pas du poste : identité 134 → 194 px, titre 202 → 249, pitch 292 → 572 (Noto Serif, celle que la pile retient ici) ; avec DejaVu Serif, serif de repli large, le titre passe sur deux lignes et le pitch finit à 622 en FR, 599 en EN. Lien « Cas 02 », selon le premier poste :
+
+| Premier poste (Chiliz) | Noto Serif FR / EN | DejaVu Serif FR / EN |
+|---|---|---|
+| sans secteur ni stack, corps actuel (le site d'avant la story, au gabarit près) | 791 → 844 / 791 → 844 | 841 → 893 / 818 → 870 |
+| vide : ni secteur, ni corps, ni stack | 791 → 844 / 791 → 844 | 841 → 893 / 818 → 870 |
+| court : secteur d'un mot, corps d'une phrase, un terme de stack | 791 → 844 / 791 → 844 | 841 → 893 / 818 → 870 |
+| secteur de trois mots, corps de six phrases, stack de six termes | 791 → 844 / 791 → 844 | 867 → 920 / 818 → 870 |
+| le plus long : secteur de huit mots, corps de six phrases, stack de six termes | 818 → 870 / 818 → 870 | 894 → 946 / 844 → 896 |
+
+Ce que les chiffres disent, sans l'arrondir :
+
+- **Le périmètre et le bloc ne repoussent rien** : le lien est au même pixel avec un corps de six phrases, d'une phrase ou sans corps. C'est ce que l'ordre « cas, puis périmètre, puis stack » devait garantir.
+- **Avec Noto Serif, le critère tient au pixel près** — le lien finit à 844 sur 844 — tant que la ligne de rôle reste sur deux lignes.
+- **Avec DejaVu Serif, il ne tient pas, et ne tenait déjà pas avant la story** : le lien commence à 841 px en FR et à 818 en EN sous le pitch actuel. La story 10.1 avait mesuré le pitch (« 272 px de marge ») mais pas le premier poste ; la story 5.5 l'avait mesuré sur un pitch d'essai de trois phrases.
+- **Le secteur, lui, peut coûter une ligne** : écrit après le rôle, il fait passer la ligne de rôle de deux à trois lignes dès qu'il est un peu long, soit 26 px de plus.
+- **Charter n'a pas pu être mesuré** : Chromium n'affiche pas la Bitstream Charter Type 1 des paquets Alpine, et retombe sur DejaVu Serif — les deux lignes donnent les mêmes chiffres au pixel. Ses chiffres ne sont donc pas connus ; DejaVu Serif, serif de repli large, en donne vraisemblablement la borne haute, sans qu'on puisse dire de quel côté du pli Charter tombe.
+
+La suite — raccourcir le pitch, plafonner le secteur, ou accepter que le lien du premier cas tombe sous le pli avec une serif large — est un arbitrage de contenu et de mise en page pour Arnaud, pas un correctif de gabarit glissé dans cette story.
 
 ## Ce que la vérification manuelle a trouvé
 

@@ -28,10 +28,14 @@ read -r -d '' program <<'JQ' || true
 # (AD-18, 24/09/2026). « company », elle, y reste, pour que « Mister Auto » ne devienne jamais
 # « MisterAuto » d'un seul côté. Même raison pour « role », « period » et « location », traduites
 # depuis l'origine.
+#
+# « stack » entre dans la liste d'un poste avec la story 10.9 : c'est la stack du projet, faite de
+# termes de data/stack.yaml, identique dans les deux langues (AD-18). « sector », lue par le même
+# gabarit à la même story, n'y entre pas : elle se traduit, comme « label ».
 def untranslated($role):
   {
     case:      ["number", "group", "order", "draft", "position"],
-    position:  ["company", "via", "company_url", "setup", "track", "order", "draft"],
+    position:  ["company", "via", "company_url", "setup", "stack", "track", "order", "draft"],
     education: ["kind", "order", "draft"],
     home:      ["identity"],
     page:      ["email", "linkedin", "github"]

@@ -43,6 +43,9 @@ case_number: "Case {{ . }}"
 cases_of_position: Cases behind this role
 back_to_career: Back to experience
 draft_marker: Draft
+# Summary of a position's collapsible block, which holds only the project stack (story 10.9,
+# Arnaud's decision of 02/10/2026: the block is named "Stack", same label in both languages).
+position_stack: Stack
 
 # Header, footer and skip link (DESIGN.md, story 5.1)
 skip_to_content: Skip to content

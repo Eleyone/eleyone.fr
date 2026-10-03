@@ -5,7 +5,8 @@
 #       n'a pas de titre plus profond que ### (décidé le 18/09/2026) : un cas groupé descend chaque
 #       titre d'un niveau, et un ###### y produirait un <h7>, balise qui n'existe pas
 #   C5  aucun fichier publié ne contient « [TODO », où que ce soit dans le fichier
-#   C6  la stack d'un cas ne cite que des technologies de data/stack.yaml
+#   C6  la stack d'un cas, et celle d'un poste (story 10.9), ne citent que des technologies de
+#       data/stack.yaml
 #   C16 « En bref » : au plus 3 phrases et 400 points de code par langue
 #   C19 parcours : rattachement d'un cas publié à un poste publié de sa langue, clés et valeurs
 #       des postes et des formations, unicité des ordres
@@ -14,7 +15,8 @@
 #       et les noms de variables de .env.example et de ci/legal-placeholder.env (jamais leurs valeurs)
 #
 # Portée (AD-10) : C4 s'applique **aussi aux brouillons**, C5 ne vise que les fichiers publiés, et C6
-# tolère une valeur « [TODO… » dans un brouillon. C4 et C6 ne portent que sur les cas.
+# tolère une valeur « [TODO… » dans un brouillon. C4 ne porte que sur les cas, C6 sur les cas et les
+# postes.
 # Codes de sortie : 0 conforme, 1 écart constaté, 2 anomalie.
 set -euo pipefail
 
@@ -144,6 +146,23 @@ def todo_value: (. // "") | tostring | gsub("^\\s+"; "") | startswith("[TODO");
         | select(($f.draft == true and ($t | startswith("[TODO"))) | not)
         | [$f.file, "C6 : technologie « \($t) » absente de data/stack.yaml"]))
     ,
+    # C6 — la stack d'un poste (story 10.9, AD-18) : la stack du projet entier, au même vocabulaire
+    # que celle d'un cas et avec la même tolérance des brouillons. Écrite comme la règle du cas
+    # ci-dessus, garde par garde (point 19 d'AGENTS.md) ; deux différences, voulues :
+    #   - la clé est à la racine du front matter, pas sous « context » ;
+    #   - une valeur qui n'est pas une chaîne (un nombre, une liste imbriquée) est comparée par sa
+    #     forme textuelle, au lieu de faire tomber jq en erreur sur « startswith » — un refus qui
+    #     nomme le fichier plutôt qu'une anomalie qui ne le nomme pas. Une stack qui n'est pas une
+    #     liste du tout relève de C19, qui la refuse ; elle est sautée ici pour ne pas la signaler
+    #     deux fois.
+    (select($f.role == "position")
+     | ($f.front_matter.stack // []) as $stack
+     | select(($stack | type) == "array")
+     | ($stack[] | if type == "string" then . else tojson end) as $t
+     | select($vocabulary | index($t) | not)
+     | select(($f.draft == true and ($t | startswith("[TODO"))) | not)
+     | [$f.file, "C6 : technologie « \($t) » de la stack du poste absente de data/stack.yaml"])
+    ,
     # C16 — « En bref » : au plus 3 phrases et 400 points de code (définition de la liste des contrôles)
     (select($f.role == "case")
      | ($f.front_matter.summary // "") as $summary
@@ -270,11 +289,32 @@ def todo_value: (. // "") | tostring | gsub("^\\s+"; "") | startswith("[TODO");
          #
          # « period » et « role » n'y sont pas : elles sont **exigées** plus haut, donc déjà refusées
          # vides. « company_url » non plus : elle a sa propre règle, qui exige une adresse https.
-         ((["company", "label", "location", "setup", "via"][] as $key
+         #
+         # « sector » y entre avec la story 10.9, qui la fait lire par « position.html » sur la ligne
+         # de rôle. Elle reste **facultative** jusqu'à la story 10.10 ; seule son écriture vide est
+         # refusée ici.
+         ((["company", "label", "location", "setup", "via", "sector"][] as $key
            | select($f.front_matter | has($key))
            | ($f.front_matter[$key] // "") as $value
            | select($value | blank)
            | [$f.file, "C19 : « \($key) » présente mais vide ; la retirer ou l'écrire"]))
+         ,
+         # « stack » (story 10.9) passe au même tamis, mais c'est une **liste** : le tamis des
+         # chaînes ci-dessus la lirait par sa forme textuelle, « [] » ou « ["  "] », qui n'est jamais
+         # blanche, et laisserait passer exactement ce qu'il doit refuser. Trois formes vides sont
+         # donc nommées : la liste vide, la liste dont aucun terme ne renseigne rien, et la valeur
+         # qui n'est pas une liste — une chaîne vide comprise, que le gabarit lirait comme absente.
+         # Un seul terme blanc au milieu de vrais termes relève de C6, qui ne le trouve pas dans le
+         # vocabulaire. Facultative jusqu'à la story 10.10, comme « sector ».
+         (select($f.front_matter | has("stack"))
+          | $f.front_matter.stack as $stack
+          | if ($stack | type) != "array" then
+              [$f.file, "C19 : « stack » présente mais \(if ($stack | blank) then "vide" else "n'est pas une liste" end) ; une liste de termes de data/stack.yaml est attendue"]
+            elif ($stack | length) == 0 then
+              [$f.file, "C19 : « stack » présente mais vide ; la retirer ou l'écrire"]
+            elif ($stack | all(blank)) then
+              [$f.file, "C19 : « stack » présente mais faite de termes vides ; la retirer ou l'écrire"]
+            else empty end)
          ,
          (($f.front_matter.track // "") as $track
           | select(($f.draft == true and ($track | todo_value)) | not)

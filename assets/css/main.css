@@ -270,7 +270,10 @@ main {
  * un libellé court (« Sommaire · 6 rubriques ») ; le libellé actuel de la page Chiliz, « Sommaire ·
  * 3 cas, 19 rubriques », tient sur deux lignes à 320 px et passait donc à 36 px, ce qui masquait
  * le défaut. Le même piège que le lien de cas rattaché, sur un élément que la règle avait oublié. */
+/* Le résumé « Stack » d'un poste (story 10.9) est le jumeau de celui du sommaire : même commande,
+ * même libellé en « label » (18,2 px de ligne), donc la même règle plutôt qu'une seconde écriture. */
 .toc summary,
+.cv-position__stack summary,
 .attached-case a,
 /* Le courriel et le téléphone des mentions légales : mesurés à 23 px, sous le seuil. Ils ne sont
  * pas « dans le texte courant » — ce sont des valeurs seules dans leur définition —, donc
@@ -283,11 +286,13 @@ main {
 
 /* « display: inline-block » retire le marqueur natif du <details> : il est reposé explicitement,
  * sinon le résumé ne se distingue plus d'un titre. */
-.toc summary::before {
+.toc summary::before,
+.cv-position__stack summary::before {
   content: "▸ ";
 }
 
-.toc details[open] > summary::before {
+.toc details[open] > summary::before,
+.cv-position__stack[open] > summary::before {
   content: "▾ ";
 }
 
@@ -401,7 +406,7 @@ main {
   margin-block: 0 var(--space-2);
 }
 
-/* Le lieu, le cadre et « prestation … » sont secondaires ; l'intitulé du poste ne l'est pas. */
+/* Le secteur, le lieu, le cadre et « prestation … » sont secondaires ; l'intitulé du poste ne l'est pas. */
 .cv-position__detail {
   color: var(--ink-muted);
 }

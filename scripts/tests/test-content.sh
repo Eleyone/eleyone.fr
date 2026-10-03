@@ -622,4 +622,72 @@ case_content_entree_en_erreur_ignoree() {
   assert_eq 0 "$rc" "une entrée en erreur relève de la parité, pas du contenu (messages : $err)"
 }
 
+case_content_c6_stack_de_poste() {
+  # Story 10.9 : C6 s'étend à la stack d'un poste, avec la tolérance des brouillons de la règle du
+  # cas. Le poste des fixtures est un brouillon : le terme hors vocabulaire y est refusé quand même,
+  # puisqu'il ne commence pas par « [TODO ».
+  rendu '.files[1].front_matter.stack = ["PHP"]' '.files[1].front_matter.stack = ["PHP"]'
+  contenu
+  assert_eq 0 "$rc" "une stack de poste du vocabulaire passe (messages : $err)"
+  rendu '.files[1].front_matter.stack = ["PHP", "Cobol"]' '.files[1].front_matter.stack = ["PHP", "Cobol"]'
+  contenu
+  assert_eq 1 "$rc" "un terme hors vocabulaire dans la stack d'un poste fait échouer"
+  assert_contains 'career/position-essai.fr.md: C6 : technologie « Cobol » de la stack du poste absente de data/stack.yaml' "$err" \
+    "le signalement nomme le fichier et le terme"
+  # Un terme qui n'est pas une chaîne est refusé en nommant le fichier, pas en anomalie de jq.
+  rendu '.files[1].front_matter.stack = [42]' '.files[1].front_matter.stack = [42]'
+  contenu
+  assert_eq 1 "$rc" "un terme qui n'est pas une chaîne est un refus, pas une anomalie (messages : $err)"
+  assert_contains 'C6 : technologie « 42 »' "$err" "le signalement le cite"
+}
+
+case_content_c6_stack_de_poste_todo_dans_un_brouillon() {
+  rendu '.files[1].front_matter.stack = ["[TODO: technologie]"]' '.files[1].front_matter.stack = ["[TODO: technologie]"]'
+  contenu
+  assert_eq 0 "$rc" "un [TODO de stack passe dans un poste en brouillon (messages : $err)"
+  rendu '.files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025" | .front_matter.stack = ["[TODO: technologie]"])' \
+        '.files[1] |= (.draft = false | .front_matter.draft = false | .front_matter.period = "2025" | .front_matter.stack = ["[TODO: technologie]"])'
+  contenu
+  assert_eq 1 "$rc" "le même [TODO ne passe pas dans un poste publié"
+  assert_contains 'C6 : technologie « [TODO: technologie] » de la stack du poste' "$err" "C6 le nomme"
+}
+
+case_content_c19_secteur_et_stack_presents_mais_vides() {
+  # Story 10.9 : « sector » et « stack » sont facultatives, mais une écriture vide est refusée —
+  # chaîne vide ou d'espaces pour l'une, liste vide, liste de blancs ou valeur qui n'est pas une
+  # liste pour l'autre. Chaque forme a son pas : un tamis vérifié en bloc laisserait passer celle
+  # qu'on a oublié d'écrire, le cas échouant déjà sur les autres.
+  local valeur
+  for valeur in '""' '"   "'; do
+    rendu ".files[1].front_matter.sector = $valeur" ".files[1].front_matter.sector = $valeur"
+    contenu
+    assert_eq 1 "$rc" "un sector $valeur est refusé"
+    assert_contains 'career/position-essai.fr.md: C19 : « sector » présente mais vide' "$err" "le signalement nomme le fichier et la clé"
+  done
+  rendu '.files[1].front_matter.stack = []' '.files[1].front_matter.stack = []'
+  contenu
+  assert_eq 1 "$rc" "une stack vide est refusée"
+  assert_contains 'career/position-essai.fr.md: C19 : « stack » présente mais vide' "$err" "le signalement nomme la clé"
+  rendu '.files[1].front_matter.stack = ["", "  "]' '.files[1].front_matter.stack = ["", "  "]'
+  contenu
+  assert_eq 1 "$rc" "une stack faite de termes blancs est refusée"
+  assert_contains 'C19 : « stack » présente mais faite de termes vides' "$err" "le signalement le dit"
+  rendu '.files[1].front_matter.stack = ""' '.files[1].front_matter.stack = ""'
+  contenu
+  assert_eq 1 "$rc" "une stack écrite comme une chaîne vide est refusée"
+  assert_contains 'C19 : « stack » présente mais vide' "$err" "le signalement le dit"
+  rendu '.files[1].front_matter.stack = "PHP"' '.files[1].front_matter.stack = "PHP"'
+  contenu
+  assert_eq 1 "$rc" "une stack qui n'est pas une liste est refusée"
+  assert_contains "C19 : « stack » présente mais n'est pas une liste" "$err" "le signalement le dit"
+  # Les clés restent facultatives : absentes, rien n'est dit (la story 10.10 les rend obligatoires).
+  rendu '.files[1].front_matter.sector = "Assurance" | .files[1].front_matter.stack = ["PHP"]' \
+        '.files[1].front_matter.sector = "Insurance" | .files[1].front_matter.stack = ["PHP"]'
+  contenu
+  assert_eq 0 "$rc" "renseignées, elles passent (messages : $err)"
+  rendu 'del(.files[1].front_matter.sector, .files[1].front_matter.stack)' 'del(.files[1].front_matter.sector, .files[1].front_matter.stack)'
+  contenu
+  assert_eq 0 "$rc" "absentes, elles passent encore (messages : $err)"
+}
+
 run_case "$@"

@@ -45,6 +45,9 @@ case_number: "Cas {{ . }}"
 cases_of_position: Cas qui prouvent ce poste
 back_to_career: Retour au parcours
 draft_marker: Brouillon
+# Résumé du bloc repliable d'un poste, qui ne contient que la stack du projet (story 10.9,
+# arbitrage d'Arnaud du 02/10/2026 : « le bloc se nomme stack », même libellé dans les deux langues).
+position_stack: Stack
 
 # En-tête, pied de page et évitement (DESIGN.md, story 5.1)
 skip_to_content: Aller au contenu
