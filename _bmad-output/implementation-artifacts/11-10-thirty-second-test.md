@@ -83,7 +83,7 @@ arrêté, images `rc.2` et `rc.1` supprimées ; ni la production, ni le proxy, n
 
 ### Répétition gardée en service pour le test
 
-[TODO: tag `v1.0.0-rc.3`, posé selon « Garder une répétition en service » — en attente]
+`v1.0.0-rc.3` posé par Arnaud selon « Garder une répétition en service » (`rehearse-release.md`), tag annoté sur le même commit `8d8eb4f` que `rc.1` et `rc.2`. Workflow `release` 2471 : succès, livré au canal de répétition, où il reste en service pendant les passages.
 
 ### Test des trente secondes — critères 2 et 3
 
