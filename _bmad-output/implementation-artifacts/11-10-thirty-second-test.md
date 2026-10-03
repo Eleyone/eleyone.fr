@@ -70,4 +70,23 @@ Voici le rapport de la revue de spec pour la story 11.10.
    la story 11.11, ses résultats dans le même `docs/measures/thirty-second-test.md`. Options
    écartées : une question ouverte pour une story future ; retirer ce passage d'`EXPERIENCE.md`.
 
+## Exécution
+
+### Répétition sur l'arbre du socle (03/10/2026, par Arnaud) — critère 1
+
+`scripts/rehearse-release.sh v1.0.0-rc.1 --run`, sur `origin/dev` (`8d8eb4f`, socle complet,
+epic 10 clos). Workflows `release` 2461 (`rc.1`) et 2462 (`rc.2`) : succès. Les trois passages
+(`rc.1` ; `rc.2` ; retour arrière vers `rc.1`) rendent chacun les onze lignes : accueil FR et EN 200,
+404 FR et EN 404, mentions légales FR et EN 200 avec **les 8 valeurs légales de mise en ligne**,
+fichier empreinté 200, SVG sans objet, journaux sans adresse IP. Puis `rehearse stop` : projet
+arrêté, images `rc.2` et `rc.1` supprimées ; ni la production, ni le proxy, ni le DNS touchés.
+
+### Répétition gardée en service pour le test
+
+[TODO: tag `v1.0.0-rc.3`, posé selon « Garder une répétition en service » — en attente]
+
+### Test des trente secondes — critères 2 et 3
+
+[TODO: cinq passages, consignés dans `docs/measures/thirty-second-test.md` — en attente]
+
 ## Revue du code
