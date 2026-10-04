@@ -3495,7 +3495,7 @@ afin de retoucher le haut de l'accueil avant la mise en ligne s'il le faut.
 **Quand** moins de quatre testeurs réussissent
 **Alors** le titre, le pitch ou le premier poste sont retouchés, FR-37 est revérifié, et le test est refait avant la story 11.11.
 
-*Révision du 04/10/2026 (arbitrage d'Arnaud) : le critère de la répétition est rempli (`v1.0.0-rc.1` et `rc.2`, 03/10/2026) ; les deux critères du test des trente secondes sont déplacés après la story 11.11, où le test devient une case de sa check-list. Les testeurs, par partage d'écran sur le site de répétition, n'ont donné qu'un avis global — « c'est bien » —, sans les réponses que la méthode demande : ce n'est pas un résultat, et il n'est pas consigné comme tel.*
+*Révision du 04/10/2026 (arbitrage d'Arnaud) : le critère de la répétition est rempli (`v1.0.0-rc.1` et `rc.2`, 03/10/2026) ; les deux critères du test des trente secondes sont déplacés après la story 11.11, où le test devient une case de sa check-list — puis, le même jour, la story 11.11b (revue de spec de la 11.11, A7). Les testeurs, par partage d'écran sur le site de répétition, n'ont donné qu'un avis global — « c'est bien » —, sans les réponses que la méthode demande : ce n'est pas un résultat, et il n'est pas consigné comme tel.*
 
 ### Story 11.11 : First base deployment and IP-free proxy
 
@@ -3531,7 +3531,35 @@ afin de lire le CV et les preuves depuis le lien reçu.
 - [ ] Directives NPM recopiées dans `deploy/proxy/npm-advanced.conf`, sans nom d'hôte ni adresse.
 - [ ] Mesure PageSpeed Insights mobile de chaque gabarit (accueil CV, page de cas, page de groupe, page simple, 404) consignée dans `docs/measures/v1.0.0.md` par une PR ordinaire.
 - [ ] La politique de confidentialité est vraie sur toute la chaîne.
-- [ ] Test des trente secondes, **seul passage** (arbitrage d'Arnaud du 04/10/2026, story 11.10) : selon la méthode d'`EXPERIENCE.md` — cinq testeurs dont au moins un CTO ou tech lead, un recruteur tech francophone et un lecteur de la version anglaise ; lien envoyé directement, ouvert sur le téléphone du testeur ; trente secondes, trois questions notées, touchers jusqu'à une section de cas —, chaque passage consigné dans `docs/measures/thirty-second-test.md`, sans nom. Moins de quatre réussites : titre, pitch ou premier poste retouchés, FR-37 revérifié, publiés par une mise en ligne ordinaire (`release`), et le test refait.
+- ~~Test des trente secondes, **seul passage** (arbitrage d'Arnaud du 04/10/2026, story 11.10) : selon la méthode d'`EXPERIENCE.md` — cinq testeurs dont au moins un CTO ou tech lead, un recruteur tech francophone et un lecteur de la version anglaise ; lien envoyé directement, ouvert sur le téléphone du testeur ; trente secondes, trois questions notées, touchers jusqu'à une section de cas —, chaque passage consigné dans `docs/measures/thirty-second-test.md`, sans nom. Moins de quatre réussites : titre, pitch ou premier poste retouchés, FR-37 revérifié, publiés par une mise en ligne ordinaire (`release`), et le test refait.~~ *Sortie de cette story le 04/10/2026 (arbitrage d'Arnaud, revue de spec de la 11.11, A7) : elle devient la story 11.11b, pour que la mise en ligne n'attende pas les testeurs.*
+
+### Story 11.11b : Thirty-second test on the live site
+
+**Ajoutée le 04/10/2026** (arbitrage d'Arnaud, revue de spec de la story 11.11, A7) : le test des trente secondes, sorti de la 11.11 pour que la mise en ligne n'attende pas les testeurs ; il y avait été placé le même jour par la story 11.10, après un passage sur le site de répétition resté sans résultat.
+
+En tant qu'Arnaud, mainteneur,
+je veux vérifier avec cinq testeurs que l'accueil en ligne dit en trente secondes qui je suis et ce que je fais bien,
+afin de retoucher le haut de l'accueil s'il le faut.
+
+**Couvre :** SM-1, SM-3, FR-1, FR-2, FR-37 · UX-DR24
+**Dépendances :** 11.11 (site en ligne)
+**Bloquée par :** —
+**Prérequis de contenu :** cinq testeurs selon `EXPERIENCE.md`.
+**Opération manuelle (Arnaud) :** **oui**, il envoie le lien et mène les cinq passages.
+
+**Critères d'acceptation :**
+
+**Étant donné** la méthode d'`EXPERIENCE.md` (cinq testeurs dont au moins un CTO ou tech lead, un recruteur tech francophone et un lecteur de la version anglaise ; lien envoyé directement, ouvert sur le téléphone du testeur ; trente secondes ; trois questions notées ; touchers jusqu'à une section de cas)
+**Quand** Arnaud mène les cinq passages
+**Alors** chacun est consigné dans `docs/measures/thirty-second-test.md`, section « Après mise en ligne » — rôle, langue, appareil, réponses résumées, touchers, verdict —, sans nom ni donnée personnelle.
+
+**Étant donné** les cinq verdicts
+**Quand** quatre ou cinq testeurs réussissent
+**Alors** la story est close sans retouche.
+
+**Étant donné** les cinq verdicts
+**Quand** moins de quatre testeurs réussissent
+**Alors** le titre, le pitch ou le premier poste sont retouchés par une PR ordinaire, FR-37 est revérifié, la retouche est publiée par une mise en ligne ordinaire (`release`, `v1.0.x`), et le test est refait.
 
 ### Story 11.12 : Hotfix skill
 

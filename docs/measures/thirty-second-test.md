@@ -21,7 +21,7 @@ suivie, et **aucun verdict n'est tiré de ces sessions**. Le test se fait après
 
 ## Après mise en ligne — [TODO: date]
 
-Lien envoyé directement, ouvert sur le téléphone de chaque testeur (story 11.11).
+Lien envoyé directement, ouvert sur le téléphone de chaque testeur (story 11.11b).
 
 | # | Rôle du testeur | Langue | Appareil | « Qui, à quel niveau ? » | « Ce qu'elle fait bien ? » | « Où le vérifier ? » | Touchers jusqu'à un cas | Verdict |
 |---|---|---|---|---|---|---|---|---|

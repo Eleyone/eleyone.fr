@@ -10,6 +10,6 @@ Chaque fichier consigne, pour la version qu'il nomme :
 
 Il reçoit aussi `thirty-second-test.md`, le test des trente secondes (`EXPERIENCE.md`, story 11.10) : une section par session — sur le site de répétition avant la mise en ligne, puis sur le site en ligne —, un tableau par passage, sans aucun nom ni donnée personnelle.
 
-Aucune mesure de performance n'y est encore écrite : le site n'est pas déployé. Le dossier existe parce que le README public y renvoie, et qu'un lien mort dans un dépôt public vaut moins que rien.
+Première mesure : `v1.0.0.md`, à la mise en ligne du socle (04/10/2026, story 11.11). Le dossier existe parce que le README public y renvoie, et qu'un lien mort dans un dépôt public vaut moins que rien.
 
-**Anticipation déclarée** (point 7 d'`AGENTS.md`) : ce fichier appartient à la story de première mise en ligne (epic 11, procédure « premier déploiement » de l'architecture, étape 8). La story 3.15 n'a créé que ce texte, et aucune mesure.
+**Anticipation déclarée** (point 7 d'`AGENTS.md`) : ce fichier appartient à la story de première mise en ligne (epic 11, procédure « premier déploiement » de l'architecture, étape 8). La story 3.15 n'a créé que ce texte ; la story 11.11 y a écrit la première mesure, `v1.0.0.md`.
