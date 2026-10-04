@@ -38,6 +38,8 @@ Mise à jour du 13/09/2026 (`bmad-correct-course`) : les décisions D-1 à D-17 
 
 Mise à jour du 02/10/2026 (`bmad-correct-course`) : la proposition de changement `sprint-change-proposal-2026-10-02.md`, approuvée par Arnaud avec ses arbitrages Q1 à Q8, donne à chaque poste du CV le contexte complet de sa mission. Elle ajoute à l'Epic 10 les stories 10.8 à 10.10, le contrôle C25, et révise UX-DR8. Le même jour, les arbitrages d'Arnaud sur la story 10.9 révisent son arbitrage Q1 : le périmètre d'un poste reste visible, seule sa stack est repliée (FR-2, UX-DR8).
 
+Mise à jour du 04/10/2026 (`bmad-correct-course`) : la proposition de changement `sprint-change-proposal-2026-10-04.md`, approuvée par Arnaud, ajoute FR-40, AD-25, C26 et la story 9.8 (meta description et aperçus de partage), nées des mesures PageSpeed de `v1.0.0`.
+
 ### Règles de conduite des stories
 
 Ces règles s'appliquent à **chaque** story.
@@ -117,6 +119,7 @@ Résumé ; le texte et les conséquences testables du PRD font foi.
 - FR-31 : artefacts de cadrage publics, sans cas brut.
 - FR-32 : socle, puis cas 03, 04 et 06 un par un, par tag.
 - FR-39 : répétition de toute la chaîne de mise en ligne sur le serveur de production, sans DNS, avant le premier tag du socle, retour arrière compris.
+- FR-40 : description et aperçu de chaque page — meta description et balises Open Graph, dans sa langue (ajoutée le 04/10/2026).
 
 ### Exigences non fonctionnelles
 
@@ -162,7 +165,7 @@ Pas de gabarit de démarrage ; le dépôt part de la structure initiale de l'arc
 - **AD-22** : canal de répétition `site-rehearsal` sur `127.0.0.1:18080`, accès par tunnel SSH, tags `-rc.N`, première répétition tôt sur `v0.1.0-rc.N`, jalon « répétition générale » avant `v1.0.0` ; tag `-rc` de même arbre exigé pour `v1.0.0` seulement.
 - **AD-23** : typographie française appliquée au build par `_partials/typo-fr.html`, pages FR seulement.
 - **AD-24** : flux de développement : `feat/*`, `fix/*`, `chore/*` et `docs/*` depuis `dev` en squash, `dev` → `main` en fast-forward, `hotfix/*` depuis `main` ; protections Gitea ; outillage en trois niveaux (neuf skills) ; revue par un LLM d'un autre fournisseur dans un worktree hors du dépôt, rapport `llm-review sha=… base=… model=… verdict=…` ; verrous de fusion, règle d'amorçage, exception documentaire sur tout `_bmad-output/` ; prérequis du poste (`jq`, `agy`, Docker dans WSL, Hugo et D2 locaux).
-- **Contrôles C1 à C25** : chacun est rattaché à une story (C25, période d'un cas comprise dans celle de son poste : story 10.9).
+- **Contrôles C1 à C26** : chacun est rattaché à une story (C25, période d'un cas comprise dans celle de son poste : story 10.9 ; C26, description et aperçu de chaque page : story 9.8).
 - **Procédures** : hook pre-receive (7 étapes, dont les PDF et l'image Gitea dérivée) ; premier déploiement (9 étapes, dont la répétition générale et la mesure).
 - **Walking skeleton** : WS-0 à WS-5, puis, hors squelette : parcours et formation, photo et JSON-LD, CV PDF, typographie, spike D2 puis pipeline, pages simples et légales, `release`, répétition générale, premier déploiement, agent de parité.
 
@@ -233,6 +236,7 @@ Tirées de `DESIGN.md` et `EXPERIENCE.md` (validés le 13/09/2026). Aucune valeu
 - FR-37 : 5.2, 10.1, 10.9, 11.11
 - FR-38 : 7.1 à 7.4, 9.4
 - FR-39 : 11.4, 11.5, 11.8, 11.9, 11.10
+- FR-40 : 9.8
 
 ## Liste des epics
 
@@ -276,7 +280,7 @@ Un schéma bilingue suit le mode du lecteur (ou son repli validé), et la CI ref
 
 ### Epic 9 : Pages légales, pages simples et données structurées
 Un lecteur trouve mentions légales, confidentialité, Contact, « À propos » et le lien vers le dépôt ; les moteurs lisent l'identité d'Arnaud.
-**FR :** FR-3, FR-16 à FR-19, FR-29, FR-33 à FR-35, FR-38. **NFR :** NFR-9, NFR-12. **AD :** AD-3, AD-9, AD-15, AD-20. **C :** C10, C23.
+**FR :** FR-3, FR-16 à FR-19, FR-29, FR-33 à FR-35, FR-38, FR-40. **NFR :** NFR-9, NFR-12. **AD :** AD-3, AD-9, AD-15, AD-20, AD-25. **C :** C10, C23, C26.
 
 ### Epic 10 : Contenu du socle
 Le pitch, le parcours, la formation, la page Chiliz et les cas 01, 02 et 05 passent les contrôles et quittent l'état de brouillon. Depuis le 02/10/2026, chaque poste du CV porte aussi le contexte complet de sa mission : contrat des postes, rendu et contrôles, puis contenu (stories 10.8 à 10.10).
@@ -2831,6 +2835,42 @@ afin de pouvoir le saisir au sujet d'un contenu, même s'il ne publie aucun num�
 - [ ] La cible de 24 px des liens de `legal-list` couvre le `mailto:` de l'hébergeur comme les autres.
 - [ ] Les commentaires de `legal-value.html` qui énumèrent « les sept » sont relus : le compte y est faux depuis le 23/09/2026 (point 8 d'AGENTS.md).
 
+### Story 9.8 : Page description and share previews
+
+**Ajoutée par la proposition de changement du 04/10/2026** (`_bmad-output/planning-artifacts/sprint-change-proposal-2026-10-04.md`), née des mesures PageSpeed de `v1.0.0` : aucune page ne portait de meta description.
+
+En tant que recruteur qui reçoit le lien du CV,
+je veux voir dans l'aperçu du lien et dans le moteur de recherche ce que contient la page,
+afin de savoir avant de cliquer si elle me concerne.
+
+**Couvre :** FR-40 · AD-25 · C3, C23, C26
+**Dépendances :** 9.6, 11.11
+**Bloquée par :** —
+**Prérequis de contenu :** les descriptions des pages hors cas, validées par Arnaud le 04/10/2026 (proposition de changement, § Contenu) ; les cas réutilisent leur `summary`.
+**Opération manuelle (Arnaud) :** **oui**, la publication `v1.0.1` par le skill `release`.
+
+**Critères d'acceptation :**
+
+**Étant donné** chaque page publiée, FR et EN
+**Quand** le site de production est construit
+**Alors** elle porte une `<meta name="description">` et les balises `og:title`, `og:description`, `og:type`, `og:url`, `og:locale` selon AD-25 : `summary` pour un cas, clé `description` pour toute autre page, sans `og:image`.
+
+**Étant donné** une page sans description
+**Quand** le site est construit
+**Alors** le build échoue en la nommant, au lieu de produire une balise vide.
+
+**Étant donné** C26
+**Quand** une page HTML n'a pas de description, en a deux, en porte une vide ou avec `[TODO`, ou qu'elle diffère de son `og:description`
+**Alors** C26 échoue en nommant la page, et un test échoue quand on retire la garde (point 9 d'AGENTS.md)
+**Et** C23 refuse toujours l'adresse de l'éditeur dans la description des mentions légales.
+
+**Étant donné** la story livrée
+**Quand** Arnaud publie `v1.0.1` par le skill `release`
+**Alors** l'audit « meta description » de PageSpeed passe sur les cinq gabarits, et la mesure est consignée dans `docs/measures/v1.0.1.md`.
+
+- [ ] C3 traite `description` comme une clé traduite des pages hors cas.
+- [ ] La ligne C26 de l'architecture reçoit le nom de son script ; AD-25 passe au présent (point 8 d'AGENTS.md).
+
 ## Epic 11 : Mise en ligne, répétition générale et socle
 
 La chaîne de mise en ligne est construite et répétée tôt sur le serveur de production, sans DNS : stories 11.1 à 11.9, placées avant l'Epic 10, dont elles ne dépendent pas (décision D-5). Après le contenu du socle, le test des trente secondes est passé, puis le socle est mis en ligne par le flux linéaire, derrière un proxy sans journal d'IP : stories 11.10 à 11.13, dans la section « Mise en ligne du socle » qui suit l'Epic 10.
@@ -3833,7 +3873,7 @@ afin de la regarder sur YouTube sans cookie sur le site.
 
 ### Validation finale
 
-- **Couverture** : chaque FR (FR-1 à FR-39), chaque NFR (NFR-1 à NFR-13), chaque contrôle (C1 à C25) et chaque AD (AD-1 à AD-24) est cité par au moins une story ; chaque UX-DR est rattachée à une story.
+- **Couverture** : chaque FR (FR-1 à FR-40), chaque NFR (NFR-1 à NFR-13), chaque contrôle (C1 à C26) et chaque AD (AD-1 à AD-25) est cité par au moins une story ; chaque UX-DR est rattachée à une story.
 - **Dépendances** : aucune story ne dépend d'une story suivante. Les skills d'Epic 0 qui s'appuient sur des stories ultérieures sont placés après elles (3.16, 3.17, 11.7, 11.8, 11.12). Les stories 11.1 à 11.9 sont placées avant l'Epic 10 (D-5).
 - **Note pour la planification de sprint** (décision d'Arnaud du 13/09/2026) : les numéros de stories sont conservés. `sprint-status.yaml` les trie par numéro, donc l'Epic 11 après l'Epic 10 : l'ordre de travail, stories 11.1 à 11.9 avant l'Epic 10, puis 11.10 à 11.13 après lui, est fixé lors de la planification de sprint. Les stories 10.4 et 10.5 sont livrées dans une seule PR. Les stories 10.8 à 10.10 (02/10/2026) suivent la 11.9 ; 10.8 et 10.9 précèdent la 11.10, et la 10.10 aussi si son contenu est prêt, sinon elle suit la 11.11.
 - **Répétition sur les mêmes fichiers** : `layouts/` est touché par les epics 2 (structure), 5 et 6 (mise en page), 9 (pages) et 13 (matériel prêt). Le regroupement est écarté : la structure précède les contrôles (walking skeleton), et chaque epic de mise en page est démontrable seul.

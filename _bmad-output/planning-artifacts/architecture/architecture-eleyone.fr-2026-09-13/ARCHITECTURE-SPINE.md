@@ -569,6 +569,18 @@ flowchart TD
   - **Exception documentaire** (périmètre décidé le 13/09/2026, D-2) : une PR dont tous les fichiers modifiés sont sous `_bmad-output/` (artefacts de cadrage et suivi de sprint, `sprint-status.yaml` compris) n'exige que la CI verte, qui inclut le garde-fou C1, ou son substitut tant que la CI est absente (règle d'amorçage). L'exception ne s'applique jamais si la PR touche un autre fichier, dont `content/**`, `AGENTS.md`, `CLAUDE.md`, `docs/procedures/**`, `.claude/**` ou `docs/format-cas.md`.
   - **README-cas** : il documente ce flux et renvoie aux branches `design/dossier-architecture`, `design/suisse` et `experiment/d2-bilingue`.
 
+### AD-25 — Le `<head>` d'une page : description et Open Graph
+
+- **Binds:** FR-40, NFR-9 ; le partial du `<head>` dans `layouts/_partials/`, front matter des pages.
+- **Prevents:** une page sans description, que le moteur ou l'aperçu de partage remplit à sa place ; une description calculée ou tronquée par un gabarit ; une balise vide ; une adresse légale dans une meta.
+- **Rule (proposition de changement du 04/10/2026, arbitrages d'Arnaud) :**
+  - un seul partial écrit la `<meta name="description">` et les balises Open Graph ;
+  - la description vient de `.Params.summary` pour un cas, de `.Description` (clé `description` du front matter, native de Hugo) pour toute autre page ; rien n'est tronqué ni calculé par le gabarit, et une description absente **fait échouer le build** plutôt que de produire une balise vide (même règle que les valeurs légales, AD-9) ;
+  - `og:title` reprend le `<title>` ; `og:url` le permalien absolu ; `og:type` vaut `website` pour l'accueil et `article` pour toute autre page ; `og:locale` vaut `fr_FR` ou `en_US`, avec `og:locale:alternate` pour l'autre langue quand la traduction existe ;
+  - pas d'`og:image` ;
+  - C23 continue d'interdire l'adresse de l'éditeur dans toute meta, ce qui couvre la description des mentions légales ;
+  - livré par la story 9.8 ; contrôlé par C26.
+
 ## Procédure : hook pre-receive sur Gitea
 
 Vérifié dans le code de Gitea (branche `main`, documentation 1.27.3) :
@@ -637,6 +649,7 @@ Portée : C3 porte sur tout fichier de `content/`. C4, C7, C8, C16 et C18 ne por
 | C23 | Adresse légale confinée : la valeur chargée de `HUGO_LEGAL_PUBLISHER_ADDRESS`, réelle ou factice, n'apparaît que dans le corps des deux pages des mentions légales ; jamais dans un `<title>`, une meta `description`, le JSON-LD, `sitemap.xml` ni une autre page | `scripts/checks/legal-address.sh` | oui | oui | FR-18, FR-33, NFR-9 |
 | C24 | Typographie : dans les pages FR, aucun nœud texte hors `pre`, `code`, `script` et `style` ne contient d'espace ordinaire devant `;`, `!`, `?`, `:`, après `«` ni avant `»` ; dans les pages EN, ni espace insécable U+00A0 ni espace **fine** insécable U+202F à ces mêmes places, le séparateur `·` restant légitime dans les deux langues ; aucune règle `hyphens: auto` dans la CSS. Lit les deux rendus, comme C10 et C11 | `scripts/checks/typo.sh` | oui | oui | FR-20, NFR-10 |
 | C25 | Période d'un cas comprise dans celle de son poste (AD-18, arbitrage Q2 du 02/10/2026) : la période de l'encart d'un cas est comprise dans la `period` du poste que désigne sa clé `position`, dans la même langue. Formes lues : « mois AAAA – mois AAAA », « depuis mois AAAA », « AAAA », « AAAA – AAAA » (story 10.10), en FR et en EN ; une forme que le contrôle ne sait pas lire le fait échouer, au lieu de passer. Il compare des bornes et n'affiche rien. Règles de lecture (story 10.9, constat A3 de sa revue de spec) : mois en toutes lettres dans la langue du fichier, casse ignorée ; « since Month YYYY » en anglais ; tiret demi-cadratin entouré d'espaces ; une année seule vaut de janvier à décembre, un intervalle d'années du 1er janvier de la première au 31 décembre de la seconde (une forme mêlée, mois d'un côté seulement, reste illisible), « depuis » / « since » n'a pas de fin ; inclusion = début du cas ≥ début du poste et fin du cas ≤ fin du poste, une fin ouverte valant l'infini ; un intervalle inversé est illisible. La période de **tout** poste est lue, qu'un cas le désigne ou non. Une valeur `[TODO` est tolérée dans un brouillon ; un cas sans `position` ou rattaché à un poste absent de sa langue n'est pas comparé, ce rattachement relevant de C19 | `scripts/checks/periods.sh` | oui | oui | FR-2, NFR-10 |
+| C26 | Description et aperçu de chaque page (AD-25, FR-40, story 9.8) : sur la sortie de production, chaque page HTML porte exactement une `<meta name="description">` non vide, égale au contenu de son `og:description`, sans `[TODO`, et les balises `og:title`, `og:description`, `og:type`, `og:url`, `og:locale` | à créer par la story 9.8 | oui | oui | FR-40 |
 
 ## Conventions de cohérence
 

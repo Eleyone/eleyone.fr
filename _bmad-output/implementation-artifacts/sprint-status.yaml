@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '10-04-2026 14:54'
+last_updated: '10-04-2026 15:07'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -117,7 +117,7 @@ development_status:
   8-3-svg-sync-check: backlog
   epic-8-retrospective: optional
 
-  epic-9: done
+  epic-9: in-progress
   9-1-legal-notice-and-confined-address: done
   9-2-privacy-policy: done
   9-3-contact-page-and-call-to-contact: done
@@ -125,6 +125,8 @@ development_status:
   9-5-conditional-public-repository-link: done
   9-6-person-structured-data: done
   9-7-host-identification-without-phone: done
+  # 9.8 : proposition de changement du 04/10/2026 (meta description et aperçus de partage).
+  9-8-page-description-and-share-previews: backlog
   epic-9-retrospective: done
 
   epic-10: done
@@ -268,6 +270,7 @@ work_order:
   - 11-10-thirty-second-test
   - 11-11-first-base-deployment-and-ip-free-proxy
   - 11-11b-thirty-second-test-on-the-live-site
+  - 9-8-page-description-and-share-previews
   - 11-12-hotfix-skill
   - 11-13-production-rollback-on-second-deployment
   - 12-1-parity-agent-script
@@ -309,6 +312,7 @@ content_prerequisites:
   9-4-about-page: "Texte de la page « À propos », FR et EN"
   9-6-person-structured-data: "URL du profil GitHub ; job_title"
   9-7-host-identification-without-phone: "Dénomination, adresse et courriel de l'hébergeur"
+  9-8-page-description-and-share-previews: "Descriptions des pages hors cas, validées le 04/10/2026"
   10-1-home-page-pitch: "Pitch FR et EN"
   10-2-career-positions: "Parcours tiré du CV ; Ton Pote le Geek"
   10-3-education-certification-and-languages-content: "Formation et langues tirées

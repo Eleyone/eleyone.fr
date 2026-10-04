@@ -579,6 +579,16 @@ Toute la chaîne de mise en ligne est exercée tôt sur le serveur de production
 - Le retour arrière remet en service la version précédente, et c'est vérifié.
 - La répétition ne rend pas l'instance de test accessible par le nom de domaine du site.
 
+#### FR-40 : Description et aperçu de chaque page
+
+Chaque page publiée porte, dans sa langue, une description qui dit ce qu'elle contient, lue par les moteurs de recherche et par les aperçus de partage. *Ajoutée le 04/10/2026 (proposition de changement du 04/10/2026, mesures PageSpeed de `v1.0.0`).*
+
+**Conséquences (testables) :**
+- Chaque page HTML publiée porte une `<meta name="description">` non vide et les balises Open Graph `og:title`, `og:description`, `og:type`, `og:url` et `og:locale`, sans `og:image`.
+- La description d'un cas est son `summary` ; celle de toute autre page est la clé `description` de son front matter.
+- Une description ne contient aucun `[TODO` dans une page publiée, et jamais l'adresse de l'éditeur (C23).
+- FR et EN portent chacun la leur, dans leur langue.
+
 ## 5. Exigences non fonctionnelles transverses
 
 - **NFR-1. Site statique.** Le site est un ensemble de fichiers statiques générés par Hugo, sans base de données, sans backend et sans code exécuté côté serveur à la requête. *Test :* le résultat du build ne contient que des fichiers servables tels quels.
