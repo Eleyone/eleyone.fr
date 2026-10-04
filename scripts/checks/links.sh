@@ -90,7 +90,7 @@ done
 declare -A atteintes=()
 file=()
 for page in "${pages[@]}"; do
-  [[ $page == index.html || $page =~ ^[a-z]{2}/index\.html$ ]] || continue
+  checks_est_accueil "$page" || continue
   atteintes[$page]=1
   file+=("$page")
 done

@@ -1,6 +1,7 @@
 ---
 title: "À propos"
 translationKey: "about"
+description: "Ce que je vends aujourd'hui : le jugement plutôt que la frappe — quoi construire, à quel coût, et ce qui casse si on se trompe."
 slug: "a-propos"
 layout: about
 ---

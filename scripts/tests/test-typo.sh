@@ -200,8 +200,8 @@ construire() {
   rm -rf "$work/site"
   mkdir -p "$work/site/content"
   cp -r "$root/layouts" "$root/config" "$root/data" "$root/i18n" "$work/site/"
-  printf -- '---\ntitle: "Accueil"\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
-  printf -- '---\ntitle: "Home"\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
+  printf -- '---\ntitle: "Accueil"\ndescription: "Description d essai."\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
+  printf -- '---\ntitle: "Home"\ndescription: "Description d essai."\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
   # Le même texte dans les deux langues : seule la composition doit différer.
   local corps='Le verdict : net ; vraiment ! Vous voyez ? Il dit « oui » sans hésiter.
 
@@ -211,8 +211,8 @@ Un lien [écrire](mailto:contact@exemple.invalide) et un `code : brut`.
 
     bloc : indenté
 '
-  printf -- '---\ntitle: "Essai : la typographie"\n---\n\n%s' "$corps" > "$work/site/content/essai.fr.md"
-  printf -- '---\ntitle: "Trial : typography"\n---\n\n%s' "$corps" > "$work/site/content/essai.en.md"
+  printf -- '---\ntitle: "Essai : la typographie"\ndescription: "Description d essai."\n---\n\n%s' "$corps" > "$work/site/content/essai.fr.md"
+  printf -- '---\ntitle: "Trial : typography"\ndescription: "Description d essai."\n---\n\n%s' "$corps" > "$work/site/content/essai.en.md"
   (cd "$work/site" && hugo --environment work --buildDrafts --panicOnWarning --destination sortie) \
     > "$work/hugo.out" 2>&1
 }

@@ -127,3 +127,15 @@ Constats de revue reportés à plus tard, au format de `bmad-build`. Chaque entr
   summary: `docs/procedures/rehearse-release.md`, section « Garder une répétition en service », décrit une opération manuelle (`git tag -a … -rc.N`, `git push`, `ssh … status`, tunnel, `rehearse stop`) dont aucune commande n'est dans `scripts/rehearse-release.sh`, contre la règle de concordance de la couche de revue (`.working-method/review/self-layer.md:23`). Écart assumé : Arnaud a choisi le 03/10/2026 la méthode sans code. À reprendre si l'opération se répète (test des trente secondes refait, démonstration) : soit une procédure manuelle à part, comme `serveur-de-production.md`, soit une option du script qui saute `rehearse stop` (l'option écartée), avec son test.
   evidence: Constat non bloquant de la revue du code de la PR n° 135 (04/10/2026, `gemini-3.1-pro-high`).
 
+- source_spec: `_bmad-output/implementation-artifacts/9-8-page-description-and-share-previews.md`
+  summary: C26 décode les `%XX` d'une URL par `printf '%b' "${url//%/\\x}"` (`scripts/checks/head-meta.sh:105`) : un antislash littéral dans l'URL serait lu comme une séquence d'échappement (`\b` → retour arrière) et fausserait la comparaison avec `og:url`. Aucune URL du rendu n'en contient, et Hugo n'en produit pas dans un slug. À reprendre en doublant les antislashs avant la substitution, ou en décodant sans `%b`, avec un test qui place un antislash dans un chemin (règle 5 commune).
+  evidence: Constat non bloquant de la revue du code de la PR n° 139 (04/10/2026, `gemini-3.1-pro-high`) ; seul emploi de `printf '%b'` sur une donnée dans `scripts/` (grep de l'orchestrateur).
+
+- source_spec: `_bmad-output/implementation-artifacts/9-8-page-description-and-share-previews.md`
+  summary: C24 (typographie française) ne lit que le texte des pages, pas les attributs : la `<meta name="description">` et `og:description`, qui portent désormais la typographie du `<title>` (insécables devant « : », « ; », « ? », « ! »), ne sont vérifiées que par un test du partial, pas par un contrôle de la sortie. À reprendre si une description saisie à la main venait à contourner le partial.
+  evidence: Signalé par l'implémentation de la story 9.8 (04/10/2026).
+
+- source_spec: `_bmad-output/implementation-artifacts/9-8-page-description-and-share-previews.md`
+  summary: Le tableau « Contrôles livrés » de `docs/procedures/check.md` n'a pas de ligne pour C21, C23 ni C24, alors que ces contrôles existent et tournent. Oubli antérieur à la story 9.8, qui a ajouté la ligne C26 sans réparer les autres. À reprendre dans une PR de documentation, en relisant le tableau entier contre la liste des contrôles de l'architecture.
+  evidence: Signalé par l'implémentation de la story 9.8 (04/10/2026).
+

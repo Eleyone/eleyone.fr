@@ -32,9 +32,9 @@ construire() {
   cp -r "$root/assets/css" "$work/site/assets/"
   local avant=""
   [[ -z $job ]] || avant="job_title: \"$job\""$'\n'
-  printf -- '---\ntitle: "Accueil"\ntranslationKey: home\nidentity: "%s"\n%s---\n' \
+  printf -- '---\ntitle: "Accueil"\ndescription: "Description d essai."\ntranslationKey: home\nidentity: "%s"\n%s---\n' \
     "$identity" "$avant" > "$work/site/content/_index.fr.md"
-  printf -- '---\ntitle: "Home"\ntranslationKey: home\nidentity: "%s"\n%s---\n' \
+  printf -- '---\ntitle: "Home"\ndescription: "Description d essai."\ntranslationKey: home\nidentity: "%s"\n%s---\n' \
     "$identity" "$avant" > "$work/site/content/_index.en.md"
   local contact="" cle
   for cle in "$@"; do
@@ -43,9 +43,9 @@ construire() {
       github) contact+="github: $github"$'\n' ;;
     esac
   done
-  printf -- '---\ntitle: "Contact"\ntranslationKey: contact\nslug: contact\nemail: e@exemple.invalide\n%s---\n\nTexte.\n' \
+  printf -- '---\ntitle: "Contact"\ndescription: "Description d essai."\ntranslationKey: contact\nslug: contact\nemail: e@exemple.invalide\n%s---\n\nTexte.\n' \
     "$contact" > "$work/site/content/contact.fr.md"
-  printf -- '---\ntitle: "Contact"\ntranslationKey: contact\nslug: contact\nemail: e@exemple.invalide\n%s---\n\nText.\n' \
+  printf -- '---\ntitle: "Contact"\ndescription: "Description d essai."\ntranslationKey: contact\nslug: contact\nemail: e@exemple.invalide\n%s---\n\nText.\n' \
     "$contact" > "$work/site/content/contact.en.md"
   # Le code du build de **production** est celui que la fonction rend : les cas qui éprouvent les
   # refus du partial en dépendent. Une première écriture s'arrêtait par « … && return 0 » quand le

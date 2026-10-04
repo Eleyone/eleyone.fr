@@ -90,12 +90,12 @@ case_groupe_sans_aucun_cas() {
   require_tool_version hugo hugo "$HUGO_VERSION" || exit 2
   cp -r "$root/layouts" "$root/config" "$root/data" "$root/i18n" "$work/site/"
   mkdir -p "$work/site/content/cases/vide"
-  printf -- '---\ntitle: "Accueil"\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
-  printf -- '---\ntitle: "Home"\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
-  printf -- '---\ntitle: "Cas"\n---\n' > "$work/site/content/cases/_index.fr.md"
-  printf -- '---\ntitle: "Cases"\n---\n' > "$work/site/content/cases/_index.en.md"
-  printf -- '---\ntitle: "Groupe vide"\ntranslationKey: group-vide\n---\n' > "$work/site/content/cases/vide/_index.fr.md"
-  printf -- '---\ntitle: "Empty group"\ntranslationKey: group-vide\n---\n' > "$work/site/content/cases/vide/_index.en.md"
+  printf -- '---\ntitle: "Accueil"\ndescription: "Description d essai."\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
+  printf -- '---\ntitle: "Home"\ndescription: "Description d essai."\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
+  printf -- '---\ntitle: "Cas"\ndescription: "Description d essai."\n---\n' > "$work/site/content/cases/_index.fr.md"
+  printf -- '---\ntitle: "Cases"\ndescription: "Description d essai."\n---\n' > "$work/site/content/cases/_index.en.md"
+  printf -- '---\ntitle: "Groupe vide"\ndescription: "Description d essai."\ntranslationKey: group-vide\n---\n' > "$work/site/content/cases/vide/_index.fr.md"
+  printf -- '---\ntitle: "Empty group"\ndescription: "Description d essai."\ntranslationKey: group-vide\n---\n' > "$work/site/content/cases/vide/_index.en.md"
   run bash -c 'cd "$1" && hugo --environment work --buildDrafts --panicOnWarning --destination sortie' _ "$work/site"
   assert_eq 0 "$rc" "un groupe sans aucun cas se construit sans erreur (sortie : $out $err)"
   local html

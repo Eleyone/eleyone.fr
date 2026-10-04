@@ -35,18 +35,18 @@ construire() {
   mkdir -p "$work/site/content"
   cp -r "$root/layouts" "$root/config" "$root/data" "$root/i18n" "$work/site/"
   cp -r "$root/assets" "$work/site/"
-  printf -- '---\ntitle: "Accueil"\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n%s\n' "$hors_page" > "$work/site/content/_index.fr.md"
-  printf -- '---\ntitle: "Home"\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
+  printf -- '---\ntitle: "Accueil"\ndescription: "Description d essai."\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n%s\n' "$hors_page" > "$work/site/content/_index.fr.md"
+  printf -- '---\ntitle: "Home"\ndescription: "Description d essai."\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
   [[ -n $corps ]] || corps=$'## Éditeur\n\n{{< legal-list "publisher" >}}\n\n## Hébergeur\n\n{{< legal-list "host" >}}\n'
-  printf -- '---\ntitle: "Mentions légales"\ntranslationKey: legal-notice\nslug: mentions-legales\n---\n\n%s\n' \
+  printf -- '---\ntitle: "Mentions légales"\ndescription: "Description d essai."\ntranslationKey: legal-notice\nslug: mentions-legales\n---\n\n%s\n' \
     "$corps" > "$work/site/content/legal-notice.fr.md"
-  printf -- '---\ntitle: "Legal notice"\ntranslationKey: legal-notice\nslug: legal-notice\n---\n\n%s\n' \
+  printf -- '---\ntitle: "Legal notice"\ndescription: "Description d essai."\ntranslationKey: legal-notice\nslug: legal-notice\n---\n\n%s\n' \
     "$corps" > "$work/site/content/legal-notice.en.md"
   # La page de confidentialité (story 9.2) : le pied de page doit porter son lien au bon slug dans
   # chaque langue, comme celui des mentions légales. Elle ne lit aucune valeur légale.
-  printf -- '---\ntitle: "Confidentialité"\ntranslationKey: privacy\nslug: confidentialite\n---\n\nTexte.\n' \
+  printf -- '---\ntitle: "Confidentialité"\ndescription: "Description d essai."\ntranslationKey: privacy\nslug: confidentialite\n---\n\nTexte.\n' \
     > "$work/site/content/privacy.fr.md"
-  printf -- '---\ntitle: "Privacy"\ntranslationKey: privacy\nslug: privacy\n---\n\nText.\n' \
+  printf -- '---\ntitle: "Privacy"\ndescription: "Description d essai."\ntranslationKey: privacy\nslug: privacy\n---\n\nText.\n' \
     > "$work/site/content/privacy.en.md"
   # « env -i » n'est pas employé : hugo a besoin de PATH et de HOME. Les valeurs légales sont
   # posées une à une, et aucune ne vient du poste.

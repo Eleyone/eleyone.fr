@@ -76,6 +76,23 @@ case_parity_label_de_poste_se_traduit() {
   assert_contains 'clé non traduite « company »' "$err" "le signalement nomme la clé restée comparée"
 }
 
+case_parity_description_se_traduit() {
+  # « description » (AD-25, story 9.8) et « summary » se traduisent : chaque langue porte la sienne.
+  # Elles n'entrent pas dans les clés que C3 compare, et leur présence de part et d'autre n'est pas
+  # son affaire — une page rendue sans description arrête le build (head-meta.html). Le cas vaut par
+  # sa paire : « identity », clé non traduite de l'accueil, reste comparée.
+  rendu '.files[0].front_matter.description = "Développeur backend : le CV."' '.files[0].front_matter.description = "Backend developer: the CV."'
+  parite
+  assert_eq 0 "$rc" "deux descriptions dans leur langue passent (messages : $err)"
+  rendu '.files[2].front_matter.summary = "Résumé."' '.files[2].front_matter.summary = "Summary."'
+  parite
+  assert_eq 0 "$rc" "deux summary dans leur langue passent (messages : $err)"
+  rendu '.files[0].front_matter.identity = "Nom · Pseudo"' '.files[0].front_matter.identity = "Name · Alias"'
+  parite
+  assert_eq 1 "$rc" "la même différence sur identity fait échouer"
+  assert_contains 'clé non traduite « identity »' "$err" "le signalement nomme la clé restée comparée"
+}
+
 case_parity_cle_de_contexte_differente() {
   rendu . '.files[2].front_matter.context.stack = ["PHP", "Redshift"]'
   parite

@@ -2,7 +2,7 @@
 title: "Confidentialité"
 translationKey: privacy
 slug: confidentialite
-description: "Ce site ne dépose aucun traceur, ne charge aucune ressource tierce et n'enregistre aucune donnée personnelle."
+description: "Ce site ne collecte aucune donnée personnelle : pages statiques, sans cookie, sans formulaire ni mesure d'audience."
 ---
 
 Ce site est un ensemble de pages statiques. Il n'a ni base de données, ni formulaire, ni compte, ni mesure d'audience.

@@ -8,7 +8,7 @@ scope: 'Dépôt, configuration Hugo, modèle de contenu (cas, parcours, identit�
 status: validated
 created: '2026-09-13'
 updated: '2026-09-13'
-binds: [FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, FR-10, FR-11, FR-12, FR-13, FR-14, FR-15, FR-16, FR-17, FR-18, FR-19, FR-20, FR-21, FR-22, FR-23, FR-24, FR-25, FR-26, FR-27, FR-28, FR-29, FR-30, FR-31, FR-32, FR-33, FR-34, FR-35, FR-36, FR-37, FR-38, FR-39, NFR-1, NFR-2, NFR-3, NFR-4, NFR-5, NFR-6, NFR-7, NFR-8, NFR-9, NFR-10, NFR-11, NFR-12, NFR-13]
+binds: [FR-1, FR-2, FR-3, FR-4, FR-5, FR-6, FR-7, FR-8, FR-9, FR-10, FR-11, FR-12, FR-13, FR-14, FR-15, FR-16, FR-17, FR-18, FR-19, FR-20, FR-21, FR-22, FR-23, FR-24, FR-25, FR-26, FR-27, FR-28, FR-29, FR-30, FR-31, FR-32, FR-33, FR-34, FR-35, FR-36, FR-37, FR-38, FR-39, FR-40, NFR-1, NFR-2, NFR-3, NFR-4, NFR-5, NFR-6, NFR-7, NFR-8, NFR-9, NFR-10, NFR-11, NFR-12, NFR-13]
 sources:
   - _bmad-output/planning-artifacts/prds/prd-eleyone.fr-2026-09-13/prd.md
   - _bmad-output/planning-artifacts/briefs/brief-eleyone.fr-2026-09-13/brief.md
@@ -571,15 +571,17 @@ flowchart TD
 
 ### AD-25 — Le `<head>` d'une page : description et Open Graph
 
-- **Binds:** FR-40, NFR-9 ; le partial du `<head>` dans `layouts/_partials/`, front matter des pages.
+- **Binds:** FR-40, NFR-9 ; `layouts/_partials/head-meta.html`, appelé par `layouts/baseof.html` ; front matter des pages ; `i18n/` (description de la 404) ; `scripts/checks/head-meta.sh` (C26).
 - **Prevents:** une page sans description, que le moteur ou l'aperçu de partage remplit à sa place ; une description calculée ou tronquée par un gabarit ; une balise vide ; une adresse légale dans une meta.
-- **Rule (proposition de changement du 04/10/2026, arbitrages d'Arnaud) :**
-  - un seul partial écrit la `<meta name="description">` et les balises Open Graph ;
-  - la description vient de `.Params.summary` pour un cas, de `.Description` (clé `description` du front matter, native de Hugo) pour toute autre page ; rien n'est tronqué ni calculé par le gabarit, et une description absente **fait échouer le build** plutôt que de produire une balise vide (même règle que les valeurs légales, AD-9) ;
-  - `og:title` reprend le `<title>` ; `og:url` le permalien absolu ; `og:type` vaut `website` pour l'accueil et `article` pour toute autre page ; `og:locale` vaut `fr_FR` ou `en_US`, avec `og:locale:alternate` pour l'autre langue quand la traduction existe ;
+- **Rule (proposition de changement du 04/10/2026, arbitrages d'Arnaud ; livrée par la story 9.8) :**
+  - un seul partial, `_partials/head-meta.html`, écrit la `<meta name="description">` et les balises Open Graph, sur toute page, juste après le `<title>` que `baseof.html` compose ;
+  - la description vient de `.Params.summary` pour un cas, de `.Description` (clé `description` du front matter, native de Hugo) pour toute autre page, et de la clé `not_found_description` d'`i18n/` pour la page 404, qui n'a pas de fichier de contenu et dont le titre et le corps viennent déjà de là (AD-3) ; rien n'est tronqué ni calculé par le gabarit, et une description absente ou blanche **fait échouer le build** en nommant la page, plutôt que de produire une balise vide (même règle que les valeurs légales, AD-9), dans les deux rendus — un brouillon de cas porte toujours un `summary`, fût-il un `[TODO: …]` (modèle de `docs/format-cas.md`) ;
+  - en français, la description passe par la même composition typographique que le `<title>` et le corps (AD-23, `_partials/typo-fr-texte.html`) : la composition remplace une espace par l'insécable voulue, elle n'ajoute ni ne retire aucun mot ;
+  - `og:title` reprend le texte exact du `<title>`, passé par `baseof.html` ; `og:url` le permalien absolu en `https://` (la 404 porte le sien, `/404.html` et `/en/404.html`) ; `og:type` vaut `website` pour l'accueil de chaque langue et `article` pour toute autre page ; `og:locale` vaut `fr_FR` ou `en_US`, avec `og:locale:alternate` pour la locale de chaque traduction existante de la page, et seulement alors ; une langue sans locale connue arrête le build ;
   - pas d'`og:image` ;
-  - C23 continue d'interdire l'adresse de l'éditeur dans toute meta, ce qui couvre la description des mentions légales ;
-  - livré par la story 9.8 ; contrôlé par C26.
+  - l'échappement des attributs est celui du moteur de gabarits de Hugo, sans `safeHTMLAttr` ni attribut assemblé à la main ;
+  - C23 continue d'interdire l'adresse de l'éditeur dans toute meta, ce qui couvre la description et l'`og:description` des mentions légales ;
+  - C26 vérifie le résultat sur la sortie de production.
 
 ## Procédure : hook pre-receive sur Gitea
 
@@ -649,7 +651,7 @@ Portée : C3 porte sur tout fichier de `content/`. C4, C7, C8, C16 et C18 ne por
 | C23 | Adresse légale confinée : la valeur chargée de `HUGO_LEGAL_PUBLISHER_ADDRESS`, réelle ou factice, n'apparaît que dans le corps des deux pages des mentions légales ; jamais dans un `<title>`, une meta `description`, le JSON-LD, `sitemap.xml` ni une autre page | `scripts/checks/legal-address.sh` | oui | oui | FR-18, FR-33, NFR-9 |
 | C24 | Typographie : dans les pages FR, aucun nœud texte hors `pre`, `code`, `script` et `style` ne contient d'espace ordinaire devant `;`, `!`, `?`, `:`, après `«` ni avant `»` ; dans les pages EN, ni espace insécable U+00A0 ni espace **fine** insécable U+202F à ces mêmes places, le séparateur `·` restant légitime dans les deux langues ; aucune règle `hyphens: auto` dans la CSS. Lit les deux rendus, comme C10 et C11 | `scripts/checks/typo.sh` | oui | oui | FR-20, NFR-10 |
 | C25 | Période d'un cas comprise dans celle de son poste (AD-18, arbitrage Q2 du 02/10/2026) : la période de l'encart d'un cas est comprise dans la `period` du poste que désigne sa clé `position`, dans la même langue. Formes lues : « mois AAAA – mois AAAA », « depuis mois AAAA », « AAAA », « AAAA – AAAA » (story 10.10), en FR et en EN ; une forme que le contrôle ne sait pas lire le fait échouer, au lieu de passer. Il compare des bornes et n'affiche rien. Règles de lecture (story 10.9, constat A3 de sa revue de spec) : mois en toutes lettres dans la langue du fichier, casse ignorée ; « since Month YYYY » en anglais ; tiret demi-cadratin entouré d'espaces ; une année seule vaut de janvier à décembre, un intervalle d'années du 1er janvier de la première au 31 décembre de la seconde (une forme mêlée, mois d'un côté seulement, reste illisible), « depuis » / « since » n'a pas de fin ; inclusion = début du cas ≥ début du poste et fin du cas ≤ fin du poste, une fin ouverte valant l'infini ; un intervalle inversé est illisible. La période de **tout** poste est lue, qu'un cas le désigne ou non. Une valeur `[TODO` est tolérée dans un brouillon ; un cas sans `position` ou rattaché à un poste absent de sa langue n'est pas comparé, ce rattachement relevant de C19 | `scripts/checks/periods.sh` | oui | oui | FR-2, NFR-10 |
-| C26 | Description et aperçu de chaque page (AD-25, FR-40, story 9.8) : sur la sortie de production, chaque page HTML porte exactement une `<meta name="description">` non vide, égale au contenu de son `og:description`, sans `[TODO`, et les balises `og:title`, `og:description`, `og:type`, `og:url`, `og:locale` | à créer par la story 9.8 | oui | oui | FR-40 |
+| C26 | Description et aperçu de chaque page (AD-25, FR-40, story 9.8) : sur la sortie de production, chaque page HTML porte exactement une `<meta name="description">` non blanche, sans `[TODO`, et exactement une de chaque balise `og:description` (égale à la description), `og:title` (égale au `<title>`), `og:type` (`website` sur l'accueil de chaque langue, `article` ailleurs), `og:url` (absolue en `https://`, égale à `baseURL` + chemin de la page), `og:locale` (cohérente avec `<html lang>` : `fr_FR`, `en_US`) ; `og:locale:alternate` présente si et seulement si la page a une traduction (lue dans ses liens `hreflang`), à la locale de celle-ci ; aucune `og:image` ni `og:image:*`. Une balise compte quelle que soit sa casse et qu'elle soit posée en `property=` ou en `name=` ; un rendu sans page HTML est une anomalie | `scripts/checks/head-meta.sh` | oui | oui | FR-40 |
 
 ## Conventions de cohérence
 
@@ -720,7 +722,7 @@ Portée : C3 porte sur tout fichier de `content/`. C4, C7, C8, C16 et C18 ne por
 │           └── case-02-chiliz.{fr,en}.md
 ├── data/stack.yaml          # vocabulaire contrôlé (existant)
 ├── i18n/{fr,en}.yaml        # libellés d'interface
-├── layouts/                 # baseof, home, page, section, 404, cases/, _partials/ (case, case-url, career-url, position, portrait, jsonld-person, legal-value, cv-links, toc, typo-fr), _shortcodes/, _markup/render-heading.html, home.checks.json
+├── layouts/                 # baseof, home, page, section, 404, cases/, _partials/ (case, case-url, career-url, position, portrait, jsonld-person, head-meta, legal-value, cv-links, toc, typo-fr), _shortcodes/, _markup/render-heading.html, home.checks.json
 ├── assets/
 │   ├── css/main.css         # mode clair et mode sombre (prefers-color-scheme)
 │   ├── images/portrait.webp # copie préparée, sans métadonnées
@@ -818,6 +820,7 @@ Décidé le 13/09/2026 et en place : `docs/format-cas.md` est passé en v0.4 et 
 | FR-37 (premier écran mobile) | `layouts/home.html`, `assets/css/` | AD-17 (check-list), AD-18 |
 | FR-38 (CV PDF) | `assets/cv/`, `scripts/checks/pdf.sh`, hooks | AD-21, C21 |
 | FR-39 (répétition de la mise en ligne) | `deploy/compose.rehearsal.yaml`, `deploy-site`, `release.yaml` | AD-22 |
+| FR-40 (description et aperçu de chaque page) | `_partials/head-meta.html`, clé `description` des pages, `summary` des cas, `i18n/` (404), `scripts/checks/head-meta.sh` | AD-25, C23, C26 |
 | FR-5 à FR-8, FR-10, FR-11 (cas) | `_partials/case.html`, `layouts/cases/page.html`, `i18n/` | AD-3, AD-18, C3, C4, C6 |
 | FR-9 (page Chiliz) | `content/cases/chiliz/`, `layouts/cases/section.html` | AD-4, C8, C15 |
 | FR-12 à FR-14 (matériel vivant) | `_shortcodes/live-material.html`, `assets/`, `diagrams/` | AD-6, AD-7, C7, C9, C10 |

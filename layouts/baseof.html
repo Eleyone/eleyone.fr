@@ -26,6 +26,9 @@
     {{ if not .IsHome }}{{ with $identity }}{{ $complet = printf "%s\u00a0· %s" $title . }}{{ end }}{{ end }}
     {{ if eq $.Site.Language.Lang "fr" }}{{ $complet = partial "typo-fr-texte.html" $complet }}{{ end }}
     <title>{{ $complet }}</title>
+    {{/* AD-25 : description et aperçu de partage, sur **toute** page. « og:title » reçoit le texte
+         exact du <title>, déjà composé ici : le recalculer dans le partial en ferait deux vérités. */}}
+    {{ partial "head-meta.html" (dict "page" . "title" $complet) }}
     {{/* AD-2 : une alternative par traduction, plus x-default vers le français. */}}
     {{ range .AllTranslations }}
       <link rel="alternate" hreflang="{{ .Site.Language.Lang }}" href="{{ .Permalink }}">

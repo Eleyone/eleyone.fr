@@ -9,6 +9,7 @@
 #   checks_attributes <fichier> <requête> <attribut>   valeurs d'un attribut, une par ligne
 #   checks_find <arguments…>          find qui s'arrête sur une erreur de parcours
 #   checks_page_de_url <RelPermalink> chemin du fichier rendu, relatif à la racine du rendu
+#   checks_est_accueil <chemin>      le chemin est l'accueil du site ou d'une langue (« index.html », « en/index.html »)
 #   decoder_echappements        filtre : ramène les sérialisations d'une chaîne (entités HTML,
 #                               séquences \uXXXX du JSON) à sa forme brute (scripts/lib/text.sh)
 #   normaliser_blancs           filtre : ramène tout blanc à une espace simple, sur **une seule ligne**
@@ -135,6 +136,14 @@ checks_find() { # arguments de find ; s'arrête sur une erreur
 
 checks_report() { # $1 = fichier, $2 = écart ; format commun à tous les contrôles
   printf '%s: %s\n' "$1" "$2" >&2
+}
+
+# Les accueils : « index.html » à la racine du site et à celle de chaque langue, jamais celui d'un
+# sous-dossier. Écrite ici à la story 9.8, où un troisième contrôle (C26) en avait besoin : html.sh
+# la portait en fonction et links.sh en ligne, deux copies de la même règle (« une parade s'écrit
+# une fois »).
+checks_est_accueil() { # $1 = chemin relatif à la racine du rendu
+  [[ ${1-} == index.html || ${1-} =~ ^[a-z]{2}/index\.html$ ]]
 }
 
 checks_is_todo() { # $1 = valeur

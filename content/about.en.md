@@ -1,6 +1,7 @@
 ---
 title: "About"
 translationKey: "about"
+description: "What I offer today: judgment rather than typing — what to build, at what cost, and what breaks if we get it wrong."
 slug: "about"
 layout: about
 ---

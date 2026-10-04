@@ -35,8 +35,8 @@ construire() {
   # veulent, pour que le défaut soit « pas de CV ».
   mkdir -p "$work/site/assets"
   cp -r "$root/assets/css" "$work/site/assets/"
-  printf -- '---\ntitle: "Accueil"\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
-  printf -- '---\ntitle: "Home"\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
+  printf -- '---\ntitle: "Accueil"\ndescription: "Description d essai."\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
+  printf -- '---\ntitle: "Home"\ndescription: "Description d essai."\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
   # La valeur de « source_url » est réécrite dans la copie de la configuration : le cas décide,
   # jamais le dépôt.
   local config=$work/site/config/_default/hugo.yaml
@@ -53,14 +53,14 @@ construire() {
         local nom
         for nom in cv-fr.pdf cv-en.pdf; do tests_pdf "$work/site/assets/cv/$nom" "" "" "" 1000; done ;;
       legal)
-        printf -- '---\ntitle: "Mentions"\ntranslationKey: legal-notice\nslug: mentions-legales\n---\n\nTexte.\n' \
+        printf -- '---\ntitle: "Mentions"\ndescription: "Description d essai."\ntranslationKey: legal-notice\nslug: mentions-legales\n---\n\nTexte.\n' \
           > "$work/site/content/legal-notice.fr.md"
-        printf -- '---\ntitle: "Legal"\ntranslationKey: legal-notice\nslug: legal-notice\n---\n\nText.\n' \
+        printf -- '---\ntitle: "Legal"\ndescription: "Description d essai."\ntranslationKey: legal-notice\nslug: legal-notice\n---\n\nText.\n' \
           > "$work/site/content/legal-notice.en.md" ;;
       privacy)
-        printf -- '---\ntitle: "Confidentialité"\ntranslationKey: privacy\nslug: confidentialite\n---\n\nTexte.\n' \
+        printf -- '---\ntitle: "Confidentialité"\ndescription: "Description d essai."\ntranslationKey: privacy\nslug: confidentialite\n---\n\nTexte.\n' \
           > "$work/site/content/privacy.fr.md"
-        printf -- '---\ntitle: "Privacy"\ntranslationKey: privacy\nslug: privacy\n---\n\nText.\n' \
+        printf -- '---\ntitle: "Privacy"\ndescription: "Description d essai."\ntranslationKey: privacy\nslug: privacy\n---\n\nText.\n' \
           > "$work/site/content/privacy.en.md" ;;
     esac
   done

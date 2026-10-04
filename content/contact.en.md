@@ -2,7 +2,7 @@
 title: "Contact"
 translationKey: contact
 slug: contact
-description: "Writing to Arnaud Grousset: email, LinkedIn, GitHub. No form."
+description: "Write to Arnaud Grousset about a role or a contract: the context, the problem and the deadline are enough. I answer myself."
 email: hello@eleyone.fr
 linkedin: https://www.linkedin.com/in/groussetarnaud/
 github: https://github.com/Eleyone

@@ -1,0 +1,76 @@
+{{/*
+  Description et aperçu de partage d'une page (AD-25, FR-40, story 9.8). **Seul endroit du site qui
+  écrit la meta « description » et les balises Open Graph** ; C26 (scripts/checks/head-meta.sh) les
+  vérifie sur la sortie de production.
+
+  D'où vient la description — un texte écrit par une personne, jamais calculé ni tronqué ici :
+
+    un cas            ← son « summary », l'encart « En bref » (arbitrage d'Arnaud du 04/10/2026)
+    la page 404       ← « not_found_description » d'i18n/ : elle n'a pas de fichier de contenu, et
+                         son titre comme son corps viennent déjà de là (AD-3)
+    toute autre page  ← sa clé « description » de front matter (« .Description », native de Hugo)
+
+  **Une description absente ou blanche arrête le build**, en nommant la page, plutôt que de rendre
+  une balise vide — même règle que les valeurs légales (AD-9, legal-value.html). Le refus vaut pour
+  les deux rendus : un brouillon de cas porte toujours un « summary », fût-il un « [TODO: …] »
+  (modèle vide de docs/format-cas.md), et le rendu de travail n'est pas contrôlé sur ses « [TODO ».
+  C5 et C26 refusent, eux, un « [TODO » dans la production.
+
+  En français, le texte passe par la même composition que le <title> et que le corps (AD-23) :
+  une description est du texte français affiché par un moteur ou un aperçu, et l'encart « En bref »
+  que reprend celle d'un cas est déjà composé sur la page. La composition **remplace** une espace,
+  elle n'ajoute ni ne retire aucun mot : ce n'est pas un calcul au sens d'AD-25.
+
+  Ce que ce partial **n'écrit pas** : « og:image » (arbitrage d'Arnaud du 04/10/2026 : aperçu sans
+  image), que C26 refuse sur toute page.
+
+  L'échappement est celui de Hugo : un attribut reçoit « " », « & », « ' » et « < » échappés par le
+  moteur de gabarits, sans « safeHTMLAttr » ni assemblage à la main (vérifié par
+  scripts/tests/test-head-meta.sh, sur une description qui porte les quatre).
+
+  Paramètres : « page » (la page), « title » (le texte exact du <title>, composé par baseof.html).
+*/}}
+{{- $page := .page -}}
+{{- $title := .title -}}
+{{- $nom := $page.Path -}}
+{{- with $page.File }}{{ $nom = printf "content/%s" .Path }}{{ end -}}
+{{- $description := "" -}}
+{{- $source := "" -}}
+{{- if eq $page.Kind "404" -}}
+  {{- $description = i18n "not_found_description" -}}
+  {{- $source = "not_found_description d'i18n/" -}}
+{{- else if and (eq $page.Kind "page") (eq $page.Section "cases") -}}
+  {{- $description = $page.Params.summary -}}
+  {{- $source = "summary" -}}
+{{- else -}}
+  {{- $description = $page.Description -}}
+  {{- $source = "description" -}}
+{{- end -}}
+{{- $description = printf "%v" ($description | default "") -}}
+{{/* Les locales Open Graph des langues du site. Une langue ajoutée sans la sienne arrête le build :
+     deviner « xx_XX » publierait une locale fausse sans que rien ne le dise. */}}
+{{- $locales := dict "fr" "fr_FR" "en" "en_US" -}}
+{{- $locale := index $locales $page.Site.Language.Lang -}}
+{{- if not $locale -}}
+  {{- errorf "head-meta : aucune locale Open Graph pour la langue « %s » (%s) ; l'ajouter dans layouts/_partials/head-meta.html (AD-25)." $page.Site.Language.Lang $nom -}}
+{{- end -}}
+{{- if not (strings.TrimSpace $description) -}}
+  {{- errorf "head-meta : %s (%s) n'a pas de description — « %s » absente ou vide. AD-25 refuse une balise vide : la renseigner." $nom $page.Site.Language.Lang $source -}}
+{{- else -}}
+  {{- if eq $page.Site.Language.Lang "fr" }}{{ $description = partial "typo-fr-texte.html" $description }}{{ end }}
+<meta name="description" content="{{ $description }}">
+<meta property="og:title" content="{{ $title }}">
+<meta property="og:description" content="{{ $description }}">
+<meta property="og:type" content="{{ cond $page.IsHome "website" "article" }}">
+<meta property="og:url" content="{{ $page.Permalink }}">
+<meta property="og:locale" content="{{ $locale }}">
+  {{- /* Une alternative par traduction **existante** de la page, et seulement alors (AD-25) :
+         « .Translations » exclut la page elle-même, comme les hreflang de baseof.html la lisent. */}}
+  {{- range $page.Translations }}
+    {{- with index $locales .Site.Language.Lang }}
+<meta property="og:locale:alternate" content="{{ . }}">
+    {{- else }}
+      {{- errorf "head-meta : aucune locale Open Graph pour la langue « %s », traduction de %s (AD-25)." .Site.Language.Lang $nom -}}
+    {{- end }}
+  {{- end }}
+{{- end -}}

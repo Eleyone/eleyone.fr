@@ -2,7 +2,7 @@
 title: "Privacy"
 translationKey: privacy
 slug: privacy
-description: "This site sets no tracker, loads no third-party resource and records no personal data."
+description: "This site collects no personal data: static pages, no cookies, no forms and no analytics."
 ---
 
 This site is a set of static pages. It has no database, no form, no account and no analytics.

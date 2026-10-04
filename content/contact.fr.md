@@ -2,7 +2,7 @@
 title: "Contact"
 translationKey: contact
 slug: contact
-description: "Écrire à Arnaud Grousset : courriel, LinkedIn, GitHub. Pas de formulaire."
+description: "Écrire à Arnaud Grousset pour un poste ou une mission : le contexte, le problème et l'échéance suffisent. Je réponds moi-même."
 email: hello@eleyone.fr
 linkedin: https://www.linkedin.com/in/groussetarnaud/
 github: https://github.com/Eleyone

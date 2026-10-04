@@ -22,13 +22,13 @@ construire() {
   mkdir -p "$work/site/content" "$work/site/assets/cv"
   cp -r "$root/layouts" "$root/config" "$root/data" "$root/i18n" "$work/site/"
   cp -r "$root/assets/css" "$root/assets/images" "$work/site/assets/"
-  printf -- '---\ntitle: "Accueil"\ntranslationKey: home\nidentity: "Essai · Pseudo"\njob_title: "Essai"\nportrait_alt: "Texte alternatif d essai"\n---\n' \
+  printf -- '---\ntitle: "Accueil"\ndescription: "Description d essai."\ntranslationKey: home\nidentity: "Essai · Pseudo"\njob_title: "Essai"\nportrait_alt: "Texte alternatif d essai"\n---\n' \
     > "$work/site/content/_index.fr.md"
-  printf -- '---\ntitle: "Home"\ntranslationKey: home\nidentity: "Essai · Pseudo"\njob_title: "Test"\nportrait_alt: "Test alternative text"\n---\n' \
+  printf -- '---\ntitle: "Home"\ndescription: "Description d essai."\ntranslationKey: home\nidentity: "Essai · Pseudo"\njob_title: "Test"\nportrait_alt: "Test alternative text"\n---\n' \
     > "$work/site/content/_index.en.md"
-  printf -- '---\ntitle: "À propos"\ntranslationKey: about\nslug: a-propos\nlayout: about\n---\n\n## Une section\n\nDu texte.\n' \
+  printf -- '---\ntitle: "À propos"\ndescription: "Description d essai."\ntranslationKey: about\nslug: a-propos\nlayout: about\n---\n\n## Une section\n\nDu texte.\n' \
     > "$work/site/content/about.fr.md"
-  printf -- '---\ntitle: "About"\ntranslationKey: about\nslug: about\nlayout: about\n---\n\n## A section\n\nSome text.\n' \
+  printf -- '---\ntitle: "About"\ndescription: "Description d essai."\ntranslationKey: about\nslug: about\nlayout: about\n---\n\n## A section\n\nSome text.\n' \
     > "$work/site/content/about.en.md"
   local nom
   for nom in "$@"; do tests_pdf "$work/site/assets/cv/$nom" "" "" "" 1000; done

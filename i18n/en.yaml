@@ -4,6 +4,9 @@ home_link: Home
 not_found_title: Page not found
 not_found_message: This page doesn't exist, or it has moved.
 home_link_other_language: Home in French
+# Description of the 404 page (AD-25, story 9.8): it has no content file, hence no "description"
+# key; its title and body already come from here.
+not_found_description: "This page does not exist. The home page leads to the CV of Arnaud Grousset, senior PHP and Symfony backend developer."
 
 # Case boxes (AD-3, story 2.5)
 engagement_context: Engagement context

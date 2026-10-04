@@ -262,6 +262,29 @@ case_legal_adresse_dans_une_meta_sociale() {
   assert_contains "balise meta" "$err" "le signalement nomme l endroit"
 }
 
+case_legal_adresse_dans_la_description_rendue_par_ad25() {
+  # Story 9.8 (constat A4 de sa revue de spec) : le partial head-meta.html écrit désormais, sur la
+  # page légale aussi, une <meta name="description"> **et** une og:description, toutes deux tirées
+  # de la clé « description ». Si l'adresse y entrait, C23 doit la voir. Le <head> reprend celui de
+  # la production — balises dans l'ordre du build minifié, valeur échappée comme Hugo l'échappe
+  # (point 16 d'AGENTS.md) — et le cas a été lancé une fois sans la lecture des balises meta de
+  # C23, pour le voir passer à tort.
+  site
+  # Remplacements **entre guillemets** : depuis bash 5.2 (« patsub_replacement »), un « & » nu dans
+  # le remplacement désigne le texte trouvé, et « &#39; » devenait « '#39; » — constaté en écrivant
+  # ce cas : C23 passait alors au vert, sur une fixture qui ne contenait plus l'adresse.
+  local echappee=${adresse//&/"&amp;"}
+  echappee=${echappee//\'/"&#39;"}
+  local description="Mentions légales d'eleyone.fr : $echappee"
+  page mentions-legales/index.html \
+    "<meta name=description content=\"$description\"><meta property=\"og:title\" content=\"Mentions légales · Essai\"><meta property=\"og:description\" content=\"$description\"><meta property=\"og:type\" content=\"article\"><meta property=\"og:url\" content=\"https://exemple.invalide/mentions-legales/\"><meta property=\"og:locale\" content=\"fr_FR\"><meta property=\"og:locale:alternate\" content=\"en_US\"><link rel=alternate hreflang=fr href=https://exemple.invalide/mentions-legales/>" \
+    "<h1>Mentions légales</h1><address>$adresse</address>" "Mentions légales · Essai"
+  controle
+  assert_eq 1 "$rc" "l adresse dans la description et l og:description de la page légale fait échouer"
+  assert_contains "mentions-legales/index.html: C23 : l'adresse de l'éditeur apparaît dans une balise meta" "$err" "la page et l endroit sont nommés"
+  [[ $err != *"$adresse"* ]] || { echo "le signalement affiche l adresse" >&2; exit 1; }
+}
+
 case_legal_adresse_multilignes_dans_le_json_ld() {
   # La sixième sérialisation de la même chaîne : dans un JSON-LD, un saut de ligne s'écrit « \n »,
   # deux caractères littéraux. Le cas voisin ne le montrait pas, son adresse tenant sur une ligne

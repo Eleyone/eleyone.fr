@@ -76,10 +76,7 @@ fi
 # Valeurs d'un attribut, une par ligne. La version de libxml2 du poste en rend déjà une par ligne,
 # mais d'autres les concatènent : la découpe ne dépend donc pas de la version (constat de la revue
 # de la PR n° 43, rejoué : le défaut n'existait pas ici, la parade le rend impossible partout).
-# Les accueils : index.html à la racine de chaque langue, jamais celui d'un sous-dossier.
-est_accueil() { # $1 = chemin relatif à $public
-  [[ $1 == index.html || $1 =~ ^[a-z]{2}/index\.html$ ]]
-}
+# Les accueils : checks_est_accueil (scripts/checks/lib.sh), partagée avec links.sh et head-meta.sh.
 
 liste_9=$(checks_find "${racines[@]}" -type f -name '*.html' | LC_ALL=C sort) || exit $?
 # Une liste vide ferait sortir ce contrôle en « conforme » sans avoir rien lu : un CHECK_PUBLIC_ROOT
@@ -171,11 +168,11 @@ while IFS= read -r page; do
   # **Exactement un sur chaque accueil**, et zéro ailleurs (FR-35, story 9.6). La règle était
   # jusqu'ici « au plus un, et seulement sur l'accueil » : un accueil qui n'en portait aucun passait
   # sans un mot, et le site aurait perdu ses données structurées sans que rien ne le dise.
-  if ((nombre == 0)) && est_accueil "$relative"; then
+  if ((nombre == 0)) && checks_est_accueil "$relative"; then
     signaler "$relative" "C10 : aucun bloc JSON-LD sur l'accueil ; exactement un est attendu (FR-35, AD-20)"
   fi
   if ((nombre > 0)); then
-    if ! est_accueil "$relative"; then
+    if ! checks_est_accueil "$relative"; then
       signaler "$relative" "C10 : bloc JSON-LD hors de l'accueil ; il n'appartient qu'à l'accueil (AD-20)"
     elif ((nombre > 1)); then
       signaler "$relative" "C10 : $nombre blocs JSON-LD ; au plus un (AD-20)"
@@ -268,7 +265,7 @@ while IFS= read -r page; do
   titre=$(checks_xpath "$page" 'string(//title)')
   if [[ -z ${titre// /} ]]; then
     signaler "$relative" "C11 : <title> vide (2.4.2)"
-  elif ! est_accueil "$relative" && [[ $titre != *"$identity"* ]]; then
+  elif ! checks_est_accueil "$relative" && [[ $titre != *"$identity"* ]]; then
     # L'accueil fait exception : son titre porte déjà le nom (AD-2, story 2.2).
     signaler "$relative" "C11 : <title> « $titre » sans la ligne d'identité « $identity » (AD-2)"
   fi

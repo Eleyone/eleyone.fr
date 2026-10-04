@@ -42,8 +42,12 @@ preparer() {
   mkdir -p "$work/site/content/career" "$work/site/assets"
   cp -r "$root/layouts" "$root/config" "$root/data" "$root/i18n" "$work/site/"
   cp -r "$root/assets/css" "$work/site/assets/"
-  printf -- '---\ntitle: "Accueil"\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
-  printf -- '---\ntitle: "Home"\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
+  # Les _index du parcours sont ceux du dépôt : les postes y sont listés sans être rendus (AD-18).
+  # Sans eux, chaque poste devenait une page, à laquelle AD-25 réclame une description qu'un poste
+  # n'a pas (story 9.8) — et le site d'essai ne ressemblait pas au vrai (point 16 d'AGENTS.md).
+  cp "$root/content/career/_index.fr.md" "$root/content/career/_index.en.md" "$work/site/content/career/"
+  printf -- '---\ntitle: "Accueil"\ndescription: "Description d essai."\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
+  printf -- '---\ntitle: "Home"\ndescription: "Description d essai."\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
 }
 
 construire() {
@@ -133,7 +137,10 @@ cas_publie() { # $1 = identifiant du poste
   for langue in fr en; do
     if [[ $langue == fr ]]; then titre="Titre du cas d'essai"; else titre="Test case title"; fi
     mkdir -p "$work/site/content/cases"
-    printf -- '---\ntitle: "%s"\ntranslationKey: "case-07"\nnumber: "07"\nslug: "essai"\nposition: "position-%s"\norder: 7\ndraft: false\ncontext:\n  company: "Société"\n  setup: "employee"\n  role: "Rôle"\n  period: "2024"\n  stack: ["PHP"]\n---\n\n## Contexte\n\nTexte.\n' \
+    # La section technique des cas, celle du dépôt : jamais rendue (AD-2). Sans elle, Hugo rendait
+    # une page « /cases/ » sans fichier, donc sans la description qu'AD-25 exige (story 9.8).
+    cp "$root/content/cases/_index.$langue.md" "$work/site/content/cases/"
+    printf -- '---\ntitle: "%s"\ntranslationKey: "case-07"\nnumber: "07"\nslug: "essai"\nposition: "position-%s"\norder: 7\ndraft: false\nsummary: "Résumé d essai."\ncontext:\n  company: "Société"\n  setup: "employee"\n  role: "Rôle"\n  period: "2024"\n  stack: ["PHP"]\n---\n\n## Contexte\n\nTexte.\n' \
       "$titre" "$1" > "$work/site/content/cases/case-07-essai.$langue.md"
   done
 }

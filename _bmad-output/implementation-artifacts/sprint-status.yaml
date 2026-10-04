@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '10-04-2026 15:07'
+last_updated: '10-04-2026 16:19'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -117,7 +117,7 @@ development_status:
   8-3-svg-sync-check: backlog
   epic-8-retrospective: optional
 
-  epic-9: in-progress
+  epic-9: done
   9-1-legal-notice-and-confined-address: done
   9-2-privacy-policy: done
   9-3-contact-page-and-call-to-contact: done
@@ -126,7 +126,7 @@ development_status:
   9-6-person-structured-data: done
   9-7-host-identification-without-phone: done
   # 9.8 : proposition de changement du 04/10/2026 (meta description et aperçus de partage).
-  9-8-page-description-and-share-previews: backlog
+  9-8-page-description-and-share-previews: done
   epic-9-retrospective: done
 
   epic-10: done
@@ -387,12 +387,16 @@ open_questions:
     epic: 6
     question: "La typographie française ne compose ni <title>, ni <meta name=\"description\"\
       >, ni les cartes sociales. (Reposée à la rétrospective de l'epic 9, même question.)"
-    state: "Vérifié le 24/09/2026 : aucune meta description ni carte sociale n'existe,
-      ni dans layouts/ ni dans la sortie construite. La story 6.3 la porte dans sa
-      section « Reporté » — « à reprendre le jour où elles seront écrites » — mais
-      aucune story du backlog ne les crée, et aucun contrôle ne les attend."
-    lands_in: "la story qui créera ces métadonnées, qui n'existe pas encore au backlog
-      — à créer ou à fermer explicitement"
+    state: "**Répondue par la story 9.8, le 04/10/2026.** Le <title>, lui, est déjà
+      composé par baseof.html (typo-fr-texte.html) : la question était en retard sur ce
+      point. La
+      story 9.8 crée la <meta name=\"description\"> et les balises Open Graph (AD-25)
+      et compose en français la description par le même partial que le <title> ;
+      og:title reprend le <title> composé. C24 ne lit toujours que les nœuds de texte,
+      pas les attributs : la composition des descriptions est éprouvée par
+      scripts/tests/test-head-meta.sh, pas par un contrôle de la sortie (décision
+      consignée dans le fichier de la story 9.8)."
+    lands_in: "réglée — story 9.8 (layouts/_partials/head-meta.html)"
   - id: "epic-7-oq-traces-wsl"
     epic: 7
     question: "Reste-t-il des traces de l'ancien poste WSL ailleurs que dans AGENTS.md

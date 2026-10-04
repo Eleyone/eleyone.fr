@@ -40,6 +40,20 @@ case_checks_is_todo() {
   assert_eq 1 "$rc" "une valeur vide ne l'est pas"
 }
 
+case_checks_est_accueil() {
+  # Story 9.8 : la règle vivait en deux copies (html.sh, links.sh) ; C26 en est le troisième lecteur.
+  local chemin
+  for chemin in index.html en/index.html fr/index.html; do
+    run bash -c '. "$1/scripts/checks/lib.sh"; checks_est_accueil "$2"' _ "$root" "$chemin"
+    assert_eq 0 "$rc" "$chemin est un accueil"
+  done
+  for chemin in a-propos/index.html en/about/index.html cas/chiliz/index.html 404.html en/404.html \
+      xindex.html en/index.html.bak eng/index.html ""; do
+    run bash -c '. "$1/scripts/checks/lib.sh"; checks_est_accueil "$2"' _ "$root" "$chemin"
+    assert_eq 1 "$rc" "« $chemin » n est pas un accueil"
+  done
+}
+
 case_checks_tolerated_seulement_sur_un_brouillon() {
   run bash -c '. "$1/scripts/checks/lib.sh"; checks_tolerated true "[TODO: période]"' _ "$root"
   assert_eq 0 "$rc" "un [TODO dans un brouillon est toléré (AD-10)"

@@ -12,6 +12,8 @@ context:
   setup: "employee"
   period: "[TODO: période]"
   stack: ["PHP"]
+summary: >-
+  [TODO: summary]
 live_material:
   - id: "diagram-fixture"
     type: "diagram"

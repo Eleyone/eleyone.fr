@@ -26,8 +26,8 @@ construire() {
   rm -rf "$work/site"
   mkdir -p "$work/site/content"
   cp -r "$root/layouts" "$root/config" "$root/data" "$root/i18n" "$root/assets" "$work/site/"
-  printf -- '---\ntitle: "Accueil"\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
-  printf -- '---\ntitle: "Home"\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
+  printf -- '---\ntitle: "Accueil"\ndescription: "Description d essai."\nidentity: "Essai · Pseudo"\njob_title: "Essai"\n---\n' > "$work/site/content/_index.fr.md"
+  printf -- '---\ntitle: "Home"\ndescription: "Description d essai."\nidentity: "Essai · Pseudo"\njob_title: "Test"\n---\n' > "$work/site/content/_index.en.md"
   local cles=("$@")
   if (( ${#cles[@]} )); then
     local avant="" nom
@@ -38,9 +38,9 @@ construire() {
         github) avant+="github: $github"$'\n' ;;
       esac
     done
-    printf -- '---\ntitle: "Contact"\ntranslationKey: contact\nslug: contact\n%s---\n\nTexte.\n\n{{< contact-list >}}\n' \
+    printf -- '---\ntitle: "Contact"\ndescription: "Description d essai."\ntranslationKey: contact\nslug: contact\n%s---\n\nTexte.\n\n{{< contact-list >}}\n' \
       "$avant" > "$work/site/content/contact.fr.md"
-    printf -- '---\ntitle: "Contact"\ntranslationKey: contact\nslug: contact\n%s---\n\nText.\n\n{{< contact-list >}}\n' \
+    printf -- '---\ntitle: "Contact"\ndescription: "Description d essai."\ntranslationKey: contact\nslug: contact\n%s---\n\nText.\n\n{{< contact-list >}}\n' \
       "$avant" > "$work/site/content/contact.en.md"
   fi
   (cd "$work/site" && hugo --environment production --minify --destination sortie) \
@@ -99,7 +99,7 @@ case_contact_aucune_cle_arrete_le_build() {
   # que de la publier.
   construire email
   # La page est réécrite sans aucune des trois clés.
-  printf -- '---\ntitle: "Contact"\ntranslationKey: contact\nslug: contact\n---\n\nTexte.\n\n{{< contact-list >}}\n' \
+  printf -- '---\ntitle: "Contact"\ndescription: "Description d essai."\ntranslationKey: contact\nslug: contact\n---\n\nTexte.\n\n{{< contact-list >}}\n' \
     > "$work/site/content/contact.fr.md"
   run bash -c 'cd "$1" && hugo --environment production --minify --destination sortie' _ "$work/site"
   assert_eq 1 "$rc" "une page Contact sans aucune clé arrête le build"

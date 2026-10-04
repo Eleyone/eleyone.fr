@@ -2,7 +2,7 @@
 title: "Format de sortie des cas clients"
 version: 0.5
 status: validated
-updated: 2026-10-02
+updated: 2026-10-04
 ---
 
 # Format de sortie des cas clients
@@ -66,6 +66,8 @@ live_material:                        # matériel vivant prévu (vide si aucun)
 ```
 
 La clé `featured` des versions précédentes n'existe plus : l'accueil est le CV, et chaque cas apparaît sous son poste.
+
+**`summary` est publié deux fois pour un cas qui a sa propre page** (cas sans groupe). Il fait l'encart « En bref », et il est aussi la description de la page — la `<meta name="description">` et l'`og:description` que lisent les moteurs de recherche et les aperçus d'un lien partagé (AD-25, story 9.8). Il s'écrit donc pour être lu hors de la page, sans renvoi au texte qui l'entoure. Un tel cas sans `summary` arrête le build, brouillon compris : le modèle vide porte un `[TODO: …]`, qu'on garde tant que le texte manque. Un cas groupé n'a pas de page à lui : la description est celle de la page du groupe, sa clé `description`.
 
 ### Vocabulaire de la stack
 

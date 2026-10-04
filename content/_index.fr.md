@@ -1,6 +1,7 @@
 ---
 title: "Arnaud Grousset · Développeur backend senior"
 translationKey: home
+description: "Développeur backend PHP et Symfony senior depuis 2008 : architecture, flux financiers fiables, jugement technique. Le CV et des cas concrets."
 identity: "Arnaud Grousset · Eleyone"
 based_in: "Basé en France"
 job_title: "Développeur backend senior"

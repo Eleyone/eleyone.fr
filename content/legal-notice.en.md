@@ -2,7 +2,7 @@
 title: "Legal notice"
 translationKey: legal-notice
 slug: legal-notice
-description: "Publisher, publication director and hosting provider of eleyone.fr."
+description: "Legal notice for eleyone.fr: the site's publisher, publication director and host."
 ---
 
 Information published under [article 1-1 of French Act no. 2004-575 of 21 June 2004](https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000049568614) on confidence in the digital economy, and under its [article 19](https://www.legifrance.gouv.fr/loda/article_lc/LEGIARTI000032236011).
