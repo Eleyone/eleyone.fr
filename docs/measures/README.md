@@ -8,6 +8,8 @@ Chaque fichier consigne, pour la version qu'il nomme :
 - le poids réel des pages servies, à comparer au budget d'AD-8 que `scripts/checks/budget.sh` fait respecter sur le build non compressé ;
 - tout écart constaté entre la mesure de mise en ligne et le contrôle local, avec son explication.
 
-Rien n'y est encore écrit : le site n'est pas déployé. Le dossier existe parce que le README public y renvoie, et qu'un lien mort dans un dépôt public vaut moins que rien.
+Il reçoit aussi `thirty-second-test.md`, le test des trente secondes (`EXPERIENCE.md`, story 11.10) : une section par session — sur le site de répétition avant la mise en ligne, puis sur le site en ligne —, un tableau par passage, sans aucun nom ni donnée personnelle.
+
+Aucune mesure de performance n'y est encore écrite : le site n'est pas déployé. Le dossier existe parce que le README public y renvoie, et qu'un lien mort dans un dépôt public vaut moins que rien.
 
 **Anticipation déclarée** (point 7 d'`AGENTS.md`) : ce fichier appartient à la story de première mise en ligne (epic 11, procédure « premier déploiement » de l'architecture, étape 8). La story 3.15 n'a créé que ce texte, et aucune mesure.

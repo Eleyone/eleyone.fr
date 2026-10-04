@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '10-03-2026 10:03'
+last_updated: '10-04-2026 12:59'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -153,7 +153,7 @@ development_status:
   11-7-release-skill: done
   11-8-rehearse-release-skill: done
   11-9-first-release-chain-rehearsal: done
-  11-10-thirty-second-test: backlog
+  11-10-thirty-second-test: done
   11-11-first-base-deployment-and-ip-free-proxy: backlog
   11-12-hotfix-skill: backlog
   11-13-production-rollback-on-second-deployment: backlog

@@ -3495,6 +3495,8 @@ afin de retoucher le haut de l'accueil avant la mise en ligne s'il le faut.
 **Quand** moins de quatre testeurs réussissent
 **Alors** le titre, le pitch ou le premier poste sont retouchés, FR-37 est revérifié, et le test est refait avant la story 11.11.
 
+*Révision du 04/10/2026 (arbitrage d'Arnaud) : le critère de la répétition est rempli (`v1.0.0-rc.1` et `rc.2`, 03/10/2026) ; les deux critères du test des trente secondes sont déplacés après la story 11.11, où le test devient une case de sa check-list. Les testeurs, par partage d'écran sur le site de répétition, n'ont donné qu'un avis global — « c'est bien » —, sans les réponses que la méthode demande : ce n'est pas un résultat, et il n'est pas consigné comme tel.*
+
 ### Story 11.11 : First base deployment and IP-free proxy
 
 En tant que Claire, CTO (UJ-1),
@@ -3502,7 +3504,7 @@ je veux ouvrir le site en ligne, en HTTPS, dans ma langue,
 afin de lire le CV et les preuves depuis le lien reçu.
 
 **Couvre :** FR-19, FR-32, FR-37, NFR-2 à NFR-5, NFR-13, SM-6, SM-8 · AD-14, AD-15, AD-17, procédure « premier déploiement » (étapes 4 à 8) · C15
-**Dépendances :** 11.7, 11.10 ; socle prêt (stories 9.1 à 9.4, 10.1 à 10.7, 10.9)
+**Dépendances :** 11.7, 11.10 ; socle prêt (stories 9.1 à 9.4, 10.1 à 10.7, 10.9). *Depuis le 04/10/2026 (arbitrage d'Arnaud, story 11.10), la 11.10 livre la répétition sur l'arbre du socle ; le test des trente secondes est passé après cette story-ci, par la case ci-dessous.*
 **Ordre (proposition du 02/10/2026) :** joue après 10.9 ; après 10.10 si son prérequis de contenu est rempli, sinon 10.10 passe après 11.11.
 **Bloquée par :** — (**levée le 25/09/2026**, même raison que la story 11.10 : le socle est complet depuis les stories 10.6 et 10.7)
 **Prérequis de contenu :** ceux des stories du socle ; les CV PDF ne sont pas requis.
@@ -3529,6 +3531,7 @@ afin de lire le CV et les preuves depuis le lien reçu.
 - [ ] Directives NPM recopiées dans `deploy/proxy/npm-advanced.conf`, sans nom d'hôte ni adresse.
 - [ ] Mesure PageSpeed Insights mobile de chaque gabarit (accueil CV, page de cas, page de groupe, page simple, 404) consignée dans `docs/measures/v1.0.0.md` par une PR ordinaire.
 - [ ] La politique de confidentialité est vraie sur toute la chaîne.
+- [ ] Test des trente secondes, **seul passage** (arbitrage d'Arnaud du 04/10/2026, story 11.10) : selon la méthode d'`EXPERIENCE.md` — cinq testeurs dont au moins un CTO ou tech lead, un recruteur tech francophone et un lecteur de la version anglaise ; lien envoyé directement, ouvert sur le téléphone du testeur ; trente secondes, trois questions notées, touchers jusqu'à une section de cas —, chaque passage consigné dans `docs/measures/thirty-second-test.md`, sans nom. Moins de quatre réussites : titre, pitch ou premier poste retouchés, FR-37 revérifié, publiés par une mise en ligne ordinaire (`release`), et le test refait.
 
 ### Story 11.12 : Hotfix skill
 
