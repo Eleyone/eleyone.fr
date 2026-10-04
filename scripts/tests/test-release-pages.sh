@@ -12,7 +12,7 @@
 # B2 de la rétrospective de l'epic 7). Chaque page déclare aussi son encodage : sans
 # « <meta charset=utf-8> », xmllint la lit en Latin-1 et les motifs cessent de correspondre en
 # silence (point 16 d'AGENTS.md).
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 page() { # $1 = chemin relatif dans public/, $2 = contenu du body
   mkdir -p "$(dirname "$work/public/$1")"
@@ -160,7 +160,7 @@ case_release_pages_liste_absente() {
 case_release_pages_liste_vide_nest_pas_une_conformite() {
   # Un fichier **présent mais vide** — ou qui n'a que des commentaires — passerait pour une
   # conformité : c'est le piège déjà rencontré avec le fichier de motifs, qui désactivait l'audit
-  # sans rien dire (docs/procedures/shell-scripts.md).
+  # sans rien dire (.working-method/procedures/shell-scripts.md).
   site
   liste
   c15

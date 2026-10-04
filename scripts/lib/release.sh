@@ -1,5 +1,5 @@
 # Décisions de la mise en ligne (scripts/release.sh), séparées des appels à la forge pour être
-# éprouvées sur des fichiers et sur un dépôt git jetable — comme scripts/lib/merge-gates.sh l'est
+# éprouvées sur des fichiers et sur un dépôt git jetable — comme .working-method/gates/merge-gates.sh l'est
 # pour les verrous de fusion.
 #
 # À charger par « . scripts/lib/release.sh ». Dépendances : bash, git, grep GNU.
@@ -22,8 +22,9 @@
 # Procédure : docs/procedures/release.md
 
 release_lib_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) || exit 2
-# shellcheck source=shell.sh
-. "$release_lib_dir/shell.sh"
+# shell.sh vit dans l'outillage commun (sous-module .working-method, story outillage-14)
+# shellcheck source=../../.working-method/lib/shell.sh
+. "$release_lib_dir/../../.working-method/lib/shell.sh"
 
 # Les deux canaux, en expressions **disjointes** et ancrées, sans zéro de tête. Le même couple vit
 # dans scripts/release/ship.sh et dans deploy/remote/deploy-site.sh, qui est recopié seul sur le
@@ -41,7 +42,7 @@ release_rc_same_tree() { # $1 = tag de production, $2 = commit ou tag dont on co
   release_rc_found=""
   local prefix=$1 tree=$2 list rc number code
   # Le motif est un **glob littéral** : « . » n'y est pas un joker, à la différence d'une expression
-  # régulière construite depuis une variable (piège connu, docs/procedures/shell-scripts.md).
+  # régulière construite depuis une variable (piège connu, .working-method/procedures/shell-scripts.md).
   list=$(git tag --list "$prefix-rc.*") || return 2
   while IFS= read -r rc; do
     [[ -n $rc ]] || continue

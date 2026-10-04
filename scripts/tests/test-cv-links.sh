@@ -7,13 +7,13 @@
 #
 # Les PDF d'essai sont fabriqués octet par octet, comme dans test-pdf.sh : aucun n'entre dans le
 # dépôt. Hors ligne, avec le Hugo épinglé.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 script_name=test-cv-links
 . "$root/scripts/lib/tools.sh"
 
 readonly insecable=$' '
 
-# Le PDF d'essai vient de « tests_pdf » (scripts/tests/lib.sh) : son cinquième paramètre est le
+# Le PDF d'essai vient de « tests_pdf » (.working-method/tests/lib.sh) : son cinquième paramètre est le
 # bourrage, qui pèse le fichier pour vérifier le poids annoncé dans le libellé.
 # $1… : les noms de CV à poser dans assets/cv/ ; aucun argument pour un dossier vide.
 construire() {

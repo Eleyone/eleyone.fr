@@ -16,7 +16,7 @@
 # ici, qu'aucun aîné n'avait : l'affirmation qu'aucune méthode d'écriture n'est jamais envoyée — un
 # contrôle qui poserait ou supprimerait un secret serait bien pire que pas de contrôle du tout.
 # Le tableau complet est dans le fichier de la story 11.6.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 script=$root/scripts/release/check-forge-secrets.sh
 depot=$work/depot
@@ -116,6 +116,8 @@ depot_de_test() {
   mkdir -p "$depot/ci"
   cp "$root/ci/legal-placeholder.env" "$depot/ci/legal-placeholder.env"
   cp "$root/ci/release-secrets.txt" "$depot/ci/release-secrets.txt"
+  # le workflow.config du projet : l'outillage commun y lit le dépôt canonique (forge.repo)
+  cp "$root/workflow.config" "$depot/workflow.config"
   printf 'site\n' > "$depot/site.txt"
   git -C "$depot" add -A
   git -C "$depot" commit -q -m "dépôt d'essai"

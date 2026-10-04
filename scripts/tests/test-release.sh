@@ -20,7 +20,7 @@
 # quoi que ce soit, vérification qu'aucun effet n'a eu lieu après un refus) et comme
 # test-merge-gates.sh (réponses de la forge en fichiers). Le tableau complet est dans le fichier de
 # story.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 script=$root/scripts/release.sh
 depot=$work/depot
@@ -176,16 +176,17 @@ pr_ouverte() { # $1 = SHA de tête ; la réponse d'une PR dev → main fusionnab
 
 # Un script témoin à la place d'un contrôle : il note son nom et ses arguments, puis rend le code
 # écrit dans $work/code-<nom> (0 par défaut).
-temoin() { # $1 = nom
-  mkdir -p "$depot/scripts"
+temoin() { # $1 = nom, $2 = dossier du témoin dans le dépôt (scripts)
+  local dossier=${2:-scripts}
+  mkdir -p "$depot/$dossier"
   {
     printf '#!/bin/sh\n'
     printf 'printf "%%s %%s\\n" "%s" "$*" >> %q\n' "$1" "$work/controles"
     printf 'if [ -f %q/code-%s ]; then printf "refus de %s\\n" >&2; exit "$(cat %q/code-%s)"; fi\n' \
       "$work" "$1" "$1" "$work" "$1"
     printf 'exit 0\n'
-  } > "$depot/scripts/$1.sh"
-  chmod +x "$depot/scripts/$1.sh"
+  } > "$depot/$dossier/$1.sh"
+  chmod +x "$depot/$dossier/$1.sh"
 }
 
 controles_lances() { [[ -f $work/controles ]] && cat "$work/controles"; return 0; }
@@ -213,7 +214,10 @@ case-05"}
   new_repo
   mkdir -p "$depot/ci" "$depot/scripts"
   temoin check-private
-  temoin sprint-consistency
+  # la cohérence du suivi vit dans l'outillage commun : son témoin prend sa place dans le sous-module
+  temoin sprint-consistency .working-method/gates
+  # le workflow.config du projet : l'outillage commun y lit le dépôt canonique (forge.repo)
+  cp "$root/workflow.config" "$depot/workflow.config"
   printf '.env\n' > "$depot/.gitignore"
   cp "$root/ci/bootstrap-commits.txt" "$depot/ci/bootstrap-commits.txt"
   cp "$root/ci/base-pages.txt" "$depot/ci/base-pages.txt"

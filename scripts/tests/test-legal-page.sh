@@ -9,7 +9,7 @@
 # et aucune valeur du poste n'entre dans un cas : l'environnement est posé explicitement, jamais
 # hérité. Un cas qui hériterait de « .env » lirait de vraies coordonnées et les écrirait dans un
 # rendu de test.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 script_name=test-legal-page
 . "$root/scripts/lib/tools.sh"
 

@@ -54,7 +54,7 @@ signaler() { checks_report "$1" "$2"; fail=1; }
 # --- la liste attendue ----------------------------------------------------------------------------
 # Commentaires et lignes vides écartés. Un fichier **présent mais vide** n'est pas une conformité :
 # c'est le piège déjà rencontré avec le fichier de motifs, qui désactivait l'audit sans rien dire
-# (docs/procedures/shell-scripts.md).
+# (.working-method/procedures/shell-scripts.md).
 shell_grep_into liste_attendues -vE '^[[:space:]]*(#|$)' "$expected_file"
 liste_attendues=$(sed -e 's/\r$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' <<< "$liste_attendues")
 [[ -n $liste_attendues ]] \

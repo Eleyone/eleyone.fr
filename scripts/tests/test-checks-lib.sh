@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Bibliothèque des contrôles (story 3.1) : découverte des manifestes du rendu de travail.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # checks_die s'arrête par « exit » : chaque appel tourne dans son propre bash, comme un contrôle réel,
 # sinon l'arrêt terminerait le cas de test lui-même.

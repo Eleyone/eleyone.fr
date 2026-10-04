@@ -30,14 +30,18 @@ set +x # même lancé avec bash -x, la trace s'arrête ici, avant la lecture du 
 
 script_name=release/check-forge-secrets
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-# shellcheck source=../lib/gitea.sh
-. "$script_dir/lib/gitea.sh"
-# shellcheck source=../lib/shell.sh
-. "$script_dir/lib/shell.sh"
+# L'adaptateur et les enveloppes vivent dans l'outillage commun (sous-module .working-method, story
+# outillage-14) ; l'adaptateur exige le lecteur de workflow.config.
+# shellcheck source=../../.working-method/lib/config.sh
+. "$script_dir/../.working-method/lib/config.sh"
+# shellcheck source=../../.working-method/gitea/gitea.sh
+. "$script_dir/../.working-method/gitea/gitea.sh"
+# shellcheck source=../../.working-method/lib/shell.sh
+. "$script_dir/../.working-method/lib/shell.sh"
 # shellcheck source=../lib/secrets.sh
 . "$script_dir/lib/secrets.sh"
 
-# die redéfinit celui de scripts/lib/gitea.sh : ici, une lecture impossible est une **anomalie**
+# die redéfinit celui de .working-method/gitea/gitea.sh : ici, une lecture impossible est une **anomalie**
 # (code 2), pas un refus. Les fonctions de la bibliothèque appellent cette définition-ci.
 die() { printf '%s: %b\n' "$script_name" "$*" >&2; exit 2; }
 refuse() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 1; }
@@ -55,11 +59,14 @@ readonly plafond_liste=20
 
 root=$(git rev-parse --show-toplevel 2>/dev/null) || die "à lancer dans le dépôt."
 cd "$root"
+# workflow.config, lu par l'outillage commun : forge.repo y nomme le dépôt canonique (gitea_configure)
+config_load "$root/workflow.config" || exit 2
+gitea_configure
 
 require_tools
 # Le dépôt distant est confronté au dépôt canonique **avant** tout appel : sans cela, le jeton
 # partirait interroger les secrets d'un dépôt que personne n'a demandé (garde de l'aîné
-# scripts/verify-and-merge-pr.sh).
+# .working-method/gates/verify-and-merge-pr.sh).
 check_origin
 
 tmp=$(mktemp -d) || die "dossier temporaire impossible."

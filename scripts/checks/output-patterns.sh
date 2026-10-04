@@ -131,7 +131,7 @@ patterns_file=${PRIVATE_PATTERNS_FILE:-$racine_depot/docs/private/forbidden-patt
 # Les deux fichiers qu'exige « pdf_confront » : la liste sous la forme « numéro:motif », pour que le
 # signalement cite un numéro de ligne, et les motifs nus pour le premier passage « grep -f ».
 # Deux commandes, chacune avec son arrêt : « a && b || die » suspend « set -e » pour tout le bloc,
-# ce que docs/procedures/shell-scripts.md proscrit.
+# ce que .working-method/procedures/shell-scripts.md proscrit.
 patterns=$(mktemp) || checks_die "fichier temporaire impossible."
 temporaires+=("$patterns")
 patterns_text=$(mktemp) || checks_die "fichier temporaire impossible."
@@ -143,7 +143,7 @@ rc=0
 grep -vE '^[[:space:]]*(#|$)' "$patterns_file" > "$patterns_text" 2>/dev/null || rc=$?
 ((rc <= 1)) || checks_die "liste des motifs illisible ($patterns_file)"
 # Un fichier **présent mais vide** n'est pas une conformité : le piège est déjà consigné
-# (docs/procedures/shell-scripts.md, story 0.8), et ici il désactiverait le contrôle entier.
+# (.working-method/procedures/shell-scripts.md, story 0.8), et ici il désactiverait le contrôle entier.
 [[ -s $patterns ]] \
   || checks_die "aucun motif dans $patterns_file : le contrôle ne chercherait rien et passerait pour vert."
 

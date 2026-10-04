@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Hook pre-receive de Gitea (scripts/gitea/pre-receive-check-private), story 1.2 : dépôt nu jetable dont le
 # hook pre-receive imite celui que Gitea génère, et dossier $GITEA_CUSTOM jetable. Motif factice seulement.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # $1 « sans-variable » pour lancer le hook sans GITEA_CUSTOM
 install_hook() {
@@ -38,7 +38,7 @@ EOF
   git -C "$work/depot" remote add origin "$work/nu.git"
 }
 
-# Le PDF d'essai vient de « tests_pdf » (scripts/tests/lib.sh) : le motif éventuel va dans les
+# Le PDF d'essai vient de « tests_pdf » (.working-method/tests/lib.sh) : le motif éventuel va dans les
 # **métadonnées**, là où il se cache dans un vrai export.
 commit_file() { # $1 chemin, $2 contenu
   mkdir -p "$(dirname "$work/depot/$1")"

@@ -10,7 +10,7 @@ docs/private/
 # Artefacts de téléchargement Windows
 *:Zone.Identifier
 
-# Corps de PR de scripts/create-pull-request.sh, réécrit à chaque PR
+# Corps de PR de .working-method/gitea/create-pull-request.sh, réécrit à chaque PR
 .pr-body.md
 
 # Outils épinglés installés en local par scripts/ci/install-tools.sh --local (AD-1, D-15)

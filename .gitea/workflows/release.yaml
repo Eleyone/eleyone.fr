@@ -33,6 +33,11 @@ jobs:
           # tout l'historique, les branches distantes et les tags : le job demande à git si le tag
           # descend de origin/main ou de origin/dev, et cherche un tag -rc de même arbre (AD-22)
           fetch-depth: 0
+          # l'outillage commun, sous-module .working-method (URL relative : le dépôt working-method de la
+          # même forge). La forge exige une connexion pour lire (REQUIRE_SIGNIN_VIEW) : le clone passe
+          # par le jeton du job, que checkout emploie sans qu'on le nomme (entrée « token », par défaut).
+          # Sans sous-module, le job échoue : il ne contrôle jamais sans l'outillage.
+          submodules: recursive
       - run: bash scripts/ci/release-job.sh
         env:
           HUGO_LEGAL_PUBLISHER_NAME: ${{ secrets.HUGO_LEGAL_PUBLISHER_NAME }}

@@ -10,7 +10,7 @@
 # que le poste porte et la CI non. La quatrième garde de l'aîné — le repli sur docs/private/ affirmé
 # dans ses deux issues — n'a pas d'objet ici : l'enveloppe ne lit aucun fichier du dépôt privé, elle
 # écrit les siens. Le tableau complet est dans le fichier de story.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # Le faux docker écrit ses arguments **et recopie les fichiers de secrets** : c'est le seul moyen de
 # voir ce que l'enveloppe a écrit dedans, puisqu'elle les supprime en sortant. Les copies vivent
@@ -153,7 +153,7 @@ case_release_build_image_valeur_factice() {
 }
 
 case_release_build_image_valeur_avec_guillemet() {
-  # scripts/lib/dotenv.sh coupe une valeur entre guillemets au guillemet suivant : la valeur serait
+  # .working-method/lib/dotenv.sh coupe une valeur entre guillemets au guillemet suivant : la valeur serait
   # tronquée en silence, et l'image servirait des mentions légales fausses sans qu'un contrôle
   # puisse le voir.
   faux_docker 0
@@ -215,7 +215,7 @@ case_release_build_image_le_fichier_legal_se_relit_a_lidentique() {
   enveloppe v1.2.3 "HUGO_LEGAL_PUBLISHER_ADDRESS=$valeur"
   assert_eq 0 "$rc" "le build passe (messages : $err)"
   [[ -f $work/secrets/legal_env ]] || { echo "le secret legal_env n'a pas été monté" >&2; exit 1; }
-  . "$root/scripts/lib/dotenv.sh"
+  . "$root/.working-method/lib/dotenv.sh"
   local lignes relue=""
   lignes=$(dotenv_read "$work/secrets/legal_env" HUGO_LEGAL_)
   while IFS= read -r ligne; do

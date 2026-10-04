@@ -5,7 +5,7 @@
 # chiffre ressemble à la bonne. Ces cas confrontent la feuille au bloc de tokens en tête de
 # DESIGN.md, qui est la source. Les valeurs purement fonctionnelles (100%, 0, calc()) n'en sont pas :
 # elles ne portent aucune décision, et le cas ne les regarde pas.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 css="$root/assets/css/main.css"
 design="$root/_bmad-output/planning-artifacts/ux-designs/ux-eleyone.fr-2026-09-13/DESIGN.md"

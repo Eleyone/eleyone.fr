@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Build du site (story 2.2) : arguments de build.sh, commandes exactes d'AD-5, vérification de version.
 # Hors ligne : hugo est bouchonné et consigne ses arguments ; aucun site n'est construit ici.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # tools.env d'essai : seule la version de Hugo compte pour ces cas
 essai_env() { # $1 version annoncée par le hugo bouchonné

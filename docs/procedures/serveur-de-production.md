@@ -371,7 +371,7 @@ Attendu : les deux empreintes sont identiques. Si elles diffèrent, s'arrêter �
 
 ### Les quatre autres, par l'API
 
-Le jeton passe par **l'entrée standard** de `curl`, jamais par la ligne de commande, où la liste des processus l'exposerait : c'est la garde de `scripts/lib/gitea.sh`. La valeur, elle, vient d'un **fichier**, jamais d'un argument, et le corps JSON est composé par `jq`, jamais par concaténation.
+Le jeton passe par **l'entrée standard** de `curl`, jamais par la ligne de commande, où la liste des processus l'exposerait : c'est la garde de `.working-method/gitea/gitea.sh`. La valeur, elle, vient d'un **fichier**, jamais d'un argument, et le corps JSON est composé par `jq`, jamais par concaténation.
 
 Depuis la racine du dépôt, sur le poste. `.env` n'est pas chargé par `source` — le projet ne le fait nulle part —, ses deux valeurs sont lues champ par champ, sans être affichées :
 

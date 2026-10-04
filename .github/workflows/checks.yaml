@@ -32,4 +32,8 @@ jobs:
         with:
           # tout l'historique : le garde-fou du job l'audite en entier (C1, AD-12)
           fetch-depth: 0
+          # l'outillage commun, sous-module .working-method : son URL relative se résout ici vers le
+          # miroir public github.com/Eleyone/working-method (.working-method/procedures/github-mirror.md),
+          # lisible sans compte. Tant que ce miroir n'existe pas, ce job échoue — jamais sans l'outillage.
+          submodules: recursive
       - run: bash scripts/ci/checks-job.sh

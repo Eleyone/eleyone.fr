@@ -14,7 +14,7 @@
 # Gardes ajoutées ici : un faux ssh qui relève les **droits** du fichier de clé qu'on lui donne, et
 # la lecture de PIPESTATUS, que le pipeline de livraison rend nécessaire. Le tableau complet est dans
 # le fichier de story.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 script=$root/scripts/release/ship.sh
 
@@ -421,7 +421,7 @@ case_ship_outil_absent() {
 # --- le pipeline, cœur de cette story ---------------------------------------------------------------------
 
 # « docker save | gzip | ssh » est un pipeline de trois commandes. Le projet s'est déjà fait mordre
-# deux fois par leurs codes de retour (docs/procedures/shell-scripts.md). Ces trois cas exercent
+# deux fois par leurs codes de retour (.working-method/procedures/shell-scripts.md). Ces trois cas exercent
 # chacun des trois éléments en échec : c'est **l'entrée que la garde doit refuser** (point 9).
 case_ship_docker_save_en_echec() {
   # Le pire résultat possible de cette story : une archive tronquée livrée en production. Le faux

@@ -42,7 +42,7 @@ require_tool_version hugo .tools/hugo "$HUGO_VERSION"
 2. Modifier `tools.env`, et lui seul : version, nom d'archive, adresse, empreinte.
 3. `scripts/ci/install-tools.sh --local`, puis vérifier que les deux binaires annoncent la nouvelle version.
 4. Pour l'image de contrôle, relever le nouveau digest (`docker inspect --format '{{index .RepoDigests 0}}' alpine:3.24`) et le porter dans `CHECK_IMAGE`.
-5. Rejouer `scripts/tests/run.sh`, puis la CI : c'est elle qui prouve que les trois environnements sont alignés.
+5. Rejouer `.working-method/tests/run.sh`, puis la CI : c'est elle qui prouve que les trois environnements sont alignés.
 
 ## Tests hors ligne
 
@@ -61,5 +61,5 @@ require_tool_version hugo .tools/hugo "$HUGO_VERSION"
 - **`alpine:3.24` n'a pas `bash`** : d'où l'amorçage en sh POSIX. Appeler `install-tools.sh` directement dans l'image donne `env: can't execute 'bash'`.
 - **`sha256sum` de BusyBox** ne connaît ni `--status` ni le format long de GNU : l'empreinte est donc calculée puis comparée par le script lui-même, ce qui marche des deux côtés. Une empreinte n'est pas un secret, elle peut être affichée.
 - **`curl` est absent d'`alpine:3.24`** : les paquets s'installent avant tout téléchargement, jamais après.
-- **Le `find` de BusyBox ignore `-printf`** (story 3.12) : `scripts/tests/run.sh` s'en sert pour relever l'état de `public/` et de `build/`, et la suite échouait dans l'image avec l'aide de `find`. D'où `findutils` dans `CHECK_PACKAGES`, comme `grep` GNU : le poste et l'image se comportent pareil.
+- **Le `find` de BusyBox ignore `-printf`** (story 3.12) : `.working-method/tests/run.sh` s'en sert pour relever l'état de `public/` et de `build/`, et la suite échouait dans l'image avec l'aide de `find`. D'où `findutils` dans `CHECK_PACKAGES`, comme `grep` GNU : le poste et l'image se comportent pareil.
 - **`xmllint` ne rend pas le même code pour « aucun nœud »** selon la version de libxml2 (story 3.12) : 10 en 2.9 (le poste), 11 en 2.13 (l'image), qui garde 10 pour une requête mal écrite. `checks_xpath` tolère les deux ; un fichier illisible rend 1 des deux côtés.

@@ -24,4 +24,9 @@ jobs:
         with:
           # tout l'historique : le garde-fou du job l'audite en entier (C1, AD-12)
           fetch-depth: 0
+          # l'outillage commun, sous-module .working-method (URL relative : le dépôt working-method de la
+          # même forge). La forge exige une connexion pour lire (REQUIRE_SIGNIN_VIEW) : le clone passe
+          # par le jeton du job, que checkout emploie sans qu'on le nomme (entrée « token », par défaut).
+          # Sans sous-module, le job échoue : il ne contrôle jamais sans l'outillage.
+          submodules: recursive
       - run: bash scripts/ci/checks-job.sh

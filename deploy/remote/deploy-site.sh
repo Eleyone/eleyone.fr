@@ -201,7 +201,7 @@ exige_compose() {
 }
 
 # Enveloppe unique des appels à Docker : le code est rendu, la sortie est gardée dans un fichier du
-# dossier de travail. Écrite une fois (docs/procedures/shell-scripts.md) plutôt qu'une fois par appel.
+# dossier de travail. Écrite une fois (.working-method/procedures/shell-scripts.md) plutôt qu'une fois par appel.
 docker_rc=0
 docker_sortie=$travail/sortie
 docker_appel() { # $@ = arguments de docker ; sortie et erreur dans $docker_sortie

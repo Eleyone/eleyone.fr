@@ -7,7 +7,7 @@
 # la table des références croisées, donc il n'y a rien à calculer.
 #
 # Hors ligne. Dépend de poppler-utils, prérequis du poste et présent dans CHECK_IMAGE.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 # La bibliothèque est chargée pour être éprouvée **en direct**, comme test-images.sh le fait de
 # lib/image.sh : depuis qu'elle porte la confrontation aux motifs, son chemin « code 2 » n'est
 # atteignable par aucun test d'intégration (constat A2, rétrospective de l'epic 7).
@@ -15,7 +15,7 @@
 
 readonly motif=MOTIFFACTICE
 
-# Le PDF d'essai est fabriqué par « tests_pdf » de scripts/tests/lib.sh : une seule écriture
+# Le PDF d'essai est fabriqué par « tests_pdf » de .working-method/tests/lib.sh : une seule écriture
 # pour les trois fichiers de test qui en avaient chacun la sienne (constat A3).
 liste() { # écrit une liste de motifs et rend son chemin
   printf '# commentaire\n%s\n' "$motif" > "$work/motifs.txt"
@@ -34,7 +34,7 @@ vide() { rm -rf "$work/cv"; mkdir -p "$work/cv"; }
 
 # Un TMPDIR **qui n'appartient qu'au cas** : « ${TMPDIR:-/tmp} » est partagé avec le reste de la
 # machine, et un cas qui compte là-dedans suppose son environnement (piège connu de
-# docs/procedures/shell-scripts.md). Ici, tout ce qui s'y trouve vient du script qu'on éprouve.
+# .working-method/procedures/shell-scripts.md). Ici, tout ce qui s'y trouve vient du script qu'on éprouve.
 #
 # La fonction rend le chemin et ne lance rien : une première écriture lançait la commande et
 # rendait le seul compte, en avalant le code de sortie par un « || true ». Un script mort avant
@@ -118,6 +118,8 @@ case_pdf_un_code_inattendu_nest_pas_un_fichier_propre() {
   rm -rf "$arbre"; mkdir -p "$arbre/scripts/checks" "$arbre/scripts/lib" "$arbre/cv"
   cp "$root/scripts/checks/pdf.sh" "$root/scripts/checks/lib.sh" "$arbre/scripts/checks/"
   cp "$root"/scripts/lib/*.sh "$arbre/scripts/lib/"
+  # les bibliothèques de l'outillage commun que celles du projet chargent (shell.sh, dotenv.sh)
+  mkdir -p "$arbre/.working-method/lib" && cp "$root"/.working-method/lib/*.sh "$arbre/.working-method/lib/"
   # La bibliothèque copiée rend 7 : ni « rien », ni « trouvé », ni « recherche impossible ».
   printf '\npdf_confront() { return 7; }\n' >> "$arbre/scripts/lib/pdf.sh"
   tests_pdf "$arbre/cv/cv-fr.pdf" "Parcours"
@@ -299,6 +301,8 @@ case_pdf_le_pre_commit_lance_c21_avant_le_garde_fou() {
   git -C "$depot" config user.name Essai
   cp "$root/scripts/checks/pdf.sh" "$root/scripts/checks/lib.sh" "$depot/scripts/checks/"
   cp "$root"/scripts/lib/*.sh "$depot/scripts/lib/"
+  # les bibliothèques de l'outillage commun que celles du projet chargent (shell.sh, dotenv.sh)
+  mkdir -p "$depot/.working-method/lib" && cp "$root"/.working-method/lib/*.sh "$depot/.working-method/lib/"
   # La seule règle retirée est celle du chemin des PDF ; tout le reste du garde-fou est le vrai.
   cp "$root/scripts/check-private.sh" "$depot/scripts/check-private.sh"
   chmod +x "$depot/scripts/check-private.sh"
@@ -347,6 +351,8 @@ case_pdf_le_pre_commit_ne_lance_c21_que_pour_assets_cv() {
   git -C "$depot" config user.name Essai
   cp "$root/scripts/checks/pdf.sh" "$root/scripts/checks/lib.sh" "$depot/scripts/checks/"
   cp "$root"/scripts/lib/*.sh "$depot/scripts/lib/"
+  # les bibliothèques de l'outillage commun que celles du projet chargent (shell.sh, dotenv.sh)
+  mkdir -p "$depot/.working-method/lib" && cp "$root"/.working-method/lib/*.sh "$depot/.working-method/lib/"
   cp "$root/scripts/check-private.sh" "$depot/scripts/"
   cp "$root/.githooks/pre-commit" "$depot/.githooks/"
   git -C "$depot" config core.hooksPath .githooks
@@ -381,6 +387,8 @@ case_pdf_le_pre_commit_voit_un_nom_non_ascii() {
   git -C "$depot" config user.name Essai
   cp "$root/scripts/checks/pdf.sh" "$root/scripts/checks/lib.sh" "$depot/scripts/checks/"
   cp "$root"/scripts/lib/*.sh "$depot/scripts/lib/"
+  # les bibliothèques de l'outillage commun que celles du projet chargent (shell.sh, dotenv.sh)
+  mkdir -p "$depot/.working-method/lib" && cp "$root"/.working-method/lib/*.sh "$depot/.working-method/lib/"
   cp "$root/scripts/check-private.sh" "$depot/scripts/check-private.sh"
   chmod +x "$depot/scripts/check-private.sh"
   cp "$root/.githooks/pre-commit" "$depot/.githooks/"
@@ -407,6 +415,8 @@ case_pdf_le_pre_commit_voit_une_suppression() {
   git -C "$depot" config user.name Essai
   cp "$root/scripts/checks/pdf.sh" "$root/scripts/checks/lib.sh" "$depot/scripts/checks/"
   cp "$root"/scripts/lib/*.sh "$depot/scripts/lib/"
+  # les bibliothèques de l'outillage commun que celles du projet chargent (shell.sh, dotenv.sh)
+  mkdir -p "$depot/.working-method/lib" && cp "$root"/.working-method/lib/*.sh "$depot/.working-method/lib/"
   cp "$root/scripts/check-private.sh" "$depot/scripts/check-private.sh"
   chmod +x "$depot/scripts/check-private.sh"
   cp "$root/.githooks/pre-commit" "$depot/.githooks/"
@@ -437,6 +447,8 @@ case_pdf_le_pre_commit_voit_un_changement_de_type() {
   git -C "$depot" config user.name Essai
   cp "$root/scripts/checks/pdf.sh" "$root/scripts/checks/lib.sh" "$depot/scripts/checks/"
   cp "$root"/scripts/lib/*.sh "$depot/scripts/lib/"
+  # les bibliothèques de l'outillage commun que celles du projet chargent (shell.sh, dotenv.sh)
+  mkdir -p "$depot/.working-method/lib" && cp "$root"/.working-method/lib/*.sh "$depot/.working-method/lib/"
   cp "$root/scripts/check-private.sh" "$depot/scripts/check-private.sh"
   chmod +x "$depot/scripts/check-private.sh"
   cp "$root/.githooks/pre-commit" "$depot/.githooks/"
@@ -494,6 +506,8 @@ case_pdf_le_pre_commit_lit_lindex_et_non_larbre() {
   git -C "$depot" config user.name Essai
   cp "$root/scripts/checks/pdf.sh" "$root/scripts/checks/lib.sh" "$depot/scripts/checks/"
   cp "$root"/scripts/lib/*.sh "$depot/scripts/lib/"
+  # les bibliothèques de l'outillage commun que celles du projet chargent (shell.sh, dotenv.sh)
+  mkdir -p "$depot/.working-method/lib" && cp "$root"/.working-method/lib/*.sh "$depot/.working-method/lib/"
   cp "$root/scripts/check-private.sh" "$depot/scripts/check-private.sh"
   chmod +x "$depot/scripts/check-private.sh"
   cp "$root/.githooks/pre-commit" "$depot/.githooks/"

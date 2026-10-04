@@ -40,8 +40,11 @@ if [ "${1:-}" = "--steps" ]; then
   # journal de CI muet ne permet pas de savoir ce qui a tourné.
   echo "$script_name: garde-fou public/privé sur tout l'historique."
   "$root/scripts/check-private.sh" history
+  # Le harnais vit dans l'outillage commun (sous-module .working-method) : il lance les tests du
+  # projet, fichier par fichier. Le prérequis bash est vérifié d'abord, en sh.
+  sh "$root/.working-method/bin/check-bash"
   echo "$script_name: tests des scripts."
-  "$root/scripts/tests/run.sh"
+  "$root/.working-method/tests/run.sh" "$root"/scripts/tests/test-*.sh
   echo "$script_name: contrôles."
   "$root/scripts/check.sh"
   exit 0

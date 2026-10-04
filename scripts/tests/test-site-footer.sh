@@ -13,7 +13,7 @@
 # Les autres fichiers de test touchent au pied de page pour ce qu'il **contient** — le libellé et
 # le poids d'un CV (`test-cv-links.sh`), les liens des pages simples (`test-legal-page.sh`). Celui-ci
 # ne juge que sa présence et celle de ses entrées.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 script_name=test-site-footer
 . "$root/scripts/lib/tools.sh"
 

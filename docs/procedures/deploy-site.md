@@ -86,7 +86,7 @@ La séquence complète — tags, attente, tunnel, vérifications, retour arrièr
 ## Tests
 
 ```bash
-bash scripts/tests/run.sh scripts/tests/test-deploy-site.sh
+bash .working-method/tests/run.sh scripts/tests/test-deploy-site.sh
 ```
 
 Les cas tournent **hors ligne** : un faux `docker` est posé en tête de `PATH` et enregistre ses appels, aucun cas ne lance le vrai démon. Un faux `rm` et un faux `id` y sont posés aussi — ils prouvent qu'une demande hostile n'a lancé aucune commande, et ils empêchent la suite elle-même de jouer un `rm -rf /` si la garde du script venait à tomber.

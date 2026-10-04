@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Outils épinglés (story 2.1) : lecture de tools.env, vérification de version, installation.
 # Hors ligne : les archives sont factices et servies depuis un dossier local (file://), jamais le réseau.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # tools.env d'essai, avec des empreintes calculées sur les archives factices
 fake_env() { # $1 empreinte hugo, $2 empreinte d2

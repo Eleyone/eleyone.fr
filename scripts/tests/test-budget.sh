@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # C13 (story 3.11) : budgets de poids et d'éléments. Les cas montent une sortie dans $work, avec des
 # fichiers de taille choisie — aucun ne dépasse quelques centaines de kilo-octets.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 octets() { # $1 = fichier, $2 = taille voulue
   mkdir -p "$(dirname "$1")"

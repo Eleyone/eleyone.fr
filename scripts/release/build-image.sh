@@ -31,7 +31,7 @@ set +x
 script_name=release/build-image
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 cd "$root"
-. "$root/scripts/lib/shell.sh"
+. "$root/.working-method/lib/shell.sh"
 
 die() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 2; }
 refuse() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 1; }
@@ -80,7 +80,7 @@ done
 
 # Trois refus sur la **forme** d'une valeur, tous avant le build, tous sans citer la valeur :
 #
-#   - un guillemet double : le fichier écrit plus bas est relu par scripts/lib/dotenv.sh, qui coupe
+#   - un guillemet double : le fichier écrit plus bas est relu par .working-method/lib/dotenv.sh, qui coupe
 #     une valeur entre guillemets au guillemet suivant. La valeur serait tronquée en silence, et
 #     l'image servirait des mentions légales fausses sans qu'aucun contrôle ne le voie ;
 #   - un saut de ligne : un fichier dotenv y lirait deux entrées, dont la seconde n'est pas une clé ;
@@ -91,7 +91,7 @@ done
 for nom in "${noms[@]}"; do
   valeur=${!nom}
   [[ $valeur != *'"'* ]] \
-    || refuse "$nom contient un guillemet double, que le chargeur des valeurs légales tronque en silence (scripts/lib/dotenv.sh)."
+    || refuse "$nom contient un guillemet double, que le chargeur des valeurs légales tronque en silence (.working-method/lib/dotenv.sh)."
   [[ $valeur != *$'\n'* ]] \
     || refuse "$nom contient un saut de ligne : un fichier de valeurs en lirait deux entrées, dont la seconde serait perdue."
   [[ $valeur != *VALEUR-FACTICE* ]] \
@@ -103,7 +103,7 @@ done
   || refuse "PRIVATE_PATTERNS absente de l'environnement : sans la liste des motifs, C21 ne confronte rien et C22 rend une anomalie (AD-12, AD-21). Aucun docker build n'a été lancé."
 
 # Un fichier **présent mais vide** n'est pas une conformité : le piège est consigné
-# (docs/procedures/shell-scripts.md, story 0.8), et une liste faite de commentaires seuls
+# (.working-method/procedures/shell-scripts.md, story 0.8), et une liste faite de commentaires seuls
 # désactiverait C22 tout en ayant l'air d'une liste.
 motif_utile=0
 while IFS= read -r ligne || [[ -n $ligne ]]; do
@@ -114,7 +114,7 @@ done <<< "$PRIVATE_PATTERNS"
 
 # --- écriture des secrets ------------------------------------------------------------------------------
 # Deux commandes séparées, chacune avec son arrêt : « a && b || die » suspend « set -e » pour tout le
-# bloc (piège connu, docs/procedures/shell-scripts.md). Chaque fichier entre dans « temporaires »
+# bloc (piège connu, .working-method/procedures/shell-scripts.md). Chaque fichier entre dans « temporaires »
 # **juste après** sa création, jamais après son remplissage : un échec d'écriture laisserait sinon le
 # fichier sur le disque.
 legal=$(mktemp) || die "fichier temporaire des valeurs légales impossible."
@@ -131,7 +131,7 @@ for chemin in "$legal" "$motifs"; do
     || die "le dossier des fichiers temporaires contient une virgule ($chemin), que « docker build --secret » lit comme un séparateur : poser TMPDIR ailleurs."
 done
 
-# Les valeurs sont écrites **entre guillemets doubles** : sans eux, scripts/lib/dotenv.sh retirerait
+# Les valeurs sont écrites **entre guillemets doubles** : sans eux, .working-method/lib/dotenv.sh retirerait
 # d'une valeur ce qui suit « <espace># » et ses espaces de fin. Le guillemet a été refusé plus haut,
 # donc la valeur se relit à l'identique.
 for nom in "${noms[@]}"; do

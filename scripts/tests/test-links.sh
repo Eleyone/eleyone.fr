@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # C12 (story 3.10) : liens internes, ancres, pages orphelines, liens conditionnels. Les cas montent
 # un petit site dans $work : deux accueils, une page de groupe et ses ancres, comme la vraie sortie.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 page() { # $1 = chemin relatif, $2 = contenu du body
   mkdir -p "$(dirname "$work/public/$1")"

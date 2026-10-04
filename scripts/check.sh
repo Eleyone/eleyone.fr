@@ -6,12 +6,15 @@
 #                                 (C15, scripts/checks/release-pages.sh)
 #
 # Il construit le rendu de travail puis le build de production par scripts/build.sh (C14 : un
-# avertissement de Hugo fait échouer le build, donc les contrôles), puis lance tous les scripts de
-# scripts/checks/ : découverte dynamique, triés, lib.sh exclu — une story qui ajoute un contrôle ne
+# avertissement de Hugo fait échouer le build, donc les contrôles), puis confie au mécanisme commun
+# (.working-method/checks/run-checks.sh) tous les scripts de scripts/checks/ (checks.dir de
+# workflow.config) : découverte dynamique, triés, lib.sh exclu — une story qui ajoute un contrôle ne
 # modifie pas ce script. Tous tournent, même après un échec, et tous les écarts s'affichent avant le
-# résumé (décidé le 18/09/2026). Aucun appel à git : le script fonctionne sans dossier .git.
+# résumé (décidé le 18/09/2026). Aucun appel à git : le script fonctionne sans dossier .git — dans le
+# contexte de build de l'image, que .dockerignore prive de .git, la racine est donc donnée au
+# mécanisme par --root, jamais devinée.
 # Codes de sortie : 0 conforme, 1 écart constaté, 2 anomalie (outil ou fichier manquant).
-# Procédure : docs/procedures/check.md
+# Procédures : docs/procedures/check.md, .working-method/procedures/check.md
 set -euo pipefail
 
 script_name=check
@@ -46,16 +49,6 @@ build() { # $1 = environnement
 build work || exit 1
 build production || exit 1
 
-shopt -s nullglob
-scripts=()
-for candidate in "$root"/scripts/checks/*.sh; do
-  [[ $(basename "$candidate") != lib.sh ]] || continue
-  scripts+=("$candidate")
-done
-shopt -u nullglob
-
-failed=()
-anomaly=0
 # Chaque contrôle tourne **sous le chargeur unique** (AD-9). Sans lui, aucun contrôle ne voit un
 # « HUGO_LEGAL_* » : « scripts/env.sh » n'enveloppait que hugo, appelé par build.sh, et check.sh
 # était lancé nu. C23, qui doit chercher dans la sortie la **valeur** de l'adresse de l'éditeur,
@@ -70,27 +63,16 @@ chargeur="$root/scripts/env.sh"
   || { printf '%s: chargeur des valeurs légales absent ou non exécutable (%s) : les contrôles ne verraient aucun HUGO_LEGAL_* (AD-9).\n' \
        "$script_name" "${chargeur#"$root"/}" >&2; exit 2; }
 
-for candidate in "${scripts[@]}"; do
-  name=$(basename "$candidate" .sh)
-  rc=0
-  "$chargeur" bash "$candidate" || rc=$?
-  case $rc in
-    0) ;;
-    1) failed+=("$name") ;;
-    *) failed+=("$name (code $rc)"); anomaly=1 ;;
-  esac
-done
+# Le mécanisme vit dans le sous-module : absent, aucun contrôle ne tournerait. C'est une anomalie, pas
+# une conformité (sous-module non initialisé : « git submodule update --init »).
+mecanisme="$root/.working-method/checks/run-checks.sh"
+[[ -f $mecanisme ]] \
+  || { printf '%s: mécanisme des contrôles absent (%s) : sous-module .working-method non initialisé (git submodule update --init).\n' \
+       "$script_name" "${mecanisme#"$root"/}" >&2; exit 2; }
 
-if ((${#scripts[@]} == 0)); then
-  printf '%s: aucun script de contrôle dans scripts/checks/ ; builds seuls, niveau %s.\n' "$script_name" "$level"
-  exit 0
-fi
-
-if ((${#failed[@]})); then
-  printf '%s: %s contrôle(s) en échec sur %s : %s\n' \
-    "$script_name" "${#failed[@]}" "${#scripts[@]}" "${failed[*]}" >&2
-  ((anomaly == 0)) || exit 2
-  exit 1
-fi
-
-printf '%s: %s contrôle(s) passés, niveau %s.\n' "$script_name" "${#scripts[@]}" "$level"
+# CHECK_LEVEL est exporté plus haut : le mécanisme le transmet à chaque contrôle et le nomme dans son
+# résumé. Son code de sortie est celui de ce script. Pas d'« exec » : il remplacerait le processus, et
+# le « trap EXIT » qui supprime le dossier temporaire des builds ne s'exécuterait pas.
+rc=0
+bash "$mecanisme" --root "$root" -- "$chargeur" || rc=$?
+exit "$rc"

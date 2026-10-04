@@ -11,7 +11,7 @@
 # Le site d'essai n'emprunte au dépôt que ses gabarits, sa configuration, ses données et ses
 # libellés : le contenu est écrit par chaque cas, pour que le résultat ne dépende jamais de l'état
 # de `content/career/` — qui change à chaque poste publié.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 script_name=test-career-position
 . "$root/scripts/lib/tools.sh"
 

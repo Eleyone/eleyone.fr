@@ -1,0 +1,12 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "Renovate sur eleyone.fr : seule la montée du sous-module .working-method (outillage commun), par le preset partagé du dépôt commun (.working-method/procedures/renovate.md).",
+    "branchPrefix est propre au projet, jamais au preset : chore/renovate/ est un préfixe admis par create-pull-request, et checks.yaml se déclenche sur toute pull_request.",
+    "baseBranchPatterns : les PR visent dev, comme toute PR de ce dépôt (AGENTS.md, point 1). enabledManagers : rien d'autre que le sous-module, tant qu'Arnaud n'a pas élargi le périmètre."
+  ],
+  "extends": ["local>Eleyone/working-method//renovate/default"],
+  "enabledManagers": ["git-submodules"],
+  "baseBranchPatterns": ["dev"],
+  "branchPrefix": "chore/renovate/"
+}

@@ -8,7 +8,7 @@
 # Chacun a été lancé une fois sans son correctif, pour le voir échouer.
 #
 # Hors ligne : aucun téléchargement, le binaire vient de .tools/ ou du PATH (CHECK_IMAGE).
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 script_name=test-case-page
 . "$root/scripts/lib/tools.sh"
 

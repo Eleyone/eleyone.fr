@@ -2,7 +2,7 @@
 # Workflows des forges (story 3.13) : un workflow ne contient que son déclencheur, le checkout et
 # l'appel du job partagé (AD-11). Ces cas gardent cette règle : dès qu'une logique de contrôle
 # s'écrirait dans le YAML, ou qu'une action perdrait son épinglage, un cas échoue.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 gitea_workflow="$root/.gitea/workflows/checks.yaml"
 github_workflow="$root/.github/workflows/checks.yaml"

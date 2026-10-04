@@ -17,7 +17,8 @@ set +x # même lancé avec bash -x, la trace s'arrête ici : .env porte aussi de
 
 script_name=env
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
-. "$root/scripts/lib/dotenv.sh"
+# le lecteur commun des fichiers dotenv, dans l'outillage commun (sous-module .working-method)
+. "$root/.working-method/lib/dotenv.sh"
 
 (($#)) || { printf 'usage : %s <commande> [<arguments>…]\n' "$0" >&2; exit 2; }
 
@@ -70,7 +71,7 @@ charger_absentes() {
       # Cela couvre les deux cas d'un coup — une entrée vide d'un fichier laisse le repli
       # continuer, et un fichier plus prioritaire n'est pas écrasé. Une garde « valeur non vide »
       # avait été ajoutée à côté : aucun test ne savait les distinguer, parce qu'elle ne gardait
-      # rien de plus. Une parade s'écrit une fois (docs/procedures/shell-scripts.md).
+      # rien de plus. Une parade s'écrit une fois (.working-method/procedures/shell-scripts.md).
       [[ -z ${!name:-} ]] || break
       export "$name=${line#*=}"
       break

@@ -33,9 +33,9 @@ Six commandes, avec leur sortie attendue. Tant qu'une échoue, le poste n'est pa
 
 | Commande | Sortie attendue |
 | --- | --- |
-| `scripts/tests/run.sh` | `tests: N cas réussis.` |
+| `.working-method/tests/run.sh` | `tests: N cas réussis.` |
 | `PRIVATE_PATTERNS_FILE=docs/private/forbidden-patterns.txt scripts/check-private.sh history` | rien, code 0 — **aucune mention « chemins seulement »** |
-| `scripts/sprint-consistency.sh` | `cohérent dans l'arbre de travail` |
+| `.working-method/gates/sprint-consistency.sh` | `cohérent dans l'arbre de travail` |
 | `scripts/build.sh production` puis `scripts/build.sh work` | aucun avertissement ; la production ne contient pas les brouillons |
 | `scripts/env.sh sh -c 'env \| grep -c "^HUGO_LEGAL_"; env \| grep -c "^GITEA_" \|\| true'` | le nombre de `HUGO_LEGAL_*` de `.env.example`, puis `0` — les valeurs légales passent, les jetons non. **Le nombre n'est pas écrit ici** : il a changé une fois (sept, puis huit à la story 9.7) et la procédure avait gardé l'ancien. `cut -d= -f1 .env.example \| grep -c '^HUGO_LEGAL_'` donne l'attendu |
 | `scripts/ci/checks-job.sh` | `check: N contrôle(s) passés` — tout le job dans le conteneur de contrôle (`checks-job.md`) ; il prouve Docker, l'image et les scripts d'un coup |
@@ -44,7 +44,7 @@ Une septième vérification touche la forge, et n'a besoin d'aucune PR ouverte :
 
 | Commande | Sortie attendue |
 | --- | --- |
-| `scripts/verify-and-merge-pr.sh <numéro d'une PR fusionnée>` | `bloque  PR fusionnable   PR déjà fusionnée : rien à fusionner.` |
+| `.working-method/gates/verify-and-merge-pr.sh <numéro d'une PR fusionnée>` | `bloque  PR fusionnable   PR déjà fusionnée : rien à fusionner.` |
 
 Ce message prouve que `GITEA_URL`, `GITEA_USER` et `GITEA_TOKEN` sont bons : sans eux, le script s'arrête plus tôt, sur « la forge refuse le jeton ou ne répond pas (HTTP …) » ou sur « le jeton n'appartient pas au compte GITEA_USER ». Sans cette vérification, une adresse erronée dans un `.env` recréé n'apparaît qu'à l'ouverture de la première PR (constaté le 17/09/2026 ; action 5 de la rétrospective de l'epic 2).
 

@@ -8,7 +8,7 @@ Une mise en ligne est un **tag `vX.Y.Z` posé sur `main`** après la publication
 
 - `jq` et `curl` installés ; `.env` avec `GITEA_URL`, `GITEA_USER` et `GITEA_TOKEN` (`gitea-token.md`).
 - Le fichier de motifs (`check-private.md`), avec au moins un motif : aucune mise en ligne sans audit.
-- `scripts/check-private.sh` et `scripts/sprint-consistency.sh` présents dans l'arbre de travail.
+- `scripts/check-private.sh` et `.working-method/gates/sprint-consistency.sh` présents dans l'arbre de travail.
 - Un arbre de travail sans modification en attente : ce qui n'est pas commité ne sera pas publié.
 - Pour `v1.0.0` : la répétition générale déjà jouée (`rehearse-release`, AD-22).
 
@@ -41,14 +41,14 @@ Le script cherche une PR ouverte `dev` → `main`. S'il n'en trouve pas, il en o
 
 ## Les cinq verrous
 
-Chaque verrou s'affiche avec son état, `passe` ou `bloque`. Il n'y a **pas** d'état `absent` ici (voir le verrou CI). Les décisions vivent dans `scripts/lib/merge-gates.sh` et `scripts/lib/release.sh`, éprouvées par `scripts/tests/run.sh` (`shell-scripts.md`).
+Chaque verrou s'affiche avec son état, `passe` ou `bloque`. Il n'y a **pas** d'état `absent` ici (voir le verrou CI). Les décisions vivent dans `.working-method/gates/merge-gates.sh` et `scripts/lib/release.sh`, éprouvées par `.working-method/tests/run.sh` (`shell-scripts.md`).
 
 1. **PR publiable** : ouverte, pas en brouillon, fusionnable pour la forge, `dev` → `main`, et sa tête est bien celle de `origin/dev`.
 2. **Revue** (AD-24, D-13) : chaque commit de `main..dev` est le squash d'une PR fusionnée par `verify-and-merge-pr`. Le marqueur `(#N)` ne le prouve pas à lui seul — Gitea l'ajoute à **tout** squash —, il prouve seulement que le commit vient de la forge. Ce qui fait la différence, c'est `ci/bootstrap-commits.txt`, qui nomme les seuls squashs fusionnés à la main, avant que `verify-and-merge-pr` existe, et dit pourquoi chacun y figure (arbitrage d'Arnaud du 25/09/2026). Un commit de **fusion** bloque même avec un `(#N)` : Gitea en compose un aussi, et le flux linéaire l'interdit. Un SHA mal formé dans la liste est une anomalie, jamais une ligne ignorée.
 3. **Garde-fou** : `scripts/check-private.sh history main..dev`, avec la liste des motifs.
 4. **CI** : les statuts du workflow `checks` sur la tête de `dev`, lus sur la forge, avec les mêmes règles que `verify-and-merge-pr` (tous verts passent, `skipped` est écarté mais ne suffit pas, `pending` bloque en disant « en cours », tout autre état bloque en se nommant).
    - **Le régime d'amorçage est refusé ici** (story 11.7). Le substitut de `verify-and-merge-pr` se déclenche quand `.gitea/workflows/checks.yaml` manque à la **base** de la PR. Pour une publication, la base est `main`, où le fichier n'est pas encore arrivé : le régime ne se réveillerait pas *malgré* la CI, il se réveillerait **exactement à la première mise en ligne**, en remplaçant la CI de la forge par un `scripts/check.sh` relancé dans une copie locale. La tête, elle, est un commit de `dev` et porte donc les statuts de `checks.yaml`. Une mise en ligne se valide sur la CI réelle qui a tourné sur ce commit même : un `absent` y est un refus.
-5. **Suivi de sprint** : `scripts/sprint-consistency.sh --rev <SHA de tête>`, le **contrôle global**, la branche entrante étant `dev`, qui ne porte aucun numéro de story. Un suivi incohérent bloque une publication comme il bloque une story.
+5. **Suivi de sprint** : `.working-method/gates/sprint-consistency.sh --rev <SHA de tête>`, le **contrôle global**, la branche entrante étant `dev`, qui ne porte aucun numéro de story. Un suivi incohérent bloque une publication comme il bloque une story.
 
 Sans `--merge`, le script s'arrête ici, quel que soit le résultat.
 

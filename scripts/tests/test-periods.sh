@@ -6,7 +6,7 @@
 # d'AGENTS.md).
 #
 # Chaque garde a son cas, et chaque cas exerce l'entrée que la garde doit **refuser** (point 9).
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # Écrit les deux manifestes. $1 = période du poste en FR, $2 = du cas en FR, $3 et $4 = en EN ;
 # $5 = filtre jq appliqué aux deux manifestes (« . » par défaut).

@@ -58,7 +58,7 @@ set -euo pipefail
 set +x
 # Une **plage** de caractères ne dit pas la même chose selon la locale : sur le poste, en
 # fr_FR.UTF-8, « [0-9a-f] » laisse entrer les octets d'un caractère accentué, là où la même
-# expression s'arrête avant dans CHECK_IMAGE, en C (piège connu, docs/procedures/shell-scripts.md,
+# expression s'arrête avant dans CHECK_IMAGE, en C (piège connu, .working-method/procedures/shell-scripts.md,
 # mesuré à la story 11.5). Ce script compare des empreintes, des identifiants de conteneur et des
 # adresses IP, tous écrits en plages : la locale est donc fixée une fois pour toutes.
 export LC_ALL=C
@@ -67,9 +67,13 @@ script_name=rehearse-release
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 # gitea.sh n'est chargé que pour « check_origin » : sans lui, un tag partirait vers un dépôt qui
 # n'est pas celui du projet. Aucune fonction d'API n'est appelée, et « require_tools » non plus — ce
-# script n'a pas besoin de jq. Une parade s'écrit une fois (docs/procedures/shell-scripts.md).
-# shellcheck source=lib/gitea.sh
-. "$script_dir/lib/gitea.sh"
+# script n'a pas besoin de jq. Une parade s'écrit une fois (.working-method/procedures/shell-scripts.md).
+# L'adaptateur vit dans l'outillage commun (sous-module .working-method, story outillage-14) et
+# exige le lecteur de workflow.config, qui y nomme le dépôt canonique.
+# shellcheck source=../.working-method/lib/config.sh
+. "$script_dir/../.working-method/lib/config.sh"
+# shellcheck source=../.working-method/gitea/gitea.sh
+. "$script_dir/../.working-method/gitea/gitea.sh"
 # release.sh porte les deux expressions de tags, et charge lui-même shell.sh.
 # shellcheck source=lib/release.sh
 . "$script_dir/lib/release.sh"
@@ -141,6 +145,9 @@ done
 appel=$PWD
 root=$(git rev-parse --show-toplevel 2> /dev/null) || die "à lancer dans le dépôt."
 cd "$root"
+# workflow.config, lu par l'outillage commun : forge.repo y nomme le dépôt canonique (gitea_configure)
+config_load "$root/workflow.config" || exit 2
+gitea_configure
 check_origin
 
 env_file=$root/.env
@@ -149,7 +156,7 @@ env_file=$root/.env
 
 # Une fonction remplit une variable de l'appelant plutôt que d'écrire sur la sortie standard :
 # appelée dans « $(…) », son « die » ne quitterait que le sous-shell (piège connu,
-# docs/procedures/shell-scripts.md). Aucune valeur de .env n'est jamais affichée (NFR-9).
+# .working-method/procedures/shell-scripts.md). Aucune valeur de .env n'est jamais affichée (NFR-9).
 destination=""
 lit_destination() { # $1 = nom de la variable ; 0 trouvée, 1 absente ou vide, 2 .env illisible
   local nom=$1 lignes ligne
@@ -305,7 +312,7 @@ fi
 # --- l'état des tags, relu depuis la forge --------------------------------------------------------
 # « git fetch » explicite : la forge et le dépôt local divergent en silence, et un tag jugé libre sur
 # un dépôt qui n'a pas relu ses références est un tag déjà pris sur la forge. Les messages de git
-# portent l'adresse de la forge, qui ne s'affiche jamais (NFR-9, docs/procedures/shell-scripts.md).
+# portent l'adresse de la forge, qui ne s'affiche jamais (NFR-9, .working-method/procedures/shell-scripts.md).
 git fetch --quiet --tags origin dev 2> /dev/null \
   || die "lecture de dev et des tags sur la forge impossible. Rien n'a été fait."
 dev_sha=$(git rev-parse --verify --quiet "refs/remotes/origin/dev^{commit}") \
@@ -649,7 +656,7 @@ status_porte_le_tag() { # $1 = sortie de status, $2 = tag attendu
 # L'attente se fait par « deploy-site status », **jamais par l'API de la forge** : c'est l'état vrai
 # — ce que le serveur sert —, et non l'état d'un run ; et il ne dépend pas d'un homelab qui peut
 # tomber (AD-14). Appelée derrière « || », cette fonction ne profiterait pas de set -e : chaque étape
-# vérifie donc son résultat elle-même (docs/procedures/shell-scripts.md).
+# vérifie donc son résultat elle-même (.working-method/procedures/shell-scripts.md).
 attends_le_tag() { # $1 = tag attendu en service ; 0 en service, 1 délai dépassé
   local essai=0 echecs=0 code
   printf '%s: attente de %s sur le canal de répétition (au plus %s min).\n' \

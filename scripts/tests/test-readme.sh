@@ -2,7 +2,7 @@
 # README public (story 3.15) : sa trame de cas et ses liens. Un lien relatif qui pointe vers un
 # fichier disparu ne se voit pas à la relecture, et jamais tant qu'on ne clique pas ; sur un dépôt
 # public, il coûte plus qu'il ne rapporte. Ces cas le rejouent à chaque suite.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 readme="$root/README.md"
 
@@ -33,7 +33,7 @@ case_readme_trame_de_cas() {
   # L'ordre compte autant que la présence : un cas se lit dans le sens du récit. Les autres titres
   # (références, modèle de branches) sont écartés, puis la suite restante est comparée à la trame.
   # La liste passe par un fichier, jamais par une substitution de processus : l'échec de la commande
-  # qui l'écrit y serait invisible (piège connu, docs/procedures/shell-scripts.md).
+  # qui l'écrit y serait invisible (piège connu, .working-method/procedures/shell-scripts.md).
   local restants
   printf '%s\n' "${trame[@]}" > "$work/trame"
   shell_grep_into restants -xF -f "$work/trame" <<< "$titres"

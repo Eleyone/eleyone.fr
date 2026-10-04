@@ -11,7 +11,7 @@
 #     vide. Un contrôle qu'on ne nourrit que de sorties conformes ne prouve rien.
 #
 # Les valeurs d'essai sont fabriquées ici et ne ressemblent à aucune vraie.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 script_name=test-jsonld-person
 . "$root/scripts/lib/tools.sh"
 

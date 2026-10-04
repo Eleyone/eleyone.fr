@@ -23,10 +23,14 @@ set +x # même lancé avec bash -x, la trace s'arrête ici, avant la lecture du 
 
 script_name=release
 script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
-# shellcheck source=lib/gitea.sh
-. "$script_dir/lib/gitea.sh"
-# shellcheck source=lib/merge-gates.sh
-. "$script_dir/lib/merge-gates.sh"
+# L'adaptateur de la forge et les décisions des verrous vivent dans l'outillage commun (sous-module
+# .working-method, story outillage-14) ; l'adaptateur exige le lecteur de workflow.config.
+# shellcheck source=../.working-method/lib/config.sh
+. "$script_dir/../.working-method/lib/config.sh"
+# shellcheck source=../.working-method/gitea/gitea.sh
+. "$script_dir/../.working-method/gitea/gitea.sh"
+# shellcheck source=../.working-method/gates/merge-gates.sh
+. "$script_dir/../.working-method/gates/merge-gates.sh"
 # shellcheck source=lib/release.sh
 . "$script_dir/lib/release.sh"
 
@@ -65,9 +69,17 @@ fi
 
 root=$(git rev-parse --show-toplevel 2>/dev/null) || die "à lancer dans le dépôt."
 cd "$root"
+# workflow.config, lu par l'outillage commun : forge.repo y nomme le dépôt canonique (gitea_configure)
+config_load "$root/workflow.config" || exit 2
+gitea_configure
+# le contexte de CI que la forge préfixe aux statuts du workflow des contrôles (ci_gate l'exige)
+config_get ci_context ci.status-context
+readonly ci_context
 check_origin
-for tool in check-private sprint-consistency; do
-  [[ -x $root/scripts/$tool.sh ]] || die "scripts/$tool.sh absent ou non exécutable."
+# le garde-fou est au projet, la cohérence du suivi à l'outillage commun
+readonly sprint_consistency=.working-method/gates/sprint-consistency.sh
+for tool in scripts/check-private.sh "$sprint_consistency"; do
+  [[ -x $root/$tool ]] || die "$tool absent ou non exécutable."
 done
 patterns_file=${PRIVATE_PATTERNS_FILE:-$root/docs/private/forbidden-patterns.txt}
 require_patterns_file "$patterns_file" "aucune mise en ligne sans audit"
@@ -277,7 +289,7 @@ code=$(gitea_api GET "/repos/$gitea_canonical_repo/commits/$dev_sha/status" "$tm
 [[ $code == 200 ]] || die "lecture de l'état de la CI impossible (HTTP $code) : $(forge_message "$tmp/status.json")"
 ci_on_base=0
 if git cat-file -e "$main_sha:$ci_workflow" 2>/dev/null; then ci_on_base=1; fi
-ci_out=$(ci_gate "$tmp/status.json" "$ci_on_base" "$ci_workflow") || die "état de la CI illisible."
+ci_out=$(ci_gate "$tmp/status.json" "$ci_on_base" "$ci_workflow" "$ci_context") || die "état de la CI illisible."
 ci_decision=${ci_out%%$'\t'*}
 ci_detail=${ci_out#*$'\t'}
 if [[ $ci_decision == amorçage ]]; then
@@ -288,9 +300,9 @@ fi
 
 # --- verrou 5 : suivi de sprint --------------------------------------------------------------------
 # Contrôle **global** : la branche entrante est dev, qui ne porte aucun numéro de story
-# (docs/procedures/verify-and-merge-pr.md). Un suivi incohérent bloque une publication comme il
+# (.working-method/procedures/verify-and-merge-pr.md). Un suivi incohérent bloque une publication comme il
 # bloque une story.
-if sprint_out=$("$root/scripts/sprint-consistency.sh" --rev "$dev_sha" 2>&1); then
+if sprint_out=$("$root/$sprint_consistency" --rev "$dev_sha" 2>&1); then
   report passe "suivi de sprint" "contrôle global sur la tête de dev : cohérent."
 else
   report bloque "suivi de sprint" "contrôle global sur la tête de dev :"

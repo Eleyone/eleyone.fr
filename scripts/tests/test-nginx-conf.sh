@@ -2,7 +2,7 @@
 # Configuration nginx de l'image (story 4.2). Les cas lisent le fichier : la suite reste hors ligne
 # et sans démon (story 0.9). Le comportement réel est éprouvé contre un vrai conteneur, à la main,
 # et la recette est dans docs/procedures/build-image.md.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 conf="$root/deploy/nginx/site.conf"
 

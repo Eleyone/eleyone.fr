@@ -18,15 +18,16 @@
 # **Aucune fonction n'affiche une valeur.** Les valeurs légales de mise en ligne vivent dans le
 # dépôt privé ; elles sont publiques une fois le site en ligne, mais pas avant, et un journal se
 # colle dans une conversation (NFR-9, AD-9). Tout ce qui sort d'ici remplit une variable de
-# l'appelant (piège connu de « $(…) », docs/procedures/shell-scripts.md).
+# l'appelant (piège connu de « $(…) », .working-method/procedures/shell-scripts.md).
 #
 # Né à la story 11.9, pour que la répétition générale vérifie elle-même que les pages légales
 # servies portent les vraies valeurs (arbitrage d'Arnaud du 02/10/2026 : « la vérif doit se faire
 # systématiquement et automatiquement »).
 
 legal_lib_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) || return 2
-# shellcheck source=dotenv.sh
-. "$legal_lib_dir/dotenv.sh" || return 2
+# dotenv.sh vit dans l'outillage commun (sous-module .working-method, story outillage-14)
+# shellcheck source=../../.working-method/lib/dotenv.sh
+. "$legal_lib_dir/../../.working-method/lib/dotenv.sh" || return 2
 # shellcheck source=text.sh
 . "$legal_lib_dir/text.sh" || return 2
 

@@ -6,7 +6,7 @@
 # porteuse de métadonnées serait refusée par C20 lui-même et par le garde-fou ; une image qui n'en
 # porte pas ne prouverait pas que le contrôle les voit. Fabriquer les octets règle les deux, et
 # n'ajoute aucune dépendance : ni Python, ni PIL, ni outil d'image (AD-19).
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 . "$root/scripts/lib/image.sh"
 
 # Un WebP VP8 simple, sans aucune métadonnée. Les données du chunk ne sont pas une vraie image —

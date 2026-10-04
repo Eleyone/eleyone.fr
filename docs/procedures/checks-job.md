@@ -14,7 +14,7 @@ Codes de sortie : ceux du contrôle en échec (`0` conforme, `1` écart, `2` ano
 2. **Dans le conteneur**, `scripts/ci/checks-job-container.sh` pose les outils épinglés par `scripts/ci/install-tools-bootstrap.sh`. Cette part tourne en `root` : `apk` l'exige.
 3. **Puis il redescend au compte de l'appelant** par `su-exec`, et enchaîne :
    - `scripts/check-private.sh history` — le garde-fou sur tout l'historique (C1, AD-12) ;
-   - `scripts/tests/run.sh` — les tests hors ligne des scripts (story 0.9) ;
+   - `.working-method/tests/run.sh` — les tests hors ligne des scripts (story 0.9) ;
    - `scripts/check.sh` — les contrôles bloquants (AD-10, `check.md`).
 
 Chaque étape s'annonce : le garde-fou et les tests ne disent rien quand tout va bien, et un journal de CI muet ne dirait pas ce qui a tourné.

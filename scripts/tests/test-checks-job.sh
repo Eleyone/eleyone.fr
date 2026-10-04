@@ -2,7 +2,7 @@
 # Job de contrôles partagé (story 3.12) : la commande docker que le script hôte construit, les refus
 # du script du conteneur, et le scénario C1 du clone jetable. Aucun cas ne lance Docker : la suite
 # reste hors ligne (story 0.9). La recette du job complet vit dans docs/procedures/checks-job.md.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # Faux docker : il répond selon la sous-commande, écrit les arguments du « run » et compte les
 # tirages. « image inspect » dit si l'image est déjà là, « pull » échoue tant qu'il reste des refus.

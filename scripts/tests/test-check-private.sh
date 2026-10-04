@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Garde-fou public/privé : constats D2 (fichier de motifs sans motif) et D3 (audit depuis un sous-dossier)
 # de la rétrospective de l'epic 0. Motifs et contenus d'essai seulement, jamais docs/private/.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 motifs() { printf '# motifs d essai\nmotif-interdit-essai\n' > "$work/motifs.txt"; }
 
@@ -14,7 +14,7 @@ depot_avec_motif() { # le motif est à la racine, l'audit est lancé depuis sous
 }
 
 require_patterns() { # $1 fichier de motifs ; lance require_patterns_file dans un processus à part, car die sort
-  run bash -c 'script_name=essai; . "$1/scripts/lib/gitea.sh"; require_patterns_file "$2" "aucun envoi sans audit"' _ "$root" "$1"
+  run bash -c 'script_name=essai; . "$1/.working-method/gitea/gitea.sh"; require_patterns_file "$2" "aucun envoi sans audit"' _ "$root" "$1"
 }
 
 case_d3_historique_depuis_un_sous_dossier() {
@@ -157,7 +157,7 @@ case_pre_receive_liste_sans_motif() {
 # Le garde-fou tourne sur la forge : ce qu'il laisse derrière lui s'y accumule. Ces deux cas
 # comptent le disque, dans un TMPDIR **qui n'appartient qu'au cas** — « ${TMPDIR:-/tmp} » est
 # partagé avec le reste de la machine, et y compter reviendrait à supposer son environnement
-# (piège connu de docs/procedures/shell-scripts.md). Tout ce qui s'y trouve vient du garde-fou.
+# (piège connu de .working-method/procedures/shell-scripts.md). Tout ce qui s'y trouve vient du garde-fou.
 bare_with_hook_tmpdir() { # $1 = liste des motifs, $2 = TMPDIR à imposer au hook
   git init -q --bare "$work/nu.git"
   git -C "$work/nu.git" config core.hooksPath "$work/nu.git/hooks"

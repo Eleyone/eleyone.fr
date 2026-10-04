@@ -19,7 +19,7 @@
 # tunnel, pour qu'un cas puisse constater que le piège de sortie l'a bien tué. Le tableau complet est
 # dans le fichier de story. Le faux ssh-agent reprend cette garde pour le second processus durable du
 # script, l'agent privé : il survit, et les cas constatent qu'il est tué sur chaque chemin de sortie.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 script=$root/scripts/rehearse-release.sh
 depot=$work/depot
@@ -519,7 +519,7 @@ site_conforme() { # $1 = « avec-svg » pour qu'un SVG figure dans la page d'acc
 }
 
 # Remplace une ligne d'en-tête d'une réponse déjà posée. Le remplacement passe par un fichier, pas
-# par une regex construite depuis une variable (piège connu, docs/procedures/shell-scripts.md).
+# par une regex construite depuis une variable (piège connu, .working-method/procedures/shell-scripts.md).
 change_entete() { # $1 = chemin, $2 = nom de l'en-tête, $3 = ligne de remplacement (vide = retrait)
   local cle fichier ligne sortie=""
   cle=$(cle_http "$1")
@@ -579,6 +579,8 @@ reinitialise() {
 depot_de_test() { # $1 = URL du dépôt distant (défaut : le dépôt canonique)
   new_repo
   git -C "$depot" remote add origin "${1:-https://exemple.invalide/Eleyone/eleyone.fr.git}"
+  # le workflow.config du projet : l'outillage commun y lit le dépôt canonique (forge.repo)
+  cp "$root/workflow.config" "$depot/workflow.config"
   printf 'site\n' > "$depot/site.txt"
   local sha
   sha=$(commit_all "socle")
@@ -1895,6 +1897,11 @@ case_rehearse_modele_ou_factice_manquant_a_cote_du_script() {
     mkdir -p "$arbre/scripts/lib" "$arbre/ci"
     cp "$script" "$arbre/scripts/"
     cp "$root"/scripts/lib/*.sh "$arbre/scripts/lib/"
+    # l'outillage commun que le script et ses bibliothèques chargent : lecteur de workflow.config,
+    # enveloppes, dotenv, et l'adaptateur de la forge
+    mkdir -p "$arbre/.working-method/lib" "$arbre/.working-method/gitea"
+    cp "$root"/.working-method/lib/*.sh "$arbre/.working-method/lib/"
+    cp "$root/.working-method/gitea/gitea.sh" "$arbre/.working-method/gitea/"
     cp "$factice" "$arbre/ci/"
     cp "$root/.env.example" "$arbre/"
     case $defaut in
@@ -1944,7 +1951,7 @@ case_rehearse_aucune_trace_de_shell() {
 }
 
 case_rehearse_aucune_adresse_de_forge() {
-  # Le chemin, jamais l'adresse (docs/procedures/shell-scripts.md, tranché à la story 0.4) : les
+  # Le chemin, jamais l'adresse (.working-method/procedures/shell-scripts.md, tranché à la story 0.4) : les
   # messages de « git fetch » et « git push » portent l'URL de la forge, et ils sont écartés.
   local vu
   # Les **appels**, et non les lignes qui en parlent : un message qui cite « git push » n'écarte

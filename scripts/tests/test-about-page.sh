@@ -7,7 +7,7 @@
 # **avec son étiquette**, parce qu'un « CV » au-dessus de rien annonce ce qui n'existe pas.
 #
 # Les PDF d'essai sont fabriqués par « tests_pdf » : aucun n'entre dans le dépôt.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 script_name=test-about-page
 . "$root/scripts/lib/tools.sh"
 

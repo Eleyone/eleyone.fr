@@ -70,7 +70,7 @@ Dans cet ordre, et sans rien pousser :
 
 1. **Le tag est une répétition.** Un `vX.Y.Z` est refusé d'entrée : c'est une mise en ligne, elle se pose sur `main` par `release` (AD-22). Les deux expressions sont disjointes et ancrées, sans zéro de tête (`scripts/lib/release.sh`).
 2. **Les outils, le dépôt, les destinations.** `git`, `ssh`, `curl` ; le dépôt distant est bien celui du projet ; `ADMIN_HOST` et `DEPLOY_HOST` sont présents et suivent `<utilisateur>@<hôte>`. Une valeur qui commence par `-` est refusée à part : `ssh` y lirait une option, pas une destination.
-3. **Le fichier des valeurs légales.** Trouvé comme `build-image.sh` le trouve — `LEGAL_RELEASE_ENV_FILE`, sinon `docs/private/legal-release.env` ; un chemin relatif se résout depuis le dossier d'appel —, et lu par `scripts/lib/dotenv.sh`, le seul lecteur dotenv du dépôt, avec la règle de `scripts/env.sh` : une valeur vide vaut absence, la première valeur non vide d'un nom est la sienne. Sont refusés, chacun avec son message et **sans afficher aucune valeur** :
+3. **Le fichier des valeurs légales.** Trouvé comme `build-image.sh` le trouve — `LEGAL_RELEASE_ENV_FILE`, sinon `docs/private/legal-release.env` ; un chemin relatif se résout depuis le dossier d'appel —, et lu par `.working-method/lib/dotenv.sh`, le seul lecteur dotenv du dépôt, avec la règle de `scripts/env.sh` : une valeur vide vaut absence, la première valeur non vide d'un nom est la sienne. Sont refusés, chacun avec son message et **sans afficher aucune valeur** :
    - un fichier absent, illisible, ou qui n'est pas un fichier ;
    - le `.env` du dépôt, `ci/legal-placeholder.env`, ou tout fichier nommé `.env` (les refus de `build-image.sh` et d'`env.sh` en mode release) ;
    - un nom de `.env.example` absent ou vide — tous les manquants sont nommés d'un coup ;
@@ -180,7 +180,7 @@ Ni le service de production, ni Nginx Proxy Manager, ni le DNS. Le seul canal em
 ## Tests
 
 ```bash
-bash scripts/tests/run.sh scripts/tests/test-rehearse-release.sh
+bash .working-method/tests/run.sh scripts/tests/test-rehearse-release.sh
 ```
 
 Les pages légales des cas sont **les vraies pages**, copiées d'un build de production fait avec les valeurs factices (`scripts/tests/fixtures/rehearse-release/`) : minifiées, sans guillemets d'attribut, typographie française appliquée. Les valeurs d'essai en dérivent, pour que la page servie garde la forme exacte du rendu.

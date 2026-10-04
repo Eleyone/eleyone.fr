@@ -7,7 +7,7 @@
 #
 # **Les valeurs d'essai sont fabriquées ici** et ne ressemblent à aucune vraie : un test ne recopie
 # pas les coordonnées du site.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 script_name=test-contact-page
 . "$root/scripts/lib/tools.sh"
 

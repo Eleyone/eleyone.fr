@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # C4, C5, C6 (story 3.4), sur des manifestes écrits à la main : rubriques d'un cas, marqueurs [TODO
 # publiés, vocabulaire de la stack. La forme du manifeste est prouvée par test-checks-manifest.sh.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 rendu() { # $1 = filtre jq pour le manifeste FR, $2 = filtre pour l'EN
   mkdir -p "$work/rendu/en"
@@ -280,11 +280,12 @@ case_content_c18_nom_de_fichier_hors_format() {
 # Les deux fichiers d'environnement sont lus dans le dépôt, pas dans le manifeste : ces cas travaillent
 # donc sur une copie du dépôt, avec le contrôle lancé depuis cette copie.
 copie_depot() {
-  mkdir -p "$work/depot/scripts/checks" "$work/depot/scripts/lib" "$work/depot/ci"
+  mkdir -p "$work/depot/scripts/checks" "$work/depot/scripts/lib" "$work/depot/ci" "$work/depot/.working-method/lib"
   cp "$root/scripts/checks/content.sh" "$root/scripts/checks/lib.sh" "$work/depot/scripts/checks/"
-  # lib.sh charge les enveloppes communes du dépôt et ses filtres de lecture (scripts/lib/text.sh,
-  # story 11.9) : le dépôt d'essai les emporte aussi
-  cp "$root/scripts/lib/shell.sh" "$root/scripts/lib/text.sh" "$work/depot/scripts/lib/"
+  # lib.sh charge les enveloppes communes (.working-method/lib/shell.sh, outillage commun) et ses
+  # filtres de lecture (scripts/lib/text.sh, story 11.9) : le dépôt d'essai les emporte aussi
+  cp "$root/scripts/lib/text.sh" "$work/depot/scripts/lib/"
+  cp "$root/.working-method/lib/shell.sh" "$work/depot/.working-method/lib/"
   cp "$root/.env.example" "$work/depot/"
   cp "$root/ci/legal-placeholder.env" "$work/depot/ci/"
   mkdir -p "$work/depot/rendu/en"

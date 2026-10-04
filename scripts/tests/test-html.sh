@@ -2,7 +2,7 @@
 # C10 et la moitié « sortie » de C5 (story 3.8) : zéro JavaScript, aucune ressource tierce, aucun
 # marqueur dans la production. Les cas travaillent sur une copie des fixtures HTML, transformée par
 # « sed » : le HTML est minifié comme celui de la production, guillemets d'attributs compris.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # $1 = ce qui est inséré avant </body> de la page d'accueil ; $2 = même chose pour la page simple.
 # Manifeste minimal : le contrôle y lit la ligne d'identité (AD-19), plutôt que de l'écrire en dur.

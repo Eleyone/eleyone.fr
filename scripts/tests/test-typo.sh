@@ -7,7 +7,7 @@
 # égratignure, ce qui est la façon la plus probable de rater cette story.
 #
 # Hors ligne : aucun téléchargement, le binaire vient de .tools/ ou du PATH (CHECK_IMAGE).
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 script_name=test-typo
 . "$root/scripts/lib/tools.sh"
 

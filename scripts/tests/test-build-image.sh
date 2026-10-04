@@ -2,7 +2,7 @@
 # Construction de l'image du site (story 4.1) : la commande que le script assemble et ses refus.
 # Aucun cas ne lance Docker : la suite reste hors ligne (story 0.9). Le build réel est joué à la
 # main et consigné dans le fichier de story ; la procédure dit comment le rejouer.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 faux_docker() { # $1 = code de sortie du build
   mkdir -p "$work/bin"
@@ -26,7 +26,7 @@ motifs() { # une liste de motifs jetable, hors du dépôt
 
 # PRIVATE_PATTERNS_FILE est **retirée** de l'environnement de chaque appel : le poste d'Arnaud porte
 # docs/private/, la CI non, et sans ce retrait un cas rendrait deux verdicts selon l'endroit où la
-# suite tourne (piège connu, docs/procedures/shell-scripts.md). Les cas qui veulent une liste la
+# suite tourne (piège connu, .working-method/procedures/shell-scripts.md). Les cas qui veulent une liste la
 # désignent par --patterns ; ceux qui n'en veulent pas la pointent vers un chemin inexistant.
 image() { run env -u PRIVATE_PATTERNS_FILE PATH="$work/bin:$PATH" bash "$root/scripts/build-image.sh" "$@"; }
 

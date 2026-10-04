@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Décision de publication d'un cas (story 3.17) : ce que publish_case_plan accepte, refuse et nomme.
 # Les manifestes sont écrits à la main, comme ceux des contrôles : aucun build, aucune forge.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # Un fichier du manifeste. $1 = fichier, $2 = rôle, $3 = clé, $4 = brouillon, $5 = todo,
 # $6 = poste (vide si aucun), $7 = groupe (vide si aucun).

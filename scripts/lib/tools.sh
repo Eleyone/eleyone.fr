@@ -9,7 +9,7 @@
 #                                        échoue en nommant l'outil, la version attendue et la trouvée
 #
 # Convention de code de sortie du projet : 0 conforme, 1 refus, 2 anomalie (fichier absent, illisible).
-# Procédures : docs/procedures/tools.md, docs/procedures/shell-scripts.md
+# Procédures : docs/procedures/tools.md, .working-method/procedures/shell-scripts.md
 
 readonly tools_env_expected=(HUGO_VERSION HUGO_ARCHIVE HUGO_URL HUGO_SHA256 D2_VERSION D2_ARCHIVE D2_URL D2_SHA256 CHECK_IMAGE CHECK_BOOTSTRAP_PACKAGES CHECK_BASE_PACKAGES CHECK_PACKAGES)
 

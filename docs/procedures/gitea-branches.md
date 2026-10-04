@@ -1,5 +1,7 @@
 # Procédure — Branches protégées et styles de fusion
 
+La méthode générique — contextes exigés, modification d'une règle par l'API, styles de fusion, vérification — vit dans l'outillage commun : `.working-method/procedures/gitea-branches.md`. Ce document garde les réglages d'`Eleyone/eleyone.fr` et ce qui a été constaté en les posant.
+
 Réglages de la forge Gitea qui tiennent le flux linéaire d'AD-24 : aucun merge commit, aucun push direct sur `main`, `dev` réécrite seulement après un hotfix. Constatés sur Gitea 1.27.3 le 14/09/2026 (story 0.2).
 
 Les réglages se font dans l'interface de la forge, sauf un, qui passe par l'API (voir « Bug de l'interface »). Ils se vérifient toujours par l'API.
@@ -68,9 +70,9 @@ Le contexte d'un statut Gitea s'écrit `<workflow> / <job> (<événement>)` : le
 
 Le réglage a été posé le 21/09/2026, après la première exécution verte : Gitea ne propose un contexte dans cette liste qu'une fois qu'il a été rapporté au moins une fois. La PR qui a introduit cette ligne a servi d'essai — elle ne pouvait se fusionner que si le motif correspondait vraiment.
 
-Ce réglage change ce que la forge rapporte : depuis qu'il est posé, la tête d'une PR porte **deux** statuts, `checks / checks (pull_request)` vert et `checks / checks (push)` **ignoré** — le déclencheur `push` n'écoutant que `dev` et `main`. `scripts/verify-and-merge-pr.sh` a dû l'apprendre : un statut ignoré est écarté, mais ne remplace pas un run effectif (constaté en fusionnant la PR qui a introduit ce réglage).
+Ce réglage change ce que la forge rapporte : depuis qu'il est posé, la tête d'une PR porte **deux** statuts, `checks / checks (pull_request)` vert et `checks / checks (push)` **ignoré** — le déclencheur `push` n'écoutant que `dev` et `main`. `.working-method/gates/verify-and-merge-pr.sh` a dû l'apprendre : un statut ignoré est écarté, mais ne remplace pas un run effectif (constaté en fusionnant la PR qui a introduit ce réglage).
 
-Ce réglage est le second verrou sur la CI, côté forge. Le premier est `scripts/verify-and-merge-pr.sh`, qui refuse de fusionner sans un run `checks` vert sur le SHA de tête (`verify-and-merge-pr.md`). Les deux disent la même chose à deux endroits : le script protège l'audit, la protection de branche protège l'interface et l'API.
+Ce réglage est le second verrou sur la CI, côté forge. Le premier est `.working-method/gates/verify-and-merge-pr.sh`, qui refuse de fusionner sans un run `checks` vert sur le SHA de tête (`verify-and-merge-pr.md`). Les deux disent la même chose à deux endroits : le script protège l'audit, la protection de branche protège l'interface et l'API.
 
 Modifier une règle par l'API (`PATCH /api/v1/repos/Eleyone/eleyone.fr/branch_protections/<règle>`) : un champ imbriqué n'est pris en compte que si la requête porte aussi ses champs parents. Envoyé seul, `push_whitelist_deploy_keys: false` répond `200` sans rien changer ; il faut envoyer `enable_push`, `enable_push_whitelist` et `push_whitelist_usernames` avec lui, et de même `enable_force_push`, `enable_force_push_allowlist` et `force_push_allowlist_usernames` avec `force_push_allowlist_deploy_keys`. Une réponse `200` ne prouve donc rien : relire la règle.
 

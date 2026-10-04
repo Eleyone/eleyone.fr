@@ -9,7 +9,7 @@
 # Chaque cas éprouve une **place** où l'adresse ne doit pas être. Ils ont tous été lancés une fois
 # contre un contrôle qui ne regardait pas cette place : ils échouent, sans quoi ils ne prouveraient
 # rien (point 9 d'AGENTS.md).
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # L'adresse d'essai porte **trois familles de caractères**, et chacune éprouve une faute possible :
 #
@@ -37,7 +37,7 @@ page() { # $1 = chemin relatif, $2 = contenu de <head> en plus, $3 = body, $4 = 
 # La page est **réécrite**, jamais retouchée par « sed » : dans un remplacement sed, « & » désigne
 # toute la correspondance, et l'adresse d'essai en contient une. Une première écriture injectait le
 # titre par sed et posait donc autre chose que ce qu'elle croyait — le cas échouait sans que le
-# contrôle soit en cause (piège connu, docs/procedures/shell-scripts.md).
+# contrôle soit en cause (piège connu, .working-method/procedures/shell-scripts.md).
 
 # Un rendu conforme : l'adresse est dans le corps des deux pages légales, et nulle part ailleurs.
 site() {
@@ -174,7 +174,7 @@ case_legal_un_octet_nul_nest_ni_bruyant_ni_aveuglant() {
   #
   # Le classement de « file » est **remplacé** par une fonction qui répond « us-ascii », sans quoi
   # le cas rendrait un verdict différent selon la machine — exactement ce qu'un cas ne doit jamais
-  # faire (docs/procedures/shell-scripts.md).
+  # faire (.working-method/procedures/shell-scripts.md).
   site
   printf 'debut\000%s\000fin\n' "$adresse" > "$work/public/flux.bin"
   run env CHECK_PUBLIC_ROOT="$work/public" HUGO_LEGAL_PUBLISHER_ADDRESS="$adresse" \
@@ -186,7 +186,7 @@ case_legal_un_octet_nul_nest_ni_bruyant_ni_aveuglant() {
   # Et le bruit ensuite. L'assertion ne cherche **pas** le texte de l'avertissement : bash le traduit,
   # et le cas aurait rendu un verdict différent selon la langue du poste — « octet nul ignoré » ici,
   # « ignored null byte » dans CHECK_IMAGE. Mesuré : une première écriture cherchait « null byte » et
-  # restait verte sur un contrôle fautif (piège connu, docs/procedures/shell-scripts.md). La règle
+  # restait verte sur un contrôle fautif (piège connu, .working-method/procedures/shell-scripts.md). La règle
   # affirmée est donc l'invariant lui-même : **toute ligne écrite sur la sortie d'erreur est un
   # signalement de C23**, et rien d'autre.
   local ligne

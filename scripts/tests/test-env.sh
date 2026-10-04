@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Chargeur des valeurs légales (story 2.4, AD-9) : priorité des sources, isolement des jetons,
 # refus d'une mise en ligne mal configurée. Hors ligne, sur des fichiers d'essai jetables.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # fichiers d'essai : un « .env » qui porte un jeton et une seule valeur légale, et un fichier factice complet
 fichiers() {

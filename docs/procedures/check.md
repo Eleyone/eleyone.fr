@@ -10,12 +10,12 @@ scripts/check.sh --release    # ajoute le niveau « release », celui des contr�
 ## Ce que fait le script
 
 1. **Le rendu de travail**, puis **le build de production**, par `scripts/build.sh`. Les deux passent `--panicOnWarning` : un avertissement de Hugo fait échouer le build, donc les contrôles (C14). Un build en échec **arrête tout** — aucun contrôle ne lit une sortie périmée —, et la sortie de Hugo est affichée telle quelle, précédée d'une ligne qui nomme le build fautif.
-2. **Tous les scripts de `scripts/checks/`**, découverts dynamiquement, triés, `lib.sh` exclu. Une story qui ajoute un contrôle dépose son script et ne touche pas à `check.sh`.
+2. **Tous les scripts de `scripts/checks/`** (`checks.dir` de `workflow.config`), découverts dynamiquement, triés, `lib.sh` exclu, chacun sous le chargeur `scripts/env.sh`. Une story qui ajoute un contrôle dépose son script et ne touche pas à `check.sh`. Depuis la story outillage-14, ce mécanisme est celui de l'outillage commun : `check.sh` appelle `.working-method/checks/run-checks.sh --root <racine> -- scripts/env.sh` (`.working-method/procedures/check.md`) ; sous-module absent, il sort en `2`.
 3. **Le résumé** : tous les contrôles tournent, même après un échec, tous les écarts s'affichent, puis une ligne nomme les contrôles en échec.
 
 Codes de sortie : `0` conforme, `1` écart constaté, `2` anomalie (outil ou fichier manquant, option inconnue).
 
-Le script n'appelle jamais `git` : il fonctionne dans un dépôt sans `.git`, par exemple dans l'image du site. Les contrôles qui lisent l'historique vivent dans `scripts/ci/checks-job.sh`, le job qui enchaîne le garde-fou, les tests des scripts et ce script dans le conteneur de contrôle (`checks-job.md`).
+Le script n'appelle jamais `git` : il fonctionne dans un dépôt sans `.git`, par exemple dans l'image du site — c'est pourquoi il donne la racine au mécanisme commun par `--root`, au lieu de la lui laisser chercher dans un dépôt git. Les contrôles qui lisent l'historique vivent dans `scripts/ci/checks-job.sh`, le job qui enchaîne le garde-fou, les tests des scripts et ce script dans le conteneur de contrôle (`checks-job.md`).
 
 ## Écrire un contrôle
 
@@ -32,7 +32,7 @@ manifests=$(checks_manifests build/work)
 - **Niveau** : `CHECK_LEVEL` vaut `standard`, ou `release` avec `--release`. Un contrôle de mise en ligne ne juge rien hors de `release` — `dev` porte des cas en brouillon et les valeurs légales factices, et il y échouerait à chaque PR —, mais il **dit** qu'il est sauté avant de rendre `0` : un `exit 0` muet cacherait un nom de variable mal écrit. C15 (`scripts/checks/release-pages.sh`) est le premier de cette famille, C22 (`scripts/checks/output-patterns.sh`) le second.
 - **Racine du rendu** : un contrôle lit `${CHECK_WORK_ROOT:-build/work}`, pour qu'un cas de test le lance sur des manifestes écrits à la main sans toucher au rendu du dépôt.
 - **Une liste vide n'est pas une conformité** : un contrôle qui parcourt des fichiers vérifie qu'il en a trouvé au moins un avant de conclure, sans quoi une racine erronée ou une sortie de build vide passeraient pour un succès (rétrospective de l'epic 3).
-- **Les enveloppes sont communes** : `checks_xpath`, `checks_attributes` et `checks_find` dans `scripts/checks/lib.sh`, `shell_grep` et `shell_grep_into` dans `scripts/lib/shell.sh`, partagées avec les tests et les scripts. Un contrôle n'écrit pas la sienne.
+- **Les enveloppes sont communes** : `checks_xpath`, `checks_attributes` et `checks_find` dans `scripts/checks/lib.sh`, `shell_grep` et `shell_grep_into` dans `.working-method/lib/shell.sh`, partagées avec les tests et les scripts. Un contrôle n'écrit pas la sienne.
 - **Lire une chaîne dans une sortie de Hugo** : `decoder_echappements` puis `normaliser_blancs` (`scripts/lib/text.sh`, chargés par `scripts/checks/lib.sh` ; la répétition générale s'en sert aussi depuis la story 11.9), dans cet ordre. Une même chaîne y a **six** sérialisations constatées — entités décimales, hexadécimales ou nommées, séquences `\uXXXX` du JSON-LD de Go — et le rendu de production est minifié : chercher la chaîne brute dans un HTML échappé ne trouve rien et passe pour vert (huit tours de revue sur la PR n° 98). Après normalisation, un fichier tient sur **une seule ligne**, ce qui est aussi ce qui rend sûre une recherche par `grep`, qui travaille ligne par ligne. La résolution d'une `RelPermalink` en chemin de fichier est `checks_page_de_url`.
 - **Confronter à la liste des motifs** : `pdf_confront` (`scripts/lib/pdf.sh`), partagée par C21, C22 et le garde-fou. Elle rend des **numéros de ligne**, jamais le motif ni l'extrait ; tout code autre que `0` et `1` est un échec de recherche, jamais « rien trouvé ». Un contrôle n'écrit pas sa propre recherche (constat A2, rétrospective de l'epic 7).
 
@@ -58,7 +58,7 @@ Cette moitié-là n'est pas décorative : la story 5.1 y a trouvé huit cibles s
 
 ## Tester un contrôle
 
-Les cas vivent dans `scripts/tests/test-*.sh` et suivent `docs/procedures/shell-scripts.md`.
+Les cas vivent dans `scripts/tests/test-*.sh` et suivent `.working-method/procedures/shell-scripts.md`.
 
 - **La logique d'un contrôle** se teste sur des **manifestes écrits à la main** sous `scripts/tests/fixtures/` : rapide, hors ligne, sans Hugo.
 - **La forme du manifeste** se teste une seule fois, par `scripts/tests/test-checks-manifest.sh` : un site fixture (`scripts/tests/fixtures/site/`) construit avec le Hugo épinglé, avec les gabarits, la configuration et les données du dépôt, puis lu à `jq`. C'est le seul cas qui lance un vrai build.

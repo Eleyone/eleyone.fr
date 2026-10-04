@@ -73,8 +73,9 @@
 # Chemin absolu : un contrôle lancé par un chemin relatif, puis un « cd », ne retrouverait pas
 # l'enveloppe commune (constaté en rejouant la suite de tests).
 checks_lib_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) || exit 2
-# shellcheck source=../lib/shell.sh
-. "$checks_lib_dir/../lib/shell.sh"
+# L'enveloppe vit dans l'outillage commun (sous-module .working-method, story outillage-14).
+# shellcheck source=../../.working-method/lib/shell.sh
+. "$checks_lib_dir/../../.working-method/lib/shell.sh"
 
 checks_die() { printf '%s: %s\n' "${script_name:-check}" "$*" >&2; exit 2; }
 
@@ -94,7 +95,7 @@ checks_manifests() { # $1 = racine du rendu de travail (par défaut build/work)
 #   find    : 0 seulement ; tout le reste est une anomalie
 #
 # La garde de grep n'est pas ici : elle est commune à tout le dépôt (« shell_grep » et
-# « shell_grep_into », scripts/lib/shell.sh). Elle y avait fini en quatre exemplaires
+# « shell_grep_into », .working-method/lib/shell.sh). Elle y avait fini en quatre exemplaires
 # (rétrospective de l'epic 3, constat A2).
 #
 # Les deux codes de « rien trouvé » viennent d'une divergence de libxml2, constatée en lançant le job

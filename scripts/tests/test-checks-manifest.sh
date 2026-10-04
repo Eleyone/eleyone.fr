@@ -3,7 +3,7 @@
 # ses manifestes lus à jq. Les autres contrôles se testent sur des manifestes écrits à la main ; ce
 # cas-ci est le seul à lancer un vrai build, pour prouver que le manifeste réel a bien cette forme.
 # Hors ligne : aucun téléchargement, le binaire vient de .tools/ ou du PATH (CHECK_IMAGE).
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 script_name=test-checks-manifest
 . "$root/scripts/lib/tools.sh"
 

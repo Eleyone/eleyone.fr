@@ -18,7 +18,7 @@ set -euo pipefail
 script_name=publish-case
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root"
-. "$root/scripts/lib/shell.sh"
+. "$root/.working-method/lib/shell.sh"
 . "$root/scripts/lib/publish-case.sh"
 
 die() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 2; }
@@ -178,5 +178,5 @@ corps="$root/.pr-body.md"
   printf 'Le poste du cas n'"'"'est pas touché : `publish-case` ne le publie jamais à la place de la story qui en a la charge.\n'
 } > "$corps" || die "écriture du corps de la PR impossible."
 
-scripts/create-pull-request.sh --title "feat: publie le cas $cle" --body-file "$corps"
+.working-method/gitea/create-pull-request.sh --title "feat: publie le cas $cle" --body-file "$corps"
 printf '%s: cas %s publié sur %s.\n' "$script_name" "$cle" "$branche"

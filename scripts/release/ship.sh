@@ -53,7 +53,7 @@ cd "$root"
 die() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 2; }
 refuse() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 1; }
 
-# Seul secrets_read_names est employé ici ; scripts/lib/shell.sh, dont dépend l'autre fonction de
+# Seul secrets_read_names est employé ici ; .working-method/lib/shell.sh, dont dépend l'autre fonction de
 # cette bibliothèque, n'est donc pas chargé.
 # shellcheck source=../lib/secrets.sh
 . "$root/scripts/lib/secrets.sh"
@@ -131,7 +131,7 @@ done
   || refuse "DEPLOY_SSH_KEY ne porte pas de clé privée OpenSSH (« -----BEGIN … PRIVATE KEY----- » attendu). Sa valeur n'est pas affichée (NFR-9). Rien n'a été envoyé."
 
 # Un fichier **présent mais vide** n'est pas une conformité : le piège est consigné
-# (docs/procedures/shell-scripts.md, story 0.8). Des empreintes faites de commentaires seuls
+# (.working-method/procedures/shell-scripts.md, story 0.8). Des empreintes faites de commentaires seuls
 # donneraient un known_hosts valide et vide, et « StrictHostKeyChecking=yes » refuserait la
 # connexion une fois l'archive déjà en train de partir.
 empreinte_utile=0
@@ -176,7 +176,7 @@ temporaires+=("$connus")
 printf '%s\n' "$DEPLOY_SSH_KEY" > "$cle" || die "écriture impossible dans le fichier temporaire de la clé."
 printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > "$connus" || die "écriture impossible dans le fichier temporaire des empreintes."
 
-# Les options sont écrites **une seule fois** (docs/procedures/shell-scripts.md) : la livraison et le
+# Les options sont écrites **une seule fois** (.working-method/procedures/shell-scripts.md) : la livraison et le
 # « status » qui la suit partent avec exactement les mêmes.
 #   - StrictHostKeyChecking=yes : l'hôte doit être celui dont on a l'empreinte, sans quoi la clé
 #     privée partirait vers une machine que personne n'a vérifiée ;
@@ -196,7 +196,7 @@ ssh_options=(
 printf '%s: livraison de %s vers le canal %s, commande « %s ».\n' "$script_name" "$image" "$canal" "$commande"
 
 # **Le piège du pipeline.** « docker save | gzip | ssh » est un pipeline de trois commandes, et le
-# projet s'est déjà fait mordre deux fois par leurs codes de retour (docs/procedures/shell-scripts.md).
+# projet s'est déjà fait mordre deux fois par leurs codes de retour (.working-method/procedures/shell-scripts.md).
 # Le code d'un pipeline est celui de sa **dernière** commande — « set -o pipefail » le corrige en
 # rendant le dernier code non nul —, mais ici même pipefail ne suffirait pas à dire **laquelle** des
 # trois a lâché, et c'est la seule chose qui compte : un « docker save » interrompu envoie une

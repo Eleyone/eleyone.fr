@@ -14,7 +14,7 @@
 # faux « id » en tête de PATH, qui prouvent qu'une demande hostile n'a lancé **aucune** commande — et
 # qui, accessoirement, empêchent la suite elle-même de jouer un « rm -rf / ». Le tableau complet est
 # dans le fichier de story.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 script=$root/deploy/remote/deploy-site.sh
 compose_production=$root/deploy/compose.yaml

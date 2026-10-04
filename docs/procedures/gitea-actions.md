@@ -61,7 +61,7 @@ Gitea lit `.gitea/workflows/` et **ignore** `.github/workflows/` dès que le pre
 
 Une CI qui tourne sans être exigée ne verrouille rien. Après la **première exécution verte**, ajouter le statut du job `checks` aux contrôles obligatoires de `dev` et de `main` (`gitea-branches.md`) : Gitea ne propose un statut dans cette liste qu'une fois qu'il a été rapporté au moins une fois.
 
-Le verrou « CI verte » de `scripts/verify-and-merge-pr.sh` lit ce même statut ; il passe de `absent` à bloquant dès que `.gitea/workflows/checks.yaml` existe sur la branche de base (règle d'amorçage, `verify-and-merge-pr.md`). Ce fichier ne doit donc arriver sur `dev` qu'une fois le runner prêt, sans quoi toutes les PR suivantes seraient bloquées.
+Le verrou « CI verte » de `.working-method/gates/verify-and-merge-pr.sh` lit ce même statut ; il passe de `absent` à bloquant dès que `.gitea/workflows/checks.yaml` existe sur la branche de base (règle d'amorçage, `verify-and-merge-pr.md`). Ce fichier ne doit donc arriver sur `dev` qu'une fois le runner prêt, sans quoi toutes les PR suivantes seraient bloquées.
 
 ## Ce qui déclenche un run
 

@@ -1,19 +1,30 @@
 #!/usr/bin/env bash
-# Point d'entrée des contrôles (story 3.2) : ordre des builds, découverte, cumul, codes de sortie.
-# Hors ligne : check.sh est copié dans un faux dépôt, avec un build.sh bouchonné et des contrôles
-# d'essai. Le vrai build est exercé par les essais de la story, pas ici.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+# Point d'entrée des contrôles (story 3.2) : ordre des builds, niveau, codes de sortie, et sa
+# délégation au mécanisme commun. Hors ligne : check.sh est copié dans un faux dépôt, avec un
+# build.sh bouchonné et des contrôles d'essai. Le vrai build est exercé par les essais de la story,
+# pas ici.
+#
+# Le mécanisme (découverte, cumul des écarts, anomalie en 2, lib.sh écarté, tri) vit dans l'outillage
+# commun depuis la story outillage-14 : ses cas — check_cumule_les_echecs, check_anomalie_rend_2,
+# check_ignore_lib_et_trie — tournent dans le dépôt commun (.working-method/tests/test-run-checks.sh),
+# au mot près. Restent ici ce que check.sh fait lui-même : les builds, --release, son option inconnue,
+# et sa délégation, sans .git, comme dans le contexte de build de l'image.
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 faux_depot() { # prépare $work/faux : check.sh réel, build.sh bouchonné, dossier de contrôles vide
-  mkdir -p "$work/faux/scripts/checks" "$work/faux/scripts/lib"
+  mkdir -p "$work/faux/scripts/checks" "$work/faux/scripts/lib" "$work/faux/.working-method/checks" "$work/faux/.working-method/lib"
   cp "$root/scripts/check.sh" "$work/faux/scripts/"
   cp "$root/scripts/checks/lib.sh" "$work/faux/scripts/checks/"
-  cp "$root/scripts/lib/shell.sh" "$root/scripts/lib/text.sh" "$work/faux/scripts/lib/"
+  cp "$root/scripts/lib/text.sh" "$work/faux/scripts/lib/"
+  # le mécanisme commun et ce qu'il charge, comme dans le sous-module, et le workflow.config du projet
+  cp "$root/.working-method/checks/run-checks.sh" "$work/faux/.working-method/checks/"
+  cp "$root/.working-method/lib/config.sh" "$root/.working-method/lib/shell.sh" "$root/.working-method/lib/dotenv.sh" \
+    "$work/faux/.working-method/lib/"
+  cp "$root/workflow.config" "$work/faux/"
   # Le chargeur unique et sa bibliothèque : check.sh lance chaque contrôle par lui depuis la story
   # 9.1, sans quoi aucun contrôle ne verrait un HUGO_LEGAL_* (AD-9). Une fixture qui ne le porte pas
   # ne ressemble plus au dépôt qu'elle imite (point 16 d'AGENTS.md).
   cp "$root/scripts/env.sh" "$work/faux/scripts/"
-  cp "$root/scripts/lib/dotenv.sh" "$work/faux/scripts/lib/"
   mkdir -p "$work/faux/ci"
   cp "$root/ci/legal-placeholder.env" "$work/faux/ci/"
   : > "$work/faux/build.log"
@@ -39,25 +50,7 @@ production" "$(cat "$work/faux/build.log")" "le rendu de travail précède le bu
   [[ ! -e $work/faux/.git ]] || { echo "le faux dépôt ne doit pas avoir de .git" >&2; exit 1; }
 }
 
-case_check_cumule_les_echecs() {
-  faux_depot
-  controle a 1
-  controle b 1
-  controle c 0
-  run bash "$work/faux/scripts/check.sh"
-  assert_eq 1 "$rc" "un écart rend 1"
-  assert_contains "contenu/a.md: écart de a" "$err" "le premier écart est affiché"
-  assert_contains "contenu/b.md: écart de b" "$err" "le contrôle suivant tourne quand même"
-  assert_contains "2 contrôle(s) en échec sur 3 : a b" "$err" "le résumé nomme les contrôles en échec"
-}
 
-case_check_anomalie_rend_2() {
-  faux_depot
-  controle a 2
-  run bash "$work/faux/scripts/check.sh"
-  assert_eq 2 "$rc" "une anomalie rend 2"
-  assert_contains "a (code 2)" "$err" "le résumé nomme le code"
-}
 
 case_check_build_en_echec_arrete_avant_les_controles() {
   faux_depot
@@ -73,15 +66,6 @@ hugo: avertissement" "$err" "la ligne de check.sh précède la sortie de Hugo"
   [[ ! -e $work/faux/controles.log ]] || { echo "un contrôle a tourné après un build en échec" >&2; exit 1; }
 }
 
-case_check_ignore_lib_et_trie() {
-  faux_depot
-  controle b 0
-  controle a 0
-  run bash "$work/faux/scripts/check.sh"
-  assert_eq 0 "$rc" "lib.sh n'est pas un contrôle (messages : $err)"
-  assert_eq "niveau=standard a
-niveau=standard b" "$(cat "$work/faux/controles.log")" "les contrôles tournent triés, sans lib.sh"
-}
 
 case_check_release_pose_le_niveau() {
   faux_depot
@@ -90,6 +74,27 @@ case_check_release_pose_le_niveau() {
   assert_eq 0 "$rc" "--release est reconnue (messages : $err)"
   assert_contains "niveau=release a" "$(cat "$work/faux/controles.log")" "le niveau est transmis au contrôle"
   assert_contains "niveau release" "$out" "le résumé nomme le niveau"
+}
+
+case_check_mecanisme_absent_rend_2() {
+  # Sans le sous-module, aucun contrôle ne tournerait : c'est une anomalie, jamais une conformité.
+  faux_depot
+  controle a 0
+  rm -rf "$work/faux/.working-method"
+  run bash "$work/faux/scripts/check.sh"
+  assert_eq 2 "$rc" "mécanisme absent : anomalie"
+  assert_contains "sous-module .working-method non initialisé" "$err" "le message dit le remède"
+  [[ ! -e $work/faux/controles.log ]] || { echo "un contrôle a tourné sans le mécanisme" >&2; exit 1; }
+}
+
+case_check_les_controles_tournent_sous_le_chargeur() {
+  # Chaque contrôle voit les valeurs légales du chargeur (AD-9), à travers le mécanisme commun.
+  faux_depot
+  printf '#!/usr/bin/env bash\necho "editeur=${HUGO_LEGAL_PUBLISHER_NAME:-absent}" >> "%s/faux/controles.log"\n' "$work" \
+    > "$work/faux/scripts/checks/valeurs.sh"
+  run env ENV_FILE=/nonexistent/.env bash "$work/faux/scripts/check.sh"
+  assert_eq 0 "$rc" "les contrôles passent (messages : $err)"
+  [[ $(cat "$work/faux/controles.log") != "editeur=absent" ]] || { echo "le contrôle ne voit aucune valeur légale" >&2; exit 1; }
 }
 
 case_check_option_inconnue() {

@@ -1,7 +1,7 @@
 # Lecture des **noms** des secrets d'Actions de la forge, dans les fichiers qui les portent.
 #
 # À charger par « . scripts/lib/secrets.sh » depuis un script qui a défini script_name, une fonction
-# die, et qui a chargé scripts/lib/shell.sh (secrets_read_env_names y prend shell_grep_into).
+# die, et qui a chargé .working-method/lib/shell.sh (secrets_read_env_names y prend shell_grep_into).
 # Aucune fonction ne lit ni n'affiche une **valeur** : ces fichiers n'en contiennent pas, et c'est
 # tout l'intérêt de les commiter.
 #
@@ -12,11 +12,11 @@
 #
 # **Une seule écriture**, parce que deux scripts lisent ces listes — scripts/release/ship.sh et
 # scripts/release/check-forge-secrets.sh — et que dupliquer une garde correcte est un défaut au
-# même titre que l'oublier (docs/procedures/shell-scripts.md, rétrospective de l'epic 3).
+# même titre que l'oublier (.working-method/procedures/shell-scripts.md, rétrospective de l'epic 3).
 #
 # Les deux fonctions **arrêtent le script** par die plutôt que de rendre un code : une liste de noms
 # comprise à moitié ferait exiger ou vérifier moins de secrets qu'il n'en faut, sans que rien ne le
-# dise. C'est la garde de require_patterns_file (scripts/lib/gitea.sh), pour la même raison.
+# dise. C'est la garde de require_patterns_file (.working-method/gitea/gitea.sh), pour la même raison.
 
 # Un nom par ligne ; « # » commente jusqu'à la fin de la ligne, les lignes vides sont ignorées.
 # Tout le reste doit être un nom de variable d'environnement, sans quoi le script s'arrête en

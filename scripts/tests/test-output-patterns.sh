@@ -18,7 +18,7 @@
 #
 # Chaque cas éprouve une **garde**, et chacune a été lancée une fois contre un contrôle privé de
 # cette garde : elles échouent alors, sans quoi elles ne prouveraient rien (point 9 d'AGENTS.md).
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # --- les motifs et les valeurs légales, tous factices ----------------------------------------------
 readonly motif="VILLEFACTICE-SUR-ESSAI"
@@ -487,6 +487,8 @@ case_output_patterns_un_code_inattendu_nest_pas_un_fichier_propre() {
   rm -rf "$arbre"; mkdir -p "$arbre/scripts/checks" "$arbre/scripts/lib"
   cp "$root/scripts/checks/output-patterns.sh" "$root/scripts/checks/lib.sh" "$arbre/scripts/checks/"
   cp "$root"/scripts/lib/*.sh "$arbre/scripts/lib/"
+  # les bibliothèques de l'outillage commun que celles du projet chargent (shell.sh, dotenv.sh)
+  mkdir -p "$arbre/.working-method/lib" && cp "$root"/.working-method/lib/*.sh "$arbre/.working-method/lib/"
   printf '\npdf_confront() { return 7; }\n' >> "$arbre/scripts/lib/pdf.sh"
   site
   run env CHECK_LEVEL=release CHECK_PUBLIC_ROOT="$work/public" CHECK_WORK_ROOT="$work/rendu" \

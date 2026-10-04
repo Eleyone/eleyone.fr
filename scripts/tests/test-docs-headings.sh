@@ -16,7 +16,7 @@
 # un fichier de story porte une rubrique de lentille de revue par revue subie (« Lentille :
 # edge-case-hunter » y figure autant de fois qu'il y a eu de revues). Les niveaux 1 et 2 nomment
 # des parties de document, qui sont uniques par construction.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # Les documents du projet, à l'exclusion des skills installés sous .claude/, .agent/ et .agents/ :
 # ceux-là sont réinstallés par BMAD, ne nous appartiennent pas, et quelques-uns répètent un titre

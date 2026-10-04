@@ -107,7 +107,7 @@ scripts/release/ship.sh --check-env
 Les cas de `scripts/tests/test-ship.sh`, `scripts/tests/test-release-job.sh` et `scripts/tests/test-workflows.sh` couvrent les refus, l'exclusivité des canaux, les trois éléments du pipeline en échec et la forme du YAML, **sans lancer ni `ssh` ni Docker** : la suite reste hors ligne (story 0.9). Ce qui demande un vrai serveur s'éprouve à la story 11.6, puis au jalon « répétition générale ».
 
 ```bash
-scripts/tests/run.sh scripts/tests/test-ship.sh scripts/tests/test-release-job.sh scripts/tests/test-workflows.sh
+.working-method/tests/run.sh scripts/tests/test-ship.sh scripts/tests/test-release-job.sh scripts/tests/test-workflows.sh
 ```
 
 Après une répétition, le canal se vérifie par un tunnel depuis le poste, puis s'arrête sans rien laisser (`deploy-site.md`) :

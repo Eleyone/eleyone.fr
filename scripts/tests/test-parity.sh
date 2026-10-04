@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # C3, parité FR/EN (story 3.3), sur des manifestes écrits à la main : la logique du contrôle se teste
 # sans Hugo. La forme du manifeste, elle, est prouvée une seule fois par test-checks-manifest.sh.
-. "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/tests/lib.sh"
 
 # Prépare $work/rendu à partir des fixtures, chaque langue pouvant être transformée par un filtre jq.
 rendu() { # $1 = filtre jq pour le manifeste FR, $2 = filtre pour l'EN (« . » pour ne rien changer)

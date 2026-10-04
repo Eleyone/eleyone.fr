@@ -1,0 +1,3 @@
+[submodule "working-method"]
+	path = .working-method
+	url = ../working-method.git

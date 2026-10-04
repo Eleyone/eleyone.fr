@@ -68,7 +68,7 @@ racine_depot=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
 patterns_file=${PRIVATE_PATTERNS_FILE:-$racine_depot/docs/private/forbidden-patterns.txt}
 if [[ -n $patterns_file && -f $patterns_file ]]; then
   # Deux commandes, chacune avec son arrêt : « a && b || die » suspend « set -e » pour tout le
-  # bloc, ce que docs/procedures/shell-scripts.md proscrit.
+  # bloc, ce que .working-method/procedures/shell-scripts.md proscrit.
   patterns=$(mktemp) || checks_die "fichier temporaire impossible."
   temporaires+=("$patterns")
   patterns_text=$(mktemp) || checks_die "fichier temporaire impossible."
@@ -89,7 +89,7 @@ fi
 # le texte, ni les métadonnées, ni le XMP n'auraient été confrontés — précisément les endroits où un
 # téléphone ou une commune se cachent sans qu'on les voie. Une liste **présente mais vide** tombe
 # dans le même refus, « patterns » étant vidé ci-dessus : le piège du fichier vide est consigné
-# (docs/procedures/shell-scripts.md, story 0.8). Mesuré à la story 11.3 : le build de l'image
+# (.working-method/procedures/shell-scripts.md, story 0.8). Mesuré à la story 11.3 : le build de l'image
 # annonçait « liste des motifs absente, contenu non confronté » et rendait 0.
 if [[ ${CHECK_LEVEL:-standard} == release && -z $patterns ]]; then
   checks_die "liste des motifs absente ou sans motif ($patterns_file) : au niveau « release », une mise en ligne ne valide pas deux CV dont le contenu n'a pas été confronté (AD-12, AD-21). Poser PRIVATE_PATTERNS_FILE."
