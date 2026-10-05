@@ -6,7 +6,7 @@ slug: "chiliz-pool-creation-takeover"
 group: "chiliz"
 position: "position-chiliz"
 order: 3
-draft: true
+draft: false
 
 context:
   company: "Chiliz"

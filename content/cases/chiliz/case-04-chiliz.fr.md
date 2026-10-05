@@ -6,7 +6,7 @@ slug: "chiliz-reprise-creation-pool"
 group: "chiliz"
 position: "position-chiliz"
 order: 3
-draft: true
+draft: false
 
 context:
   company: "Chiliz"
