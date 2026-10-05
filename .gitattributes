@@ -1,0 +1,7 @@
+# Les anciennes copies locales de BMAD, supprimées au passage sur le BMAD du sous-module (story outillage-1
+# du dépôt commun) : leur diff de suppression, environ 8 Mo, n'entrerait pas dans la fenêtre de la revue
+# LLM, qui n'en reçoit ainsi que la liste. Ces chemins ne désignent plus que des liens vers le sous-module
+# (.working-method/bmad/method/skills/<skill>), qui ne sont pas concernés : ces lignes ne cachent rien d'autre.
+/.claude/skills/bmad-*/** -diff
+/.agents/skills/bmad-*/** -diff
+/.agent/skills/bmad-*/** -diff

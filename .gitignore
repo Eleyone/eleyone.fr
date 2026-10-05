@@ -22,3 +22,9 @@ build/
 resources/_gen/
 .hugo_build.lock
 .agents/mcp_config.json
+
+# BMAD (story outillage-1 du dépôt commun) : configuration générée par .working-method/bin/install depuis
+# workflow.config ET _bmad/config.user.toml, propre à chaque poste ; et la couche utilisatrice elle-même
+# (décisions d'Arnaud des 04 et 05/10/2026). bin/install exige _bmad/config.user.toml et ne l'écrit jamais.
+/_bmad/*/config.yaml
+/_bmad/config.user.toml

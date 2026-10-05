@@ -89,7 +89,7 @@ The shared dev skills (`llm-review`, `create-pull-request`, `verify-and-merge-pr
 
 ## BMAD workflow
 
-Skills are installed in `.claude/skills/`, with mirrored copies in `.agent/skills/` and `.agents/skills/` for other agent runtimes. The project's own dev skills are symlinks in those two folders, not copies (see Development workflow). Invoke them as slash commands (`/bmad-help` recommends the next one). The expected chain for this project: Analyst brief → PM PRD (v1 then v1.1) → Architect (repo layout, Docker nginx build pipeline, Markdown and D2 naming conventions) → small stories delivered one at a time.
+BMAD is not installed in this repository: it comes from the shared repository, which carries **the** BMAD version every project uses (6.12.0, modules declared in `workflow.config`, `bmad.*`). `.working-method/bin/install` links each BMAD skill of the enabled modules into `.claude/skills/`, `.agents/skills/` and `.agent/skills/`, as relative symlinks to `.working-method/bmad/method/skills/<skill>`, and links the method files into `_bmad/` (`.working-method/procedures/bmad.md`). ⛔ **Never run the BMAD installer (`npx bmad-method install`) here**: it would write through the links, into the submodule. A BMAD upgrade is a bump of the submodule, with `bmad.version` aligned in the same PR. The project's own dev skills are real folders in `.claude/skills/` and symlinks in the two other folders (see Development workflow). Invoke them as slash commands (`/bmad-help` recommends the next one). The expected chain for this project: Analyst brief → PM PRD (v1 then v1.1) → Architect (repo layout, Docker nginx build pipeline, Markdown and D2 naming conventions) → small stories delivered one at a time.
 
 Arnaud's stated preference: before each story, restate your understanding and ask questions. He would rather field one question too many than redo a page. From story 0.6 on, the spec review (`.working-method/review/llm-review.sh --story <n.m>`) comes first, and the restatement and questions build on its triaged findings.
 
@@ -101,7 +101,7 @@ Arnaud's stated preference: before each story, restate your understanding and as
 
 ### Configuration
 
-Config is a four-layer TOML merge. `_bmad/config.toml` and `_bmad/config.user.toml` are installer-managed and regenerated on every install — never edit them. Durable overrides go in `_bmad/custom/config.toml` (team) or `_bmad/custom/config.user.toml` (personal, gitignored); per-skill overrides go in `_bmad/custom/<skill-name>.toml`. The installer never touches those.
+Config is a four-layer TOML merge. `_bmad/config.toml` is **generated** by `.working-method/bin/install` from `workflow.config` (`bmad.project-name`, `bmad.document-output-language`, `bmad.output-folder`) and committed; each `_bmad/<module>/config.yaml` is generated from `workflow.config` **and** `_bmad/config.user.toml`, and is not committed. Never edit them: a hand edit is overwritten at the next `bin/install`, which says so. `_bmad/config.user.toml` (user name, communication language, skill level) is personal and **not committed** (Arnaud's decision, 05/10/2026): a fresh clone writes it before running `bin/install`, which refuses without it and lists the keys it needs. Durable overrides go in `_bmad/custom/config.toml` (team) or `_bmad/custom/config.user.toml` (personal, gitignored); per-skill overrides go in `_bmad/custom/<skill-name>.toml`. Nothing generates or touches those.
 
 Key values: project `eleyone.fr`, user `Eleyone`, output folder `_bmad-output/`, planning artifacts in `_bmad-output/planning-artifacts/`, implementation artifacts in `_bmad-output/implementation-artifacts/`, project knowledge in `docs/`, skill level `intermediate`. `_bmad/custom/bmad-party-mode.toml` moves party-mode memory and keepsakes into `docs/private/party-mode/`.
 
@@ -111,7 +111,7 @@ Key values: project `eleyone.fr`, user `Eleyone`, output folder `_bmad-output/`,
 
 ### Scripts
 
-Python helpers run through `uv` (a `.venv` with Python 3.14 is present). Run each from the exact path written in the skill, never assume co-location.
+Python helpers run through `uv` (a `.venv` with Python 3.14 is present). Run each from the exact path written in the skill, never assume co-location. `_bmad/scripts` is a link to the shared repository's copy (`.working-method/bmad/method/scripts`): run the scripts from the project root, which they take as the project.
 
 ```bash
 uv run _bmad/scripts/resolve_config.py --project-root .          # merged config as JSON

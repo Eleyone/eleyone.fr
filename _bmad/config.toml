@@ -1,19 +1,11 @@
-# ─────────────────────────────────────────────────────────────────
-# Installer-managed. Regenerated on every install — treat as read-only.
-#
-# Direct edits to this file will be overwritten on the next install.
-# To change an install answer durably, re-run the installer (your prior
-# answers are remembered as defaults). To pin a value regardless of
-# install answers, or to add custom agents / override descriptors, use:
-#   _bmad/custom/config.toml       (team, committed)
-#   _bmad/custom/config.user.toml  (personal, gitignored)
-# Those files are never touched by the installer.
-# ─────────────────────────────────────────────────────────────────
+# Généré par bin/install du dépôt commun depuis workflow.config (BMAD 6.12.0, modules : core bmm bmb cis bmad-loop) — ne pas éditer.
+# Une édition à la main est écrasée au prochain bin/install, et signalée. Réglage durable : workflow.config,
+# ou _bmad/custom/config.toml (équipe) et _bmad/custom/config.user.toml (personnel), que BMAD lit par-dessus.
 
 [core]
 project_name = "eleyone.fr"
 document_output_language = "English"
-output_folder = "{project-root}/_bmad-output"
+output_folder = "_bmad-output"
 
 [modules.bmm]
 planning_artifacts = "{project-root}/_bmad-output/planning-artifacts"
