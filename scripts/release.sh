@@ -163,20 +163,18 @@ fi
 load_gitea_env "$root/.env"
 check_token_owner "$tmp/user.json"
 
-pr=""
-page=1
-while :; do
-  ((page <= max_pr_pages)) || die "liste des PR ouvertes plus longue que $max_pr_pages pages."
-  code=$(gitea_api GET "/repos/$gitea_canonical_repo/pulls?state=open&limit=50&page=$page" "$tmp/open.json")
-  [[ $code == 200 ]] || die "lecture des PR ouvertes impossible (HTTP $code) : $(forge_message "$tmp/open.json")"
-  pr=$(jq -r '[.[] | select(.head.ref == "dev" and .base.ref == "main") | .number] | first // empty' "$tmp/open.json" 2>/dev/null) \
-    || die "liste des PR ouvertes illisible."
-  [[ -z $pr ]] || break
-  count=$(jq 'length' "$tmp/open.json" 2>/dev/null) || die "liste des PR ouvertes illisible."
-  [[ $count =~ ^[0-9]+$ ]] || die "liste des PR ouvertes illisible."
-  ((count == 50)) || break
-  page=$((page + 1))
-done
+# La lecture paginée des PR ouvertes est commune à release et hotfix (scripts/lib/release.sh) ;
+# l'appel à la forge reste ici, et meurt lui-même sur un code inattendu.
+fetch_open_page() { # $1 numéro de page, $2 fichier de réponse
+  local code
+  code=$(gitea_api GET "/repos/$gitea_canonical_repo/pulls?state=open&limit=50&page=$1" "$2")
+  [[ $code == 200 ]] || die "lecture des PR ouvertes impossible (HTTP $code) : $(forge_message "$2")"
+}
+code=0
+release_find_open_pr fetch_open_page dev main "$max_pr_pages" "$tmp/pr-ouverte" || code=$?
+((code != 3)) || die "liste des PR ouvertes plus longue que $max_pr_pages pages."
+((code == 0)) || die "liste des PR ouvertes illisible."
+pr=$(cat "$tmp/pr-ouverte")
 
 if [[ -z $pr ]]; then
   printf 'Mise en ligne %s\n' "$tag" > "$tmp/titre.txt"
@@ -191,14 +189,9 @@ if [[ -z $pr ]]; then
   # Le titre et le corps partent sur la forge : ils passent d'abord la liste des motifs, comme le
   # fait create-pull-request. Le tag est le seul morceau qui vienne de la ligne de commande.
   code=0
-  grep -vE '^[[:space:]]*(#|$)' "$patterns_file" > "$tmp/patterns" 2>/dev/null || code=$?
-  ((code <= 1)) || die "lecture du fichier de motifs impossible : rien n'est ouvert."
-  if [[ -s $tmp/patterns ]]; then
-    code=0
-    grep -qiF -f "$tmp/patterns" "$tmp/titre.txt" "$tmp/corps.txt" || code=$?
-    ((code != 0)) || refuse "le titre ou le corps de la PR contient un motif privé (contenu masqué) : rien n'est ouvert."
-    ((code == 1)) || die "vérification du titre et du corps impossible : rien n'est ouvert."
-  fi
+  release_private_text "$patterns_file" "$tmp/patterns" "$tmp/titre.txt" "$tmp/corps.txt" || code=$?
+  ((code != 0)) || refuse "le titre ou le corps de la PR contient un motif privé (contenu masqué) : rien n'est ouvert."
+  ((code == 1)) || die "vérification du titre et du corps impossible : rien n'est ouvert."
   jq -n --rawfile titre "$tmp/titre.txt" --rawfile corps "$tmp/corps.txt" \
     '{head: "dev", base: "main", title: ($titre | rtrimstr("\n")), body: $corps}' > "$tmp/creation.json" \
     || die "préparation de la PR impossible."
@@ -336,21 +329,18 @@ while :; do
   forge_said=$(forge_message "$tmp/fusion-reponse.json")
   # Un 405 « Please try again later » est **transitoire** : la forge n'a pas fini de recalculer la
   # fusionnabilité (AD-24). Un 405 qui dit autre chose est un refus de style, et il reste un refus.
-  [[ $code == 405 && ${forge_said,,} == *"try again later"* ]] || break
+  # La classification est commune à release et hotfix (scripts/lib/release.sh).
+  outcome=$(release_merge_response "$code" "$forge_said")
+  [[ $outcome == retry ]] || break
   ((attempt < retry_max)) || break
   attempt=$((attempt + 1))
   printf '%s: la forge demande de réessayer (405 transitoire) ; reprise %s sur %s.\n' "$script_name" "$attempt" "$retry_max"
   sleep "$retry_delay"
 done
-case $code in
-  200) ;;
-  405) refuse "la forge refuse le style de fusion (HTTP 405) : $forge_said. Les styles du dépôt sont squash et fast-forward-only (docs/procedures/gitea-branches.md). Aucun tag n'est posé." ;;
-  500)
-    if [[ $forge_said == *DivergingFastForwardOnly* ]]; then
-      refuse "main a divergé de dev pendant la publication (HTTP 500, DivergingFastForwardOnly) : rien n'est réécrit en silence (AD-24). Relancer après avoir relu l'état des deux branches. Aucun tag n'est posé."
-    fi
-    refuse "la forge refuse la fusion (HTTP 500) : $forge_said. Aucun tag n'est posé."
-    ;;
+case $outcome in
+  ok) ;;
+  retry | style) refuse "la forge refuse le style de fusion (HTTP 405) : $forge_said. Les styles du dépôt sont squash et fast-forward-only (docs/procedures/gitea-branches.md). Aucun tag n'est posé." ;;
+  diverging) refuse "main a divergé de dev pendant la publication (HTTP 500, DivergingFastForwardOnly) : rien n'est réécrit en silence (AD-24). Relancer après avoir relu l'état des deux branches. Aucun tag n'est posé." ;;
   *) refuse "la forge refuse la fusion (HTTP $code) : $forge_said. Aucun tag n'est posé." ;;
 esac
 read_pr "$tmp/pr-apres-fusion.json"
@@ -368,17 +358,19 @@ dev_after=$(git rev-parse --verify --quiet "refs/remotes/origin/dev^{commit}") |
 [[ $dev_after == "$dev_sha" ]] \
   || die "dev a bougé pendant la publication (${dev_after:0:7}) : aucun tag n'est posé, main et dev ne portent pas le même commit."
 
-git tag -a "$tag" -m "Mise en ligne $tag" "$main_after" || die "création du tag $tag impossible."
-if ! git push --quiet origin "refs/tags/$tag" 2>/dev/null; then
-  # Le retrait du tag local est le seul « best effort » du script, et il est écrit comme tel : on
-  # meurt à la ligne suivante de toute façon, et un tag local resté en place ne casse qu'une reprise
-  # — que le message annonce. Son code est tout de même lu, pour que le message dise laquelle des
-  # deux situations l'opérateur retrouvera.
-  retrait_rc=0
-  git tag -d "$tag" > /dev/null 2>&1 || retrait_rc=$?
-  ((retrait_rc == 0)) || printf '%s: le tag local %s n'"'"'a pas pu être retiré non plus : le supprimer à la main avant de relancer.\n' "$script_name" "$tag" >&2
-  die "le tag $tag n'a pas pu être poussé : il a été retiré du dépôt local pour qu'une reprise le repose sur le même commit. La PR est fusionnée ; relancer."
-fi
+code=0
+release_push_tag "$tag" "$main_after" "Mise en ligne $tag" || code=$?
+case $code in
+  0) ;;
+  1) die "création du tag $tag impossible." ;;
+  # Le retrait du tag local est fait par la bibliothèque ; son code dit laquelle des deux situations
+  # l'opérateur retrouvera.
+  2) die "le tag $tag n'a pas pu être poussé : il a été retiré du dépôt local pour qu'une reprise le repose sur le même commit. La PR est fusionnée ; relancer." ;;
+  *)
+    printf '%s: le tag local %s n'"'"'a pas pu être retiré non plus : le supprimer à la main avant de relancer.\n' "$script_name" "$tag" >&2
+    die "le tag $tag n'a pas pu être poussé. La PR est fusionnée ; relancer."
+    ;;
+esac
 
 printf '%s: %s posé sur main (%s) et poussé. La livraison appartient maintenant au workflow release.\n' \
   "$script_name" "$tag" "${main_after:0:7}"

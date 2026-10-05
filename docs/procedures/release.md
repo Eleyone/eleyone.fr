@@ -29,7 +29,7 @@ Un tag `vX.Y.Z-rc.N` est refusé d'entrée : c'est une **répétition générale
 
 Dans cet ordre, et sans appeler la forge :
 
-1. **L'invariant d'AD-24** : `main` est un ancêtre de `dev`. Sinon le script refuse et renvoie vers `hotfix`, qui rebase `dev` sur `main` — c'est exactement l'état que laisse un correctif de production.
+1. **L'invariant d'AD-24** : `main` est un ancêtre de `dev`. Sinon le script refuse et renvoie vers `hotfix`, dont `sync` rebase `dev` sur `main` (`hotfix.md`) — c'est exactement l'état que laisse un correctif de production.
 2. **Il y a quelque chose à publier** : `main` et `dev` ne pointent pas déjà sur le même commit.
 3. **Le tag est libre** : un `vX.Y.Z` déjà posé arrête tout, plutôt que d'être poussé sur un autre commit.
 4. **La répétition générale** (AD-22, D-6) : un tag `<tag>-rc.N` doit pointer sur un **arbre identique** à la tête de `dev` — l'arbre et non le commit, une signature ou un hotfix changeant le commit sans changer une ligne du site. Pour `v1.0.0`, son absence est un **refus** ; pour tout tag de production suivant, un simple **avertissement**.
@@ -79,7 +79,7 @@ Le retour arrière ne passe pas par un tag : il se demande au serveur, qui relan
 deploy-site rollback <tag>     # envoyé par ssh au compte de déploiement, dans SSH_ORIGINAL_COMMAND
 ```
 
-Le tag demandé doit être un `vX.Y.Z` dont l'image est encore présente sur le serveur ; `deploy-site` refuse un tag `-rc` en production. Le correctif qui suit, lui, passe par le skill `hotfix` : branche `hotfix/*` depuis `main`, PR vers `main`, tag `vX.Y.(Z+1)`, puis `dev` rebasée sur `main` (AD-24).
+Le tag demandé doit être un `vX.Y.Z` dont l'image est encore présente sur le serveur ; `deploy-site` refuse un tag `-rc` en production. Le correctif qui suit, lui, passe par le skill `hotfix` (`hotfix.md`) : branche `hotfix/*` depuis `main`, PR vers `main` fusionnée en fast-forward, tag `vX.Y.(Z+1)` calculé, puis `dev` rebasée sur `main` et poussée en `--force-with-lease` sur l'approbation d'Arnaud (AD-24, D-14).
 
 ## En cas de verrou bloquant
 

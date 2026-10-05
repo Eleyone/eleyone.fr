@@ -139,3 +139,7 @@ Constats de revue reportés à plus tard, au format de `bmad-build`. Chaque entr
   summary: Le tableau « Contrôles livrés » de `docs/procedures/check.md` n'a pas de ligne pour C21, C23 ni C24, alors que ces contrôles existent et tournent. Oubli antérieur à la story 9.8, qui a ajouté la ligne C26 sans réparer les autres. À reprendre dans une PR de documentation, en relisant le tableau entier contre la liste des contrôles de l'architecture.
   evidence: Signalé par l'implémentation de la story 9.8 (04/10/2026).
 
+- source_spec: `_bmad-output/implementation-artifacts/11-12-hotfix-skill.md`
+  summary: Après une fusion réussie, si la relecture des branches ou le push du tag échoue, `scripts/release.sh` conseille de « relancer » ; or une relance trouve la PR déjà fusionnée et ne pose pas le tag. `scripts/hotfix.sh`, son jumeau écrit à la story 11.12, donne à la place les commandes exactes pour poser et pousser le tag à la main. À reprendre en alignant les messages de `release.sh`, avec un test qui place l'échec après la fusion (règle 5 commune).
+  evidence: Relevé par l'implémentation de la story 11.12 (05/10/2026), en parcourant `release.sh` garde par garde (règle 8 commune).
+

@@ -19,7 +19,26 @@
 #                                          écrit dans <sortie> les clés du socle absentes de la liste
 #                                          cumulative : 0 lu, 2 anomalie
 #
-# Procédure : docs/procedures/release.md
+# Les quatre suivantes sont communes aux deux chemins vers main, release et hotfix (story 11.12) :
+# écrites une fois, pour qu'une garde apprise par l'un ne manque pas à l'autre (règle 8 commune).
+#
+#   release_find_open_pr <fonction> <tête> <base|*> <plafond> <sortie>
+#                                          cherche, page par page, la PR ouverte depuis la branche
+#                                          <tête> (vers <base>, ou vers toute base avec « * ») et
+#                                          écrit son numéro dans <sortie>, vide si aucune : 0 lu,
+#                                          2 page illisible, 3 plafond de pages atteint
+#   release_private_text <motifs> <scratch> <fichier>…
+#                                          un motif privé figure-t-il dans les fichiers : 0 oui,
+#                                          1 non, 2 lecture impossible
+#   release_merge_response <code HTTP> <message de la forge>
+#                                          classe la réponse d'une fusion fast-forward-only : écrit
+#                                          ok, retry, style, diverging ou refused ; rend 0
+#   release_push_tag <tag> <commit> <message>
+#                                          pose le tag annoté et le pousse sur origin : 0 poussé,
+#                                          1 création impossible, 2 push refusé et tag local retiré,
+#                                          3 push refusé et tag local resté en place
+#
+# Procédure : docs/procedures/release.md, docs/procedures/hotfix.md
 
 release_lib_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) || exit 2
 # shell.sh vit dans l'outillage commun (sous-module .working-method, story outillage-14)
@@ -121,4 +140,90 @@ release_missing_base_pages() { # $1 = liste du socle, $2 = liste cumulative, $3 
     ((code == 0)) || { printf '%s\n' "$key" >> "$out" || return 2; }
   done <<< "$keys"
   return 0
+}
+
+# --- communs à release et hotfix (story 11.12) ------------------------------------------------------
+
+# La liste des PR ouvertes se lit par pages de 50 : la PR cherchée peut être au-delà de la première.
+# <fonction> écrit la page <numéro> dans <fichier> : le script lui fait appeler la forge (et meurt
+# lui-même sur un code HTTP inattendu), les tests lui font lire des fixtures — comme
+# read_timeline_reports de .working-method/gates/merge-gates.sh. Le résultat va dans un fichier, et
+# non sur la sortie standard : appelée dans « $(…) », la fonction de lecture ne pourrait pas arrêter
+# le script sur une erreur de la forge (piège connu, .working-method/procedures/shell-scripts.md).
+release_find_open_pr() { # $1 fonction, $2 branche de tête, $3 base ou « * », $4 plafond de pages, $5 sortie
+  local fetch=$1 head=$2 base=$3 max=$4 out=$5 page=1 number count
+  [[ $max =~ ^[1-9][0-9]*$ && -n $head && -n $base ]] || return 2
+  : > "$out" || return 2
+  while :; do
+    ((page <= max)) || { rm -f "$out.page"; return 3; }
+    "$fetch" "$page" "$out.page" || { rm -f "$out.page"; return 2; }
+    number=$(jq -r --arg h "$head" --arg b "$base" \
+      '[.[] | select(.head.ref == $h and ($b == "*" or .base.ref == $b)) | .number] | first // empty' \
+      "$out.page" 2>/dev/null) || { rm -f "$out.page"; return 2; }
+    if [[ -n $number ]]; then
+      rm -f "$out.page"
+      [[ $number =~ ^[1-9][0-9]*$ ]] || return 2
+      printf '%s\n' "$number" > "$out" || return 2
+      return 0
+    fi
+    count=$(jq 'length' "$out.page" 2>/dev/null) || { rm -f "$out.page"; return 2; }
+    [[ $count =~ ^[0-9]+$ ]] || { rm -f "$out.page"; return 2; }
+    ((count == 50)) || break
+    page=$((page + 1))
+  done
+  rm -f "$out.page"
+  return 0
+}
+
+# Le titre et le corps d'une PR partent sur la forge, et de là sur le miroir public : ils passent la
+# liste des motifs avant l'envoi, comme le fait create-pull-request. Les codes de grep sont lus,
+# jamais avalés : 1 « aucun motif » n'est pas 2 « fichier illisible ».
+release_private_text() { # $1 fichier de motifs, $2 fichier de travail, $3… fichiers à vérifier
+  local patterns=$1 scratch=$2 code=0
+  shift 2
+  (($# > 0)) || return 2
+  grep -vE '^[[:space:]]*(#|$)' "$patterns" > "$scratch" 2>/dev/null || code=$?
+  ((code <= 1)) || return 2
+  # un fichier de motifs sans motif est refusé en amont (require_patterns_file) ; ici, il ne
+  # trouverait rien, et ne doit pas pour autant passer pour une vérification faite
+  [[ -s $scratch ]] || return 2
+  code=0
+  grep -qiF -f "$scratch" -- "$@" || code=$?
+  case $code in
+    0) return 0 ;;
+    1) return 1 ;;
+    *) return 2 ;;
+  esac
+}
+
+# Réponses constatées de l'API de fusion (AD-24, docs/procedures/gitea-branches.md) : 200 fusionné ;
+# 405 « Please try again later », transitoire juste après le déplacement de la base ; 405 autre, un
+# style refusé ; 500 DivergingFastForwardOnly, la base a divergé. Les deux 405 se distinguent par le
+# message, jamais par le code.
+release_merge_response() { # $1 code HTTP, $2 message de la forge
+  local code=$1 message=${2,,}
+  case $code in
+    200) printf 'ok\n' ;;
+    405)
+      if [[ $message == *"try again later"* ]]; then printf 'retry\n'; else printf 'style\n'; fi
+      ;;
+    500)
+      if [[ $message == *divergingfastforwardonly* ]]; then printf 'diverging\n'; else printf 'refused\n'; fi
+      ;;
+    *) printf 'refused\n' ;;
+  esac
+  return 0
+}
+
+# Le tag poussé déclenche le workflow release : c'est le dernier geste, et le plus lourd. Si le push
+# échoue, le tag local est retiré pour qu'une reprise le repose sur le même commit ; un tag local
+# resté en place se dit par un code à part, pour que le message de l'appelant décrive la situation
+# que l'opérateur retrouvera. Les messages de git restent muets : ils portent l'adresse de la forge
+# (NFR-9).
+release_push_tag() { # $1 tag, $2 commit, $3 message du tag
+  local tag=$1 commit=$2 message=$3
+  git tag -a "$tag" -m "$message" "$commit" > /dev/null 2>&1 || return 1
+  git push --quiet origin "refs/tags/$tag" > /dev/null 2>&1 && return 0
+  git tag -d "$tag" > /dev/null 2>&1 || return 3
+  return 2
 }
