@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '10-05-2026 10:36'
+last_updated: '10-05-2026 14:07'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -297,9 +297,8 @@ blocked_by_open_questions:
   # tranchée pour les cas 01 et 05 (arbitrages d'Arnaud du 24/09/2026), et « bloquée par Q2 »
   # voulait dire pour elles « le socle doit être complet : stories 10.6 et 10.7 » (epics.md), toutes
   # deux `done`. Les cas 03, 04 et 06 gardent le leur : leurs périodes ne sont pas tranchées.
-  13-1-integrate-and-release-case-03: [Q2, Q4, Q5]
-  13-2-integrate-and-release-case-04: [Q2]
-  13-3-integrate-and-release-case-06: [Q2]
+  # Les stories 13.1 à 13.3 y figuraient pour Q2 (et Q4, Q5 pour la 13.1). Blocage **levé le
+  # 05/10/2026** : Q2, Q4 et Q5 tranchées par Arnaud (PRD §11.1 et §11.2). Q1 et Q3 restent ouvertes.
   13-4-first-ready-diagram-published: [Q1]
   13-5-ready-snippets-and-thematic-boxes: [Q1]
   13-6-ready-video-as-plain-link: [Q1, Q3]

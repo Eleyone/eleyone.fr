@@ -3734,7 +3734,7 @@ afin de voir comment Arnaud arbitre quand un sujet n'aboutit pas.
 
 **Couvre :** FR-2, FR-5 à FR-10, FR-12, FR-20, FR-26, FR-32, SM-C2
 **Dépendances :** 3.17, 11.7, 11.11
-**Bloquée par :** **Q2**, **Q4**, **Q5**
+**Bloquée par :** — (**levée le 05/10/2026** : Q2, Q4 et Q5 tranchées par Arnaud, PRD §11.1)
 **Prérequis de contenu :** cas 03 FR et EN rédigé par Arnaud.
 **Opération manuelle (Arnaud) :** **oui**, tag de mise en ligne par le skill `release`.
 
@@ -3760,7 +3760,7 @@ afin de voir comment Arnaud reprend un sujet sans écraser celui qui le portait.
 
 **Couvre :** FR-2, FR-5 à FR-9, FR-12, FR-20, FR-26, FR-32
 **Dépendances :** 3.17, 11.7, 11.11
-**Bloquée par :** **Q2**
+**Bloquée par :** — (**levée le 05/10/2026** : Q2 tranchée par Arnaud, PRD §11.1)
 **Prérequis de contenu :** cas 04 FR et EN rédigé par Arnaud.
 **Opération manuelle (Arnaud) :** **oui**, tag de mise en ligne.
 
@@ -3782,7 +3782,7 @@ afin de mesurer la portée du cas.
 
 **Couvre :** FR-2, FR-5 à FR-8, FR-12, FR-15, FR-20, FR-22 (April Technologies), FR-26, FR-32, UJ-2
 **Dépendances :** 3.17, 6.2, 11.7, 11.11
-**Bloquée par :** **Q2**
+**Bloquée par :** — (**levée le 05/10/2026** : Q2 tranchée par Arnaud, PRD §11.1)
 **Prérequis de contenu :** cas 06 FR et EN rédigé par Arnaud, avec la ligne de contexte sur April Technologies (PRD §11.2).
 **Opération manuelle (Arnaud) :** **oui**, tag de mise en ligne.
 
@@ -3883,13 +3883,13 @@ afin de la regarder sur YouTube sans cookie sur le site.
 
 | Story | Bloquée par |
 | --- | --- |
-| 10.6 Cas 01 | Q2 |
-| 10.7 Cas 05 | Q2 |
-| 11.10 Test des trente secondes | Q2 (par le socle) |
-| 11.11 Premier déploiement du socle | Q2 (par le socle) |
-| 13.1 Cas 03 | Q2, Q4, Q5 |
-| 13.2 Cas 04 | Q2 |
-| 13.3 Cas 06 | Q2 |
+| 10.6 Cas 01 | ~~Q2~~ levée le 24/09/2026 |
+| 10.7 Cas 05 | ~~Q2~~ levée le 24/09/2026 |
+| 11.10 Test des trente secondes | ~~Q2 (par le socle)~~ levée le 25/09/2026 |
+| 11.11 Premier déploiement du socle | ~~Q2 (par le socle)~~ levée le 25/09/2026 |
+| 13.1 Cas 03 | ~~Q2, Q4, Q5~~ levées le 05/10/2026 |
+| 13.2 Cas 04 | ~~Q2~~ levée le 05/10/2026 |
+| 13.3 Cas 06 | ~~Q2~~ levée le 05/10/2026 |
 | 13.4 Schéma prêt | Q1 |
 | 13.5 Extraits et encarts prêts | Q1 |
 | 13.6 Vidéo prête | Q1, Q3 |
