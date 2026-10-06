@@ -5,7 +5,7 @@ number: "06"
 slug: "april-hors-perimetre"
 position: "position-april-technologies-2017"
 order: 6
-draft: true
+draft: false
 
 context:
   company: "April Technologies"
@@ -15,7 +15,7 @@ context:
   stack: ["Symfony 1.3", "Java", "SOAP"]
 
 summary: >-
-  Embauché pour l'écran, je suis allé comprendre la machine derrière : lire le Java pour débugger précisément, puis livrer des features de bout en bout.
+  Venu pour l'écran, je suis allé comprendre la machine derrière : lire le Java pour débugger précisément, puis livrer des features de bout en bout.
   Je ne m'arrête pas à ma fiche de poste quand la qualité du résultat est en jeu.
 
 live_material:
@@ -33,7 +33,7 @@ live_material:
 
 ## Contexte
 
-Deuxième passage sur ce projet : je l'avais déjà connu en 2013–2014, sur une mission pour le compte de CGI. Cette fois, embauché pour faire le front d'une application en Symfony 1.3. Le back était en Java et nous exposait des API SOAP. Mon périmètre : l'IHM qui affiche les données renvoyées par les services. Concrètement, de la mise en page.
+Deuxième passage sur ce projet : je l'avais déjà connu en 2013–2014, sur une mission chez CGI, pour le compte d'April. Cette fois, en mission pour Modis, pour faire le front d'une application en Symfony 1.3. Le back était en Java et nous exposait des API SOAP. Mon périmètre : l'IHM qui affiche les données renvoyées par les services. Concrètement, de la mise en page.
 
 {{< live-material id="diagram-official-scope-vs-explored" >}}
 

@@ -5,7 +5,7 @@ number: "06"
 slug: "april-beyond-scope"
 position: "position-april-technologies-2017"
 order: 6
-draft: true
+draft: false
 
 context:
   company: "April Technologies"
@@ -15,7 +15,7 @@ context:
   stack: ["Symfony 1.3", "Java", "SOAP"]
 
 summary: >-
-  Hired for the screen, I went to understand the machine behind it: reading the Java to debug precisely, then delivering features end to end.
+  Brought in for the screen, I went to understand the machine behind it: reading the Java to debug precisely, then delivering features end to end.
   I do not stop at my job description when the quality of the result is at stake.
 
 live_material:
@@ -33,9 +33,7 @@ live_material:
 
 ## Context
 
-[TODO: ligne de contexte EN — ce qu'est April Technologies, à écrire avec l'auteur ; éviter la confusion avec le mois d'avril]
-
-Second time on this project: I had already worked on it in 2013–2014, on an assignment for CGI. This time, hired to build the frontend of an application in Symfony 1.3. The backend was in Java and exposed SOAP APIs to us. My scope: the UI that displays the data returned by the services. In practice, layout work.
+April Technologies is the IT arm of April, a French insurance group. Second time on this project: I had already worked on it in 2013–2014, on an assignment at CGI, for April. This time, on assignment through Modis, to build the frontend of an application in Symfony 1.3. The backend was in Java and exposed SOAP APIs to us. My scope: the UI that displays the data returned by the services. In practice, layout work.
 
 {{< live-material id="diagram-official-scope-vs-explored" >}}
 
