@@ -2506,6 +2506,8 @@ Hors périmètre, noté ici pour mémoire : le job `release` rejouera C21 avec l
 Un schéma bilingue suit le mode du lecteur (ou son repli validé), et la CI refuse tout SVG désynchronisé. Le spike passe avant toute story du pipeline (AD-7).
 
 > **Reporté après l'epic 9, décision d'Arnaud du 22/09/2026.** Aucun schéma n'est à produire pour l'instant, et cet epic n'outille que des schémas. Il ne bloque rien avant la mise en ligne : sa seule dépendance hors epic est la story 13.4 (« premier schéma publié »), postérieure à la release et déjà bloquée par **Q1**. Les epics 9, 10, 11 et 12 n'en dépendent pas — vérifié en relisant toutes les lignes « Dépendances » du backlog. À reprendre quand un cas aura un schéma à montrer ; la branche `experiment/d2-bilingue` porte déjà le travail exploratoire.
+>
+> **Report confirmé le 06/10/2026 (Arnaud)**, avec les stories 13.4 à 13.6 : aucun schéma n'est retenu pour l'instant ; la question se rouvre après les retours des recruteurs et des testeurs (story 11.11b), si ces retours demandent du matériel vivant.
 
 ### Story 8.1 : Dual-theme D2 spike
 
@@ -3725,6 +3727,8 @@ afin de corriger un oubli avant la fusion.
 ## Epic 13 : Après le socle : cas 03, 04 et 06, matériel vivant prêt
 
 Les cas 03, 04 et 06 sont mis en ligne un par un sous leur poste, chacun par son tag ; le matériel vivant retenu pour la v1 passe à « prêt ».
+
+> **Stories 13.4 à 13.6 reportées, décision d'Arnaud du 06/10/2026.** Les cas 03, 04 et 06 sont en ligne depuis `v1.1.0`, publiés ensemble par un seul tag (arbitrage du même jour, écart assumé avec « un par un »). Le matériel vivant reste « prévu », donc invisible en production : Arnaud décidera s'il produit des schémas, des encarts, des extraits ou une vidéo après les retours des recruteurs et des testeurs (story 11.11b). Les questions 1 et 3 du PRD restent ouvertes, suivies dans `open_questions` de `sprint-status.yaml` ; l'epic 8 (outillage D2), seule dépendance hors epic de la 13.4, est reporté avec elles. Les trois stories restent `backlog` et l'epic reste `in-progress` : le suivi n'a pas de statut « reporté », c'est cette note qui le dit.
 
 ### Story 13.1 : Integrate and release case 03
 

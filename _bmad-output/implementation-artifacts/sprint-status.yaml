@@ -448,6 +448,16 @@ open_questions:
       ; l'option intermédiaire est tracée ici — commiter les six valeurs sans enjeu
       et garder commune et téléphone en secret, ce qui retirerait six secrets Gitea
       de la story 11.6"
+  - id: "epic-13-oq-materiel-vivant"
+    epic: 13
+    question: "Quel matériel vivant livrer (PRD §11.2, Q1), et que montrent les vidéos
+      (Q3) ? Bloque 13.4 à 13.6, et l'epic 8 par la 13.4."
+    state: "Reportée par Arnaud le 06/10/2026 : les 18 éléments restent « prévus »,
+      invisibles en production ; stories 13.4 à 13.6 et epic 8 en backlog, notes de
+      report dans epics.md."
+    lands_in: "arbitrage d'Arnaud après les retours de la story 11.11b (test des trente
+      secondes) et des premiers recruteurs ; sa réponse débloque 13.4 à 13.6, et l'epic
+      8 si un schéma est retenu"
 
 action_items:
   - id: "epic-1-retro-item-1-story-1-5-couverture-du-garde-fou-g1-env"
