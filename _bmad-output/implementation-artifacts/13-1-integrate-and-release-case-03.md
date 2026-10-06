@@ -123,3 +123,13 @@ VERDICT: NON BLOQUANT — aucune réserve
 ### Décisions (06/10/2026, orchestrateur)
 
 Verdict `pass`, aucun constat sur les deux lentilles ni sur la couche projet : rien à retenir, réfuter ni reporter.
+
+## Mise en ligne (06/10/2026)
+
+Publiée en `v1.1.0` avec les cas 03, 04 et 06, par un seul tag (arbitrage d'Arnaud du 06/10/2026) :
+répétition `v1.1.0-rc.1` / `rc.2` verte sur `5f3538a`, audit `release` vert (PR n° 150), `--merge`
+lancé par Arnaud, run `release` du tag `v1.1.0` en succès. Vérifié sur le site servi à 10:31 UTC :
+la page Chiliz porte les sections `case-02`, `case-03`, `case-04` en FR et en EN, la ligne « Côté
+technique » / « On the technical side » du cas 03 est servie, l'accueil FR et EN lie les cas 02, 03
+et 04 sous le poste Chiliz et le cas 06 (`/cas/april-hors-perimetre/`,
+`/en/cases/april-beyond-scope/`, réponse 200, une `<meta name="description">` chacune).
