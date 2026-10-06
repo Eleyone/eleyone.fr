@@ -6,14 +6,14 @@ slug: "chiliz-transaction-batching"
 group: "chiliz"
 position: "position-chiliz"
 order: 2
-draft: true
+draft: false
 
 context:
   company: "Chiliz"
   setup: "employee"
   role: "Design of the chaining architecture and specification of the transaction batch"
-  period: "[TODO: période]"
-  stack: ["[TODO: stack]"]
+  period: "August 2024 – October 2024"
+  stack: ["PHP", "Symfony", "AWS SQS/SNS", "PostgreSQL", "Node.js", "TypeScript", "Fireblocks"]
 
 summary: >-
   Traders were repeating the same operation pool by pool. I designed a single entry that executes transactions in sequence, each confirmed before the next, without one failure cancelling the others.
@@ -41,7 +41,7 @@ live_material:
 
 Same application as the previous case, but the other half of the product: beyond calculations, the tool let the finance team execute all its on-chain operations on the token pools themselves — transfers between wallets, deposits into a pool, withdrawals, swaps. Those operations were built first; the decision-support tools came on top.
 
-[TODO: stack]
+On the technical side: PHP and Symfony, PostgreSQL, AWS SQS/SNS, Node.js and TypeScript, Fireblocks for the wallets.
 
 ## The problem
 

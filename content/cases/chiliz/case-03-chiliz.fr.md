@@ -6,14 +6,14 @@ slug: "chiliz-batch-transactions"
 group: "chiliz"
 position: "position-chiliz"
 order: 2
-draft: true
+draft: false
 
 context:
   company: "Chiliz"
   setup: "employee"
   role: "Conception de l'architecture de chaînage et spécification du batch de transactions"
-  period: "[TODO: période]"
-  stack: ["[TODO: stack]"]
+  period: "août 2024 – octobre 2024"
+  stack: ["PHP", "Symfony", "AWS SQS/SNS", "PostgreSQL", "Node.js", "TypeScript", "Fireblocks"]
 
 summary: >-
   Les traders répétaient la même opération pool par pool. J'ai conçu une saisie unique qui exécute les transactions en séquence, chacune confirmée avant la suivante, sans qu'un échec annule les autres.
@@ -41,7 +41,7 @@ live_material:
 
 Même application que le cas précédent, mais l'autre moitié du produit : au-delà des calculs, l'outil permettait au pôle finance d'exécuter lui-même toutes ses opérations on-chain sur les pools de tokens — transfert entre wallets, dépôt sur un pool, retrait, swap. Ces opérations ont été construites en premier ; les outils d'aide à la décision sont venus par-dessus.
 
-[TODO: stack]
+Côté technique : PHP et Symfony, PostgreSQL, AWS SQS/SNS, Node.js et TypeScript, Fireblocks pour les wallets.
 
 ## Le problème
 
