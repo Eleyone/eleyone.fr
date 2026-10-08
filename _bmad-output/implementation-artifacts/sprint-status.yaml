@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '10-06-2026 10:01'
+last_updated: '10-08-2026 08:35'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -175,7 +175,7 @@ development_status:
   13-4-first-ready-diagram-published: backlog
   13-5-ready-snippets-and-thematic-boxes: backlog
   13-6-ready-video-as-plain-link: backlog
-  epic-13-retrospective: optional
+  epic-13-retrospective: done
 work_order:
   # ORDRE DE TRAVAIL (décision D-5, note de planification d'epics.md)
   # development_status est trié par numéro d'epic (outil de planification) :
@@ -311,7 +311,8 @@ content_prerequisites:
   9-4-about-page: "Texte de la page « À propos », FR et EN"
   9-6-person-structured-data: "URL du profil GitHub ; job_title"
   9-7-host-identification-without-phone: "Dénomination, adresse et courriel de l'hébergeur"
-  9-8-page-description-and-share-previews: "Descriptions des pages hors cas, validées le 04/10/2026"
+  9-8-page-description-and-share-previews: "Descriptions des pages hors cas, validées
+    le 04/10/2026"
   10-1-home-page-pitch: "Pitch FR et EN"
   10-2-career-positions: "Parcours tiré du CV ; Ton Pote le Geek"
   10-3-education-certification-and-languages-content: "Formation et langues tirées
@@ -339,17 +340,17 @@ open_questions:
     question: "Le substitut d'amorçage de verify-and-merge-pr.sh a-t-il encore un
       rôle une fois la CI en place ?"
     state: "**Répondue par la story 11.7, le 25/09/2026.** Le résumé « régime révolu
-      mais pas mort » laissait tomber la moitié de la phrase de la procédure, qui nommait
-      déjà le cas restant : la PR de mise en ligne dev → main, dont la base est main,
-      où checks.yaml n'existe pas encore. Le régime n'était donc pas révolu mais dormant,
-      armé pour la première mise en ligne. Décision prise et écrite : release ne le tolère
-      pas — il lit les statuts de la tête, un commit de dev, et y traite un « absent »
-      comme un refus (docs/procedures/release.md, scripts/release.sh, cas
-      release_ci_absente_refuse_l_amorcage). Le code de verify-and-merge-pr.sh:188-206
+      mais pas mort » laissait tomber la moitié de la phrase de la procédure, qui
+      nommait déjà le cas restant : la PR de mise en ligne dev → main, dont la base
+      est main, où checks.yaml n'existe pas encore. Le régime n'était donc pas révolu
+      mais dormant, armé pour la première mise en ligne. Décision prise et écrite
+      : release ne le tolère pas — il lit les statuts de la tête, un commit de dev,
+      et y traite un « absent » comme un refus (docs/procedures/release.md, scripts/release.sh,
+      cas release_ci_absente_refuse_l_amorcage). Le code de verify-and-merge-pr.sh:188-206
       reste, mais ne couvre plus aucun cas vivant : sa procédure le dit désormais."
-    lands_in: "réglée — story 11.7 ; la leçon pour le suivi des questions ouvertes (un
-      « state » qui résume un document finit par le remplacer) est dans le fichier de
-      story 11-7-release-skill.md"
+    lands_in: "réglée — story 11.7 ; la leçon pour le suivi des questions ouvertes
+      (un « state » qui résume un document finit par le remplacer) est dans le fichier
+      de story 11-7-release-skill.md"
   - id: "epic-4-oq-cause-des-insertions-pures"
     epic: 4
     question: "Comment les deux insertions pures d'epics.md se sont-elles produites
@@ -387,13 +388,12 @@ open_questions:
     question: "La typographie française ne compose ni <title>, ni <meta name=\"description\"\
       >, ni les cartes sociales. (Reposée à la rétrospective de l'epic 9, même question.)"
     state: "**Répondue par la story 9.8, le 04/10/2026.** Le <title>, lui, est déjà
-      composé par baseof.html (typo-fr-texte.html) : la question était en retard sur ce
-      point. La
-      story 9.8 crée la <meta name=\"description\"> et les balises Open Graph (AD-25)
-      et compose en français la description par le même partial que le <title> ;
-      og:title reprend le <title> composé. C24 ne lit toujours que les nœuds de texte,
-      pas les attributs : la composition des descriptions est éprouvée par
-      scripts/tests/test-head-meta.sh, pas par un contrôle de la sortie (décision
+      composé par baseof.html (typo-fr-texte.html) : la question était en retard sur
+      ce point. La story 9.8 crée la <meta name=\"description\"> et les balises Open
+      Graph (AD-25) et compose en français la description par le même partial que
+      le <title> ; og:title reprend le <title> composé. C24 ne lit toujours que les
+      nœuds de texte, pas les attributs : la composition des descriptions est éprouvée
+      par scripts/tests/test-head-meta.sh, pas par un contrôle de la sortie (décision
       consignée dans le fichier de la story 9.8)."
     lands_in: "réglée — story 9.8 (layouts/_partials/head-meta.html)"
   - id: "epic-7-oq-traces-wsl"
@@ -989,3 +989,26 @@ action_items:
     owner: "Claude"
     status: done
     ref: "_bmad-output/implementation-artifacts/epic-10-retro-2026-09-24.md"
+  - id: "epic-13-retro-item-72-réconcilier-la-spec-avec-la-mise-en-lign"
+    epic: 13
+    action: "Réconcilier la spec avec la mise en ligne groupée de v1.1.0 : FR-32 et
+      prd.md:558, 677 ; epics.md:120, 298, 3729 ; troisième critère des stories 13.1
+      à 13.3 ; ligne datée au §11.1 du PRD"
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-13-retro-2026-10-08.md"
+  - id: "epic-13-retro-item-73-faire-écrire-publish-case-relu-sur-la-br"
+    epic: 13
+    action: "Faire écrire publish-case --relu sur la branche courante quand elle porte
+      un numéro de story, et ne créer feat/publish-case-<clé> que depuis dev ; test
+      qui échoue sans la garde"
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-13-retro-2026-10-08.md"
+  - id: "epic-13-retro-item-74-agents-md-point-8-une-décision-qui-contr"
+    epic: 13
+    action: "AGENTS.md, point 8 : une décision qui contredit un critère d acceptation
+      se reporte dans le PRD et epics.md dans la PR qui l applique"
+    owner: "Claude"
+    status: open
+    ref: "_bmad-output/implementation-artifacts/epic-13-retro-2026-10-08.md"
