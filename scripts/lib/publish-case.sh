@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Décision de publication d'un cas (story 3.17) : que publier, qu'ajouter, que refuser.
 #
 # À charger par « . scripts/lib/publish-case.sh » depuis un script qui a défini script_name.
@@ -12,9 +13,22 @@
 #         release=<clé>                          à ajouter à ci/release-pages.txt
 #       codes : 0 plan affiché, 1 refus (le message dit quoi corriger), 2 anomalie (manifeste illisible)
 #
+#   publish_case_branch_mode <branche courante> <forge.base> <forge.branch-prefixes>
+#       dit où --relu écrit son commit (action 73 de la rétrospective de l'epic 13, constat F3) :
+#         new        depuis la base : créer feat/publish-case-<clé>, pousser, ouvrir la PR
+#         current    depuis la branche d'une story : commit sur place, ni push ni PR (la PR est
+#                    celle de la story)
+#       codes : 0 mode affiché, 1 refus (le message dit où se placer ; rien sur la sortie standard),
+#       2 anomalie (base vide)
+#
 # Le plan est trié : les fichiers du cas, puis ceux du groupe, puis les clés. Un appelant peut donc
 # le comparer octet pour octet dans un test.
 # Procédure : docs/procedures/publish-case.md
+
+# Le numéro de story d'une branche se lit par la fonction de l'outillage commun, jamais par une
+# copie de son expression (AGENTS.md, point 19) : sprint.sh ne contient que des définitions.
+# shellcheck source=.working-method/lib/sprint.sh # chemin lu depuis la racine du dépôt
+. "$(dirname "${BASH_SOURCE[0]}")/../../.working-method/lib/sprint.sh"
 
 publish_case_die() { printf '%s: %s\n' "${script_name:-publish-case}" "$*" >&2; return 2; }
 publish_case_refuse() { printf '%s: %s\n' "${script_name:-publish-case}" "$*" >&2; return 1; }
@@ -94,4 +108,38 @@ publish_case_plan() { # $1 = manifeste fr, $2 = manifeste en, $3 = translationKe
   for e in "${index_entrees[@]}"; do printf 'index=%s\n' "$(jq -r '.file' <<< "$e")"; done
   printf 'release=%s\n' "$cle"
   [[ -z $groupe ]] || printf 'release=group-%s\n' "$groupe"
+}
+
+# Une liste blanche, pas une liste noire : la branche d'une story porte un numéro **et** un préfixe
+# de forge.branch-prefixes, ceux qu'admet create-pull-request. Tout le reste est refusé — la branche
+# de publication, une branche sans numéro (feat/publish-case-<clé> comprise), une HEAD détachée
+# (nom vide), et une branche hotfix/* même numérotée : hotfix/ n'est pas un préfixe déclaré, un
+# correctif part de main et ne porte jamais de numéro de story (docs/procedures/hotfix.md).
+publish_case_branch_mode() { # $1 = branche courante, $2 = forge.base, $3 = forge.branch-prefixes
+  local branche=$1 base=$2 prefixes=$3 prefixe admis=""
+  [[ -n $base ]] || { publish_case_die "aucune branche de base donnée (forge.base)."; return 2; }
+  if [[ -z $branche ]]; then
+    publish_case_refuse "HEAD détachée : une publication part de $base ou de la branche d'une story."
+    return 1
+  fi
+  if [[ $branche == "$base" ]]; then
+    printf 'new\n'
+    return 0
+  fi
+  for prefixe in $prefixes; do
+    admis+="${admis:+, }$prefixe/"
+  done
+  if story_number_from_branch "$branche" > /dev/null; then
+    # Le préfixe se lit jusqu'au premier « / », pas comme un début de mot : featx/ n'est pas feat/.
+    for prefixe in $prefixes; do
+      if [[ ${branche%%/*} == "$prefixe" ]]; then
+        printf 'current\n'
+        return 0
+      fi
+    done
+    publish_case_refuse "« $branche » porte un numéro de story, mais son préfixe n'est pas admis ($admis) : une publication part de $base ou de la branche d'une story."
+    return 1
+  fi
+  publish_case_refuse "une publication part de $base ou de la branche d'une story (<préfixe>/<epic>-<story>-<titre>, préfixes $admis), pas de « $branche »."
+  return 1
 }

@@ -2,11 +2,16 @@
 # Publie un cas : tous les contrôles, puis draft: false dans une PR, toujours de la même façon.
 #
 #   scripts/publish-case.sh <translationKey>           contrôle et affiche le plan, ne modifie rien
-#   scripts/publish-case.sh <translationKey> --relu     publie, commit, pousse et ouvre la PR
+#   scripts/publish-case.sh <translationKey> --relu     publie et commit ; depuis dev, pousse et ouvre la PR
 #
 # Sans --relu, rien n'est touché : le format exige une relecture humaine avant qu'un cas devienne
 # public, et ce drapeau en est la trace explicite (décidé par Arnaud le 21/09/2026). Il couvre aussi
 # la page du groupe, qui part dans la même PR que son premier cas publié (D-3, AD-4).
+#
+# --relu écrit depuis deux endroits seulement (action 73 de la rétrospective de l'epic 13, F3) :
+# depuis dev, il crée feat/publish-case-<clé>, pousse et ouvre la PR ; depuis la branche d'une story
+# (numérotée, préfixe de forge.branch-prefixes), il commite sur place et ne pousse rien — la PR est
+# celle de la story. Toute autre branche est refusée (publish_case_branch_mode).
 #
 # Le script ne publie jamais le poste du cas : un poste en brouillon fait échouer la publication et
 # le script le nomme. Les fichiers se trouvent par le manifeste du rendu de travail, jamais par un
@@ -19,10 +24,18 @@ script_name=publish-case
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$root"
 . "$root/.working-method/lib/shell.sh"
+. "$root/.working-method/lib/config.sh"
 . "$root/scripts/lib/publish-case.sh"
 
 die() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 2; }
 refuse() { printf '%s: %s\n' "$script_name" "$*" >&2; exit 1; }
+
+# La base et les préfixes de branche se lisent dans workflow.config, jamais en dur (shell-scripts.md).
+config_load "$root/workflow.config" || exit 2
+base_branch="" branch_prefixes=""
+config_get base_branch forge.base || exit 2
+config_get branch_prefixes forge.branch-prefixes || exit 2
+readonly base_branch branch_prefixes
 
 cle="" relu=0
 while (($#)); do
@@ -46,6 +59,15 @@ readonly pages_file="ci/release-pages.txt"
 
 # Rien ne se publie depuis un arbre sale : le commit emporterait des modifications étrangères.
 [[ -z $(git status --porcelain) ]] || refuse "l'arbre de travail n'est pas propre : commiter ou ranger avant de publier."
+
+# Avec --relu, la branche se juge avant les contrôles, qui prennent du temps : un refus de branche
+# n'a pas à les attendre. Sans --relu, rien n'est modifié, et l'audit se consulte depuis n'importe où.
+# « git branch --show-current » rend un nom vide sur une HEAD détachée, que la décision refuse.
+mode=""
+if ((relu)); then
+  branche_courante=$(git branch --show-current) || die "branche courante illisible."
+  mode=$(publish_case_branch_mode "$branche_courante" "$base_branch" "$branch_prefixes") || exit $?
+fi
 
 # --- 1. les contrôles, sur l'état courant --------------------------------------------------------
 # D'abord, pour ne rien modifier sur un dépôt déjà en écart : les faux positifs ne se mêlent pas aux
@@ -91,19 +113,22 @@ if ((relu == 0)); then
 fi
 
 # --- 3. la branche -----------------------------------------------------------------------------------
-# La branche de publication part de dev, comme toute branche de travail. La règle ne vaut qu'ici :
-# le mode sans --relu ne modifie rien, et se consulte depuis n'importe où.
-branche_courante=$(git branch --show-current) || die "branche courante illisible."
-[[ $branche_courante == dev ]] \
-  || refuse "une publication part de dev, pas de « $branche_courante » : se placer sur dev à jour."
-
-branche="feat/publish-case-$cle"
-# « git rev-parse … && refuse » ferait sortir le script sous set -e quand la branche n'existe pas,
-# le « et » rendant alors un code non nul : le cas normal est écrit en clair.
-if git rev-parse --verify --quiet "refs/heads/$branche" > /dev/null; then
-  refuse "la branche $branche existe déjà : la supprimer ou la reprendre à la main."
-fi
-git switch --quiet --create "$branche" || die "création de la branche $branche impossible."
+# Depuis la base, la publication a sa propre branche, comme toute branche de travail. Depuis la
+# branche d'une story, le commit reste sur place : la story porte la publication dans sa propre PR,
+# et son numéro reste lisible par les verrous (AGENTS.md, point 1).
+case $mode in
+  new)
+    branche="feat/publish-case-$cle"
+    # « git rev-parse … && refuse » ferait sortir le script sous set -e quand la branche n'existe pas,
+    # le « et » rendant alors un code non nul : le cas normal est écrit en clair.
+    if git rev-parse --verify --quiet "refs/heads/$branche" > /dev/null; then
+      refuse "la branche $branche existe déjà : la supprimer ou la reprendre à la main."
+    fi
+    git switch --quiet --create "$branche" || die "création de la branche $branche impossible."
+    ;;
+  current) branche=$branche_courante ;;
+  *) die "mode de branche inattendu : « $mode »." ;;
+esac
 
 # --- 4. draft: false, dans le front matter seulement --------------------------------------------------
 # La réécriture est bornée au front matter, entre les deux premiers « --- » : un « draft: » cité dans
@@ -161,6 +186,12 @@ if ! sortie_controles=$(scripts/check.sh 2>&1); then
     "$script_name" "$branche" >&2
   printf '%s\n' "$sortie_controles" >&2
   exit 1
+fi
+
+if [[ $mode == current ]]; then
+  printf '%s: cas %s publié par un commit sur la branche de la story, %s : ni push ni PR, la PR est celle de la story.\n' \
+    "$script_name" "$cle" "$branche"
+  exit 0
 fi
 
 git push --quiet --set-upstream origin "$branche" || die "push de $branche impossible."

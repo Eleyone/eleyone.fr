@@ -1,11 +1,21 @@
 # Procédure — Publier un cas
 
-Un cas devient public en passant de `draft: true` à `draft: false`. `scripts/publish-case.sh` fait ce passage toujours de la même façon : tous les contrôles, la modification, le commit, la PR. Publier à la main, c'est oublier un contrôle.
+Un cas devient public en passant de `draft: true` à `draft: false`. `scripts/publish-case.sh` fait ce passage toujours de la même façon : tous les contrôles, la modification, le commit, puis la PR quand la publication a sa propre branche. Publier à la main, c'est oublier un contrôle.
 
 ```bash
 scripts/publish-case.sh case-02            # contrôle et montre ce qu'il changerait ; ne modifie rien
-scripts/publish-case.sh case-02 --relu     # publie, commit, pousse et ouvre la PR
+scripts/publish-case.sh case-02 --relu     # publie et commite ; depuis dev, pousse et ouvre la PR
 ```
+
+## D'où lancer `--relu`
+
+| Branche courante | Ce que fait `--relu` |
+| --- | --- |
+| `dev` (`forge.base`) | crée `feat/publish-case-<clé>`, commite, relance les contrôles, pousse et ouvre la PR |
+| branche d'une story — préfixe de `forge.branch-prefixes` et numéro de story, `feat/13-1-integrate-and-release-case-03` | commite **sur la branche courante**, relance les contrôles, et **ne pousse ni n'ouvre de PR** : la PR est celle de la story, que ses verrous rattachent à son numéro (AGENTS.md, point 1) |
+| toute autre branche — `main`, une branche sans numéro (`feat/publish-case-case-03`, `fix/truc`), une HEAD détachée, une branche `hotfix/*` même numérotée | refus, sans rien toucher |
+
+La décision vit dans `publish_case_branch_mode` (`scripts/lib/publish-case.sh`) ; le numéro se lit par `story_number_from_branch` de l'outillage commun (`.working-method/lib/sprint.sh`), jamais par une copie de son expression. `hotfix/*` est refusée parce que ce n'est pas un préfixe déclaré : un correctif part de `main` et ne livre jamais de story (`hotfix.md`). Le chemin d'une story n'avait pas d'outil avant l'action 73 de la rétrospective de l'epic 13 : ces gestes y ont été refaits à la main quatre fois (constat F3).
 
 Codes de sortie : `0` conforme, `1` refus (le message dit quoi corriger), `2` anomalie (usage, `jq` absent, manifeste illisible).
 
@@ -17,14 +27,14 @@ Sans lui, le script va jusqu'au bout des contrôles, affiche les fichiers qu'il 
 
 ## Ce que le script fait, dans l'ordre
 
-1. **Refuse un arbre sale.** Un commit de publication n'emporte pas des modifications étrangères.
+1. **Refuse un arbre sale.** Un commit de publication n'emporte pas des modifications étrangères. Avec `--relu`, **juge aussi la branche courante** (tableau ci-dessus) avant de lancer les contrôles, qui prennent du temps ; sans `--relu`, l'audit se consulte depuis n'importe quelle branche.
 2. **Lance `scripts/check.sh` sur l'état courant.** Rien n'est modifié si le dépôt est déjà en écart : les faux positifs ne se mêlent pas aux vrais. Ce build produit aussi les manifestes que la décision lit.
 3. **Décide**, par `scripts/lib/publish-case.sh`, à partir des deux manifestes du rendu de travail (AD-10) : quels fichiers passer hors brouillon, quelles clés ajouter, quoi refuser. Les fichiers se trouvent par le **manifeste**, jamais par un chemin deviné : un cas rangé dans un sous-dossier se trouve comme les autres.
 4. **Sans `--relu`, s'arrête ici.**
-5. **Crée la branche** `feat/publish-case-<clé>`, depuis `dev` — la règle ne vaut qu'à partir d'ici, le premier temps se consulte depuis n'importe où.
+5. **Depuis `dev`, crée la branche** `feat/publish-case-<clé>` ; depuis la branche d'une story, reste dessus.
 6. **Réécrit `draft:`**, dans le **front matter seulement**, entre les deux premiers `---`. Un `draft:` cité dans le corps du texte n'est pas touché, et le script vérifie qu'il a changé une ligne, et une seule, par fichier.
 7. **Ajoute à `ci/release-pages.txt`** le `translationKey` du cas et, pour un cas groupé, `group-<groupe>` — chacun seulement s'il en est absent (D-5). La liste est cumulative : C15 la comparera au site produit.
-8. **Commite**, relance `scripts/check.sh` — c'est lui qui juge le cas devenu public —, pousse la branche, puis ouvre la PR par `create-pull-request`, avec un corps qui nomme les fichiers publiés et les clés ajoutées.
+8. **Commite**, relance `scripts/check.sh` — c'est lui qui juge le cas devenu public. Sur la branche d'une story, s'arrête là et le dit : le commit est sur la branche de la story, que l'auteur de la story pousse avec le reste. Depuis `dev`, pousse la branche, puis ouvre la PR par `create-pull-request`, avec un corps qui nomme les fichiers publiés et les clés ajoutées.
 
 ## Ce que le script refuse
 
@@ -37,6 +47,7 @@ Sans lui, le script va jusqu'au bout des contrôles, affiche les fichiers qu'il 
 | le cas ne désigne aucun poste | tout cas est rattaché à un poste (AD-18) |
 | la page du groupe est publiée dans une langue et en brouillon dans l'autre | la parité (C3) compare l'existence des fichiers, pas leur brouillon : elle ne verrait pas ce boiteux |
 | un contrôle échoue, avant ou après | ce que le contrôle dit |
+| `--relu` lancé ailleurs que sur `dev` ou sur la branche d'une story | la publication a sa propre PR depuis `dev`, ou part dans celle de la story ; nulle part ailleurs |
 
 ## La page du groupe
 
@@ -46,8 +57,8 @@ Si la page du groupe est déjà publiée, elle n'est pas retouchée — seule la
 
 ## Si les contrôles échouent après la modification
 
-Le commit est déjà sur la branche : corriger, recommiter, relancer `scripts/check.sh`, puis pousser et ouvrir la PR à la main. Le script ne pousse ni n'ouvre rien tant que les contrôles ne passent pas.
+Le commit est déjà sur la branche : corriger, recommiter, relancer `scripts/check.sh`. Depuis `dev`, pousser et ouvrir la PR à la main ; sur la branche d'une story, la PR de la story suffit. Le script ne pousse ni n'ouvre rien tant que les contrôles ne passent pas.
 
 ## Pourquoi la décision vit dans une bibliothèque
 
-`scripts/lib/publish-case.sh` ne lit que les manifestes et n'écrit rien : elle s'éprouve sur des manifestes écrits à la main, sans build, sans git et sans forge (`scripts/tests/test-publish-case.sh`). Le script, lui, fait le build, les contrôles, git et la forge. C'est la même séparation que pour les verrous de fusion (`verify-and-merge-pr.md`) — sans elle, aucun cas de test hors ligne n'est possible.
+`scripts/lib/publish-case.sh` ne lit que les manifestes et le nom de la branche courante, et n'écrit rien : elle s'éprouve sur des manifestes et des noms de branche écrits à la main, sans build, sans git et sans forge (`scripts/tests/test-publish-case.sh`). Le script, lui, fait le build, les contrôles, git et la forge. C'est la même séparation que pour les verrous de fusion (`verify-and-merge-pr.md`) — sans elle, aucun cas de test hors ligne n'est possible.

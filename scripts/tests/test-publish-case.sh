@@ -182,6 +182,99 @@ case_publish_case_sans_cle() {
   assert_eq 2 "$rc" "une clé vide est une anomalie d'usage"
 }
 
+# --- où --relu écrit (action 73 de la rétrospective de l'epic 13, F3) ---------------------------------
+# La décision lit le nom de branche, la base et les préfixes que le script tire de workflow.config ;
+# les valeurs ci-dessous sont celles du dépôt. Un refus n'écrit rien sur la sortie standard : le
+# script lit cette sortie comme le mode, et un mode vide ne doit jamais passer pour une décision.
+
+mode() { # $1 = branche courante, $2 = préfixes (par défaut ceux de workflow.config)
+  run bash -c 'set -euo pipefail; script_name=essai; . "$1/scripts/lib/publish-case.sh"; publish_case_branch_mode "$2" dev "$3"' \
+    _ "$root" "$1" "${2:-feat fix chore docs}"
+}
+
+case_publish_case_branche_base_cree() {
+  mode dev
+  assert_eq 0 "$rc" "depuis dev, la publication est admise (messages : $err)"
+  assert_eq new "$out" "et crée sa propre branche"
+}
+
+case_publish_case_branche_de_story_sur_place() {
+  local branche
+  for branche in feat/13-1-integrate-and-release-case-03 fix/7-4a-lien chore/0-7-verify-and-merge-pr-skill \
+    docs/10-12-procedure; do
+    mode "$branche"
+    assert_eq 0 "$rc" "$branche : la branche d'une story est admise (messages : $err)"
+    assert_eq current "$out" "$branche : le commit reste sur place"
+  done
+}
+
+case_publish_case_branche_refusee() {
+  # Chaque refus : code 1, rien sur la sortie standard, un message qui dit où se placer.
+  local branche
+  for branche in main feat/publish-case-case-03 fix/truc feat/ feat/13-1 "feat/13-x-titre" \
+    Feat/13-1-titre featx/13-1-titre 13-1-titre; do
+    mode "$branche"
+    assert_eq 1 "$rc" "« $branche » est refusée (sortie : $out)"
+    assert_eq "" "$out" "« $branche » : aucun mode sur la sortie standard"
+    assert_contains "dev ou de la branche d'une story" "$err" "« $branche » : le message dit où se placer"
+  done
+}
+
+case_publish_case_branche_hotfix_refusee() {
+  # Un correctif part de main et ne livre jamais de story (docs/procedures/hotfix.md) : hotfix/ n'est
+  # pas un préfixe de forge.branch-prefixes, même devant un numéro.
+  mode hotfix/1-2-x
+  assert_eq 1 "$rc" "une branche hotfix/* numérotée est refusée (sortie : $out)"
+  assert_eq "" "$out" "aucun mode sur la sortie standard"
+  assert_contains "préfixe n'est pas admis" "$err" "le message dit pourquoi"
+  mode refactor/1-2-x
+  assert_eq 1 "$rc" "un préfixe absent de forge.branch-prefixes est refusé, numéro ou non"
+  mode refactor/1-2-x "feat refactor"
+  assert_eq 0 "$rc" "les préfixes viennent de forge.branch-prefixes, pas d'une liste écrite ici"
+  assert_eq current "$out" "un préfixe déclaré est admis"
+}
+
+case_publish_case_branche_head_detachee() {
+  mode ""
+  assert_eq 1 "$rc" "un nom vide (HEAD détachée) est refusé"
+  assert_eq "" "$out" "aucun mode sur la sortie standard"
+  assert_contains "HEAD détachée" "$err" "le message le dit"
+}
+
+case_publish_case_branche_base_vide() {
+  run bash -c 'set -euo pipefail; script_name=essai; . "$1/scripts/lib/publish-case.sh"; publish_case_branch_mode dev "" "feat"' _ "$root"
+  assert_eq 2 "$rc" "une base vide est une anomalie, jamais un nom de branche qui serait égal à rien"
+  # Le cas qui compte : HEAD détachée **et** base vide. Sans la garde, « "" == "" » rendrait new, et
+  # le script créerait une branche depuis une HEAD détachée.
+  run bash -c 'set -euo pipefail; script_name=essai; . "$1/scripts/lib/publish-case.sh"; publish_case_branch_mode "" "" "feat"' _ "$root"
+  assert_eq 2 "$rc" "nom vide et base vide : anomalie"
+  assert_eq "" "$out" "aucun mode sur la sortie standard"
+}
+
+case_publish_case_numero_lu_par_l_outillage_commun() {
+  # Règle 8 : la bibliothèque appelle story_number_from_branch, elle ne recopie pas son expression.
+  local lib
+  lib=$(cat "$root/scripts/lib/publish-case.sh")
+  assert_contains "story_number_from_branch" "$lib" "la fonction commune est appelée"
+  assert_contains ".working-method/lib/sprint.sh" "$lib" "et chargée depuis l'outillage commun"
+  [[ $lib != *'[0-9]+-'* ]] || { echo "une expression de numéro de story est recopiée dans la bibliothèque" >&2; exit 1; }
+}
+
+case_publish_case_script_suit_la_decision() {
+  # Le script n'a plus aucun « dev » en dur dans sa règle de branche : il lit forge.base, passe par
+  # la décision, et ne pousse ni n'ouvre de PR depuis la branche d'une story.
+  local script
+  script=$(cat "$root/scripts/publish-case.sh")
+  assert_contains "publish_case_branch_mode" "$script" "le script passe par la décision"
+  assert_contains "config_get base_branch forge.base" "$script" "la base vient de workflow.config"
+  assert_contains "config_get branch_prefixes forge.branch-prefixes" "$script" "les préfixes aussi"
+  [[ $script != *'== dev ]]'* ]] || { echo "une comparaison à dev reste en dur" >&2; exit 1; }
+  # Le départ du mode « current » précède le push : rien n'est poussé depuis une story.
+  local avant_push=${script%%git push*}
+  # shellcheck disable=SC2016 # texte du script cherché tel quel : ses « $ » ne doivent pas se développer
+  assert_contains 'if [[ $mode == current ]]; then' "$avant_push" "la sortie sur place précède le push"
+}
+
 case_publish_case_trois_niveaux() {
   # Le skill suit le principe des trois niveaux, et les deux copies sont des liens, jamais des
   # doublons : une copie dériverait (AGENTS.md).
