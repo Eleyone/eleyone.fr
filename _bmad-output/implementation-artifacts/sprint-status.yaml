@@ -29,7 +29,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 # - Retrospective appends its action items to action_items; the status view surfaces open ones
 generated: 09-13-2026 22:58
-last_updated: '10-08-2026 08:35'
+last_updated: '10-08-2026 08:41'
 project: eleyone.fr
 project_key: NOKEY
 tracking_system: file-system
@@ -995,7 +995,7 @@ action_items:
       prd.md:558, 677 ; epics.md:120, 298, 3729 ; troisième critère des stories 13.1
       à 13.3 ; ligne datée au §11.1 du PRD"
     owner: "Claude"
-    status: open
+    status: done
     ref: "_bmad-output/implementation-artifacts/epic-13-retro-2026-10-08.md"
   - id: "epic-13-retro-item-73-faire-écrire-publish-case-relu-sur-la-br"
     epic: 13

@@ -117,7 +117,7 @@ Résumé ; le texte et les conséquences testables du PRD font foi.
 - FR-29 : lien vers le dépôt public.
 - FR-30 : README-cas en anglais, structuré comme un cas.
 - FR-31 : artefacts de cadrage publics, sans cas brut.
-- FR-32 : socle, puis cas 03, 04 et 06 un par un, par tag.
+- FR-32 : socle, puis cas 03, 04 et 06 quand ils sont prêts, seuls ou ensemble, par tag.
 - FR-39 : répétition de toute la chaîne de mise en ligne sur le serveur de production, sans DNS, avant le premier tag du socle, retour arrière compris.
 - FR-40 : description et aperçu de chaque page — meta description et balises Open Graph, dans sa langue (ajoutée le 04/10/2026).
 
@@ -295,7 +295,7 @@ Sur une PR de contenu, Arnaud reçoit un commentaire qui signale un écart FR/EN
 **FR :** FR-24. **NFR :** NFR-11. **AD :** AD-16. **C :** C17.
 
 ### Epic 13 : Après le socle : cas 03, 04 et 06, matériel vivant prêt
-Les cas 03, 04 et 06 sont mis en ligne un par un sous leur poste ; le matériel vivant retenu pour la v1 passe à « prêt ».
+Les cas 03, 04 et 06 sont mis en ligne sous leur poste quand ils sont prêts ; le matériel vivant retenu pour la v1 passe à « prêt ».
 **FR :** FR-10, FR-12 à FR-14, FR-22, FR-32. **NFR :** NFR-3, NFR-10. **AD :** AD-6, AD-7.
 
 ## Epic 0 : Outillage de développement
@@ -3726,7 +3726,7 @@ afin de corriger un oubli avant la fusion.
 
 ## Epic 13 : Après le socle : cas 03, 04 et 06, matériel vivant prêt
 
-Les cas 03, 04 et 06 sont mis en ligne un par un sous leur poste, chacun par son tag ; le matériel vivant retenu pour la v1 passe à « prêt ».
+Les cas 03, 04 et 06 sont mis en ligne sous leur poste quand ils sont prêts, par tag, seuls ou ensemble (ensemble en `v1.1.0`, arbitrage d'Arnaud du 06/10/2026) ; le matériel vivant retenu pour la v1 passe à « prêt ».
 
 > **Stories 13.4 à 13.6 reportées, décision d'Arnaud du 06/10/2026.** Les cas 03, 04 et 06 sont en ligne depuis `v1.1.0`, publiés ensemble par un seul tag (arbitrage du même jour, écart assumé avec « un par un »). Le matériel vivant reste « prévu », donc invisible en production : Arnaud décidera s'il produit des schémas, des encarts, des extraits ou une vidéo après les retours des recruteurs et des testeurs (story 11.11b). Les questions 1 et 3 du PRD restent ouvertes, suivies dans `open_questions` de `sprint-status.yaml` ; l'epic 8 (outillage D2), seule dépendance hors epic de la 13.4, est reporté avec elles. Les trois stories restent `backlog` et l'epic reste `in-progress` : le suivi n'a pas de statut « reporté », c'est cette note qui le dit.
 
@@ -3754,7 +3754,7 @@ afin de voir comment Arnaud arbitre quand un sujet n'aboutit pas.
 
 **Étant donné** le cas publié et les contrôles au vert
 **Quand** Arnaud publie un nouveau tag par `release`
-**Alors** le cas est mis en ligne seul, sans modifier le contenu des autres pages.
+**Alors** le cas est mis en ligne, seul ou avec d'autres cas prêts, sans modifier le contenu des autres pages.
 
 ### Story 13.2 : Integrate and release case 04
 
@@ -3776,7 +3776,7 @@ afin de voir comment Arnaud reprend un sujet sans écraser celui qui le portait.
 
 **Étant donné** le cas publié
 **Quand** Arnaud publie un nouveau tag
-**Alors** le cas est mis en ligne seul.
+**Alors** le cas est mis en ligne, seul ou avec d'autres cas prêts.
 
 ### Story 13.3 : Integrate and release case 06
 
@@ -3798,7 +3798,7 @@ afin de mesurer la portée du cas.
 
 **Étant donné** le cas publié
 **Quand** Arnaud publie un nouveau tag
-**Alors** le cas est mis en ligne seul et atteint en un clic depuis l'accueil.
+**Alors** le cas est mis en ligne, seul ou avec d'autres cas prêts, et atteint en un clic depuis l'accueil.
 
 ### Story 13.4 : First ready diagram published
 

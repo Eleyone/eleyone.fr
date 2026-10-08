@@ -555,17 +555,17 @@ Le dépôt public contient les artefacts de cadrage BMAD : brief, PRD, puis arch
 
 ### 4.9 Mise en ligne progressive
 
-**Description.** Le site est mis en ligne en deux temps : un socle d'abord, puis les autres cas un par un, quand chacun est prêt. La chaîne de mise en ligne est répétée sur le serveur de production avant la vraie mise en ligne. *Tranché le 13/09/2026.*
+**Description.** Le site est mis en ligne en deux temps : un socle d'abord, puis les autres cas quand ils sont prêts, seuls ou ensemble. La chaîne de mise en ligne est répétée sur le serveur de production avant la vraie mise en ligne. *Tranché le 13/09/2026.*
 
-#### FR-32 : Socle, puis cas un par un
+#### FR-32 : Socle, puis cas quand ils sont prêts
 
-La première mise en ligne est le socle ; les cas 03, 04 et 06 sont ensuite mis en ligne un par un.
+La première mise en ligne est le socle ; les cas 03, 04 et 06 sont ensuite mis en ligne quand ils ne sont plus des brouillons, seuls ou ensemble. *Révisé le 08/10/2026 : « un par un » jusque-là ; les trois cas sont partis ensemble en `v1.1.0`, arbitrage d'Arnaud du 06/10/2026 (rétrospective de l'epic 13).*
 
 **Conséquences (testables) :**
 - La première mise en ligne contient, en FR et en EN : l'accueil, « À propos », Contact, les mentions légales, la politique de confidentialité, la page cas du cas 01, la page Chiliz avec la section du cas 02, et la page cas du cas 05.
 - Aucun des cas 01, 02 et 05 n'est un brouillon au moment de la mise en ligne du socle.
 - Le socle peut être mis en ligne sans les CV PDF : leurs liens apparaissent à la mise en ligne qui suit leur contrôle (FR-38, question 16).
-- Les cas 03, 04 et 06 sont mis en ligne chacun indépendamment, quand il n'est plus un brouillon, sans modifier le contenu des autres pages.
+- Un cas 03, 04 ou 06 est mis en ligne quand il n'est plus un brouillon, sans attendre les autres ni modifier le contenu des autres pages ; plusieurs cas prêts peuvent partir par le même tag.
 - Chaque mise en ligne est déclenchée explicitement, par un tag (AD-14), et non à chaque modification du dépôt.
 - À chaque étape, le site mis en ligne respecte FR-2 (liens du parcours), FR-9 (page Chiliz partielle), FR-15 (aucune page orpheline) et FR-26 (aucun brouillon).
 
@@ -674,7 +674,7 @@ Le PRD rappelle les décisions déjà prises et nomme les points confiés à l'a
 - Un site complet en FR et en EN, avec racine française, anglais sous `/en/`, sélecteur de langue, lignes de contexte, script de parité et agent de parité (FR-20 à FR-24).
 - L'édition sans code, le rendu de travail, les brouillons exclus de la mise en ligne et le garde-fou public/privé (FR-25, FR-26, FR-28).
 - Le lien vers le dépôt public, le README-cas et les artefacts de cadrage publics (FR-29 à FR-31).
-- La mise en ligne en deux temps, socle puis cas 03, 04 et 06 un par un, précédée de la répétition de la mise en ligne (FR-32, FR-39).
+- La mise en ligne en deux temps, socle puis cas 03, 04 et 06 quand ils sont prêts, précédée de la répétition de la mise en ligne (FR-32, FR-39).
 - Le mode sombre (NFR-13).
 
 ### 8.2 v1.1
@@ -707,7 +707,7 @@ Le PRD rappelle les décisions déjà prises et nomme les points confiés à l'a
 - **Validation de l'architecture sur le cas pilote.** L'architecture est validée sur le cas pilote avant la rédaction des dix autres fichiers de cas (les cinq autres cas, en deux langues). Les premières stories doivent pouvoir être démontrées avec ce seul cas, sur le rendu de travail : FR-2 (lien vers une section depuis un poste), FR-5 à FR-9 (dont la page Chiliz avec la seule section du cas 02), FR-12, FR-20 à FR-23 et FR-26. Le format peut encore être ajusté à l'issue de cette validation.
 - **UX.** Les stories de gabarits s'appuient sur `DESIGN.md` et `EXPERIENCE.md`, validés le 13/09/2026 (NFR-6).
 - **Stories.** Elles sont courtes et livrées une par une. Avant chaque story, l'agent reformule ce qu'il a compris et pose ses questions (`AGENTS.md`).
-- **Répétition, puis mise en ligne (FR-39, FR-32).** La chaîne de mise en ligne est répétée tôt sur le serveur de production. Vient ensuite le socle, puis les cas 03, 04 et 06 un par un. Le socle attend que les cas 01 et 05 ne soient plus des brouillons, donc la réponse à la question 2 pour ces deux cas, et que les données de parcours soient saisies à partir du CV d'Arnaud.
+- **Répétition, puis mise en ligne (FR-39, FR-32).** La chaîne de mise en ligne est répétée tôt sur le serveur de production. Vient ensuite le socle, puis les cas 03, 04 et 06 quand ils sont prêts (ensemble en `v1.1.0`). Le socle attend que les cas 01 et 05 ne soient plus des brouillons, donc la réponse à la question 2 pour ces deux cas, et que les données de parcours soient saisies à partir du CV d'Arnaud.
 - **Corrections préalables des sources (addendum).** Avant la rédaction des cas concernés :
   - cas 01 : reformuler une mention personnelle du contexte, et ajouter le cadre (Ton Pote le Geek) ; la société cliente peut être nommée ;
   - cas 02 : corriger la note sur la signature unique, avant la rédaction du cas 03 (question 4) ;
@@ -768,6 +768,7 @@ Le PRD rappelle les décisions déjà prises et nomme les points confiés à l'a
 | 02/10/2026 | Contexte complet de chaque mission sur le CV (proposition de changement du 02/10/2026, arbitrages Q1 à Q8 d'Arnaud) | Chaque poste affiche son secteur (clé traduite) et porte, **qu'il ait des cas ou non**, son périmètre complet et la stack complète du projet, tirée de `data/stack.yaml`, dans un bloc repliable natif fermé par défaut, placé après ses cas (Q1, Q3, Q4 ; Q1 révisé à la ligne suivante). Aucune durée n'est affichée : la période de l'auteur en porte les bornes ; la période d'un cas est comprise dans celle de son poste, sans couvrir nécessairement toute la mission (Q2). Termes du vocabulaire acceptés, termes génériques refusés, « Zend Framework » scindé en 1 et 2 (Q5). Contrat public `docs/format-parcours.md` et passation privée (Q6). Stories 10.8 à 10.10 dans l'Epic 10 (Q7) ; les incohérences du parcours publié attendent la story 10.10 (Q8). Les pages de cas ne changent pas, hormis la stack du cas 05 | §3, FR-2, FR-6, FR-23, FR-25, FR-37 |
 | 02/10/2026 | Révision de l'arbitrage Q1 (story 10.9, arbitrages d'Arnaud) | Le bloc repliable d'un poste ne contient que la stack du projet et se nomme « Stack », en FR comme en EN ; le périmètre est **toujours visible**, après la liste des cas. Le secteur vient juste après l'intitulé du poste sur sa ligne. Un poste n'affiche que ce qui existe : sans stack, pas de bloc ; sans corps, pas de périmètre ; aucune mention d'absence | §3, FR-2, FR-37 |
 | 05/10/2026 | Questions 2, 4 et 5 (Arnaud) | **2** : périodes des cas 03 (« août 2024 – octobre 2024 »), 04 (« décembre 2025 – mars 2026 ») et 06 (« 2017 », second passage chez April Technologies, en mission pour Modis). **4** : close, le site est cohérent (le cas 02 publié ne mentionne pas de signature unique, le cas 03 dit qu'elle a été abandonnée). **5** : stack du cas 03 — PHP, Symfony, AWS SQS/SNS, PostgreSQL, Node.js, TypeScript, Fireblocks, citées dans son texte. Les questions 1 et 3 (matériel vivant, vidéos) restent ouvertes : le matériel vivant est reporté. |
+| 06/10/2026 | Mise en ligne des cas 03, 04 et 06 (Arnaud) | Les trois cas partent ensemble, par un seul tag (`v1.1.0`), et non plus un par un ; un cas prêt peut toujours partir seul. Reporté dans le contrat le 08/10/2026 par la rétrospective de l'epic 13 | FR-32, §4.9, §9 |
 
 Les mentions « ex-question N » renvoient à la numérotation des versions antérieures de la liste, avant son gel ; « numéro conservé » renvoie à la numérotation figée du §11.2.
 
