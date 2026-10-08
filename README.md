@@ -53,14 +53,14 @@ The lesson cost more than the fix: **a control that only lives in CI arrives aft
 
 ## Outcome
 
-The site is **not online yet**: the first release ships the base — home page as CV, about, contact, legal pages and the first cases — and the remaining cases follow one at a time. What exists today is the machinery, and it is what this repository is worth looking at for:
+The site is **online** at [eleyone.fr](https://eleyone.fr/) since October 2026: the first release shipped the base — home page as CV, about, contact, legal pages and the first cases — and the three remaining cases followed together in a second release. The machinery behind it is what this repository is worth looking at for:
 
 - both CIs run the same checks job, in the same pinned image, as the same script I run locally;
-- the checks that exist so far live in [`scripts/checks/`](scripts/checks/) — FR/EN parity, content and front-matter rules, HTML and accessibility, internal links and orphan pages, weight and element budget;
+- the checks live in [`scripts/checks/`](scripts/checks/) — FR/EN parity, content and front-matter rules, HTML and accessibility, internal links and orphan pages, weight and element budget, page descriptions, case periods, and the release-only checks on the production output;
 - the public/private guard runs at three layers and has refused what it was written for;
 - every story since the first has a written record: its spec review, the decisions taken, the findings refused and why.
 
-Measured page weight and Core Web Vitals will be published in [`docs/measures/`](docs/measures/) after the first deployment.
+Measured scores and Core Web Vitals of each release are in [`docs/measures/`](docs/measures/): PageSpeed Insights on mobile gives 100 in performance, accessibility, best practices and SEO on the home page, a case page, the Chiliz group page and a simple page ([`v1.0.1.md`](docs/measures/v1.0.1.md)).
 
 ## Where to look
 
